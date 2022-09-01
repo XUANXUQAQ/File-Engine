@@ -48,6 +48,9 @@
     <ClInclude Include="str_utils.cuh">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="sync_queue.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">

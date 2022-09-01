@@ -9,6 +9,11 @@
 #include "str_convert.cuh"
 #include <concurrent_queue.h>
 #include <thread>
+#include "sync_queue.h"
+#include <functional>
+#ifdef DEBUG_OUTPUT
+#include <iostream>
+#endif
 
 #pragma comment(lib, "cudart.lib")
 
@@ -20,6 +25,7 @@ void generate_search_case(JNIEnv* env, std::vector<std::string>& search_case_vec
 void collect_results(std::atomic_uint& result_counter, unsigned max_results);
 bool is_record_repeat(const std::string& record, const list_cache* cache);
 void release_all();
+void init_threads();
 
 //lock
 inline void wait_for_clear_cache();
@@ -35,6 +41,8 @@ std::atomic_uint remove_record_thread_count(0);
 std::mutex modify_cache_lock;
 std::hash<std::string> hasher;
 concurrency::concurrent_unordered_map<std::string, concurrency::concurrent_queue<std::string>*> search_result_map;
+sync_queue<std::function<void()>> task_queue(COLLECT_THREAD_NUMBER);
+std::atomic_int task_complete_count;
 
 /*
  * Class:     file_engine_dllInterface_CudaAccelerator
@@ -58,6 +66,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_initialize
 	init_stop_signal();
 	init_cuda_search_memory();
 	init_str_convert();
+	init_threads();
 }
 
 /*
@@ -150,21 +159,19 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_match
 	//GPU并行计算
 	start_kernel(cache_map, search_case_vec, is_ignore_case, search_text_chars, keywords_vec, keywords_lower_vec,
 		is_keyword_path_ptr, streams, stream_count);
-	std::vector<std::thread> collect_threads;
-	collect_threads.reserve(COLLECT_THREAD_NUMBER);
 	std::atomic_uint result_counter = 0;
+	task_complete_count = 0;
+	auto task = [&]
+	{
+		collect_results(result_counter, max_results);
+		++task_complete_count;
+	};
 	for (int i = 0; i < COLLECT_THREAD_NUMBER; ++i)
 	{
-		collect_threads.emplace_back(std::thread([&]
-			{
-				collect_results(result_counter, max_results);
-			}));
+		task_queue.put(task);
 	}
-	for (std::thread& collect_thread : collect_threads)
-	{
-		if (collect_thread.joinable())
-			collect_thread.join();
-	}
+	// 同步
+	while (task_complete_count.load() != COLLECT_THREAD_NUMBER) std::this_thread::yield();
 	env->ReleaseStringUTFChars(search_text, search_text_chars);
 	// 等待执行完成
 	auto cudaStatus = cudaDeviceSynchronize();
@@ -450,7 +457,7 @@ void collect_results(std::atomic_uint& result_counter, const unsigned max_result
 			}
 #ifdef DEBUG_OUTPUT
 			const auto thread_id = std::hash<std::thread::id>{}(std::this_thread::get_id());
-			printf("thread_id: %llu, collecting key: %s\n", thread_id, key.c_str());
+			std::cout << "thread_id: " << thread_id << "collecting key: " << key.c_str() << std::endl;
 #endif
 			std::lock_guard lock_guard(val->str_data.lock);
 			//复制结果数组到host，dev_output下标对应dev_cache中的下标，若dev_output[i]中的值为1，则对应dev_cache[i]字符串匹配成功
@@ -490,7 +497,7 @@ void collect_results(std::atomic_uint& result_counter, const unsigned max_result
 			val->is_output_done = 2;
 			delete[] output_ptr;
 #ifdef DEBUG_OUTPUT
-			printf("thread_id: %llu, collect complete, result number: %d\n", thread_id, result_counter.load());
+			std::cout << "thread_id: " << thread_id << "collect complete, result number: " << result_counter.load() << std::endl;
 #endif
 		}
 	} while (!all_complete && !is_stop() && result_counter.load() < max_results);
@@ -588,9 +595,6 @@ void add_one_record_to_cache(const std::string& key, const std::string& record)
 			{
 				if (cache->str_data.remain_blank_num.load() > 0)
 				{
-#ifdef DEBUG_OUTPUT
-					printf("adding record: %s\n", record.c_str());
-#endif
 					const auto index = cache->str_data.record_num.load();
 					//计算下一个空位的内存地址
 					const auto target_address = cache->str_data.dev_cache_str + index;
@@ -615,7 +619,7 @@ void add_one_record_to_cache(const std::string& key, const std::string& record)
 	}
 	catch (std::exception& e)
 	{
-		printf("add record failed: %s\n", e.what());
+		fprintf(stderr, "add record failed: %s\n", e.what());
 	}
 	//释放clear_cache锁
 	free_clear_cache(add_record_thread_count);
@@ -672,7 +676,7 @@ void remove_one_record_from_cache(const std::string& key, const std::string& rec
 	}
 	catch (std::exception& e)
 	{
-		printf("remove record failed: %s\n", e.what());
+		fprintf(stderr, "remove record failed: %s\n", e.what());
 	}
 	//释放clear_cache锁
 	free_clear_cache(remove_record_thread_count);
@@ -721,7 +725,7 @@ void clear_cache(const std::string& key)
 	}
 	catch (std::exception& e)
 	{
-		printf("clear cache failed: %s\n", e.what());
+		fprintf(stderr, "clear cache failed: %s\n", e.what());
 	}
 	clear_cache_flag = false;
 }
@@ -730,4 +734,21 @@ void release_all()
 {
 	free_cuda_search_memory();
 	free_stop_signal();
+}
+
+void init_threads()
+{
+	for (int i = 0; i < COLLECT_THREAD_NUMBER; ++i)
+	{
+		std::thread t([]
+			{
+				while (true)
+				{
+					std::function<void()> task;
+					task_queue.take(task);
+					task();
+				}
+			});
+		t.detach();
+	}
 }

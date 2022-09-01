@@ -655,15 +655,16 @@ public class DatabaseService {
             return matchedResultCount;
         }
         ArrayList<String> tmpQueryResultsCache = new ArrayList<>(MAX_TEMP_QUERY_RESULT_CACHE);
+        EventManagement eventManagement = EventManagement.getInstance();
         try (ResultSet resultSet = stmt.executeQuery(sql)) {
-            while (resultSet.next()) {
+            while (resultSet.next() && eventManagement.notMainExit()) {
                 int i = 0;
                 // 先将结果查询出来，再进行字符串匹配，提高吞吐量
                 tmpQueryResultsCache.clear();
                 do {
                     tmpQueryResultsCache.add(resultSet.getString("PATH"));
                     ++i;
-                } while (resultSet.next() && i < MAX_TEMP_QUERY_RESULT_CACHE);
+                } while (resultSet.next() && eventManagement.notMainExit() && i < MAX_TEMP_QUERY_RESULT_CACHE);
                 //结果太多则不再进行搜索
                 //用户重新输入了信息
                 if (shouldStopSearch.get()) {
@@ -796,7 +797,7 @@ public class DatabaseService {
                 eventManagement.putEvent(new SearchDoneEvent(new ConcurrentLinkedQueue<>(tempResultsForEvent)));
                 tempResultsForEvent.clear();
                 isSearchStopped.set(true);
-                if (AllConfigs.getInstance().isEnableCuda()) {
+                if (AllConfigs.getInstance().isEnableCuda() && eventManagement.notMainExit()) {
                     CudaAccelerator.INSTANCE.stopCollectResults();
                 }
             }
@@ -1934,6 +1935,7 @@ public class DatabaseService {
     }
 
     @EventRegister(registerClass = StopSearchEvent.class)
+    @EventListener(listenClass = RestartEvent.class)
     private static void stopSearchEvent(Event event) {
         DatabaseService databaseService = getInstance();
         databaseService.stopSearch();
