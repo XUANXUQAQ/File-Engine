@@ -3537,7 +3537,7 @@ public class SearchBar {
             isCudaSearchNotStarted.set(false);
             if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL && runningMode == RunningMode.NORMAL_MODE) {
                 searchCaseToLowerAndRemoveConflict();
-                eventManagement.putEvent(new PrepareCudaSearchEvent(() -> searchText, () -> searchCase, () -> keywords));
+                eventManagement.putEvent(new PrepareSearchEvent(() -> searchText, () -> searchCase, () -> keywords));
             }
         }
     }
@@ -3574,7 +3574,7 @@ public class SearchBar {
             while (eventManagement.notMainExit()) {
                 try {
                     final long endTime = System.currentTimeMillis();
-                    if ((endTime - startTime > 100) && isCudaSearchNotStarted.get() && startSearchSignal.get()) {
+                    if ((endTime - startTime > 50) && isCudaSearchNotStarted.get() && startSearchSignal.get()) {
                         setSearchKeywordsAndSearchCase();
                         sendPrepareCudaSearchEvent();
                     }
