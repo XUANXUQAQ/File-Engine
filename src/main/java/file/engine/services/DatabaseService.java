@@ -435,6 +435,7 @@ public class DatabaseService {
     }
 
     private synchronized void createMemoryCache(Supplier<Boolean> isStopCreateCache) {
+        System.out.println("添加缓存");
         String availableDisks = AllConfigs.getInstance().getAvailableDisks();
         ConcurrentLinkedQueue<String> tableQueueByPriority = initTableQueueByPriority();
         isCreatingCache.set(true);
@@ -450,6 +451,7 @@ public class DatabaseService {
     }
 
     private synchronized void createCudaCache(Supplier<Boolean> isStopCreateCache) {
+        System.out.println("添加cuda缓存");
         String availableDisks = AllConfigs.getInstance().getAvailableDisks();
         ConcurrentLinkedQueue<String> tableQueueByPriority = initTableQueueByPriority();
         isCreatingCache.set(true);
@@ -487,7 +489,6 @@ public class DatabaseService {
                         }
                         strings.add(resultSet.getString("PATH"));
                     }
-                    System.out.println("添加cuda缓存" + key);
                     CudaAccelerator.INSTANCE.initCache(key, strings.toArray());
                     if (isStopCreateCache.get()) {
                         break;
@@ -533,7 +534,6 @@ public class DatabaseService {
                     }
                     cache.isCached.compareAndSet(cache.isCached.get(), true);
                     cache.isFileLost.set(false);
-                    System.out.println("添加缓存 " + key);
                 }
             } else {
                 if (cache.isCached.get()) {

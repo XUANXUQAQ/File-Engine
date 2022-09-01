@@ -3574,11 +3574,11 @@ public class SearchBar {
             while (eventManagement.notMainExit()) {
                 try {
                     final long endTime = System.currentTimeMillis();
-                    if ((endTime - startTime > 50) && isCudaSearchNotStarted.get() && startSearchSignal.get()) {
+                    if ((endTime - startTime > 50) && isCudaSearchNotStarted.get() && startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
                         setSearchKeywordsAndSearchCase();
                         sendPrepareCudaSearchEvent();
                     }
-                    if ((endTime - startTime > 250) && isSearchNotStarted.get() && startSearchSignal.get()) {
+                    if ((endTime - startTime > 250) && isSearchNotStarted.get() && startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
                         setSearchKeywordsAndSearchCase();
                         sendSearchEvent(isMergeThreadNotExist);
                     }
