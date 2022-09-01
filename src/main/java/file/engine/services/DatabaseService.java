@@ -1023,7 +1023,7 @@ public class DatabaseService {
             System.out.println("CUDA缓存命中" + key);
         }
         String record;
-        while ((record = CudaAccelerator.INSTANCE.getOneResult(key)) != null) {
+        while ((record = CudaAccelerator.INSTANCE.getOneResult(key)) != null && !shouldStopSearch.get()) {
             Path recordPath = Path.of(record);
             if (!Files.exists(recordPath)) {
                 continue;
@@ -1951,6 +1951,10 @@ public class DatabaseService {
 
     @EventRegister(registerClass = PrepareSearchEvent.class)
     private static void prepareCudaSearch(Event event) {
+        DatabaseService databaseService = DatabaseService.getInstance();
+        while (!databaseService.isSearchStopped.get()) {
+            Thread.onSpinWait();
+        }
         PrepareSearchEvent prepareSearchEvent = (PrepareSearchEvent) event;
         prepareSearchKeywords(prepareSearchEvent.searchText, prepareSearchEvent.searchCase, prepareSearchEvent.keywords);
         if (AllConfigs.getInstance().isEnableCuda()) {
@@ -1978,8 +1982,11 @@ public class DatabaseService {
 
     @EventRegister(registerClass = StartSearchEvent.class)
     private static void startSearchEvent(Event event) {
-        StartSearchEvent startSearchEvent = (StartSearchEvent) event;
         DatabaseService databaseService = getInstance();
+        while (!databaseService.isSearchStopped.get()) {
+            Thread.onSpinWait();
+        }
+        StartSearchEvent startSearchEvent = (StartSearchEvent) event;
         databaseService.tempResults.clear();
         if (!PrepareSearchInfo.isSearchPrepared.get()) {
             prepareSearchKeywords(startSearchEvent.searchText, startSearchEvent.searchCase, startSearchEvent.keywords);
