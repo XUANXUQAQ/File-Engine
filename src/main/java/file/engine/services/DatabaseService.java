@@ -756,16 +756,16 @@ public class DatabaseService {
                     //由于任务的耗时不同，如果阻塞时间过长，则跳过该任务，在下次循环中重新拿取结果
                     long waitTime = 0;
                     ConcurrentSkipListSet<String> results;
-                    while (start.length() <= allTaskStatus.length() || taskStatus.or(zero).equals(zero)) {
+                    while (start.length() <= allTaskStatus.length() || Bit.or(taskStatus.getBytes(), zero.getBytes()).equals(zero)) {
                         if (shouldStopSearch.get()) {
                             //用户重新输入，结束当前任务
                             break;
                         }
                         //当线程完成，taskStatus中的位会被设置为1
                         //这时，将taskStatus和start做与运算，然后移到第一位，如果为1，则线程已完成搜索
-                        Bit and = taskStatus.and(start);
+                        Bit and = Bit.and(taskStatus.getBytes(), start.getBytes());
                         boolean isFailed = System.currentTimeMillis() - waitTime > 300 && waitTime != 0;
-                        if (((and).shiftRight(loopCount)).equals(one) || isFailed) {
+                        if ((and.shiftRight(loopCount)).equals(one) || isFailed) {
                             // 阻塞时间过长则跳过
                             waitTime = 0;
                             results = containerMap.get(start.toString());
@@ -824,6 +824,7 @@ public class DatabaseService {
      * @param containerMap    每个任务搜索出来的结果都会被放到一个属于它自己的一个容器中，该容器保存任务与容器的映射关系
      * @param taskMap         任务
      */
+    @SuppressWarnings("DuplicatedCode")
     private void addSearchTasksForSharedMemory(LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> nonFormattedSql,
                                                Bit taskStatus,
                                                Bit allTaskStatus,
@@ -839,7 +840,13 @@ public class DatabaseService {
                 //为每个任务分配的位，不断左移以不断进行分配
                 number.shiftLeft(1);
                 Bit currentTaskNum = new Bit(number);
-                allTaskStatus.set(allTaskStatus.or(currentTaskNum));
+                byte[] originBytes;
+                while ((originBytes = allTaskStatus.getBytes()) != null) {
+                    Bit or = Bit.or(originBytes, currentTaskNum.getBytes());
+                    if (allTaskStatus.set(originBytes, or)) {
+                        break;
+                    }
+                }
                 containerMap.put(currentTaskNum.toString(), container);
                 tasks.add(() -> {
                     try {
@@ -860,7 +867,13 @@ public class DatabaseService {
                     } catch (Exception e) {
                         e.printStackTrace();
                     } finally {
-                        taskStatus.set(taskStatus.or(currentTaskNum));
+                        byte[] originalBytes;
+                        while ((originalBytes = taskStatus.getBytes()) != null) {
+                            Bit or = Bit.or(originalBytes, currentTaskNum.getBytes());
+                            if (taskStatus.set(originalBytes, or)) {
+                                break;
+                            }
+                        }
                     }
                 });
             }
@@ -903,6 +916,7 @@ public class DatabaseService {
      * @param containerMap    每个任务搜索出来的结果都会被放到一个属于它自己的一个容器中，该容器保存任务与容器的映射关系
      * @param taskMap         任务
      */
+    @SuppressWarnings("DuplicatedCode")
     private void addSearchTasksForDatabase(LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> nonFormattedSql,
                                            Bit taskStatus,
                                            Bit allTaskStatus,
@@ -920,7 +934,13 @@ public class DatabaseService {
                 //为每个任务分配的位，不断左移以不断进行分配
                 number.shiftLeft(1);
                 Bit currentTaskNum = new Bit(number);
-                allTaskStatus.set(allTaskStatus.or(currentTaskNum));
+                byte[] origin;
+                while ((origin = allTaskStatus.getBytes()) != null) {
+                    Bit or = Bit.or(origin, currentTaskNum.getBytes());
+                    if (allTaskStatus.set(origin, or)) {
+                        break;
+                    }
+                }
                 containerMap.put(currentTaskNum.toString(), container);
                 tasks.add(() -> {
                     try {
@@ -949,7 +969,13 @@ public class DatabaseService {
                         e.printStackTrace();
                     } finally {
                         //执行完后将对应的线程flag设为1
-                        taskStatus.set(taskStatus.or(currentTaskNum));
+                        byte[] originalBytes;
+                        while ((originalBytes = taskStatus.getBytes()) != null) {
+                            Bit or = Bit.or(originalBytes, currentTaskNum.getBytes());
+                            if (taskStatus.set(originalBytes, or)) {
+                                break;
+                            }
+                        }
                     }
                 });
             }
@@ -1551,7 +1577,6 @@ public class DatabaseService {
 
     private void stopSearch() {
         shouldStopSearch.set(true);
-        tempResults.clear();
         tempResultsRecordCounter.set(0);
     }
 
