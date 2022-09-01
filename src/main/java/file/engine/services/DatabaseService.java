@@ -988,13 +988,17 @@ public class DatabaseService {
         }
         String record;
         while ((record = CudaAccelerator.INSTANCE.getOneResult(key)) != null) {
+            Path recordPath = Path.of(record);
+            if (!Files.exists(recordPath)) {
+                continue;
+            }
             if (searchCase == null || searchCase.length == 0) {
                 container.add(record);
                 ++matchedNum;
             } else {
                 List<String> searchCaseList = Arrays.asList(searchCase);
                 if (searchCaseList.contains(PathMatchUtil.SearchCase.D)) {
-                    if (Files.isDirectory(Path.of(record))) {
+                    if (Files.isDirectory(recordPath)) {
                         container.add(record);
                         ++matchedNum;
                     }
