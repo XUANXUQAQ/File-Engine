@@ -11,7 +11,6 @@ import file.engine.services.utils.DaemonUtil;
 import file.engine.utils.CachedThreadPoolUtil;
 import file.engine.utils.clazz.scan.ClassScannerUtil;
 import file.engine.utils.system.properties.IsDebug;
-import lombok.SneakyThrows;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -22,8 +21,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
@@ -32,8 +36,8 @@ import java.util.function.Consumer;
 public class EventManagement {
     private static volatile EventManagement instance = null;
     private final AtomicBoolean exit = new AtomicBoolean(false);
-    private final SynchronousQueue<Event> blockEventQueue = new SynchronousQueue<>();
-    private final SynchronousQueue<Event> asyncEventQueue = new SynchronousQueue<>();
+    private final ConcurrentLinkedQueue<Event> blockEventQueue = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Event> asyncEventQueue = new ConcurrentLinkedQueue<>();
     private final ConcurrentHashMap<String, Method> EVENT_HANDLER_MAP = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, ConcurrentLinkedQueue<Method>> EVENT_LISTENER_MAP = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, BiConsumer<Class<?>, Object>> PLUGIN_EVENT_HANDLER_MAP = new ConcurrentHashMap<>();
@@ -289,7 +293,6 @@ public class EventManagement {
      *
      * @param event 任务
      */
-    @SneakyThrows
     public void putEvent(Event event) {
         final boolean isDebug = IsDebug.isDebug();
         if (isDebug) {
@@ -298,11 +301,11 @@ public class EventManagement {
         if (!exit.get()) {
             if (event.isBlock()) {
                 if (!blockEventQueue.contains(event)) {
-                    blockEventQueue.put(event);
+                    blockEventQueue.add(event);
                 }
             } else {
                 if (!asyncEventQueue.contains(event)) {
-                    asyncEventQueue.put(event);
+                    asyncEventQueue.add(event);
                 }
             }
         } else {
@@ -497,12 +500,21 @@ public class EventManagement {
         new Thread(() -> eventHandle(blockEventQueue)).start();
     }
 
-    private void eventHandle(SynchronousQueue<Event> eventQueue) {
+    /**
+     * 事件处理器
+     * 注意，容器不能使用SynchronousQueue，因为事件处理的过程中可能会放入其他事件，会导致putEvent和eventHandle互相等待的问题
+     * @param eventQueue eventQueue
+     */
+    private void eventHandle(ConcurrentLinkedQueue<Event> eventQueue) {
         final boolean isDebug = IsDebug.isDebug();
         try {
             while (isEventHandlerNotExit()) {
                 //取出任务
-                Event event = eventQueue.take();
+                Event event = eventQueue.poll();
+                if (event == null) {
+                    TimeUnit.MILLISECONDS.sleep(5);
+                    continue;
+                }
                 //判断任务是否执行完成或者失败
                 if (event.isFinished() || event.isFailed()) {
                     continue;
