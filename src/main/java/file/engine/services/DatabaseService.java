@@ -349,7 +349,7 @@ public class DatabaseService {
     private LinkedHashMap<String, Integer> scanDatabaseAndSelectCacheTable(String[] disks,
                                                                            ConcurrentLinkedQueue<String> tableQueueByPriority,
                                                                            Supplier<Boolean> isStopCreateCache,
-                                                                           int minRecordNum,
+                                                                           @SuppressWarnings("SameParameterValue") int minRecordNum,
                                                                            int maxRecordNum) {
         if (minRecordNum > maxRecordNum) {
             throw new RuntimeException("minRecordNum > maxRecordNum");
@@ -415,12 +415,13 @@ public class DatabaseService {
                     }
                     if (isStartSaveCache.get()) {
                         startCheckTime.startCheckTimeMills = System.currentTimeMillis();
-                        final double memoryUsage = SystemInfoUtil.getMemoryUsage();
-                        if (memoryUsage < 0.7) {
-                            createMemoryCache(isStopCreateCache);
-                        }
                         if (allConfigs.isEnableCuda()) {
                             createCudaCache(isStopCreateCache);
+                        } else {
+                            final double memoryUsage = SystemInfoUtil.getMemoryUsage();
+                            if (memoryUsage < 0.7) {
+                                createMemoryCache(isStopCreateCache);
+                            }
                         }
                     }
                     TimeUnit.SECONDS.sleep(1);
@@ -456,7 +457,7 @@ public class DatabaseService {
         LinkedHashMap<String, Integer> tableNeedCache = scanDatabaseAndSelectCacheTable(disks,
                 tableQueueByPriority,
                 isStopCreateCache,
-                2000,
+                100,
                 50000);
         saveTableCacheForCuda(isStopCreateCache, tableNeedCache);
         isCreatingCache.set(false);
@@ -1627,12 +1628,13 @@ public class DatabaseService {
                     }
                     final Supplier<Boolean> isStopCreateCache =
                             () -> !isSearchStopped.get() || !EventManagement.getInstance().notMainExit() || status == Constants.Enums.DatabaseStatus.MANUAL_UPDATE;
-                    final double memoryUsage = SystemInfoUtil.getMemoryUsage();
-                    if (memoryUsage < 0.7) {
-                        createMemoryCache(isStopCreateCache);
-                    }
                     if (AllConfigs.getInstance().isEnableCuda()) {
                         createCudaCache(isStopCreateCache);
+                    } else {
+                        final double memoryUsage = SystemInfoUtil.getMemoryUsage();
+                        if (memoryUsage < 0.7) {
+                            createMemoryCache(isStopCreateCache);
+                        }
                     }
                 }
             }
