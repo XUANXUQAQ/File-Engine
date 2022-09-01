@@ -73,12 +73,12 @@ public class DatabaseService {
     //tableCache 数据表缓存，在初始化时将会放入所有的key和一个空的cache，后续需要缓存直接放入空的cache中，不再创建新的cache实例
     private final ConcurrentHashMap<String, Cache> tableCache = new ConcurrentHashMap<>();
     private final AtomicInteger cacheCount = new AtomicInteger();
-    private volatile String[] searchCase;
-    private volatile boolean isIgnoreCase;
-    private volatile String searchText;
-    private volatile String[] keywords;
-    private volatile String[] keywordsLowerCase;
-    private volatile boolean[] isKeywordPath;
+    private static volatile String[] searchCase;
+    private static volatile boolean isIgnoreCase;
+    private static volatile String searchText;
+    private static volatile String[] keywords;
+    private static volatile String[] keywordsLowerCase;
+    private static volatile boolean[] isKeywordPath;
     private final AtomicBoolean isSharedMemoryCreated = new AtomicBoolean(false);
     private final ConcurrentSkipListSet<String> databaseCacheSet = new ConcurrentSkipListSet<>();
     private final AtomicInteger searchThreadCount = new AtomicInteger(0);
@@ -625,7 +625,13 @@ public class DatabaseService {
      */
     private boolean checkIsMatchedAndAddToList(String path, ConcurrentSkipListSet<String> container) {
         boolean ret = false;
-        if (PathMatchUtil.check(path, searchCase, isIgnoreCase, searchText, keywords, keywordsLowerCase, isKeywordPath)) {
+        if (PathMatchUtil.check(path,
+                searchCase,
+                isIgnoreCase,
+                searchText,
+                keywords,
+                keywordsLowerCase,
+                isKeywordPath)) {
             //字符串匹配通过
             ret = true;
             if (!tempResultsForEvent.contains(path)) {
@@ -671,7 +677,7 @@ public class DatabaseService {
                 if (shouldStopSearch.get()) {
                     return matchedResultCount;
                 }
-                matchedResultCount += tmpQueryResultsCache.parallelStream()
+                matchedResultCount += tmpQueryResultsCache.stream()
                         .filter(each -> checkIsMatchedAndAddToList(each, container))
                         .count();
             }
@@ -734,7 +740,9 @@ public class DatabaseService {
      * @param allTaskStatus 所有的任务信息
      * @param taskStatus    实时更新的任务完成信息
      */
-    private void waitForTaskAndMergeResults(LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap, Bit allTaskStatus, Bit taskStatus) {
+    private void waitForTaskAndMergeResults(LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap,
+                                            Bit allTaskStatus,
+                                            Bit taskStatus) {
         final Bit zero = new Bit(new byte[]{0});
         final Bit one = new Bit(new byte[]{1});
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
@@ -798,6 +806,7 @@ public class DatabaseService {
                 eventManagement.putEvent(new SearchDoneEvent(new ConcurrentLinkedQueue<>(tempResultsForEvent)));
                 tempResultsForEvent.clear();
                 isSearchStopped.set(true);
+                PrepareSearchInfo.isSearchPrepared.set(false);
                 if (AllConfigs.getInstance().isEnableCuda() && eventManagement.notMainExit()) {
                     CudaAccelerator.INSTANCE.stopCollectResults();
                 }
@@ -963,7 +972,7 @@ public class DatabaseService {
             if (IsDebug.isDebug()) {
                 System.out.println("从缓存中读取 " + key);
             }
-            matchedNum = cache.data.parallelStream()
+            matchedNum = cache.data.stream()
                     .filter(record -> checkIsMatchedAndAddToList(record, container))
                     .count();
         } else {
@@ -1084,23 +1093,11 @@ public class DatabaseService {
         searchCache();
         searchPriorityFolder();
         searchStartMenu();
-        //每个priority用一个线程，每一个后缀名对应一个优先级
-        //按照优先级排列，key是sql和表名的对应，value是容器
-        LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>>
-                nonFormattedSql = getNonFormattedSqlFromTableQueue();
-        Bit taskStatus = new Bit(new byte[]{0});
-        Bit allTaskStatus = new Bit(new byte[]{0});
-
-        LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap = new LinkedHashMap<>();
-        //任务队列
-        ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskMap = new ConcurrentHashMap<>();
-        //添加搜索任务到队列
-        addSearchTasks(nonFormattedSql, taskStatus, allTaskStatus, containerMap, taskMap, isReadFromSharedMemory.get());
         if (shouldStopSearch.get()) {
             isSearchStopped.set(true);
             return;
         }
-        taskMap.forEach((disk, taskQueue) -> {
+        PrepareSearchInfo.taskMap.forEach((disk, taskQueue) -> {
             CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
             for (int i = 0; i < 2; ++i) {
                 cachedThreadPoolUtil.executeTask(() -> {
@@ -1119,7 +1116,7 @@ public class DatabaseService {
                 });
             }
         });
-        waitForTaskAndMergeResults(containerMap, allTaskStatus, taskStatus);
+        waitForTaskAndMergeResults(PrepareSearchInfo.containerMap, PrepareSearchInfo.allTaskStatus, PrepareSearchInfo.taskStatus);
     }
 
     /**
@@ -1828,24 +1825,23 @@ public class DatabaseService {
         }
     }
 
-    private static void prepareSearchInfo(Supplier<String> searchTextSupplier, Supplier<String[]> searchCaseSupplier, Supplier<String[]> keywordsSupplier) {
-        DatabaseService databaseService = getInstance();
-        databaseService.searchText = searchTextSupplier.get();
-        databaseService.searchCase = searchCaseSupplier.get();
-        databaseService.isIgnoreCase = databaseService.searchCase == null ||
-                Arrays.stream(databaseService.searchCase).noneMatch(s -> s.equals(PathMatchUtil.SearchCase.CASE));
+    private static void prepareSearchKeywords(Supplier<String> searchTextSupplier, Supplier<String[]> searchCaseSupplier, Supplier<String[]> keywordsSupplier) {
+        searchText = searchTextSupplier.get();
+        searchCase = searchCaseSupplier.get();
+        isIgnoreCase = searchCase == null ||
+                Arrays.stream(searchCase).noneMatch(s -> s.equals(PathMatchUtil.SearchCase.CASE));
         String[] _keywords = keywordsSupplier.get();
-        databaseService.keywords = new String[_keywords.length];
-        databaseService.keywordsLowerCase = new String[_keywords.length];
-        databaseService.isKeywordPath = new boolean[_keywords.length];
+        keywords = new String[_keywords.length];
+        keywordsLowerCase = new String[_keywords.length];
+        isKeywordPath = new boolean[_keywords.length];
         // 对keywords进行处理
         for (int i = 0; i < _keywords.length; ++i) {
             String eachKeyword = _keywords[i];
             // 当keywords为空，初始化为默认值
             if (eachKeyword == null || eachKeyword.isEmpty()) {
-                databaseService.isKeywordPath[i] = false;
-                databaseService.keywords[i] = "";
-                databaseService.keywordsLowerCase[i] = "";
+                isKeywordPath[i] = false;
+                keywords[i] = "";
+                keywordsLowerCase[i] = "";
                 continue;
             }
             final char _firstChar = eachKeyword.charAt(0);
@@ -1859,9 +1855,9 @@ public class DatabaseService {
                 Matcher matcher = RegexUtil.getPattern("/|\\\\", 0).matcher(eachKeyword);
                 eachKeyword = matcher.replaceAll(Matcher.quoteReplacement(""));
             }
-            databaseService.isKeywordPath[i] = isPath;
-            databaseService.keywords[i] = eachKeyword;
-            databaseService.keywordsLowerCase[i] = eachKeyword.toLowerCase();
+            isKeywordPath[i] = isPath;
+            keywords[i] = eachKeyword;
+            keywordsLowerCase[i] = eachKeyword.toLowerCase();
         }
     }
 
@@ -1899,34 +1895,60 @@ public class DatabaseService {
         startMonitorDisk();
     }
 
-    static class CudaThreadRecorder {
+    private static class PrepareSearchInfo {
         static AtomicBoolean isCudaThreadRunning = new AtomicBoolean(false);
+        static AtomicBoolean isSearchPrepared = new AtomicBoolean(false);
+        static LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap = new LinkedHashMap<>();
+        //任务队列
+        static ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskMap = new ConcurrentHashMap<>();
+        static Bit taskStatus = new Bit(new byte[]{0});
+        static Bit allTaskStatus = new Bit(new byte[]{0});
+
+        private static void prepareSearchTasks() {
+            DatabaseService databaseService = DatabaseService.getInstance();
+            PrepareSearchInfo.containerMap.clear();
+            PrepareSearchInfo.taskMap.clear();
+            //每个priority用一个线程，每一个后缀名对应一个优先级
+            //按照优先级排列，key是sql和表名的对应，value是容器
+            LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>>
+                    nonFormattedSql = databaseService.getNonFormattedSqlFromTableQueue();
+            taskStatus = new Bit(new byte[]{0});
+            allTaskStatus = new Bit(new byte[]{0});
+            //添加搜索任务到队列
+            databaseService.addSearchTasks(nonFormattedSql,
+                    taskStatus,
+                    allTaskStatus,
+                    PrepareSearchInfo.containerMap,
+                    PrepareSearchInfo.taskMap,
+                    databaseService.isReadFromSharedMemory.get());
+        }
     }
 
-    @EventRegister(registerClass = PrepareCudaSearchEvent.class)
+    @EventRegister(registerClass = PrepareSearchEvent.class)
     private static void prepareCudaSearch(Event event) {
+        PrepareSearchEvent prepareSearchEvent = (PrepareSearchEvent) event;
+        prepareSearchKeywords(prepareSearchEvent.searchText, prepareSearchEvent.searchCase, prepareSearchEvent.keywords);
         if (AllConfigs.getInstance().isEnableCuda()) {
-            PrepareCudaSearchEvent prepareCudaSearchEvent = (PrepareCudaSearchEvent) event;
-            prepareSearchInfo(prepareCudaSearchEvent.searchText, prepareCudaSearchEvent.searchCase, prepareCudaSearchEvent.keywords);
             // 退出上一次搜索
             CudaAccelerator.INSTANCE.stopCollectResults();
-            while (CudaThreadRecorder.isCudaThreadRunning.get())
+            while (PrepareSearchInfo.isCudaThreadRunning.get())
                 Thread.onSpinWait();
-            DatabaseService databaseService = getInstance();
             CachedThreadPoolUtil.getInstance().executeTask(() -> {
                 // 开始进行搜索
                 CudaAccelerator.INSTANCE.resetAllResultStatus();
-                CudaThreadRecorder.isCudaThreadRunning.set(true);
-                CudaAccelerator.INSTANCE.match(databaseService.searchCase,
-                        databaseService.isIgnoreCase,
-                        databaseService.searchText,
-                        databaseService.keywords,
-                        databaseService.keywordsLowerCase,
-                        databaseService.isKeywordPath,
+                PrepareSearchInfo.isCudaThreadRunning.set(true);
+                CudaAccelerator.INSTANCE.match(searchCase,
+                        isIgnoreCase,
+                        searchText,
+                        keywords,
+                        keywordsLowerCase,
+                        isKeywordPath,
                         MAX_RESULTS);
-                CudaThreadRecorder.isCudaThreadRunning.set(false);
+                PrepareSearchInfo.isCudaThreadRunning.set(false);
             }, false);
         }
+        PrepareSearchInfo.prepareSearchTasks();
+        PrepareSearchInfo.isSearchPrepared.set(true);
     }
 
     @EventRegister(registerClass = StartSearchEvent.class)
@@ -1934,7 +1956,10 @@ public class DatabaseService {
         StartSearchEvent startSearchEvent = (StartSearchEvent) event;
         DatabaseService databaseService = getInstance();
         databaseService.tempResults.clear();
-        prepareSearchInfo(startSearchEvent.searchText, startSearchEvent.searchCase, startSearchEvent.keywords);
+        if (!PrepareSearchInfo.isSearchPrepared.get()) {
+            prepareSearchKeywords(startSearchEvent.searchText, startSearchEvent.searchCase, startSearchEvent.keywords);
+            PrepareSearchInfo.prepareSearchTasks();
+        }
         databaseService.shouldStopSearch.set(false);
         databaseService.startSearch();
         databaseService.startSearchTimeMills.set(System.currentTimeMillis());
