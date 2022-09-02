@@ -109,4 +109,7 @@ public class ConfigEntity {
 
     @SerializedName("isEnableCuda")
     private boolean isEnableCuda;
+
+    @SerializedName("cudaDeviceNum")
+    private int cudaDeviceNum;
 }

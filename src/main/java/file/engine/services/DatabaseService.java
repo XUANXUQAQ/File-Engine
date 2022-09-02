@@ -13,6 +13,7 @@ import file.engine.event.handler.impl.database.*;
 import file.engine.event.handler.impl.database.cuda.CudaAddRecordEvent;
 import file.engine.event.handler.impl.database.cuda.CudaClearCacheEvent;
 import file.engine.event.handler.impl.database.cuda.CudaRemoveRecordEvent;
+import file.engine.event.handler.impl.database.cuda.CudaSetDeviceEvent;
 import file.engine.event.handler.impl.frame.searchBar.SearchBarReadyEvent;
 import file.engine.event.handler.impl.monitor.disk.StartMonitorDiskEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
@@ -1946,6 +1947,17 @@ public class DatabaseService {
                     PrepareSearchInfo.containerMap,
                     PrepareSearchInfo.taskMap,
                     databaseService.isReadFromSharedMemory.get());
+        }
+    }
+
+    @EventRegister(registerClass = CudaSetDeviceEvent.class)
+    private static void setCudaDevice(Event event) {
+        if (AllConfigs.getInstance().isEnableCuda()) {
+            CudaSetDeviceEvent cudaSetDeviceEvent = (CudaSetDeviceEvent) event;
+            if (!CudaAccelerator.INSTANCE.setDevice(cudaSetDeviceEvent.deviceNum)) {
+                System.err.println("cuda设备id" + cudaSetDeviceEvent.deviceNum + "无效");
+                CudaAccelerator.INSTANCE.setDevice(0);
+            }
         }
     }
 

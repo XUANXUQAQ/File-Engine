@@ -47,6 +47,42 @@ std::atomic_int task_complete_count;
 
 /*
  * Class:     file_engine_dllInterface_CudaAccelerator
+ * Method:    getDevices
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_CudaAccelerator_getDevices
+(JNIEnv* env, jobject)
+{
+	int device_count = 0;
+	std::string device_string;
+	std::string ret;
+	gpuErrchk(cudaGetDeviceCount(&device_count), false, "get device number failed.");
+	for (int i = 0; i < device_count; ++i)
+	{
+		cudaDeviceProp prop;
+		gpuErrchk(cudaGetDeviceProperties(&prop, i), false, "get device info failed.");
+		device_string.append(prop.name).append(",").append(std::to_string(i)).append(";");
+	}
+	if (device_count)
+	{
+		ret = device_string.substr(0, device_string.length() - 1);
+	}
+	return env->NewStringUTF(ret.c_str());
+}
+
+/*
+ * Class:     file_engine_dllInterface_CudaAccelerator
+ * Method:    setDevice
+ * Signature: (I)Z
+ */
+JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_CudaAccelerator_setDevice
+(JNIEnv*, jobject, jint device_number_jint)
+{
+	return set_using_device(device_number_jint);
+}
+
+/*
+ * Class:     file_engine_dllInterface_CudaAccelerator
  * Method:    release
  * Signature: ()V
  */

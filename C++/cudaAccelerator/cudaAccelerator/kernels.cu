@@ -263,6 +263,17 @@ __global__ void check(const char(*str_address_ptr_array)[MAX_PATH_LENGTH],
 	output[thread_id] = 1;
 }
 
+bool set_using_device(const int device_number)
+{
+	const auto status = cudaSetDevice(device_number);
+	if (status != cudaSuccess)
+	{
+		fprintf(stderr, "set device error: %s\n", cudaGetErrorString(status));
+		return false;
+	}
+	return true;
+}
+
 void init_cuda_search_memory()
 {
 	gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_search_case), sizeof(int)), true, nullptr);
@@ -287,8 +298,6 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 {
 	const auto keywords_num = keywords.size();
 
-	// 选择第一个GPU
-	gpuErrchk(cudaSetDevice(0), true, nullptr);
 	// 复制search case
 	// 第一位为1表示有F，第二位为1表示有D，第三位为1表示有FULL，CASE由File-Engine主程序进行判断，传入参数is_ignore_case为false表示有CASE
 	int search_case_num = 0;

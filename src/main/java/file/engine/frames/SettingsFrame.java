@@ -92,6 +92,7 @@ public class SettingsFrame {
     private static final AllConfigs allConfigs = AllConfigs.getInstance();
     private static final CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
     private final HashMap<TabNameAndTitle, Component> tabComponentNameMap = new HashMap<>();
+    private final HashMap<String, Integer> cudaDeviceMap = new HashMap<>();
     private HashMap<String, Integer> suffixMap;
     private final Set<Component> excludeComponent = ConcurrentHashMap.newKeySet();
     private final LinkedHashSet<String> diskSet = new LinkedHashSet<>();
@@ -304,6 +305,7 @@ public class SettingsFrame {
     private JLabel labelHolder5;
     private JLabel labelHolder6;
     private JCheckBox checkBoxEnableCuda;
+    private JComboBox<Object> comboBoxCudaDevice;
 
 
     private static volatile SettingsFrame instance = null;
@@ -1283,7 +1285,10 @@ public class SettingsFrame {
         checkBoxEnableCuda = new JCheckBox();
         checkBoxEnableCuda.setOpaque(false);
         checkBoxEnableCuda.setText("Enable GPU acceleration");
-        tabSearchSettings.add(checkBoxEnableCuda, new GridConstraints(0, 0, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        tabSearchSettings.add(checkBoxEnableCuda, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        comboBoxCudaDevice = new JComboBox();
+        comboBoxCudaDevice.setOpaque(false);
+        tabSearchSettings.add(comboBoxCudaDevice, new GridConstraints(0, 1, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         tabSearchBarSettings = new JPanel();
         tabSearchBarSettings.setLayout(new GridLayoutManager(18, 9, new Insets(0, 0, 0, 0), -1, -1));
         tabSearchBarSettings.setBackground(new Color(-1));
@@ -2587,6 +2592,20 @@ public class SettingsFrame {
         }
     }
 
+    private void setComboBoxGui() {
+        boolean cudaAvailableOnSystem = CudaAccelerator.INSTANCE.isCudaAvailableOnSystem();
+        comboBoxCudaDevice.setEnabled(cudaAvailableOnSystem);
+        if (cudaAvailableOnSystem) {
+            String devices = CudaAccelerator.INSTANCE.getDevices();
+            String[] split = RegexUtil.semicolon.split(devices);
+            for (String each : split) {
+                String[] cudaInfo = RegexUtil.comma.split(each);
+                cudaDeviceMap.put(cudaInfo[0], Integer.valueOf(cudaInfo[1]));
+                comboBoxCudaDevice.addItem(cudaInfo[0]);
+            }
+        }
+    }
+
     /**
      * 初始化所有选择栏的显示
      */
@@ -2677,6 +2696,7 @@ public class SettingsFrame {
         setColorChooserGui();
         setTextFieldAndTextAreaGui();
         setCheckBoxGui();
+        setComboBoxGui();
         setTableGui();
         initTreeSettings();
         resizeGUI();
@@ -3288,6 +3308,8 @@ public class SettingsFrame {
         configEntity.setDisks(parseDisk());
         configEntity.setAttachExplorer(checkBoxIsAttachExplorer.isSelected());
         configEntity.setEnableCuda(checkBoxEnableCuda.isSelected());
+        String selectedCudaDevice = (String) comboBoxCudaDevice.getSelectedItem();
+        configEntity.setCudaDeviceNum(cudaDeviceMap.getOrDefault(selectedCudaDevice, 0));
         return configEntity;
     }
 

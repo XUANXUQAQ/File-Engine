@@ -60,4 +60,8 @@ public enum CudaAccelerator {
     public native void initialize();
 
     public native void release();
+
+    public native String getDevices();
+
+    public native boolean setDevice(int deviceNum);
 }

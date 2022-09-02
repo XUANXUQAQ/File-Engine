@@ -62,3 +62,4 @@ __global__ void check(const char(*str_address_ptr_array)[MAX_PATH_LENGTH],
 __device__ void convert_to_pinyin(const char* chinese_str, char* output_str);
 void free_cuda_search_memory();
 void init_cuda_search_memory();
+bool set_using_device(int device_number);
