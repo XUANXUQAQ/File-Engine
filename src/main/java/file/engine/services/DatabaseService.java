@@ -400,28 +400,37 @@ public class DatabaseService {
             final Supplier<Boolean> isStopCreateCache =
                     () -> !isSearchStopped.get() || !eventManagement.notMainExit() || status == Constants.Enums.DatabaseStatus.MANUAL_UPDATE;
             final Supplier<Boolean> isStartSaveCache =
-                    () -> isSearchStopped.get() &&
+                    () -> (isSearchStopped.get() &&
                             System.currentTimeMillis() - startCheckTime.startCheckTimeMills > checkTimeInterval &&
-                            !GetHandle.INSTANCE.isForegroundFullscreen();
+                            !GetHandle.INSTANCE.isForegroundFullscreen()) || (isDatabaseUpdated.get());
             try {
                 AllConfigs allConfigs = AllConfigs.getInstance();
+                final int createMemoryThreshold = 70;
+                final int createCudaCacheThreshold = 50;
+                final int freeCudaCacheThreshold = 70;
                 while (eventManagement.notMainExit()) {
-                    if (allConfigs.isEnableCuda()) {
-                        int cudaMemUsage = CudaAccelerator.INSTANCE.getCudaMemUsage();
-                        if (cudaMemUsage > 70) {
-                            // 防止显存占用超过70%后仍然扫描数据库
-                            startCheckTime.startCheckTimeMills = System.currentTimeMillis();
-                            eventManagement.putEvent(new CudaClearCacheEvent());
-                        }
-                    }
                     if (isStartSaveCache.get()) {
                         startCheckTime.startCheckTimeMills = System.currentTimeMillis();
                         if (allConfigs.isEnableCuda()) {
-                            createCudaCache(isStopCreateCache);
+                            final int cudaMemUsage = CudaAccelerator.INSTANCE.getCudaMemUsage();
+                            if (cudaMemUsage < createCudaCacheThreshold) {
+                                createCudaCache(isStopCreateCache);
+                            }
                         } else {
                             final double memoryUsage = SystemInfoUtil.getMemoryUsage();
-                            if (memoryUsage < 0.7) {
+                            if (memoryUsage * 100 < createMemoryThreshold) {
                                 createMemoryCache(isStopCreateCache);
+                            }
+                        }
+                    } else {
+                        if (allConfigs.isEnableCuda()) {
+                            final int cudaMemUsage = CudaAccelerator.INSTANCE.getCudaMemUsage();
+                            if (cudaMemUsage >= freeCudaCacheThreshold) {
+                                // 防止显存占用超过70%后仍然扫描数据库
+                                startCheckTime.startCheckTimeMills = System.currentTimeMillis();
+                                if (CudaAccelerator.INSTANCE.hasCache()) {
+                                    eventManagement.putEvent(new CudaClearCacheEvent());
+                                }
                             }
                         }
                     }
@@ -477,7 +486,7 @@ public class DatabaseService {
         for (Map.Entry<String, Cache> entry : tableCache.entrySet()) {
             String key = entry.getKey();
             if (tableNeedCache.containsKey(key)) {
-                if (CudaAccelerator.INSTANCE.hasCache(key)) {
+                if (CudaAccelerator.INSTANCE.isCacheExist(key)) {
                     continue;
                 }
                 String[] info = RegexUtil.comma.split(key);
@@ -1646,19 +1655,6 @@ public class DatabaseService {
                     // 搜索完成，更新isDatabaseUpdated标志，结束UpdateDatabaseEvent事件等待
                     isDatabaseUpdated.set(true);
                     isReadFromSharedMemory.set(false);
-                    if (IsDebug.isDebug()) {
-                        System.out.println("重新创建缓存");
-                    }
-                    final Supplier<Boolean> isStopCreateCache =
-                            () -> !isSearchStopped.get() || !EventManagement.getInstance().notMainExit() || status == Constants.Enums.DatabaseStatus.MANUAL_UPDATE;
-                    if (AllConfigs.getInstance().isEnableCuda()) {
-                        createCudaCache(isStopCreateCache);
-                    } else {
-                        final double memoryUsage = SystemInfoUtil.getMemoryUsage();
-                        if (memoryUsage < 0.7) {
-                            createMemoryCache(isStopCreateCache);
-                        }
-                    }
                 }
             }
         });
@@ -2230,7 +2226,7 @@ public class DatabaseService {
         }
 
         private static void addRecord(String key, String record) {
-            if (CudaAccelerator.INSTANCE.hasCache(key) && !CudaAccelerator.INSTANCE.isCacheValid(key)) {
+            if (CudaAccelerator.INSTANCE.isCacheExist(key) && !CudaAccelerator.INSTANCE.isCacheValid(key)) {
                 invalidCacheKeys.add(key);
             } else {
                 workQueue.add(() -> CudaAccelerator.INSTANCE.addOneRecordToCache(key, record));

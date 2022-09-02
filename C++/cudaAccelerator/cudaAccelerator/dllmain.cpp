@@ -264,9 +264,20 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_CudaAccelerator_isMatch
 /*
  * Class:     file_engine_dllInterface_CudaAccelerator
  * Method:    hasCache
- * Signature: (Ljava/lang/String;)Z
+ * Signature: ()Z
  */
 JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_CudaAccelerator_hasCache
+(JNIEnv*, jobject)
+{
+	return !cache_map.empty();
+}
+
+/*
+ * Class:     file_engine_dllInterface_CudaAccelerator
+ * Method:    isCacheExist
+ * Signature: (Ljava/lang/String;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_CudaAccelerator_isCacheExist
 (JNIEnv* env, jobject, jstring key_jstring)
 {
 	const auto _key = env->GetStringUTFChars(key_jstring, nullptr);

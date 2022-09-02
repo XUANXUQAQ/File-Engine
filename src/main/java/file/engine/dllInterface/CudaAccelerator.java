@@ -40,8 +40,8 @@ public enum CudaAccelerator {
     public native void stopCollectResults();
 
     private native boolean isCudaAvailable();
-
-    public native boolean hasCache(String key);
+    public native boolean hasCache();
+    public native boolean isCacheExist(String key);
 
     public native void initCache(String key, Object[] records);
 
