@@ -18,6 +18,7 @@
 #pragma comment(lib, "cudart.lib")
 
 void clear_cache(const std::string& key);
+void clear_all_cache();
 bool has_cache(const std::string& key);
 void add_one_record_to_cache(const std::string& key, const std::string& record);
 void remove_one_record_from_cache(const std::string& key, const std::string& record);
@@ -399,15 +400,7 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_CudaAccelerator_isCache
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_clearAllCache
 (JNIEnv*, jobject)
 {
-	std::vector<std::string> all_keys_vec;
-	for (auto& each : cache_map)
-	{
-		all_keys_vec.emplace_back(each.first);
-	}
-	for (auto& key : all_keys_vec)
-	{
-		clear_cache(key);
-	}
+	clear_all_cache();
 }
 
 /*
@@ -730,8 +723,22 @@ void clear_cache(const std::string& key)
 	clear_cache_flag = false;
 }
 
+void clear_all_cache()
+{
+	std::vector<std::string> all_keys_vec;
+	for (auto& [key, _] : cache_map)
+	{
+		all_keys_vec.emplace_back(key);
+	}
+	for (auto& key : all_keys_vec)
+	{
+		clear_cache(key);
+	}
+}
+
 void release_all()
 {
+	clear_all_cache();
 	free_cuda_search_memory();
 	free_stop_signal();
 }
