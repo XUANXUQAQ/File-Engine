@@ -44,10 +44,7 @@ import java.sql.Statement;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -479,7 +476,7 @@ public class DatabaseService {
         LinkedHashMap<String, Integer> tableNeedCache = scanDatabaseAndSelectCacheTable(disks,
                 tableQueueByPriority,
                 isStopCreateCache,
-                100,
+                1,
                 50000);
         saveTableCacheForCuda(isStopCreateCache, tableNeedCache, createCudaCacheThreshold);
         isCreatingCache.set(false);
@@ -1142,10 +1139,12 @@ public class DatabaseService {
             isSearchStopped.set(true);
             return;
         }
+        int availableProcessors = Runtime.getRuntime().availableProcessors();
+        int splitTask = availableProcessors / PrepareSearchInfo.taskMap.size();
+        var pool = new ForkJoinPool(availableProcessors);
         PrepareSearchInfo.taskMap.forEach((disk, taskQueue) -> {
-            CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
-            for (int i = 0; i < 2; ++i) {
-                cachedThreadPoolUtil.executeTask(() -> {
+            for (int i = 0; i < splitTask; i++) {
+                pool.submit(() -> {
                     Runnable runnable;
                     while ((runnable = taskQueue.poll()) != null) {
                         try {
@@ -1161,6 +1160,7 @@ public class DatabaseService {
                 });
             }
         });
+        pool.shutdown();
         waitForTaskAndMergeResults(PrepareSearchInfo.containerMap, PrepareSearchInfo.allTaskStatus, PrepareSearchInfo.taskStatus);
     }
 
