@@ -11,14 +11,7 @@ public enum CachedThreadPoolUtil {
     private final AtomicBoolean isShutdown = new AtomicBoolean(false);
 
     CachedThreadPoolUtil() {
-        virtualThreadPool = new ThreadPoolExecutor(
-                0,
-                1000,
-                0,
-                TimeUnit.SECONDS,
-                new SynchronousQueue<>(),
-                Thread.ofVirtual().factory()
-        );
+        virtualThreadPool = Executors.newVirtualThreadPerTaskExecutor();
         platformThreadPool = new ThreadPoolExecutor(
                 0,
                 100,
