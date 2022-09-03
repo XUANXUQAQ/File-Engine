@@ -319,8 +319,11 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_initCache
 	cache->str_data.record_num = record_count;
 	cache->str_data.remain_blank_num = MAX_RECORD_ADD_COUNT;
 	const size_t total_results_size = static_cast<size_t>(record_count) + MAX_RECORD_ADD_COUNT;
+	gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&cache->str_data.dev_total_number), sizeof(size_t)), true, nullptr);
+	gpuErrchk(cudaMemcpy(cache->str_data.dev_total_number, &total_results_size, sizeof(size_t), cudaMemcpyHostToDevice), true, nullptr);
 	gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&cache->str_data.dev_cache_str),
 		total_results_size * MAX_PATH_LENGTH), true, get_cache_info(key, cache).c_str());
+	gpuErrchk(cudaMemset(cache->str_data.dev_cache_str, 0, MAX_PATH_LENGTH), true, nullptr);
 	gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&cache->dev_output), total_results_size), true,
 		get_cache_info(key, cache).c_str());
 	cache->is_cache_valid = true;
@@ -333,7 +336,6 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_initCache
 	for (const std::string& record : records_vec)
 	{
 		const auto target_address = cache->str_data.dev_cache_str + address_offset;
-		gpuErrchk(cudaMemsetAsync(target_address, 0, MAX_PATH_LENGTH, stream), true, nullptr);
 		gpuErrchk(cudaMemcpyAsync(target_address, record.c_str(), record.length(), cudaMemcpyHostToDevice, stream),
 			true, nullptr);
 		cache->str_data.record_hash.insert(hasher(record));
@@ -499,10 +501,6 @@ void collect_results(std::atomic_uint& result_counter, const unsigned max_result
 			{
 				continue;
 			}
-#ifdef DEBUG_OUTPUT
-			const auto thread_id = std::hash<std::thread::id>{}(std::this_thread::get_id());
-			std::cout << "thread_id: " << thread_id << "collecting key: " << key.c_str() << std::endl;
-#endif
 			std::lock_guard lock_guard(val->str_data.lock);
 			//复制结果数组到host，dev_output下标对应dev_cache中的下标，若dev_output[i]中的值为1，则对应dev_cache[i]字符串匹配成功
 			const auto output_ptr = new char[val->str_data.record_num + val->str_data.remain_blank_num];
@@ -540,9 +538,6 @@ void collect_results(std::atomic_uint& result_counter, const unsigned max_result
 			}
 			val->is_output_done = 2;
 			delete[] output_ptr;
-#ifdef DEBUG_OUTPUT
-			std::cout << "thread_id: " << thread_id << "collect complete, result number: " << result_counter.load() << std::endl;
-#endif
 		}
 	} while (!all_complete && !is_stop() && result_counter.load() < max_results);
 }
@@ -644,8 +639,10 @@ void add_one_record_to_cache(const std::string& key, const std::string& record)
 					const auto target_address = cache->str_data.dev_cache_str + index;
 					//记录到下一空位内存地址target_address
 					gpuErrchk(cudaMemcpy(target_address, record.c_str(), record_len,
-						cudaMemcpyHostToDevice),
-						true, get_cache_info(key, cache).c_str());
+						cudaMemcpyHostToDevice), true, get_cache_info(key, cache).c_str());
+#ifdef DEBUG_OUTPUT
+					std::cout << "successfully add record: " << record << "    key: " << key << std::endl;
+#endif
 					++cache->str_data.record_num;
 					--cache->str_data.remain_blank_num;
 					cache->str_data.record_hash.insert(hasher(record));
@@ -704,17 +701,17 @@ void remove_one_record_from_cache(const std::string& key, const std::string& rec
 					const auto last_index = cache->str_data.record_num - 1;
 					const auto last_str_address = cache->str_data.dev_cache_str + last_index;
 					//复制最后一个结果到当前空位
-					gpuErrchk(
-						cudaMemcpy(str_address, last_str_address,
-							MAX_PATH_LENGTH, cudaMemcpyDeviceToDevice), true, get_cache_info(key, cache).c_str());
+					gpuErrchk(cudaMemcpy(str_address, last_str_address,
+						MAX_PATH_LENGTH, cudaMemcpyDeviceToDevice), true, get_cache_info(key, cache).c_str());
+					gpuErrchk(cudaMemset(last_str_address, 0, MAX_PATH_LENGTH), true, nullptr);
 					--cache->str_data.record_num;
 					++cache->str_data.remain_blank_num;
 					cache->str_data.record_hash.unsafe_erase(hasher(record));
 					break;
-				}
 			}
 		}
 	}
+}
 	catch (std::out_of_range&)
 	{
 	}
@@ -761,6 +758,7 @@ void clear_cache(const std::string& key)
 			std::lock_guard lock_guard(cache->str_data.lock);
 			gpuErrchk(cudaFree(cache->str_data.dev_cache_str), false, get_cache_info(key, cache).c_str());
 			gpuErrchk(cudaFree(cache->dev_output), false, get_cache_info(key, cache).c_str());
+			gpuErrchk(cudaFree(cache->str_data.dev_total_number), true, nullptr);
 		}
 		delete cache;
 		cache_map.unsafe_erase(key);

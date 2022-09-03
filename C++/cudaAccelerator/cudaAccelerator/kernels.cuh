@@ -49,6 +49,7 @@ __device__ bool not_matched(const char* path,
 
 
 __global__ void check(const char(*str_address_ptr_array)[MAX_PATH_LENGTH],
+	const size_t* total_num,
 	const int* search_case,
 	const bool* is_ignore_case,
 	char* search_text,
@@ -63,3 +64,4 @@ __device__ void convert_to_pinyin(const char* chinese_str, char* output_str);
 void free_cuda_search_memory();
 void init_cuda_search_memory();
 bool set_using_device(int device_number);
+size_t find_table_sizeof2(size_t target);

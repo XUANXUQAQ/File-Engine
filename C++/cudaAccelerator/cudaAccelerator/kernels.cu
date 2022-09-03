@@ -218,6 +218,7 @@ __device__ bool not_matched(const char* path,
 }
 
 __global__ void check(const char(*str_address_ptr_array)[MAX_PATH_LENGTH],
+	const size_t* total_num,
 	const int* search_case,
 	const bool* is_ignore_case,
 	char* search_text,
@@ -229,6 +230,10 @@ __global__ void check(const char(*str_address_ptr_array)[MAX_PATH_LENGTH],
 	const bool* is_stop_collect_var)
 {
 	const size_t thread_id = GET_TID();
+	if (thread_id >= *total_num)
+	{
+		return;
+	}
 	const char* path = reinterpret_cast<const char*>(str_address_ptr_array + thread_id);
 	if (*is_stop_collect_var)
 	{
@@ -351,10 +356,12 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 			continue;
 		}
 		int block_num, thread_num;
-		if (cache->str_data.record_num > MAX_THREAD_PER_BLOCK)
+		const auto total = cache->str_data.record_num.load() + cache->str_data.remain_blank_num.load();
+		const auto max_pow_of_2 = find_table_sizeof2(total);
+		if (cache->str_data.record_num.load() > MAX_THREAD_PER_BLOCK)
 		{
 			thread_num = MAX_THREAD_PER_BLOCK;
-			block_num = static_cast<int>(cache->str_data.record_num / thread_num);
+			block_num = static_cast<int>(max_pow_of_2 / thread_num);
 		}
 		else
 		{
@@ -366,6 +373,7 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 
 		check << <block_num, thread_num, 0, streams[count] >> >
 			(cache->str_data.dev_cache_str,
+				cache->str_data.dev_total_number,
 				dev_search_case,
 				dev_is_ignore_case,
 				dev_search_text,
@@ -395,6 +403,17 @@ void free_cuda_search_memory()
 	cudaFree(dev_is_keyword_path);
 	cudaFree(dev_is_ignore_case);
 	cudaFree(dev_keywords_length);
+}
+
+size_t find_table_sizeof2(const size_t target)
+{
+	size_t temp = target - 1;
+	temp |= temp >> 1;
+	temp |= temp >> 2;
+	temp |= temp >> 4;
+	temp |= temp >> 8;
+	temp |= temp >> 16;
+	return temp + 1;
 }
 
 void CUDART_CB set_match_done_flag_callback(cudaStream_t, cudaError_t, void* data)

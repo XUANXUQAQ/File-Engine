@@ -16,6 +16,7 @@ typedef struct cache_data
 	char(*dev_cache_str)[MAX_PATH_LENGTH] = nullptr;
 	std::atomic_uint64_t remain_blank_num;
 	std::atomic_uint64_t record_num;
+	size_t* dev_total_number = nullptr;
 	std::mutex lock;
 	concurrency::concurrent_unordered_set<size_t> record_hash;
 } cache_data;
