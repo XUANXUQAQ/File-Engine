@@ -654,10 +654,9 @@ public class DatabaseService {
                 isKeywordPath)) {
             //字符串匹配通过
             ret = true;
-            if (!tempResultsForEvent.contains(path)) {
+            if (tempResultsForEvent.add(path)) {
                 if (container == null) {
                     tempResults.add(path);
-                    tempResultsForEvent.add(path);
                     tempResultsRecordCounter.incrementAndGet();
                     if (tempResultsRecordCounter.get() > MAX_RESULTS) {
                         stopSearch();
