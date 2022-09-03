@@ -216,43 +216,6 @@ public class DatabaseService {
     }
 
     /**
-     * 读取磁盘监控信息并发送删除sql线程
-     */
-    private void deleteRecordsFromDatabaseThread() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            String tmp;
-            int fileCount = 0;
-            LinkedHashSet<String> deletePaths = new LinkedHashSet<>();
-            EventManagement eventManagement = EventManagement.getInstance();
-            try {
-                while (eventManagement.notMainExit()) {
-                    if (status == Constants.Enums.DatabaseStatus.NORMAL) {
-                        while ((tmp = FileMonitor.INSTANCE.pop_del_file()) != null) {
-                            fileCount++;
-                            deletePaths.add(tmp);
-                            if (fileCount > 3000) {
-                                break;
-                            }
-                        }
-                    }
-                    if (status == Constants.Enums.DatabaseStatus.NORMAL && !deletePaths.isEmpty()) {
-                        if (!isReadFromSharedMemory.get()) {
-                            for (String deletePath : deletePaths) {
-                                removeFileFromDatabase(deletePath);
-                            }
-                        }
-                        deletePaths.clear();
-                        fileCount = 0;
-                    }
-                    TimeUnit.MILLISECONDS.sleep(10);
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        });
-    }
-
-    /**
      * 开始监控磁盘文件变化
      */
     private static void startMonitorDisk() {
@@ -563,40 +526,37 @@ public class DatabaseService {
         }
     }
 
-    /**
-     * 读取磁盘监控信息并发送添加sql线程
-     */
-    private void addRecordsToDatabaseThread() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            //检测文件添加线程
-            String tmp;
-            int fileCount = 0;
-            LinkedHashSet<String> addPaths = new LinkedHashSet<>();
-            EventManagement eventManagement = EventManagement.getInstance();
+    private void syncFileChangesThread() {
+        CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+        EventManagement eventManagement = EventManagement.getInstance();
+        var fileChanges = new SynchronousQueue<Runnable>();
+        cachedThreadPoolUtil.executeTask(() -> {
             try {
                 while (eventManagement.notMainExit()) {
-                    if (status == Constants.Enums.DatabaseStatus.NORMAL) {
-                        while ((tmp = FileMonitor.INSTANCE.pop_add_file()) != null) {
-                            fileCount++;
-                            addPaths.add(tmp);
-                            if (fileCount > 3000) {
-                                break;
-                            }
-                        }
+                    String addFile = FileMonitor.INSTANCE.pop_add_file();
+                    String deleteFile = FileMonitor.INSTANCE.pop_del_file();
+                    if (addFile == null && deleteFile == null) {
+                        TimeUnit.MILLISECONDS.sleep(1);
+                        continue;
                     }
-                    if (status == Constants.Enums.DatabaseStatus.NORMAL && !addPaths.isEmpty()) {
-                        if (!isReadFromSharedMemory.get()) {
-                            for (String addPath : addPaths) {
-                                addFileToDatabase(addPath);
-                            }
-                        }
-                        addPaths.clear();
-                        fileCount = 0;
-                    }
-                    TimeUnit.MILLISECONDS.sleep(10);
+                    fileChanges.put(() -> {
+                        addFileToDatabase(addFile);
+                        removeFileFromDatabase(deleteFile);
+                    });
+                }
+                fileChanges.put(() -> {
+                });
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        cachedThreadPoolUtil.executeTask(() -> {
+            try {
+                while (eventManagement.notMainExit()) {
+                    fileChanges.take().run();
                 }
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                throw new RuntimeException(e);
             }
         });
     }
@@ -651,9 +611,10 @@ public class DatabaseService {
                 isKeywordPath)) {
             //字符串匹配通过
             ret = true;
-            if (tempResultsForEvent.add(path)) {
+            if (!tempResultsForEvent.contains(path)) {
                 if (container == null) {
                     tempResults.add(path);
+                    tempResultsForEvent.add(path);
                     tempResultsRecordCounter.incrementAndGet();
                     if (tempResultsRecordCounter.get() > MAX_RESULTS) {
                         stopSearch();
@@ -1232,6 +1193,9 @@ public class DatabaseService {
      * @param path 文件路径
      */
     private void removeFileFromDatabase(String path) {
+        if (path == null || path.isEmpty()) {
+            return;
+        }
         int asciiSum = getAscIISum(getFileName(path));
         if (isRemoveFileInDatabase(path)) {
             addDeleteSqlCommandByAscii(asciiSum, path);
@@ -1312,6 +1276,9 @@ public class DatabaseService {
     }
 
     private void addFileToDatabase(String path) {
+        if (path == null || path.isEmpty()) {
+            return;
+        }
         int asciiSum = getAscIISum(getFileName(path));
         int priorityBySuffix = getPriorityBySuffix(getSuffixByPath(path));
         addAddSqlCommandByAscii(asciiSum, path, priorityBySuffix);
@@ -2016,8 +1983,7 @@ public class DatabaseService {
         DatabaseService databaseService = getInstance();
         databaseService.initDatabaseCacheNum();
         databaseService.initPriority();
-        databaseService.addRecordsToDatabaseThread();
-        databaseService.deleteRecordsFromDatabaseThread();
+        databaseService.syncFileChangesThread();
         databaseService.checkTimeAndSendExecuteSqlSignalThread();
         databaseService.executeSqlCommandsThread();
         databaseService.initTableMap();
