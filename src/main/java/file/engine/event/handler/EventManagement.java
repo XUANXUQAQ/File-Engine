@@ -73,11 +73,11 @@ public class EventManagement {
      * 等待任务
      *
      * @param event 任务实例
+     * @param timeout 超时时间
      * @return true如果任务执行失败， false如果执行正常完成
      */
-    public boolean waitForEvent(Event event) {
+    public boolean waitForEvent(Event event, int timeout) {
         try {
-            final long timeout = 20_000; // 20s
             long startTime = System.currentTimeMillis();
             while (!event.isFailed() && !event.isFinished()) {
                 if (System.currentTimeMillis() - startTime > timeout) {
@@ -90,6 +90,15 @@ public class EventManagement {
             e.printStackTrace();
         }
         return event.isFailed();
+    }
+
+    /**
+     * 等待任务
+     * @param event 任务实例
+     * @return true如果任务执行失败， false如果执行正常完成
+     */
+    public boolean waitForEvent(Event event) {
+        return waitForEvent(event, 20_000);
     }
 
     /**

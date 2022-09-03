@@ -751,6 +751,7 @@ void clear_cache(const std::string& key)
 		static std::mutex clear_cache_lock;
 		std::lock_guard clear_cache_lock_guard(clear_cache_lock);
 		const auto cache = cache_map.at(key);
+		cache->is_cache_valid = false;
 		{
 			//对当前cache加锁
 			std::lock_guard lock_guard(cache->str_data.lock);

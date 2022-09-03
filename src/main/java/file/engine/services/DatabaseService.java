@@ -127,7 +127,7 @@ public class DatabaseService {
         CudaClearCacheEvent cudaClearCacheEvent = new CudaClearCacheEvent();
         EventManagement eventManagement = EventManagement.getInstance();
         eventManagement.putEvent(cudaClearCacheEvent);
-        eventManagement.waitForEvent(cudaClearCacheEvent);
+        eventManagement.waitForEvent(cudaClearCacheEvent, 60_000);
         tableCache.values().forEach(each -> {
             each.isCached.set(false);
             each.data = null;
@@ -398,7 +398,7 @@ public class DatabaseService {
                 long startCheckTimeMills = System.currentTimeMillis() - checkTimeInterval + _startupLatency;
             };
             final Supplier<Boolean> isStopCreateCache =
-                    () -> !isSearchStopped.get() || !eventManagement.notMainExit() || status == Constants.Enums.DatabaseStatus.MANUAL_UPDATE;
+                    () -> !isSearchStopped.get() || !eventManagement.notMainExit() || status != Constants.Enums.DatabaseStatus.NORMAL;
             final Supplier<Boolean> isStartSaveCache =
                     () -> (isSearchStopped.get() &&
                             System.currentTimeMillis() - startCheckTime.startCheckTimeMills > checkTimeInterval &&
@@ -414,7 +414,7 @@ public class DatabaseService {
                         if (allConfigs.isEnableCuda()) {
                             final int cudaMemUsage = CudaAccelerator.INSTANCE.getCudaMemUsage();
                             if (cudaMemUsage < createCudaCacheThreshold) {
-                                createCudaCache(isStopCreateCache);
+                                createCudaCache(isStopCreateCache, createCudaCacheThreshold);
                             }
                         } else {
                             final double memoryUsage = SystemInfoUtil.getMemoryUsage();
@@ -429,7 +429,9 @@ public class DatabaseService {
                                 // 防止显存占用超过70%后仍然扫描数据库
                                 startCheckTime.startCheckTimeMills = System.currentTimeMillis();
                                 if (CudaAccelerator.INSTANCE.hasCache()) {
-                                    eventManagement.putEvent(new CudaClearCacheEvent());
+                                    CudaClearCacheEvent cudaClearCacheEvent = new CudaClearCacheEvent();
+                                    eventManagement.putEvent(cudaClearCacheEvent);
+                                    eventManagement.waitForEvent(cudaClearCacheEvent);
                                 }
                             }
                         }
@@ -444,7 +446,7 @@ public class DatabaseService {
         });
     }
 
-    private synchronized void createMemoryCache(Supplier<Boolean> isStopCreateCache) {
+    private void createMemoryCache(Supplier<Boolean> isStopCreateCache) {
         System.out.println("添加缓存");
         String availableDisks = AllConfigs.getInstance().getAvailableDisks();
         ConcurrentLinkedQueue<String> tableQueueByPriority = initTableQueueByPriority();
@@ -460,7 +462,8 @@ public class DatabaseService {
         isCreatingCache.set(false);
     }
 
-    private synchronized void createCudaCache(Supplier<Boolean> isStopCreateCache) {
+    @SuppressWarnings("SameParameterValue")
+    private void createCudaCache(Supplier<Boolean> isStopCreateCache, int createCudaCacheThreshold) {
         System.out.println("添加cuda缓存");
         String availableDisks = AllConfigs.getInstance().getAvailableDisks();
         ConcurrentLinkedQueue<String> tableQueueByPriority = initTableQueueByPriority();
@@ -471,7 +474,7 @@ public class DatabaseService {
                 isStopCreateCache,
                 100,
                 50000);
-        saveTableCacheForCuda(isStopCreateCache, tableNeedCache);
+        saveTableCacheForCuda(isStopCreateCache, tableNeedCache, createCudaCacheThreshold);
         isCreatingCache.set(false);
     }
 
@@ -481,7 +484,7 @@ public class DatabaseService {
      * @param isStopCreateCache 是否停止
      * @param tableNeedCache    需要缓存的表
      */
-    private void saveTableCacheForCuda(Supplier<Boolean> isStopCreateCache, LinkedHashMap<String, Integer> tableNeedCache) {
+    private void saveTableCacheForCuda(Supplier<Boolean> isStopCreateCache, LinkedHashMap<String, Integer> tableNeedCache, int createCudaCacheThreshold) {
         out:
         for (Map.Entry<String, Cache> entry : tableCache.entrySet()) {
             String key = entry.getKey();
@@ -492,7 +495,7 @@ public class DatabaseService {
                 String[] info = RegexUtil.comma.split(key);
                 try (Statement stmt = SQLiteUtil.getStatement(info[0]);
                      ResultSet resultSet = stmt.executeQuery("SELECT PATH FROM " + info[1] + " " + "WHERE PRIORITY=" + info[2])) {
-                    ArrayList<String> strings = new ArrayList<>();
+                    LinkedList<String> strings = new LinkedList<>();
                     while (resultSet.next()) {
                         if (isStopCreateCache.get()) {
                             break out;
@@ -503,7 +506,7 @@ public class DatabaseService {
                     if (isStopCreateCache.get()) {
                         break;
                     }
-                    if (CudaAccelerator.INSTANCE.getCudaMemUsage() > 50) {
+                    if (CudaAccelerator.INSTANCE.getCudaMemUsage() > createCudaCacheThreshold) {
                         break;
                     }
                 } catch (SQLException e) {
