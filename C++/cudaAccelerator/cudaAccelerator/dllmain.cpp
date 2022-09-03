@@ -151,6 +151,10 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_match
 (JNIEnv* env, jobject, jobjectArray search_case, jboolean is_ignore_case, jstring search_text,
 	jobjectArray keywords, jobjectArray keywords_lower, jbooleanArray is_keyword_path, jint max_results)
 {
+	if (cache_map.empty())
+	{
+		return;
+	}
 	//生成搜索条件 search_case_vec
 	std::vector<std::string> search_case_vec;
 	if (search_case != nullptr)

@@ -394,15 +394,16 @@ public class DatabaseService {
                 startupLatency = 0;
             }
             final int _startupLatency = startupLatency;
-            var startCheckTime = new Object() {
+            var startCheckInfo = new Object() {
                 long startCheckTimeMills = System.currentTimeMillis() - checkTimeInterval + _startupLatency;
+                boolean isCreatedOnDatabaseUpdate = false;
             };
             final Supplier<Boolean> isStopCreateCache =
                     () -> !isSearchStopped.get() || !eventManagement.notMainExit() || status != Constants.Enums.DatabaseStatus.NORMAL;
             final Supplier<Boolean> isStartSaveCache =
                     () -> (isSearchStopped.get() &&
-                            System.currentTimeMillis() - startCheckTime.startCheckTimeMills > checkTimeInterval && !GetHandle.INSTANCE.isForegroundFullscreen()) ||
-                            (isDatabaseUpdated.get() && System.currentTimeMillis() - startCheckTime.startCheckTimeMills > checkTimeInterval);
+                            System.currentTimeMillis() - startCheckInfo.startCheckTimeMills > checkTimeInterval && !GetHandle.INSTANCE.isForegroundFullscreen()) ||
+                            (isDatabaseUpdated.get() && !startCheckInfo.isCreatedOnDatabaseUpdate);
             try {
                 AllConfigs allConfigs = AllConfigs.getInstance();
                 final int createMemoryThreshold = 70;
@@ -410,7 +411,10 @@ public class DatabaseService {
                 final int freeCudaCacheThreshold = 70;
                 while (eventManagement.notMainExit()) {
                     if (isStartSaveCache.get()) {
-                        startCheckTime.startCheckTimeMills = System.currentTimeMillis();
+                        if (isDatabaseUpdated.get()) {
+                            startCheckInfo.isCreatedOnDatabaseUpdate = true;
+                        }
+                        startCheckInfo.startCheckTimeMills = System.currentTimeMillis();
                         if (allConfigs.isEnableCuda()) {
                             final int cudaMemUsage = CudaAccelerator.INSTANCE.getCudaMemUsage();
                             if (cudaMemUsage < createCudaCacheThreshold) {
@@ -423,11 +427,14 @@ public class DatabaseService {
                             }
                         }
                     } else {
+                        if (!isDatabaseUpdated.get()) {
+                            startCheckInfo.isCreatedOnDatabaseUpdate = false;
+                        }
                         if (allConfigs.isEnableCuda()) {
                             final int cudaMemUsage = CudaAccelerator.INSTANCE.getCudaMemUsage();
                             if (cudaMemUsage >= freeCudaCacheThreshold) {
                                 // 防止显存占用超过70%后仍然扫描数据库
-                                startCheckTime.startCheckTimeMills = System.currentTimeMillis();
+                                startCheckInfo.startCheckTimeMills = System.currentTimeMillis();
                                 if (CudaAccelerator.INSTANCE.hasCache()) {
                                     CudaClearCacheEvent cudaClearCacheEvent = new CudaClearCacheEvent();
                                     eventManagement.putEvent(cudaClearCacheEvent);
