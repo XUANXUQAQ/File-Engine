@@ -401,8 +401,8 @@ public class DatabaseService {
                     () -> !isSearchStopped.get() || !eventManagement.notMainExit() || status != Constants.Enums.DatabaseStatus.NORMAL;
             final Supplier<Boolean> isStartSaveCache =
                     () -> (isSearchStopped.get() &&
-                            System.currentTimeMillis() - startCheckTime.startCheckTimeMills > checkTimeInterval &&
-                            !GetHandle.INSTANCE.isForegroundFullscreen()) || (isDatabaseUpdated.get());
+                            System.currentTimeMillis() - startCheckTime.startCheckTimeMills > checkTimeInterval && !GetHandle.INSTANCE.isForegroundFullscreen()) ||
+                            (isDatabaseUpdated.get() && System.currentTimeMillis() - startCheckTime.startCheckTimeMills > checkTimeInterval);
             try {
                 AllConfigs allConfigs = AllConfigs.getInstance();
                 final int createMemoryThreshold = 70;
