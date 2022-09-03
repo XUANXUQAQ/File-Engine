@@ -761,73 +761,71 @@ public class DatabaseService {
                                             Bit taskStatus) {
         final Bit zero = new Bit(new byte[]{0});
         final Bit one = new Bit(new byte[]{1});
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            int failedRetryTimes = 0;
-            try {
-                while (!taskStatus.equals(allTaskStatus) && !shouldStopSearch.get()) {
-                    //线程状态的记录从第二个位开始，所以初始值为1 0
-                    Bit start = new Bit(new byte[]{1, 0});
-                    //循环次数，也是下方与运算结束后需要向右偏移的位数
-                    int loopCount = 1;
-                    //由于任务的耗时不同，如果阻塞时间过长，则跳过该任务，在下次循环中重新拿取结果
-                    long waitTime = 0;
-                    ConcurrentSkipListSet<String> results;
-                    while (start.length() <= allTaskStatus.length() || Bit.or(taskStatus.getBytes(), zero.getBytes()).equals(zero)) {
-                        if (shouldStopSearch.get()) {
-                            //用户重新输入，结束当前任务
-                            break;
-                        }
-                        //当线程完成，taskStatus中的位会被设置为1
-                        //这时，将taskStatus和start做与运算，然后移到第一位，如果为1，则线程已完成搜索
-                        Bit and = Bit.and(taskStatus.getBytes(), start.getBytes());
-                        boolean isFailed = System.currentTimeMillis() - waitTime > 300 && waitTime != 0;
-                        if ((and.shiftRight(loopCount)).equals(one) || isFailed) {
-                            // 阻塞时间过长则跳过
-                            waitTime = 0;
-                            results = containerMap.get(start.toString());
-                            if (results != null) {
-                                for (String result : results) {
-                                    if (tempResultsForEvent.add(result)) {
-                                        tempResults.add(result);
-                                        tempResultsRecordCounter.incrementAndGet();
-                                        if (tempResultsRecordCounter.get() > MAX_RESULTS) {
-                                            stopSearch();
-                                            break;
-                                        }
+        int failedRetryTimes = 0;
+        try {
+            while (!taskStatus.equals(allTaskStatus) && !shouldStopSearch.get()) {
+                //线程状态的记录从第二个位开始，所以初始值为1 0
+                Bit start = new Bit(new byte[]{1, 0});
+                //循环次数，也是下方与运算结束后需要向右偏移的位数
+                int loopCount = 1;
+                //由于任务的耗时不同，如果阻塞时间过长，则跳过该任务，在下次循环中重新拿取结果
+                long waitTime = 0;
+                ConcurrentSkipListSet<String> results;
+                while (start.length() <= allTaskStatus.length() || Bit.or(taskStatus.getBytes(), zero.getBytes()).equals(zero)) {
+                    if (shouldStopSearch.get()) {
+                        //用户重新输入，结束当前任务
+                        break;
+                    }
+                    //当线程完成，taskStatus中的位会被设置为1
+                    //这时，将taskStatus和start做与运算，然后移到第一位，如果为1，则线程已完成搜索
+                    Bit and = Bit.and(taskStatus.getBytes(), start.getBytes());
+                    boolean isFailed = System.currentTimeMillis() - waitTime > 300 && waitTime != 0;
+                    if ((and.shiftRight(loopCount)).equals(one) || isFailed) {
+                        // 阻塞时间过长则跳过
+                        waitTime = 0;
+                        results = containerMap.get(start.toString());
+                        if (results != null) {
+                            for (String result : results) {
+                                if (tempResultsForEvent.add(result)) {
+                                    tempResults.add(result);
+                                    tempResultsRecordCounter.incrementAndGet();
+                                    if (tempResultsRecordCounter.get() > MAX_RESULTS) {
+                                        stopSearch();
+                                        break;
                                     }
                                 }
-                                if (!isFailed || failedRetryTimes > 5) {
-                                    failedRetryTimes = 0;
-                                    results.clear();
-                                    //将start左移，代表当前任务结束，继续拿下一个任务的结果
-                                    start.shiftLeft(1);
-                                    loopCount++;
-                                } else {
-                                    ++failedRetryTimes;
-                                }
                             }
-                        } else {
-                            if (waitTime == 0) {
-                                waitTime = System.currentTimeMillis();
+                            if (!isFailed || failedRetryTimes > 5) {
+                                failedRetryTimes = 0;
+                                results.clear();
+                                //将start左移，代表当前任务结束，继续拿下一个任务的结果
+                                start.shiftLeft(1);
+                                loopCount++;
+                            } else {
+                                ++failedRetryTimes;
                             }
                         }
-                        TimeUnit.MILLISECONDS.sleep(1);
+                    } else {
+                        if (waitTime == 0) {
+                            waitTime = System.currentTimeMillis();
+                        }
                     }
-                    TimeUnit.MILLISECONDS.sleep(10);
+                    TimeUnit.MILLISECONDS.sleep(1);
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                EventManagement eventManagement = EventManagement.getInstance();
-                eventManagement.putEvent(new SearchDoneEvent(new ConcurrentLinkedQueue<>(tempResultsForEvent)));
-                tempResultsForEvent.clear();
-                isSearchStopped.set(true);
-                PrepareSearchInfo.isSearchPrepared.set(false);
-                if (AllConfigs.getInstance().isEnableCuda() && eventManagement.notMainExit()) {
-                    CudaAccelerator.INSTANCE.stopCollectResults();
-                }
+                TimeUnit.MILLISECONDS.sleep(10);
             }
-        }, false);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            EventManagement eventManagement = EventManagement.getInstance();
+            eventManagement.putEvent(new SearchDoneEvent(new ConcurrentLinkedQueue<>(tempResultsForEvent)));
+            tempResultsForEvent.clear();
+            isSearchStopped.set(true);
+            PrepareSearchInfo.isSearchPrepared.set(false);
+            if (AllConfigs.getInstance().isEnableCuda() && eventManagement.notMainExit()) {
+                CudaAccelerator.INSTANCE.stopCollectResults();
+            }
+        }
     }
 
     /**
@@ -1139,28 +1137,20 @@ public class DatabaseService {
             isSearchStopped.set(true);
             return;
         }
-        int availableProcessors = Runtime.getRuntime().availableProcessors();
-        int splitTask = availableProcessors / PrepareSearchInfo.taskMap.size();
-        var pool = new ForkJoinPool(availableProcessors);
-        PrepareSearchInfo.taskMap.forEach((disk, taskQueue) -> {
-            for (int i = 0; i < splitTask; i++) {
-                pool.submit(() -> {
-                    Runnable runnable;
-                    while ((runnable = taskQueue.poll()) != null) {
-                        try {
-                            searchThreadCount.incrementAndGet();
-                            runnable.run();
-                            if (shouldStopSearch.get()) {
-                                break;
-                            }
-                        } finally {
-                            searchThreadCount.decrementAndGet();
-                        }
+        PrepareSearchInfo.taskMap.forEach((disk, taskQueue) -> CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            Runnable runnable;
+            while ((runnable = taskQueue.poll()) != null) {
+                try {
+                    searchThreadCount.incrementAndGet();
+                    runnable.run();
+                    if (shouldStopSearch.get()) {
+                        break;
                     }
-                });
+                } finally {
+                    searchThreadCount.decrementAndGet();
+                }
             }
-        });
-        pool.shutdown();
+        }));
         waitForTaskAndMergeResults(PrepareSearchInfo.containerMap, PrepareSearchInfo.allTaskStatus, PrepareSearchInfo.taskStatus);
     }
 
@@ -2010,7 +2000,7 @@ public class DatabaseService {
             PrepareSearchInfo.prepareSearchTasks();
         }
         databaseService.shouldStopSearch.set(false);
-        databaseService.startSearch();
+        CachedThreadPoolUtil.getInstance().executeTask(databaseService::startSearch);
         databaseService.startSearchTimeMills.set(System.currentTimeMillis());
     }
 
