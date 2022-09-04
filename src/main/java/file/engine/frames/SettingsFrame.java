@@ -2596,12 +2596,23 @@ public class SettingsFrame {
         boolean cudaAvailableOnSystem = CudaAccelerator.INSTANCE.isCudaAvailableOnSystem();
         comboBoxCudaDevice.setEnabled(cudaAvailableOnSystem);
         if (cudaAvailableOnSystem) {
+            var deviceMap = new HashMap<Integer, String>();
             String devices = CudaAccelerator.INSTANCE.getDevices();
             String[] split = RegexUtil.semicolon.split(devices);
             for (String each : split) {
                 String[] cudaInfo = RegexUtil.comma.split(each);
-                cudaDeviceMap.put(cudaInfo[0], Integer.valueOf(cudaInfo[1]));
+                Integer deviceNum = Integer.valueOf(cudaInfo[1]);
+                String deviceName = cudaInfo[0];
+                cudaDeviceMap.put(deviceName, deviceNum);
+                deviceMap.put(deviceNum, deviceName);
                 comboBoxCudaDevice.addItem(cudaInfo[0]);
+            }
+            int cudaDeviceNum = allConfigs.getCudaDeviceNum();
+            String item = deviceMap.get(cudaDeviceNum);
+            if (item == null) {
+                comboBoxCudaDevice.setSelectedIndex(0);
+            } else {
+                comboBoxCudaDevice.setSelectedItem(item);
             }
         }
     }

@@ -93,6 +93,10 @@ public class AllConfigs {
         return Constants.Enums.SwingThemes.MaterialLighter;
     }
 
+    public int getCudaDeviceNum() {
+        return configEntity.getCudaDeviceNum();
+    }
+
     /**
      * 是否在将文件拖出时提示已创建快捷方式
      *
