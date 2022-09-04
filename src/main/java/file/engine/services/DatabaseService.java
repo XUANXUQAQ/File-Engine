@@ -2105,6 +2105,9 @@ public class DatabaseService {
         if (databaseService.isReadFromSharedMemory.get()) {
             return;
         }
+        if ("dirPriority".equals(delete.suffix) || "defaultPriority".equals(delete.suffix)) {
+            return;
+        }
         databaseService.addToCommandQueue(new SQLWithTaskId(String.format("DELETE FROM priority where SUFFIX=\"%s\"", delete.suffix), SqlTaskIds.UPDATE_SUFFIX, "cache"));
     }
 

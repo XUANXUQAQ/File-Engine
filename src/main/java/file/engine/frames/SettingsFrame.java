@@ -2300,7 +2300,7 @@ public class SettingsFrame {
     private void addButtonDeleteSuffixListener() {
         buttonDeleteSuffix.addActionListener(e -> {
             String current = getCurrentSelectedTableVal();
-            if (current.isEmpty() || "defaultPriority".equals(current)) {
+            if (current.isEmpty() || "defaultPriority".equals(current) || "dirPriority".equals(current)) {
                 return;
             }
             int ret = JOptionPane.showConfirmDialog(frame, TRANSLATE_SERVICE.getTranslation("Do you sure want to delete this suffix") + "  --  " + current + "?");
