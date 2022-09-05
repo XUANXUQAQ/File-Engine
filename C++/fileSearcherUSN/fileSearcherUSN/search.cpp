@@ -10,9 +10,6 @@
 #include <atomic>
 #include <mutex>
 #include "constants.h"
-#include <boost/asio/thread_pool.hpp>
-#include <boost/asio/post.hpp>
-#include <boost/asio/packaged_task.hpp>
 
 CONCURRENT_MAP<HANDLE, LPVOID> shared_memory_map;
 static std::atomic_int* complete_task_count = new std::atomic_int(0);
@@ -46,13 +43,6 @@ void volume::init_volume()
 		)
 	{
 		using namespace std;
-		static SYSTEM_INFO sys_info;
-		GetSystemInfo(&sys_info);
-		static const auto thread_num = sys_info.dwNumberOfProcessors;
-		static boost::asio::thread_pool fixed_thread_pool(thread_num);
-
-		const auto map_size = frnPfrnNameMap.size();
-		const auto split_size = map_size / thread_num;
 #ifdef TEST
 		cout << "starting " << thread_num << " threads to collect results" << endl;
 		cout << "fileMap size: " << map_size << endl;
@@ -70,51 +60,19 @@ void volume::init_volume()
 				collect_result_to_result_map(ascii, full_path);
 			}
 		};
-		auto search_internal = [split_size, this, _collect_internal](const DWORD pre_loop_count,
-			const bool is_loop_to_end)
+		auto search_internal = [this, &_collect_internal]
 		{
 			auto start_iter = frnPfrnNameMap.begin();
-			for (size_t i = 0; i < split_size * pre_loop_count; ++i)
+			auto end_iter = frnPfrnNameMap.end();
+			while (start_iter != end_iter)
 			{
+				_collect_internal(start_iter);
 				++start_iter;
-			}
-			if (is_loop_to_end)
-			{
-				auto end_iter = frnPfrnNameMap.end();
-				while (start_iter != end_iter)
-				{
-					_collect_internal(start_iter);
-					++start_iter;
-				}
-			}
-			else
-			{
-				for (size_t i = 0; i < split_size; ++i)
-				{
-					_collect_internal(start_iter);
-					++start_iter;
-				}
 			}
 		};
 		try
 		{
-			atomic_uint task_count(0);
-			for (DWORD i = 0; i < thread_num - 1; ++i)
-			{
-				post(fixed_thread_pool, [&]
-					{
-						search_internal(i, false);
-						++task_count;
-					});
-			}
-			post(fixed_thread_pool, [&]
-				{
-					search_internal(thread_num - 1, true);
-					++task_count;
-				});
-			while (task_count.load() != thread_num)
-				this_thread::yield();
-
+			search_internal();
 			cout << "collect complete." << endl;
 			thread save_results_to_db_thread([this]
 				{
