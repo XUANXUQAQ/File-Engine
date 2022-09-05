@@ -28,6 +28,7 @@ bool is_record_repeat(const std::string& record, const list_cache* cache);
 void release_all();
 void init_threads();
 int is_dir_or_file(const char* path);
+std::wstring string2wstring(const std::string& str);
 
 //lock
 inline void wait_for_clear_cache();
@@ -517,20 +518,20 @@ void collect_results(std::atomic_uint& result_counter, const unsigned max_result
 				//dev_cache[i]字符串匹配成功
 				if (static_cast<bool>(output_ptr[i]))
 				{
-					auto _collect_func = [&result_counter](const std::string& _key, char matched_record_str[MAX_PATH_LENGTH])
+					auto _collect_func = [&result_counter](const std::string& _key, char _matched_record_str[MAX_PATH_LENGTH])
 					{
 						++result_counter;
 						if (search_result_map.find(_key) != search_result_map.end())
 						{
 							//已经存在该key容器
 							const auto result_queue = search_result_map.at(_key);
-							result_queue->push(matched_record_str);
+							result_queue->push(_matched_record_str);
 						}
 						else
 						{
 							//不存在该key的容器
 							const auto result_queue = new concurrency::concurrent_queue<std::string>;
-							result_queue->push(matched_record_str);
+							result_queue->push(_matched_record_str);
 							search_result_map.insert(std::make_pair(_key, result_queue));
 						}
 					};
@@ -539,25 +540,27 @@ void collect_results(std::atomic_uint& result_counter, const unsigned max_result
 					//拷贝GPU中的字符串到host
 					gpuErrchk(cudaMemcpy(matched_record_str, str_address, MAX_PATH_LENGTH, cudaMemcpyDeviceToHost), false, "collect results failed");
 					// 判断文件和文件夹
-					if (std::find(search_case_vec.begin(), search_case_vec.end(), "f") != search_case_vec.end())
-					{
-						if (is_dir_or_file(matched_record_str) == 1)
-						{
-							_collect_func(key, matched_record_str);
-						}
-					}
-					else if (std::find(search_case_vec.begin(), search_case_vec.end(), "d") != search_case_vec.end())
-					{
-						if (is_dir_or_file(matched_record_str) == 0)
-						{
-							_collect_func(key, matched_record_str);
-						}
-					}
-					else
+					if (search_case_vec.empty())
 					{
 						_collect_func(key, matched_record_str);
 					}
-
+					else
+					{
+						if (std::find(search_case_vec.begin(), search_case_vec.end(), "f") != search_case_vec.end())
+						{
+							if (is_dir_or_file(matched_record_str) == 1)
+							{
+								_collect_func(key, matched_record_str);
+							}
+						}
+						else if (std::find(search_case_vec.begin(), search_case_vec.end(), "d") != search_case_vec.end())
+						{
+							if (is_dir_or_file(matched_record_str) == 0)
+							{
+								_collect_func(key, matched_record_str);
+							}
+						}
+					}
 				}
 			}
 			val->is_output_done = 2;
@@ -573,19 +576,32 @@ void collect_results(std::atomic_uint& result_counter, const unsigned max_result
  */
 int is_dir_or_file(const char* path)
 {
-	struct stat s;
-	if (stat(path, &s) == 0)
+	const auto w_path = string2wstring(path);
+	DWORD dwAttrib = GetFileAttributes(w_path.c_str());
+	if (dwAttrib != INVALID_FILE_ATTRIBUTES)
 	{
-		if (s.st_mode & S_IFDIR)
+		if (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)
 		{
 			return 0;
 		}
-		if (s.st_mode & S_IFREG)
-		{
-			return 1;
-		}
+		return 1;
 	}
 	return -1;
+}
+
+std::wstring string2wstring(const std::string& str)
+{
+	std::wstring result;
+	//获取缓冲区大小，并申请空间，缓冲区大小按字符计算  
+	const int len = MultiByteToWideChar(CP_ACP, 0, str.c_str(), static_cast<int>(str.size()), nullptr, 0);
+	const auto buffer = new TCHAR[len + 1];
+	//多字节编码转换成宽字节编码  
+	MultiByteToWideChar(CP_ACP, 0, str.c_str(), static_cast<int>(str.size()), buffer, len);
+	buffer[len] = '\0';
+	//删除缓冲区并返回值  
+	result.append(buffer);
+	delete[] buffer;
+	return result;
 }
 
 /**
