@@ -721,6 +721,7 @@ public class DatabaseService {
                                             Bit taskStatus) {
         final Bit zero = new Bit(new byte[]{0});
         final Bit one = new Bit(new byte[]{1});
+        final int taskTimeoutThreshold = 300;
         int failedRetryTimes = 0;
         try {
             while (!taskStatus.equals(allTaskStatus) && !shouldStopSearch.get()) {
@@ -730,7 +731,6 @@ public class DatabaseService {
                 int loopCount = 1;
                 //由于任务的耗时不同，如果阻塞时间过长，则跳过该任务，在下次循环中重新拿取结果
                 long waitTime = 0;
-                ConcurrentSkipListSet<String> results;
                 while (start.length() <= allTaskStatus.length() || Bit.or(taskStatus.getBytes(), zero.getBytes()).equals(zero)) {
                     if (shouldStopSearch.get()) {
                         //用户重新输入，结束当前任务
@@ -739,11 +739,11 @@ public class DatabaseService {
                     //当线程完成，taskStatus中的位会被设置为1
                     //这时，将taskStatus和start做与运算，然后移到第一位，如果为1，则线程已完成搜索
                     Bit and = Bit.and(taskStatus.getBytes(), start.getBytes());
-                    boolean isFailed = System.currentTimeMillis() - waitTime > 300 && waitTime != 0;
+                    boolean isFailed = System.currentTimeMillis() - waitTime > taskTimeoutThreshold && waitTime != 0;
                     if ((and.shiftRight(loopCount)).equals(one) || isFailed) {
                         // 阻塞时间过长则跳过
                         waitTime = 0;
-                        results = containerMap.get(start.toString());
+                        var results = containerMap.get(start.toString());
                         if (results != null) {
                             for (String result : results) {
                                 if (tempResultsForEvent.add(result)) {
@@ -770,9 +770,9 @@ public class DatabaseService {
                             waitTime = System.currentTimeMillis();
                         }
                     }
-                    TimeUnit.MILLISECONDS.sleep(1);
+                    Thread.yield();
                 }
-                TimeUnit.MILLISECONDS.sleep(10);
+                Thread.yield();
             }
         } catch (Exception e) {
             e.printStackTrace();
