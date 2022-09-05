@@ -770,9 +770,9 @@ public class DatabaseService {
                             waitTime = System.currentTimeMillis();
                         }
                     }
-                    Thread.yield();
+                    TimeUnit.NANOSECONDS.sleep(100);
                 }
-                Thread.yield();
+                TimeUnit.NANOSECONDS.sleep(100);
             }
         } catch (Exception e) {
             e.printStackTrace();
