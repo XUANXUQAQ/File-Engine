@@ -41,7 +41,7 @@ public class Bit {
     public Bit shiftLeft(int count) {
         byte[] originBytes;
         while ((originBytes = bytes.get()) != null) {
-            byte[] newBytes = Arrays.copyOf(originBytes, this.bytes.get().length + count);
+            byte[] newBytes = Arrays.copyOf(originBytes, originBytes.length + count);
             if (bytes.compareAndSet(originBytes, newBytes)) {
                 return this;
             }
@@ -62,7 +62,7 @@ public class Bit {
         } else {
             byte[] originBytes;
             while ((originBytes = bytes.get()) != null) {
-                byte[] newBytes = Arrays.copyOfRange(originBytes, 0, bytes.get().length - count);
+                byte[] newBytes = Arrays.copyOfRange(originBytes, 0, originBytes.length - count);
                 if (bytes.compareAndSet(originBytes, newBytes)) {
                     return this;
                 }

@@ -23,10 +23,11 @@ bool has_cache(const std::string& key);
 void add_one_record_to_cache(const std::string& key, const std::string& record);
 void remove_one_record_from_cache(const std::string& key, const std::string& record);
 void generate_search_case(JNIEnv* env, std::vector<std::string>& search_case_vec, jobjectArray search_case);
-void collect_results(std::atomic_uint& result_counter, unsigned max_results);
+void collect_results(std::atomic_uint& result_counter, unsigned max_results, const std::vector<std::string>& search_case_vec);
 bool is_record_repeat(const std::string& record, const list_cache* cache);
 void release_all();
 void init_threads();
+int is_dir_or_file(const char* path);
 
 //lock
 inline void wait_for_clear_cache();
@@ -204,7 +205,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_match
 	task_complete_count = 0;
 	auto task = [&]
 	{
-		collect_results(result_counter, max_results);
+		collect_results(result_counter, max_results, search_case_vec);
 		++task_complete_count;
 	};
 	for (int i = 0; i < COLLECT_THREAD_NUMBER; ++i)
@@ -474,7 +475,7 @@ JNIEXPORT jint JNICALL Java_file_engine_dllInterface_CudaAccelerator_getCudaMemU
 /**
  * \brief 将显卡计算的结果保存到hashmap中
  */
-void collect_results(std::atomic_uint& result_counter, const unsigned max_results)
+void collect_results(std::atomic_uint& result_counter, const unsigned max_results, const std::vector<std::string>& search_case_vec)
 {
 	bool all_complete;
 	const auto stop_func = [&]
@@ -516,30 +517,75 @@ void collect_results(std::atomic_uint& result_counter, const unsigned max_result
 				//dev_cache[i]字符串匹配成功
 				if (static_cast<bool>(output_ptr[i]))
 				{
+					auto _collect_func = [&result_counter](const std::string& _key, char matched_record_str[MAX_PATH_LENGTH])
+					{
+						++result_counter;
+						if (search_result_map.find(_key) != search_result_map.end())
+						{
+							//已经存在该key容器
+							const auto result_queue = search_result_map.at(_key);
+							result_queue->push(matched_record_str);
+						}
+						else
+						{
+							//不存在该key的容器
+							const auto result_queue = new concurrency::concurrent_queue<std::string>;
+							result_queue->push(matched_record_str);
+							search_result_map.insert(std::make_pair(_key, result_queue));
+						}
+					};
 					char matched_record_str[MAX_PATH_LENGTH]{ 0 };
 					const auto str_address = val->str_data.dev_cache_str + i;
 					//拷贝GPU中的字符串到host
 					gpuErrchk(cudaMemcpy(matched_record_str, str_address, MAX_PATH_LENGTH, cudaMemcpyDeviceToHost), false, "collect results failed");
-					++result_counter;
-					if (search_result_map.find(key) != search_result_map.end())
+					// 判断文件和文件夹
+					if (std::find(search_case_vec.begin(), search_case_vec.end(), "f") != search_case_vec.end())
 					{
-						//已经存在该key容器
-						const auto result_queue = search_result_map.at(key);
-						result_queue->push(matched_record_str);
+						if (is_dir_or_file(matched_record_str) == 1)
+						{
+							_collect_func(key, matched_record_str);
+						}
+					}
+					else if (std::find(search_case_vec.begin(), search_case_vec.end(), "d") != search_case_vec.end())
+					{
+						if (is_dir_or_file(matched_record_str) == 0)
+						{
+							_collect_func(key, matched_record_str);
+						}
 					}
 					else
 					{
-						//不存在该key的容器
-						const auto result_queue = new concurrency::concurrent_queue<std::string>;
-						result_queue->push(matched_record_str);
-						search_result_map.insert(std::make_pair(key, result_queue));
+						_collect_func(key, matched_record_str);
 					}
+
 				}
 			}
 			val->is_output_done = 2;
 			delete[] output_ptr;
 		}
 	} while (!all_complete && !is_stop() && result_counter.load() < max_results);
+}
+
+/**
+ * \brief 检查是文件还是文件夹
+ * \param path path
+ * \return 如果是文件返回1，文件夹返回0，错误返回-1
+ */
+int is_dir_or_file(const char* path)
+{
+	struct stat s;
+	if (stat(path, &s) == 0)
+	{
+		if (s.st_mode & S_IFDIR)
+		{
+			return 0;
+		}
+		if (s.st_mode & S_IFREG)
+		{
+			return 1;
+		}
+	}
+	return -1;
 }
 
 /**
@@ -708,10 +754,10 @@ void remove_one_record_from_cache(const std::string& key, const std::string& rec
 					++cache->str_data.remain_blank_num;
 					cache->str_data.record_hash.unsafe_erase(hasher(record));
 					break;
+				}
 			}
 		}
 	}
-}
 	catch (std::out_of_range&)
 	{
 	}

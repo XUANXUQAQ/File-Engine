@@ -26,7 +26,6 @@ import file.engine.utils.CachedThreadPoolUtil;
 import file.engine.utils.ProcessUtil;
 import file.engine.utils.RegexUtil;
 import file.engine.utils.bit.Bit;
-import file.engine.utils.file.FileUtil;
 import file.engine.utils.gson.GsonUtil;
 import file.engine.utils.system.properties.IsDebug;
 import lombok.AllArgsConstructor;
@@ -1003,26 +1002,8 @@ public class DatabaseService {
             if (!Files.exists(recordPath)) {
                 continue;
             }
-            if (searchCase == null || searchCase.length == 0) {
-                container.add(record);
-                ++matchedNum;
-            } else {
-                List<String> searchCaseList = Arrays.asList(searchCase);
-                if (searchCaseList.contains(PathMatchUtil.SearchCase.D)) {
-                    if (Files.isDirectory(recordPath)) {
-                        container.add(record);
-                        ++matchedNum;
-                    }
-                } else if (searchCaseList.contains(PathMatchUtil.SearchCase.F)) {
-                    if (FileUtil.isFile(record)) {
-                        container.add(record);
-                        ++matchedNum;
-                    }
-                } else {
-                    container.add(record);
-                    ++matchedNum;
-                }
-            }
+            container.add(record);
+            ++matchedNum;
         }
         return matchedNum;
     }
