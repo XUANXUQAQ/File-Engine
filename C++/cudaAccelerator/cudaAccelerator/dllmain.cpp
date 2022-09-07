@@ -157,6 +157,8 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_match
 	{
 		return;
 	}
+	wait_for_clear_cache();
+	std::lock_guard lock_guard(modify_cache_lock);
 	//生成搜索条件 search_case_vec
 	std::vector<std::string> search_case_vec;
 	if (search_case != nullptr)
@@ -503,7 +505,6 @@ void collect_results(std::atomic_uint& result_counter, const unsigned max_result
 			{
 				continue;
 			}
-			std::lock_guard lock_guard(val->str_data.lock);
 			//复制结果数组到host，dev_output下标对应dev_cache中的下标，若dev_output[i]中的值为1，则对应dev_cache[i]字符串匹配成功
 			const auto output_ptr = new char[val->str_data.record_num + val->str_data.remain_blank_num];
 			//将dev_output拷贝到output_ptr
@@ -560,6 +561,10 @@ void collect_results(std::atomic_uint& result_counter, const unsigned max_result
 								_collect_func(key, matched_record_str);
 							}
 						}
+						else
+						{
+							_collect_func(key, matched_record_str);
+						}
 					}
 				}
 			}
@@ -593,10 +598,10 @@ std::wstring string2wstring(const std::string& str)
 {
 	std::wstring result;
 	//获取缓冲区大小，并申请空间，缓冲区大小按字符计算  
-	const int len = MultiByteToWideChar(CP_ACP, 0, str.c_str(), static_cast<int>(str.size()), nullptr, 0);
+	const int len = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), static_cast<int>(str.size()), nullptr, 0);
 	const auto buffer = new TCHAR[len + 1];
 	//多字节编码转换成宽字节编码  
-	MultiByteToWideChar(CP_ACP, 0, str.c_str(), static_cast<int>(str.size()), buffer, len);
+	MultiByteToWideChar(CP_UTF8, 0, str.c_str(), static_cast<int>(str.size()), buffer, len);
 	buffer[len] = '\0';
 	//删除缓冲区并返回值  
 	result.append(buffer);
