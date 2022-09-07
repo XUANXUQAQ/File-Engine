@@ -122,8 +122,8 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_resetAllRes
 	{
 		val->is_match_done = false;
 		val->is_output_done = 0;
-		cudaMemset(val->dev_output, 0,
-			val->str_data.record_num + val->str_data.remain_blank_num);
+		gpuErrchk(cudaMemset(val->dev_output, 0,
+			val->str_data.record_num + val->str_data.remain_blank_num), true, nullptr);
 	}
 	// 清空search_result_map
 	for (const auto& [key, result_queue_ptr] : search_result_map)
@@ -175,11 +175,15 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_match
 		return;
 	}
 	bool is_keyword_path_ptr[MAX_KEYWORDS_NUMBER]{ false };
+	const auto is_keyword_path_ptr_bool_array = env->GetBooleanArrayElements(is_keyword_path, nullptr);
 	for (jsize i = 0; i < keywords_length; ++i)
 	{
 		auto keywords_str = env->GetObjectArrayElement(keywords, i);
 		auto tmp_keywords_str = reinterpret_cast<jstring>(keywords_str);
 		auto keywords_chars = env->GetStringUTFChars(tmp_keywords_str, nullptr);
+#ifdef DEBUG_OUTPUT
+		std::cout << "keywords: " << keywords_chars << std::endl;
+#endif
 		keywords_vec.emplace_back(keywords_chars);
 		env->ReleaseStringUTFChars(tmp_keywords_str, keywords_chars);
 
@@ -189,9 +193,12 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_match
 		keywords_lower_vec.emplace_back(keywords_chars);
 		env->ReleaseStringUTFChars(tmp_keywords_str, keywords_chars);
 
-		const auto val = env->GetBooleanArrayElements(is_keyword_path, nullptr);
-		is_keyword_path_ptr[i] = *val == JNI_TRUE;
+#ifdef DEBUG_OUTPUT
+		std::cout << "is keyword path: " << static_cast<bool>(is_keyword_path_ptr_bool_array[i]) << std::endl;
+#endif
+		is_keyword_path_ptr[i] = is_keyword_path_ptr_bool_array[i];
 	}
+	env->ReleaseBooleanArrayElements(is_keyword_path, is_keyword_path_ptr_bool_array, JNI_ABORT);
 	//复制全字匹配字符串 search_text
 	const auto search_text_chars = env->GetStringUTFChars(search_text, nullptr);
 	const auto stream_count = cache_map.size();
@@ -219,7 +226,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_match
 	while (task_complete_count.load() != COLLECT_THREAD_NUMBER) std::this_thread::yield();
 	env->ReleaseStringUTFChars(search_text, search_text_chars);
 	// 等待执行完成
-	auto cudaStatus = cudaDeviceSynchronize();
+	const auto cudaStatus = cudaDeviceSynchronize();
 	if (cudaStatus != cudaSuccess)
 		fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launch!\n", cudaStatus);
 	for (size_t i = 0; i < stream_count; ++i)

@@ -195,7 +195,7 @@ __device__ bool not_matched(const char* path,
 		{
 			continue;
 		}
-		if (!match_str[0] || strstr_cuda(match_str, each_keyword) == nullptr)
+		if (strstr_cuda(match_str, each_keyword) == nullptr)
 		{
 			if (is_keyword_path_val || !is_str_contains_chinese(match_str))
 			{
@@ -234,7 +234,7 @@ __global__ void check(const char(*str_address_ptr_array)[MAX_PATH_LENGTH],
 	{
 		return;
 	}
-	const char* path = reinterpret_cast<const char*>(str_address_ptr_array + thread_id);
+	const auto path = reinterpret_cast<const char*>(str_address_ptr_array + thread_id);
 	if (*is_stop_collect_var)
 	{
 		return;
@@ -253,7 +253,7 @@ __global__ void check(const char(*str_address_ptr_array)[MAX_PATH_LENGTH],
 		output[thread_id] = 1;
 		return;
 	}
-	if ((*search_case & 4) == 4)
+	if (*search_case & 4)
 	{
 		// 全字匹配
 		strlwr_cuda(search_text);
@@ -293,7 +293,7 @@ void init_cuda_search_memory()
 
 void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*>& cache_map,
 	const std::vector<std::string>& search_case,
-	bool is_ignore_case,
+	const bool is_ignore_case,
 	const char* search_text,
 	const std::vector<std::string>& keywords,
 	const std::vector<std::string>& keywords_lower_case,
@@ -308,14 +308,6 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 	int search_case_num = 0;
 	for (auto& each_case : search_case)
 	{
-		// if (each_case == "f")
-		// {
-		// 	search_case_num |= 1;
-		// }
-		// if (each_case == "d")
-		// {
-		// 	search_case_num |= 2;
-		// }
 		if (each_case == "full")
 		{
 			search_case_num |= 4;
