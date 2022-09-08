@@ -1946,6 +1946,25 @@ public class DatabaseService {
         if (!PrepareSearchInfo.isSearchPrepared.get()) {
             prepareSearchKeywords(startSearchEvent.searchText, startSearchEvent.searchCase, startSearchEvent.keywords);
             PrepareSearchInfo.prepareSearchTasks();
+            if (AllConfigs.getInstance().isEnableCuda()) {
+                // 退出上一次搜索
+                CudaAccelerator.INSTANCE.stopCollectResults();
+                while (PrepareSearchInfo.isCudaThreadRunning.get())
+                    Thread.onSpinWait();
+                CachedThreadPoolUtil.getInstance().executeTask(() -> {
+                    // 开始进行搜索
+                    CudaAccelerator.INSTANCE.resetAllResultStatus();
+                    PrepareSearchInfo.isCudaThreadRunning.set(true);
+                    CudaAccelerator.INSTANCE.match(searchCase,
+                            isIgnoreCase,
+                            searchText,
+                            keywords,
+                            keywordsLowerCase,
+                            isKeywordPath,
+                            MAX_RESULTS);
+                    PrepareSearchInfo.isCudaThreadRunning.set(false);
+                }, false);
+            }
         }
         databaseService.shouldStopSearch.set(false);
         CachedThreadPoolUtil.getInstance().executeTask(databaseService::startSearch);
