@@ -49,7 +49,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -112,7 +111,7 @@ public class SearchBar {
     private int iconSideLength;
     private volatile long visibleStartTime = 0;  //记录窗口开始可见的事件，窗口默认最短可见时间0.5秒，防止窗口快速闪烁
     private volatile long firstResultStartShowingTime = 0;  //记录开始显示结果的时间，用于防止刚开始移动到鼠标导致误触
-    private final CopyOnWriteArrayList<String> listResults;  //保存从数据库中找出符合条件的记录（文件路径）
+    private final ArrayList<String> listResults;  //保存从数据库中找出符合条件的记录（文件路径）
     private volatile String[] searchCase;
     private volatile String searchText = "";
     private volatile String[] keywords;
@@ -134,7 +133,7 @@ public class SearchBar {
     private static volatile SearchBar instance = null;
 
     private SearchBar() {
-        listResults = new CopyOnWriteArrayList<>();
+        listResults = new ArrayList<>();
         searchBar = new JFrame();
         currentResultCount = new AtomicInteger(0);
         listResultsNum = new AtomicInteger(0);
@@ -2398,7 +2397,7 @@ public class SearchBar {
         }
     }
 
-    private void clearListAndTempAndReset() {
+    private void clearResults() {
         listResults.clear();
         listResultsNum.set(0);
     }
@@ -2408,7 +2407,7 @@ public class SearchBar {
      */
     private void clearAllAndResetAll() {
         clearAllLabels();
-        clearListAndTempAndReset();
+        clearResults();
         firstResultStartShowingTime = 0;
         currentResultCount.set(0);
         currentLabelSelectedPosition.set(0);
@@ -2671,6 +2670,7 @@ public class SearchBar {
     }
 
     @EventRegister(registerClass = HideSearchBarEvent.class)
+    @EventListener(listenClass = RestartEvent.class)
     private static void hideSearchBarEvent(Event event) {
         SearchBar searchBar = getInstance();
         searchBar.closeSearchBar();
@@ -2788,12 +2788,6 @@ public class SearchBar {
     @EventRegister(registerClass = GetShowingModeEvent.class)
     private static void getShowingModeEvent(Event event) {
         event.setReturnValue(getInstance().showingMode);
-    }
-
-    @EventListener(listenClass = RestartEvent.class)
-    private static void restartEvent(Event event) {
-        SearchBar searchBarInstance = getInstance();
-        searchBarInstance.closeSearchBar();
     }
 
     /**
@@ -3263,10 +3257,8 @@ public class SearchBar {
                     for (PluginService.PluginInfo eachPlugin : PluginService.getInstance().getAllPlugins()) {
                         while ((each = eachPlugin.plugin.pollFromResultQueue()) != null) {
                             each = "plugin" + pluginResultSplitStr + eachPlugin.plugin.identifier + pluginResultSplitStr + each;
-                            if (!listResults.contains(each)) {
-                                listResults.add(each);
-                                listResultsNum.incrementAndGet();
-                            }
+                            listResults.add(each);
+                            listResultsNum.incrementAndGet();
                         }
                     }
                     while ((each = tempResults.poll()) != null) {
@@ -3274,10 +3266,8 @@ public class SearchBar {
                             eventManagement.putEvent(new StopSearchEvent());
                             return;
                         }
-                        if (!listResults.contains(each)) {
-                            listResults.add(each);
-                            listResultsNum.incrementAndGet();
-                        }
+                        listResults.add(each);
+                        listResultsNum.incrementAndGet();
                     }
                     TimeUnit.MILLISECONDS.sleep(1);
                 }
@@ -4278,7 +4268,7 @@ public class SearchBar {
         startTime = System.currentTimeMillis();//结束搜索
         currentResultCount.set(0);
         currentLabelSelectedPosition.set(0);
-        clearListAndTempAndReset();
+        clearResults();
         isUserPressed.set(false);
         isLockMouseMotion.set(false);
         isOpenLastFolderPressed.set(false);
