@@ -53,7 +53,7 @@ public class MainClass {
     private static final String RESULT_PIPE_MD5 = "e91b7783a6add81d8123e2698c52efb6";
     private static final String GET_DPI_MD5 = "2d835577b3505af292966411b50e93b4";
     private static final String GET_START_MENU_MD5 = "b446b307fae7646f9d7cd0064f55d1af";
-//    private static final String SQLITE_JDBC_MD5 = "580fd050832e37d14bc04e8d5d13b7b1";
+    private static final String SQLITE_JDBC_MD5 = "607931b6a0655945daf1db51312b4473";
     private static final String EMPTY_RECYCLE_BIN_MD5 = "431225a47e74fe343b42e4bba741b80b";
     private static final String CUDA_ACCELERATOR_MD5 = "ea75f1b7749d525310662d9e854a9c68";
     private static final String CUDA_RUNTIME_MD5 = "d7cfc69c62e8eb977d827f46bab408da";
@@ -202,8 +202,8 @@ public class MainClass {
         System.setProperty("file.encoding", "UTF-8");
         System.setProperty("sun.java2d.noddraw", "true");
         System.setProperty("swing.aatext", "true");
-//        System.setProperty("org.sqlite.lib.path", Path.of("user/").toAbsolutePath().toString());
-//        System.setProperty("org.sqlite.lib.name", "sqliteJDBC.dll");
+        System.setProperty("org.sqlite.lib.path", Path.of("user/").toAbsolutePath().toString());
+        System.setProperty("org.sqlite.lib.name", "sqliteJDBC.dll");
     }
 
     private static void readAllConfigs() {
@@ -416,7 +416,7 @@ public class MainClass {
         copyOrIgnoreFile("user/resultPipe.dll", "/win32-native/resultPipe.dll", RESULT_PIPE_MD5);
         copyOrIgnoreFile("user/getDpi.exe", "/win32-native/getDpi.exe", GET_DPI_MD5);
         copyOrIgnoreFile("user/getStartMenu.dll", "/win32-native/getStartMenu.dll", GET_START_MENU_MD5);
-//        copyOrIgnoreFile("user/sqliteJDBC.dll", "/win32-native/sqliteJDBC.dll", SQLITE_JDBC_MD5);
+        copyOrIgnoreFile("user/sqliteJDBC.dll", "/win32-native/sqliteJDBC.dll", SQLITE_JDBC_MD5);
         copyOrIgnoreFile("user/emptyRecycleBin.dll", "/win32-native/emptyRecycleBin.dll", EMPTY_RECYCLE_BIN_MD5);
         copyOrIgnoreFile("user/cudaAccelerator.dll", "/win32-native/cudaAccelerator.dll", CUDA_ACCELERATOR_MD5);
         copyOrIgnoreFile("cudart64_110.dll", "/win32-native/cudart64_110.dll", CUDA_RUNTIME_MD5);
