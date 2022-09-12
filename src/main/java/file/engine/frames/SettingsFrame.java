@@ -2605,8 +2605,8 @@ public class SettingsFrame {
                 String deviceName = cudaInfo[0];
                 cudaDeviceMap.put(deviceName, deviceNum);
                 deviceMap.put(deviceNum, deviceName);
-                comboBoxCudaDevice.addItem(cudaInfo[0]);
             }
+            comboBoxCudaDevice.setModel(new DefaultComboBoxModel<>(new Vector<>(cudaDeviceMap.keySet())));
             int cudaDeviceNum = allConfigs.getCudaDeviceNum();
             String item = deviceMap.get(cudaDeviceNum);
             if (item == null) {
