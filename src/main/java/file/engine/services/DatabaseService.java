@@ -928,7 +928,7 @@ public class DatabaseService {
                             String priority = getPriorityFromSql(eachSql);
                             String key = diskStr + "," + tableName + "," + priority;
                             long matchedNum;
-                            if (allConfigs.isEnableCuda() && CudaAccelerator.INSTANCE.isCacheValid(key) && CudaAccelerator.INSTANCE.isMatchDone(key)) {
+                            if (allConfigs.isEnableCuda() && CudaAccelerator.INSTANCE.isMatchDone(key)) {
                                 matchedNum = searchFromCudaCache(container, key);
                             } else {
                                 matchedNum = searchFromDatabaseOrCache(container, diskStr, eachSql, key);
@@ -1079,20 +1079,40 @@ public class DatabaseService {
             isSearchStopped.set(true);
             return;
         }
-        PrepareSearchInfo.taskMap.forEach((disk, taskQueue) -> CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            Runnable runnable;
-            while ((runnable = taskQueue.poll()) != null) {
-                try {
-                    searchThreadCount.incrementAndGet();
-                    runnable.run();
-                    if (shouldStopSearch.get()) {
-                        break;
+        CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+        final int threadNumber = Math.max(1, Runtime.getRuntime().availableProcessors() / PrepareSearchInfo.taskMap.size());
+        for (var entry : PrepareSearchInfo.taskMap.entrySet()) {
+            for (int i = 0; i < threadNumber; i++) {
+                cachedThreadPoolUtil.executeTask(() -> {
+                    String currentDisk = entry.getKey();
+                    ConcurrentLinkedQueue<Runnable> taskQueue = entry.getValue();
+                    while (!taskQueue.isEmpty()) {
+                        var runnable = taskQueue.poll();
+                        if (runnable == null) continue;
+                        searchThreadCount.incrementAndGet();
+                        runnable.run();
+                        searchThreadCount.decrementAndGet();
+                        if (shouldStopSearch.get()) {
+                            return;
+                        }
                     }
-                } finally {
-                    searchThreadCount.decrementAndGet();
-                }
+                    //自身任务已经完成，开始扫描其他线程的任务
+                    while (!shouldStopSearch.get() && !isSearchStopped.get()) {
+                        for (var e : PrepareSearchInfo.taskMap.entrySet()) {
+                            String otherDisk = e.getKey();
+                            if (otherDisk.equals(currentDisk)) continue;
+                            ConcurrentLinkedQueue<Runnable> otherTaskQueue = e.getValue();
+                            Runnable otherRunnable;
+                            while ((otherRunnable = otherTaskQueue.poll()) != null && !shouldStopSearch.get()) {
+                                searchThreadCount.incrementAndGet();
+                                otherRunnable.run();
+                                searchThreadCount.decrementAndGet();
+                            }
+                        }
+                    }
+                });
             }
-        }));
+        }
         waitForTaskAndMergeResults(PrepareSearchInfo.containerMap, PrepareSearchInfo.allTaskStatus, PrepareSearchInfo.taskStatus);
     }
 
@@ -1832,21 +1852,8 @@ public class DatabaseService {
 
     @EventListener(listenClass = SearchBarReadyEvent.class)
     private static void searchBarVisibleListener(Event event) {
-        if (IsDebug.isDebug()) {
-            CachedThreadPoolUtil.getInstance().executeTask(() -> {
-                try {
-                    while (SearchBar.getInstance().isVisible()) {
-                        getInstance().sendExecuteSQLSignal();
-                        TimeUnit.MILLISECONDS.sleep(500);
-                    }
-                } catch (InterruptedException ignored) {
-
-                }
-            });
-        } else {
-            SQLiteUtil.openAllConnection();
-            getInstance().sendExecuteSQLSignal();
-        }
+        SQLiteUtil.openAllConnection();
+        getInstance().sendExecuteSQLSignal();
     }
 
     @EventRegister(registerClass = CheckDatabaseEmptyEvent.class)
