@@ -824,16 +824,17 @@ public class DatabaseService {
                 containerMap.put(currentTaskNum.toString(), container);
                 tasks.add(() -> {
                     try {
-                        Set<String> sqls = commandsMap.keySet();
-                        for (String each : sqls) {
+                        for (var e : commandsMap.entrySet()) {
+                            String eachSql = e.getKey();
+                            String listName = e.getValue();
                             if (shouldStopSearch.get()) {
-                                return;
+                                continue;
                             }
-                            String listName = commandsMap.get(each);
-                            int priority = Integer.parseInt(getPriorityFromSql(each));
+                            int priority = Integer.parseInt(getPriorityFromSql(eachSql));
                             String result;
                             for (int count = 0;
-                                 !shouldStopSearch.get() && ((result = ResultPipe.INSTANCE.getResult(eachDisk.charAt(0), listName, priority, count)) != null);
+                                 !shouldStopSearch.get() &&
+                                         ((result = ResultPipe.INSTANCE.getResult(eachDisk.charAt(0), listName, priority, count)) != null);
                                  ++count) {
                                 checkIsMatchedAndAddToList(result, container);
                             }
@@ -919,12 +920,12 @@ public class DatabaseService {
                 tasks.add(() -> {
                     try {
                         String diskStr = String.valueOf(eachDisk.charAt(0));
-                        Set<String> sqls = commandsMap.keySet();
-                        for (String eachSql : sqls) {
+                        for (var e : commandsMap.entrySet()) {
+                            String eachSql = e.getKey();
+                            String tableName = e.getValue();
                             if (shouldStopSearch.get()) {
-                                return;
+                                continue;
                             }
-                            String tableName = commandsMap.get(eachSql);
                             String priority = getPriorityFromSql(eachSql);
                             String key = diskStr + "," + tableName + "," + priority;
                             long matchedNum;
@@ -1792,21 +1793,22 @@ public class DatabaseService {
         try {
             ProcessBuilder processBuilder = new ProcessBuilder("cmd.exe");
             Process process = processBuilder.start();
-            PrintStream printStream = new PrintStream(process.getOutputStream(), true);
-            Scanner scanner = new Scanner(process.getInputStream());
-            printStream.println("@echo off");
-            printStream.println(">nul 2>&1 \"%SYSTEMROOT%\\system32\\cacls.exe\" \"%SYSTEMROOT%\\system32\\config\\system\"");
-            printStream.println("echo %errorlevel%");
-
-            boolean printedErrorLevel = false;
-            while (true) {
-                String nextLine = scanner.nextLine();
-                if (printedErrorLevel) {
-                    int errorLevel = Integer.parseInt(nextLine);
-                    scanner.close();
-                    return errorLevel == 0;
-                } else if ("echo %errorlevel%".equals(nextLine)) {
-                    printedErrorLevel = true;
+            try (PrintStream printStream = new PrintStream(process.getOutputStream(), true)) {
+                try (Scanner scanner = new Scanner(process.getInputStream())) {
+                    printStream.println("@echo off");
+                    printStream.println(">nul 2>&1 \"%SYSTEMROOT%\\system32\\cacls.exe\" \"%SYSTEMROOT%\\system32\\config\\system\"");
+                    printStream.println("echo %errorlevel%");
+                    boolean printedErrorLevel = false;
+                    while (true) {
+                        String nextLine = scanner.nextLine();
+                        if (printedErrorLevel) {
+                            int errorLevel = Integer.parseInt(nextLine);
+                            scanner.close();
+                            return errorLevel == 0;
+                        } else if ("echo %errorlevel%".equals(nextLine)) {
+                            printedErrorLevel = true;
+                        }
+                    }
                 }
             }
         } catch (IOException e) {

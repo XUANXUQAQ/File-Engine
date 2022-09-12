@@ -1,6 +1,7 @@
 package file.engine.utils.bit;
 
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -9,7 +10,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class Bit {
 
     private final AtomicReference<byte[]> bytes = new AtomicReference<>();
-    private final byte[] zero = new byte[]{0};
+    private static final byte[] zero = new byte[]{0};
 
     public Bit(byte[] init) {
         if (init != null && init.length > 0) {
@@ -174,6 +175,13 @@ public class Bit {
             return Arrays.equals(this.bytes.get(), tmp.bytes.get());
         }
         return false;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(bytes);
+        result = 31 * result + Arrays.hashCode(zero);
+        return result;
     }
 
     public int length() {

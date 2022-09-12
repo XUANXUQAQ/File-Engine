@@ -51,7 +51,7 @@ public class ProcessUtil {
         while (isProcessExist(procName)) {
             TimeUnit.MILLISECONDS.sleep(checkInterval);
             if (System.currentTimeMillis() - start > timeLimit) {
-                System.err.printf("等待进程%s超时\n", procName);
+                System.err.printf("等待进程%s超时%n", procName);
                 String command = String.format("taskkill /im %s /f", procName);
                 Process exec = Runtime.getRuntime().exec(command);
                 exec.waitFor();

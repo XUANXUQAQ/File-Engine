@@ -732,7 +732,7 @@ public class SearchBar {
      */
     private void addTextFieldKeyListener() {
         textField.addKeyListener(new KeyListener() {
-            final int timeLimit = 50;
+            private static final int timeLimit = 50;
             long pressTime;
             boolean isFirstPress = true;
             final AllConfigs allConfigs = AllConfigs.getInstance();
