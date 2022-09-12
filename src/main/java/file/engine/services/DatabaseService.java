@@ -868,6 +868,19 @@ public class DatabaseService {
         return sql.substring(pos + 1);
     }
 
+    /**
+     * 创建搜索任务
+     * nonFormattedSql将会生成从list0-40，根据priority从高到低排序的SQL语句，第一个map中key保存未格式化的sql，value保存表名称，第二个set为搜索结果的暂时存储容器
+     * containerMap中key为每个任务分配到的位，value为nonFormattedSql中的临时存储容器
+     * 生成任务顺序会根据list的权重和priority来生成，所以使用SkipList保证顺序。
+     *
+     * @param nonFormattedSql        未格式化搜索字段的SQL
+     * @param taskStatus             任务执行完成的标志，每个任务会分配到一个位，默认为0，当任务完成，将taskStatus的对应位设为1
+     * @param allTaskStatus          任务全部执行完成之后的位图，当taskStatus全部完成将会等于allTaskStatus
+     * @param containerMap           每个任务被分配到的临时存储结果的容器
+     * @param taskMap                存储任务的Map，第一个参数是disk，即硬盘盘符，第二个参数为Queue，即生成的任务
+     * @param isReadFromSharedMemory 是否通过共享内存读取，而不是数据库搜索
+     */
     private void addSearchTasks(LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> nonFormattedSql,
                                 Bit taskStatus,
                                 Bit allTaskStatus,
@@ -903,7 +916,8 @@ public class DatabaseService {
         for (String eachDisk : RegexUtil.comma.split(availableDisks)) {
             ConcurrentLinkedQueue<Runnable> tasks = new ConcurrentLinkedQueue<>();
             taskMap.put(eachDisk, tasks);
-            for (Map.Entry<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> entry : nonFormattedSql.entrySet()) {
+            //向任务队列tasks添加任务
+            for (var entry : nonFormattedSql.entrySet()) {
                 LinkedHashMap<String, String> commandsMap = entry.getKey();
                 ConcurrentSkipListSet<String> container = entry.getValue();
                 //为每个任务分配的位，不断左移以不断进行分配
@@ -917,6 +931,7 @@ public class DatabaseService {
                     }
                 }
                 containerMap.put(currentTaskNum.toString(), container);
+                //每一个任务负责查询一个priority和list0-list40生成的41个SQL
                 tasks.add(() -> {
                     try {
                         String diskStr = String.valueOf(eachDisk.charAt(0));
@@ -1011,7 +1026,8 @@ public class DatabaseService {
 
     /**
      * 生成未格式化的sql
-     * 第一个map中key保存未格式化的sql，value保存表名称，第二个map为搜索结果的暂时存储容器
+     * 第一个map中每一个priority加上list0-list40会生成41条SQL作为key，value是搜索的表，即SELECT* FROM [list?]中的[list?];
+     * 第二个SkipListSet作为SQL执行搜索后存储结果的容器
      *
      * @return map
      */
@@ -1028,7 +1044,7 @@ public class DatabaseService {
         int asciiSum = 0;
         if (keywords != null) {
             for (String keyword : keywords) {
-                int ascII = GetAscII.INSTANCE.getAscII(keyword);
+                int ascII = GetAscII.INSTANCE.getAscII(keyword); //其实是utf8编码的值
                 asciiSum += Math.max(ascII, 0);
             }
         }
@@ -1037,7 +1053,9 @@ public class DatabaseService {
             asciiGroup = Constants.ALL_TABLE_NUM;
         }
         String firstTableName = "list" + asciiGroup;
+        // 有d代表只需要搜索文件夹，文件夹的priority为-1
         if (searchCase != null && Arrays.asList(searchCase).contains("d")) {
+            //首先根据输入的keywords找到对应的list
             LinkedHashMap<String, String> _priorityMap = new LinkedHashMap<>();
             String _sql = "SELECT %s FROM " + firstTableName + " WHERE PRIORITY=" + "-1";
             _priorityMap.put(_sql, firstTableName);
@@ -1046,9 +1064,7 @@ public class DatabaseService {
                 String sql = "SELECT %s FROM " + each + " WHERE PRIORITY=" + "-1";
                 _priorityMap.put(sql, each);
             });
-            ConcurrentSkipListSet<String> container;
-            container = new ConcurrentSkipListSet<>();
-            sqlColumnMap.put(_priorityMap, container);
+            sqlColumnMap.put(_priorityMap, new ConcurrentSkipListSet<>());
         } else {
             for (Pair i : priorityMap) {
                 LinkedHashMap<String, String> eachPriorityMap = new LinkedHashMap<>();
@@ -1059,9 +1075,7 @@ public class DatabaseService {
                     String sql = "SELECT %s FROM " + each + " WHERE PRIORITY=" + i.priority;
                     eachPriorityMap.put(sql, each);
                 });
-                ConcurrentSkipListSet<String> container;
-                container = new ConcurrentSkipListSet<>();
-                sqlColumnMap.put(eachPriorityMap, container);
+                sqlColumnMap.put(eachPriorityMap, new ConcurrentSkipListSet<>());
             }
         }
         tableQueue.clear();
