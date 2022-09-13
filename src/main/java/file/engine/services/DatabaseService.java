@@ -798,7 +798,6 @@ public class DatabaseService {
      * @param containerMap    每个任务搜索出来的结果都会被放到一个属于它自己的一个容器中，该容器保存任务与容器的映射关系
      * @param taskMap         任务
      */
-    @SuppressWarnings("DuplicatedCode")
     private void addSearchTasksForSharedMemory(LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> nonFormattedSql,
                                                Bit taskStatus,
                                                Bit allTaskStatus,
@@ -808,7 +807,7 @@ public class DatabaseService {
         for (String eachDisk : RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks())) {
             ConcurrentLinkedQueue<Runnable> tasks = new ConcurrentLinkedQueue<>();
             taskMap.put(eachDisk, tasks);
-            for (Map.Entry<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> entry : nonFormattedSql.entrySet()) {
+            for (var entry : nonFormattedSql.entrySet()) {
                 LinkedHashMap<String, String> commandsMap = entry.getKey();
                 ConcurrentSkipListSet<String> container = entry.getValue();
                 //为每个任务分配的位，不断左移以不断进行分配
@@ -825,11 +824,11 @@ public class DatabaseService {
                 tasks.add(() -> {
                     try {
                         for (var e : commandsMap.entrySet()) {
+                            if (shouldStopSearch.get()) {
+                                return;
+                            }
                             String eachSql = e.getKey();
                             String listName = e.getValue();
-                            if (shouldStopSearch.get()) {
-                                continue;
-                            }
                             int priority = Integer.parseInt(getPriorityFromSql(eachSql));
                             String result;
                             for (int count = 0;
@@ -904,7 +903,6 @@ public class DatabaseService {
      * @param containerMap    每个任务搜索出来的结果都会被放到一个属于它自己的一个容器中，该容器保存任务与容器的映射关系
      * @param taskMap         任务
      */
-    @SuppressWarnings("DuplicatedCode")
     private void addSearchTasksForDatabase(LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> nonFormattedSql,
                                            Bit taskStatus,
                                            Bit allTaskStatus,
@@ -936,11 +934,11 @@ public class DatabaseService {
                     try {
                         String diskStr = String.valueOf(eachDisk.charAt(0));
                         for (var e : commandsMap.entrySet()) {
+                            if (shouldStopSearch.get()) {
+                                return;
+                            }
                             String eachSql = e.getKey();
                             String tableName = e.getValue();
-                            if (shouldStopSearch.get()) {
-                                continue;
-                            }
                             String priority = getPriorityFromSql(eachSql);
                             String key = diskStr + "," + tableName + "," + priority;
                             long matchedNum;
