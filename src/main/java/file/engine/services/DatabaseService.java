@@ -69,7 +69,7 @@ public class DatabaseService {
     private final ConcurrentLinkedQueue<Pair> priorityMap = new ConcurrentLinkedQueue<>();
     //tableCache 数据表缓存，在初始化时将会放入所有的key和一个空的cache，后续需要缓存直接放入空的cache中，不再创建新的cache实例
     private final ConcurrentHashMap<String, Cache> tableCache = new ConcurrentHashMap<>();
-    private final AtomicInteger cacheCount = new AtomicInteger();
+    private final AtomicInteger tableCacheCount = new AtomicInteger();
     private static volatile String[] searchCase;
     private static volatile boolean isIgnoreCase;
     private static volatile String searchText;
@@ -128,7 +128,7 @@ public class DatabaseService {
             each.isCached.set(false);
             each.data = null;
         });
-        cacheCount.set(0);
+        tableCacheCount.set(0);
     }
 
     /**
@@ -348,20 +348,17 @@ public class DatabaseService {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             EventManagement eventManagement = EventManagement.getInstance();
             final int checkTimeInterval = 10 * 60 * 1000; // 10 min
-            int startupLatency = 30 * 1000;
-            if (IsDebug.isDebug()) {
-                startupLatency = 0;
-            }
-            final int _startupLatency = startupLatency;
+            final int startUpLatency = 10 * 1000; // 10s
             var startCheckInfo = new Object() {
-                long startCheckTimeMills = System.currentTimeMillis() - checkTimeInterval + _startupLatency;
+                long startCheckTimeMills = System.currentTimeMillis() - checkTimeInterval + startUpLatency;
                 boolean isCreatedOnDatabaseUpdate = false;
             };
             final Supplier<Boolean> isStopCreateCache =
                     () -> !isSearchStopped.get() || !eventManagement.notMainExit() || status != Constants.Enums.DatabaseStatus.NORMAL;
             final Supplier<Boolean> isStartSaveCache =
                     () -> (isSearchStopped.get() &&
-                            System.currentTimeMillis() - startCheckInfo.startCheckTimeMills > checkTimeInterval && !GetHandle.INSTANCE.isForegroundFullscreen()) ||
+                            System.currentTimeMillis() - startCheckInfo.startCheckTimeMills > checkTimeInterval &&
+                            !GetHandle.INSTANCE.isForegroundFullscreen()) ||
                             (isDatabaseUpdated.get() && !startCheckInfo.isCreatedOnDatabaseUpdate);
             try {
                 AllConfigs allConfigs = AllConfigs.getInstance();
@@ -406,8 +403,6 @@ public class DatabaseService {
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
-            } finally {
-                isCreatingCache.set(false);
             }
         });
     }
@@ -496,7 +491,7 @@ public class DatabaseService {
             Cache cache = entry.getValue();
             if (tableNeedCache.containsKey(key)) {
                 //当前表可以被缓存
-                if (cacheCount.get() + tableNeedCache.get(key) < MAX_CACHED_RECORD_NUM - 1000 && !cache.isCacheValid()) {
+                if (tableCacheCount.get() + tableNeedCache.get(key) < MAX_CACHED_RECORD_NUM - 1000 && !cache.isCacheValid()) {
                     cache.data = new ConcurrentLinkedQueue<>();
                     String[] info = RegexUtil.comma.split(key);
                     try (Statement stmt = SQLiteUtil.getStatement(info[0]);
@@ -506,7 +501,7 @@ public class DatabaseService {
                                 break out;
                             }
                             cache.data.add(resultSet.getString("PATH"));
-                            cacheCount.incrementAndGet();
+                            tableCacheCount.incrementAndGet();
                         }
                     } catch (SQLException e) {
                         e.printStackTrace();
@@ -518,7 +513,7 @@ public class DatabaseService {
                 if (cache.isCached.get()) {
                     cache.isCached.compareAndSet(cache.isCached.get(), false);
                     int num = cache.data.size();
-                    cacheCount.compareAndSet(cacheCount.get(), cacheCount.get() - num);
+                    tableCacheCount.compareAndSet(tableCacheCount.get(), tableCacheCount.get() - num);
                     cache.data = null;
                 }
             }
@@ -1224,7 +1219,7 @@ public class DatabaseService {
             Cache cache = tableCache.get(key);
             if (cache.isCached.get()) {
                 if (cache.data.remove(path)) {
-                    cacheCount.decrementAndGet();
+                    tableCacheCount.decrementAndGet();
                 }
             }
         }
@@ -1305,9 +1300,9 @@ public class DatabaseService {
         }
         Cache cache = tableCache.get(key);
         if (cache.isCacheValid()) {
-            if (cacheCount.get() < MAX_CACHED_RECORD_NUM) {
+            if (tableCacheCount.get() < MAX_CACHED_RECORD_NUM) {
                 if (cache.data.add(path)) {
-                    cacheCount.incrementAndGet();
+                    tableCacheCount.incrementAndGet();
                 }
             } else {
                 cache.isFileLost.set(true);
@@ -1434,7 +1429,15 @@ public class DatabaseService {
      * @return 装填
      */
     public Constants.Enums.DatabaseStatus getStatus() {
-        return status;
+        switch (status) {
+            case NORMAL:
+            case TEMP:
+                return Constants.Enums.DatabaseStatus.NORMAL;
+            case MANUAL_UPDATE:
+            case VACUUM:
+            default:
+                return status;
+        }
     }
 
     /**
@@ -1931,6 +1934,7 @@ public class DatabaseService {
         while (!databaseService.isSearchStopped.get()) {
             Thread.onSpinWait();
         }
+        databaseService.tempResults.clear();
         PrepareSearchEvent prepareSearchEvent = (PrepareSearchEvent) event;
         prepareSearchKeywords(prepareSearchEvent.searchText, prepareSearchEvent.searchCase, prepareSearchEvent.keywords);
         if (AllConfigs.getInstance().isEnableCuda()) {
@@ -1963,7 +1967,6 @@ public class DatabaseService {
             Thread.onSpinWait();
         }
         StartSearchEvent startSearchEvent = (StartSearchEvent) event;
-        databaseService.tempResults.clear();
         if (!PrepareSearchInfo.isSearchPrepared.get()) {
             prepareSearchKeywords(startSearchEvent.searchText, startSearchEvent.searchCase, startSearchEvent.keywords);
             PrepareSearchInfo.prepareSearchTasks();
@@ -2056,7 +2059,7 @@ public class DatabaseService {
                 throw new RuntimeException("search failed");
             }
         } finally {
-            databaseService.setStatus(Constants.Enums.DatabaseStatus.NORMAL);
+            databaseService.setStatus(Constants.Enums.DatabaseStatus.TEMP);
             if (IsDebug.isDebug()) {
                 System.out.println("搜索已经可用");
             }

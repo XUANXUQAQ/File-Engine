@@ -51,7 +51,7 @@ public class Constants {
         }
 
         public enum DatabaseStatus {
-            NORMAL, VACUUM, MANUAL_UPDATE
+            NORMAL, VACUUM, MANUAL_UPDATE, TEMP
         }
 
         public enum DownloadStatus {
