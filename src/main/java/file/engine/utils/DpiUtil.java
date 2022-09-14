@@ -20,7 +20,9 @@ public class DpiUtil {
             ProcessUtil.waitForProcess("getDpi.exe", 10);
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(exec.getInputStream()))) {
                 String dpiStr = reader.readLine();
-                dpi = Double.parseDouble(dpiStr);
+                if (dpiStr != null) {
+                    dpi = Double.parseDouble(dpiStr);
+                }
             }
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();

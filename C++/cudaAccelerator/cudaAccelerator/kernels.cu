@@ -9,165 +9,18 @@
 #include "constans.h"
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
+#include "str_utils.cuh"
+#include "str_convert.cuh"
 
-inline void gpuAssert(cudaError_t code, const char* file, int line, const char* function, bool is_exit,
-                      const char* info)
-{
-	if (code != cudaSuccess)
-	{
-		if (info == nullptr)
-		{
-			fprintf(stderr, "GPU assert: %s %s %d %s\n", cudaGetErrorString(code), file, line, function);
-		}
-		else
-		{
-			fprintf(stderr, "GPU assert: %s %s %d %s %s\n", cudaGetErrorString(code), file, line, function, info);
-		}
-		if (is_exit)
-		{
-			std::quick_exit(code);
-		}
-	}
-}
+int* dev_search_case = nullptr;
+char* dev_search_text = nullptr;
+char* dev_keywords = nullptr;
+char* dev_keywords_lower_case = nullptr;
+size_t* dev_keywords_length = nullptr;
+bool* dev_is_keyword_path = nullptr;
+bool* dev_is_ignore_case = nullptr;
 
-__device__ int strcmp_cuda(const char* str1, const char* str2)
-{
-	while (*str1)
-	{
-		if (*str1 > *str2)return 1;
-		if (*str1 < *str2)return -1;
-		++str1;
-		++str2;
-	}
-	if (*str1 < *str2)return -1;
-	return 0;
-}
-
-
-__device__ char* strlwr_cuda(char* src)
-{
-	while (*src != '\0')
-	{
-		if (*src > 'A' && *src <= 'Z')
-		{
-			*src += 32;
-		}
-		++src;
-	}
-	return src;
-}
-
-
-__device__ char* strstr_cuda(char* s1, char* s2)
-{
-	int n;
-	if (*s2) //两种情况考虑
-	{
-		while (*s1)
-		{
-			for (n = 0; *(s1 + n) == *(s2 + n); ++n)
-			{
-				if (!*(s2 + n + 1)) //查找的下一个字符是否为'\0'
-				{
-					return s1;
-				}
-			}
-			++s1;
-		}
-		return nullptr;
-	}
-	return s1;
-}
-
-__device__ char* strrchr_cuda(const char* s, int c)
-{
-	if (s == nullptr)
-	{
-		return nullptr;
-	}
-
-	char* p_char = nullptr;
-	while (*s != '\0')
-	{
-		if (*s == static_cast<char>(c))
-		{
-			p_char = const_cast<char*>(s);
-		}
-		++s;
-	}
-
-	return p_char;
-}
-
-__device__ char* strcpy_cuda(char* dst, const char* src)
-{
-	char* ret = dst;
-	while ((*dst++ = *src++) != '\0')
-	{
-	}
-	return ret;
-}
-
-__device__ size_t strlen_cuda(const char* str)
-{
-	size_t count = 0;
-	while (*str != '\0')
-	{
-		count++;
-		++str;
-	}
-	return count;
-}
-
-__device__ char* strcat_cuda(char* dst, char const* src)
-{
-	if (dst == nullptr || src == nullptr)
-	{
-		return nullptr;
-	}
-
-	char* tmp = dst;
-
-	while (*dst != '\0') //这个循环结束之后，dst指向'\0'
-	{
-		dst++;
-	}
-
-	while (*src != '\0')
-	{
-		*dst++ = *src++; //把src指向的内容赋值给dst
-	}
-
-	*dst = '\0'; //这句一定要加，否则最后一个字符会乱码
-	return tmp;
-}
-
-__device__ void str_add_single(char* dst, const char c)
-{
-	while (*dst != '\0')
-	{
-		dst++;
-	}
-	*dst++ = c;
-	*dst = '\0';
-}
-
-__device__ void get_file_name(const char* path, char* output)
-{
-	const char* p = strrchr_cuda(path, '\\');
-	strcpy_cuda(output, p + 1);
-}
-
-__device__ void get_parent_path(const char* path, char* output)
-{
-	strcpy_cuda(output, path);
-	char* p = strrchr_cuda(output, '\\');
-	*p = '\0';
-}
-
-__device__ void convert_to_pinyin(const char* chinese_str, char* output_str)
-{
-	constexpr int spell_value[] = {
+__device__ constexpr int spell_value[] = {
 		-20319, -20317, -20304, -20295, -20292, -20283, -20265, -20257, -20242, -20230, -20051, -20036, -20032, -20026,
 		-20002, -19990, -19986, -19982, -19976, -19805, -19784, -19775, -19774, -19763, -19756, -19751, -19746, -19741,
 		-19739, -19728,
@@ -216,55 +69,58 @@ __device__ void convert_to_pinyin(const char* chinese_str, char* output_str)
 		-11020, -11019, -11018, -11014, -10838, -10832, -10815, -10800, -10790, -10780, -10764, -10587, -10544, -10533,
 		-10519, -10331,
 		-10329, -10328, -10322, -10315, -10309, -10307, -10296, -10281, -10274, -10270, -10262, -10260, -10256, -10254
-	};
+};
 
-	// 395个字符串，每个字符串长度不超过6
-	constexpr char spell_dict[396][7] = {
-		"a", "ai", "an", "ang", "ao", "ba", "bai", "ban", "bang", "bao", "bei", "ben", "beng", "bi", "bian", "biao",
-		"bie", "bin", "bing", "bo", "bu", "ca", "cai", "can", "cang", "cao", "ce", "ceng", "cha", "chai", "chan",
-		"chang", "chao", "che", "chen",
-		"cheng", "chi", "chong", "chou", "chu", "chuai", "chuan", "chuang", "chui", "chun", "chuo", "ci", "cong", "cou",
-		"cu", "cuan", "cui",
-		"cun", "cuo", "da", "dai", "dan", "dang", "dao", "de", "deng", "di", "dian", "diao", "die", "ding", "diu",
-		"dong", "dou", "du", "duan",
-		"dui", "dun", "duo", "e", "en", "er", "fa", "fan", "fang", "fei", "fen", "feng", "fo", "fou", "fu", "ga", "gai",
-		"gan", "gang", "gao",
-		"ge", "gei", "gen", "geng", "gong", "gou", "gu", "gua", "guai", "guan", "guang", "gui", "gun", "guo", "ha",
-		"hai", "han", "hang",
-		"hao", "he", "hei", "hen", "heng", "hong", "hou", "hu", "hua", "huai", "huan", "huang", "hui", "hun", "huo",
-		"ji", "jia", "jian",
-		"jiang", "jiao", "jie", "jin", "jing", "jiong", "jiu", "ju", "juan", "jue", "jun", "ka", "kai", "kan", "kang",
-		"kao", "ke", "ken",
-		"keng", "kong", "kou", "ku", "kua", "kuai", "kuan", "kuang", "kui", "kun", "kuo", "la", "lai", "lan", "lang",
-		"lao", "le", "lei",
-		"leng", "li", "lia", "lian", "liang", "liao", "lie", "lin", "ling", "liu", "long", "lou", "lu", "lv", "luan",
-		"lue", "lun", "luo",
-		"ma", "mai", "man", "mang", "mao", "me", "mei", "men", "meng", "mi", "mian", "miao", "mie", "min", "ming",
-		"miu", "mo", "mou", "mu",
-		"na", "nai", "nan", "nang", "nao", "ne", "nei", "nen", "neng", "ni", "nian", "niang", "niao", "nie", "nin",
-		"ning", "niu", "nong",
-		"nu", "nv", "nuan", "nue", "nuo", "o", "ou", "pa", "pai", "pan", "pang", "pao", "pei", "pen", "peng", "pi",
-		"pian", "piao", "pie",
-		"pin", "ping", "po", "pu", "qi", "qia", "qian", "qiang", "qiao", "qie", "qin", "qing", "qiong", "qiu", "qu",
-		"quan", "que", "qun",
-		"ran", "rang", "rao", "re", "ren", "reng", "ri", "rong", "rou", "ru", "ruan", "rui", "run", "ruo", "sa", "sai",
-		"san", "sang",
-		"sao", "se", "sen", "seng", "sha", "shai", "shan", "shang", "shao", "she", "shen", "sheng", "shi", "shou",
-		"shu", "shua",
-		"shuai", "shuan", "shuang", "shui", "shun", "shuo", "si", "song", "sou", "su", "suan", "sui", "sun", "suo",
-		"ta", "tai",
-		"tan", "tang", "tao", "te", "teng", "ti", "tian", "tiao", "tie", "ting", "tong", "tou", "tu", "tuan", "tui",
-		"tun", "tuo",
-		"wa", "wai", "wan", "wang", "wei", "wen", "weng", "wo", "wu", "xi", "xia", "xian", "xiang", "xiao", "xie",
-		"xin", "xing",
-		"xiong", "xiu", "xu", "xuan", "xue", "xun", "ya", "yan", "yang", "yao", "ye", "yi", "yin", "ying", "yo", "yong",
-		"you",
-		"yu", "yuan", "yue", "yun", "za", "zai", "zan", "zang", "zao", "ze", "zei", "zen", "zeng", "zha", "zhai",
-		"zhan", "zhang",
-		"zhao", "zhe", "zhen", "zheng", "zhi", "zhong", "zhou", "zhu", "zhua", "zhuai", "zhuan", "zhuang", "zhui",
-		"zhun", "zhuo",
-		"zi", "zong", "zou", "zu", "zuan", "zui", "zun", "zuo"
-	};
+// 395个字符串，每个字符串长度不超过6
+__device__ constexpr char spell_dict[396][7] = {
+	"a", "ai", "an", "ang", "ao", "ba", "bai", "ban", "bang", "bao", "bei", "ben", "beng", "bi", "bian", "biao",
+	"bie", "bin", "bing", "bo", "bu", "ca", "cai", "can", "cang", "cao", "ce", "ceng", "cha", "chai", "chan",
+	"chang", "chao", "che", "chen",
+	"cheng", "chi", "chong", "chou", "chu", "chuai", "chuan", "chuang", "chui", "chun", "chuo", "ci", "cong", "cou",
+	"cu", "cuan", "cui",
+	"cun", "cuo", "da", "dai", "dan", "dang", "dao", "de", "deng", "di", "dian", "diao", "die", "ding", "diu",
+	"dong", "dou", "du", "duan",
+	"dui", "dun", "duo", "e", "en", "er", "fa", "fan", "fang", "fei", "fen", "feng", "fo", "fou", "fu", "ga", "gai",
+	"gan", "gang", "gao",
+	"ge", "gei", "gen", "geng", "gong", "gou", "gu", "gua", "guai", "guan", "guang", "gui", "gun", "guo", "ha",
+	"hai", "han", "hang",
+	"hao", "he", "hei", "hen", "heng", "hong", "hou", "hu", "hua", "huai", "huan", "huang", "hui", "hun", "huo",
+	"ji", "jia", "jian",
+	"jiang", "jiao", "jie", "jin", "jing", "jiong", "jiu", "ju", "juan", "jue", "jun", "ka", "kai", "kan", "kang",
+	"kao", "ke", "ken",
+	"keng", "kong", "kou", "ku", "kua", "kuai", "kuan", "kuang", "kui", "kun", "kuo", "la", "lai", "lan", "lang",
+	"lao", "le", "lei",
+	"leng", "li", "lia", "lian", "liang", "liao", "lie", "lin", "ling", "liu", "long", "lou", "lu", "lv", "luan",
+	"lue", "lun", "luo",
+	"ma", "mai", "man", "mang", "mao", "me", "mei", "men", "meng", "mi", "mian", "miao", "mie", "min", "ming",
+	"miu", "mo", "mou", "mu",
+	"na", "nai", "nan", "nang", "nao", "ne", "nei", "nen", "neng", "ni", "nian", "niang", "niao", "nie", "nin",
+	"ning", "niu", "nong",
+	"nu", "nv", "nuan", "nue", "nuo", "o", "ou", "pa", "pai", "pan", "pang", "pao", "pei", "pen", "peng", "pi",
+	"pian", "piao", "pie",
+	"pin", "ping", "po", "pu", "qi", "qia", "qian", "qiang", "qiao", "qie", "qin", "qing", "qiong", "qiu", "qu",
+	"quan", "que", "qun",
+	"ran", "rang", "rao", "re", "ren", "reng", "ri", "rong", "rou", "ru", "ruan", "rui", "run", "ruo", "sa", "sai",
+	"san", "sang",
+	"sao", "se", "sen", "seng", "sha", "shai", "shan", "shang", "shao", "she", "shen", "sheng", "shi", "shou",
+	"shu", "shua",
+	"shuai", "shuan", "shuang", "shui", "shun", "shuo", "si", "song", "sou", "su", "suan", "sui", "sun", "suo",
+	"ta", "tai",
+	"tan", "tang", "tao", "te", "teng", "ti", "tian", "tiao", "tie", "ting", "tong", "tou", "tu", "tuan", "tui",
+	"tun", "tuo",
+	"wa", "wai", "wan", "wang", "wei", "wen", "weng", "wo", "wu", "xi", "xia", "xian", "xiang", "xiao", "xie",
+	"xin", "xing",
+	"xiong", "xiu", "xu", "xuan", "xue", "xun", "ya", "yan", "yang", "yao", "ye", "yi", "yin", "ying", "yo", "yong",
+	"you",
+	"yu", "yuan", "yue", "yun", "za", "zai", "zan", "zang", "zao", "ze", "zei", "zen", "zeng", "zha", "zhai",
+	"zhan", "zhang",
+	"zhao", "zhe", "zhen", "zheng", "zhi", "zhong", "zhou", "zhu", "zhua", "zhuai", "zhuan", "zhuang", "zhui",
+	"zhun", "zhuo",
+	"zi", "zong", "zou", "zu", "zuan", "zui", "zun", "zuo"
+};
+
+__device__ void convert_to_pinyin(const char* chinese_str, char* output_str)
+{
 	// 循环处理字节数组
 	const auto length = strlen_cuda(chinese_str);
 	for (size_t j = 0; j < length;)
@@ -307,16 +163,16 @@ __device__ void convert_to_pinyin(const char* chinese_str, char* output_str)
 }
 
 __device__ bool not_matched(const char* path,
-                            const bool is_ignore_case,
-                            char* keywords,
-                            char* keywords_lower_case,
-                            const int keywords_length,
-                            const bool* is_keyword_path)
+	const bool is_ignore_case,
+	char* keywords,
+	char* keywords_lower_case,
+	const int keywords_length,
+	const bool* is_keyword_path)
 {
 	for (int i = 0; i < keywords_length; ++i)
 	{
 		const bool is_keyword_path_val = is_keyword_path[i];
-		char match_str[MAX_PATH_LENGTH]{0};
+		char match_str[MAX_PATH_LENGTH]{ 0 };
 		if (is_keyword_path_val)
 		{
 			get_parent_path(path, match_str);
@@ -339,14 +195,19 @@ __device__ bool not_matched(const char* path,
 		{
 			continue;
 		}
-		if (!match_str[0] || strstr_cuda(match_str, each_keyword) == nullptr)
+		if (strstr_cuda(match_str, each_keyword) == nullptr)
 		{
-			if (is_keyword_path_val)
+			if (is_keyword_path_val || !is_str_contains_chinese(match_str))
 			{
 				return true;
 			}
-			char converted_pinyin[MAX_PATH_LENGTH]{0};
-			convert_to_pinyin(match_str, converted_pinyin);
+			char gbk_buffer[MAX_PATH_LENGTH * 2]{ 0 };
+			char* gbk_buffer_ptr = gbk_buffer;
+			unsigned gbk_buffer_size = MAX_PATH_LENGTH * 2;
+			// utf-8编码转换gbk
+			utf8_to_gbk(match_str, static_cast<unsigned>(strlen_cuda(match_str)), &gbk_buffer_ptr, &gbk_buffer_size);
+			char converted_pinyin[MAX_PATH_LENGTH * 6]{ 0 };
+			convert_to_pinyin(gbk_buffer, converted_pinyin);
 			if (strstr_cuda(converted_pinyin, each_keyword) == nullptr)
 			{
 				return true;
@@ -356,32 +217,34 @@ __device__ bool not_matched(const char* path,
 	return false;
 }
 
-__global__ void check(const char (* str_address_ptr_array)[MAX_PATH_LENGTH],
-                      const int* search_case,
-                      const bool* is_ignore_case,
-                      char* search_text,
-                      char* keywords,
-                      char* keywords_lower_case,
-                      const size_t* keywords_length,
-                      const bool* is_keyword_path,
-                      char* output,
-                      const bool* is_stop_collect_var)
+__global__ void check(const char(*str_address_ptr_array)[MAX_PATH_LENGTH],
+	const size_t* total_num,
+	const int* search_case,
+	const bool* is_ignore_case,
+	char* search_text,
+	char* keywords,
+	char* keywords_lower_case,
+	const size_t* keywords_length,
+	const bool* is_keyword_path,
+	char* output,
+	const bool* is_stop_collect_var)
 {
 	const size_t thread_id = GET_TID();
-	const char* path = reinterpret_cast<const char*>(str_address_ptr_array + thread_id);
+	if (thread_id >= *total_num)
+	{
+		return;
+	}
+	const auto path = reinterpret_cast<const char*>(str_address_ptr_array + thread_id);
 	if (*is_stop_collect_var)
 	{
 		return;
 	}
-#ifdef DEBUG_OUTPUT
-	printf("%s\n", path);
-#endif
 	if (path == nullptr || !path[0])
 	{
 		return;
 	}
 	if (not_matched(path, *is_ignore_case, keywords, keywords_lower_case, static_cast<int>(*keywords_length),
-	                is_keyword_path))
+		is_keyword_path))
 	{
 		return;
 	}
@@ -390,7 +253,7 @@ __global__ void check(const char (* str_address_ptr_array)[MAX_PATH_LENGTH],
 		output[thread_id] = 1;
 		return;
 	}
-	if ((*search_case & 4) == 4)
+	if (*search_case & 4)
 	{
 		// 全字匹配
 		strlwr_cuda(search_text);
@@ -405,132 +268,126 @@ __global__ void check(const char (* str_address_ptr_array)[MAX_PATH_LENGTH],
 	output[thread_id] = 1;
 }
 
-void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*>& cache_map,
-                  const std::vector<std::string>& search_case,
-                  bool is_ignore_case,
-                  const char* search_text,
-                  const std::vector<std::string>& keywords,
-                  const std::vector<std::string>& keywords_lower_case,
-                  const bool* is_keyword_path)
+bool set_using_device(const int device_number)
 {
-	int* dev_search_case = nullptr;
-	char* dev_search_text = nullptr;
-	char* dev_keywords = nullptr;
-	char* dev_keywords_lower_case = nullptr;
-	size_t* dev_keywords_length = nullptr;
-	bool* dev_is_keyword_path = nullptr;
-	bool* dev_is_ignore_case = nullptr;
+	const auto status = cudaSetDevice(device_number);
+	if (status != cudaSuccess)
+	{
+		fprintf(stderr, "set device error: %s\n", cudaGetErrorString(status));
+		return false;
+	}
+	return true;
+}
 
+void init_cuda_search_memory()
+{
+	gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_search_case), sizeof(int)), true, nullptr);
+	gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_search_text), MAX_PATH_LENGTH * sizeof(char)), true, nullptr);
+	gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_keywords_length), sizeof(size_t)), true, nullptr);
+	gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_is_keyword_path), sizeof(bool) * MAX_KEYWORDS_NUMBER), true,
+		nullptr);
+	gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_is_ignore_case), sizeof(bool)), true, nullptr);
+	gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_keywords), static_cast<size_t>(MAX_PATH_LENGTH * MAX_KEYWORDS_NUMBER)), true, nullptr);
+	gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_keywords_lower_case), static_cast<size_t>(MAX_PATH_LENGTH * MAX_KEYWORDS_NUMBER)), true, nullptr);
+}
+
+void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*>& cache_map,
+	const std::vector<std::string>& search_case,
+	const bool is_ignore_case,
+	const char* search_text,
+	const std::vector<std::string>& keywords,
+	const std::vector<std::string>& keywords_lower_case,
+	const bool* is_keyword_path,
+	cudaStream_t* streams,
+	const size_t stream_count)
+{
 	const auto keywords_num = keywords.size();
-	const auto stream_count = cache_map.size();
-	auto streams = new cudaStream_t[stream_count];
-	//初始化流
-	for (size_t i = 0; i < stream_count; ++i)
+
+	// 复制search case
+	// 第一位为1表示有F，第二位为1表示有D，第三位为1表示有FULL，CASE由File-Engine主程序进行判断，传入参数is_ignore_case为false表示有CASE
+	int search_case_num = 0;
+	for (auto& each_case : search_case)
 	{
-		gpuErrchk(cudaStreamCreate(&streams[i]), true, nullptr)
+		if (each_case == "full")
+		{
+			search_case_num |= 4;
+		}
 	}
-	do
+	gpuErrchk(cudaMemcpy(dev_search_case, &search_case_num, sizeof(int), cudaMemcpyHostToDevice), true, nullptr);
+
+	// 复制search text
+	const auto search_text_len = strlen(search_text);
+
+	gpuErrchk(cudaMemset(dev_search_text, 0, search_text_len + 1), true, nullptr);
+	gpuErrchk(cudaMemcpy(dev_search_text, search_text, search_text_len, cudaMemcpyHostToDevice), true, nullptr);
+
+	// 复制keywords
+	gpuErrchk(vector_to_cuda_char_array(keywords, reinterpret_cast<void**>(&dev_keywords)), true, nullptr);
+
+	// 复制keywords_lower_case
+	gpuErrchk(vector_to_cuda_char_array(keywords_lower_case, reinterpret_cast<void**>(&dev_keywords_lower_case)),
+		true, nullptr);
+
+	//复制keywords_length
+	gpuErrchk(cudaMemcpy(dev_keywords_length, &keywords_num, sizeof(size_t), cudaMemcpyHostToDevice), true, nullptr);
+
+	// 复制is_keyword_path
+	gpuErrchk(cudaMemcpy(dev_is_keyword_path, is_keyword_path, sizeof(bool) * keywords_num, cudaMemcpyHostToDevice),
+		true, nullptr);
+
+	// 复制is_ignore_case
+	gpuErrchk(cudaMemcpy(dev_is_ignore_case, &is_ignore_case, sizeof(bool), cudaMemcpyHostToDevice), true, nullptr);
+	unsigned count = 0;
+	for (auto& each : cache_map)
 	{
-		// 选择第一个GPU
-		gpuErrchk(cudaSetDevice(0), true, nullptr)
-
-		// 复制search case
-		// 第一位为1表示有F，第二位为1表示有D，第三位为1表示有FULL，CASE由File-Engine主程序进行判断，传入参数is_ignore_case为false表示有CASE
-		gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_search_case), sizeof(int)), true, nullptr)
-		int search_case_num = 0;
-		for (auto& each_case : search_case)
-		{
-			// if (each_case == "f")
-			// {
-			// 	search_case_num |= 1;
-			// }
-			// if (each_case == "d")
-			// {
-			// 	search_case_num |= 2;
-			// }
-			if (each_case == "full")
-			{
-				search_case_num |= 4;
-			}
-		}
-		gpuErrchk(cudaMemcpy(dev_search_case, &search_case_num, sizeof(int), cudaMemcpyHostToDevice), true, nullptr)
-
-		// 复制search text
-		const auto search_text_len = strlen(search_text);
-		gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_search_text), (search_text_len + 1) * sizeof(char)), true,
-		          nullptr)
-		gpuErrchk(cudaMemset(dev_search_text, 0, search_text_len + 1), true, nullptr)
-		gpuErrchk(cudaMemcpy(dev_search_text, search_text, search_text_len, cudaMemcpyHostToDevice), true, nullptr)
-
-		// 复制keywords
-		gpuErrchk(vector_to_cuda_char_array(keywords, reinterpret_cast<void**>(&dev_keywords)), true, nullptr)
-
-		// 复制keywords_lower_case
-		gpuErrchk(vector_to_cuda_char_array(keywords_lower_case, reinterpret_cast<void**>(&dev_keywords_lower_case)),
-		          true, nullptr)
-
-		//复制keywords_length
-		gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_keywords_length), sizeof(size_t)), true, nullptr)
-		gpuErrchk(cudaMemcpy(dev_keywords_length, &keywords_num, sizeof(size_t), cudaMemcpyHostToDevice), true, nullptr)
-
-		// 复制is_keyword_path
-		gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_is_keyword_path), sizeof(bool) * keywords_num), true,
-		          nullptr)
-		gpuErrchk(cudaMemcpy(dev_is_keyword_path, is_keyword_path, sizeof(bool) * keywords_num, cudaMemcpyHostToDevice),
-		          true, nullptr)
-
-		// 复制is_ignore_case
-		gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_is_ignore_case), sizeof(bool)), true, nullptr)
-		gpuErrchk(cudaMemcpy(dev_is_ignore_case, &is_ignore_case, sizeof(bool), cudaMemcpyHostToDevice), true, nullptr)
-		int count = 0;
-		for (auto& each : cache_map)
-		{
-			int block_num, thread_num;
-			const auto& cache = each.second;
-			if (cache->str_data.record_num > MAX_THREAD_PER_BLOCK)
-			{
-				thread_num = MAX_THREAD_PER_BLOCK;
-				block_num = static_cast<int>(cache->str_data.record_num / thread_num);
-			}
-			else
-			{
-				thread_num = static_cast<int>(cache->str_data.record_num.load());
-				block_num = 1;
-			}
-			//注册回调
-			cudaStreamAddCallback(streams[count], set_match_done_flag_callback, cache, 0);
-
-			check<<<block_num, thread_num, 0, streams[count]>>>
-			(cache->str_data.dev_cache_str,
-			 dev_search_case,
-			 dev_is_ignore_case,
-			 dev_search_text,
-			 dev_keywords,
-			 dev_keywords_lower_case,
-			 dev_keywords_length,
-			 dev_is_keyword_path,
-			 cache->dev_output,
-			 get_dev_stop_signal());
-			++count;
-		}
-
-		// 检查启动错误
-		cudaError_t cudaStatus = cudaGetLastError();
-		if (cudaStatus != cudaSuccess)
-		{
-			fprintf(stderr, "check launch failed: %s\n", cudaGetErrorString(cudaStatus));
+		if (count >= stream_count)
 			break;
+		const auto& cache = each.second;
+		if (!cache->is_cache_valid)
+		{
+			continue;
 		}
+		int block_num, thread_num;
+		const auto total = cache->str_data.record_num.load() + cache->str_data.remain_blank_num.load();
+		const auto max_pow_of_2 = find_table_sizeof2(total);
+		if (cache->str_data.record_num.load() > MAX_THREAD_PER_BLOCK)
+		{
+			thread_num = MAX_THREAD_PER_BLOCK;
+			block_num = static_cast<int>(max_pow_of_2 / thread_num);
+		}
+		else
+		{
+			thread_num = static_cast<int>(cache->str_data.record_num.load());
+			block_num = 1;
+		}
+		//注册回调
+		cudaStreamAddCallback(streams[count], set_match_done_flag_callback, cache, 0);
 
-		// 等待执行完成
-		// cudaStatus = cudaDeviceSynchronize();
-		// if (cudaStatus != cudaSuccess)
-		// {
-		// 	fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launch!\n", cudaStatus);
-		// }
+		check << <block_num, thread_num, 0, streams[count] >> >
+			(cache->str_data.dev_cache_str,
+				cache->str_data.dev_total_number,
+				dev_search_case,
+				dev_is_ignore_case,
+				dev_search_text,
+				dev_keywords,
+				dev_keywords_lower_case,
+				dev_keywords_length,
+				dev_is_keyword_path,
+				cache->dev_output,
+				get_dev_stop_signal());
+		++count;
 	}
-	while (false);
-	delete[] streams;
+
+	// 检查启动错误
+	cudaError_t cudaStatus = cudaGetLastError();
+	if (cudaStatus != cudaSuccess)
+	{
+		fprintf(stderr, "check launch failed: %s\n", cudaGetErrorString(cudaStatus));
+	}
+}
+
+void free_cuda_search_memory()
+{
 	cudaFree(dev_search_case);
 	cudaFree(dev_search_text);
 	cudaFree(dev_keywords);
@@ -538,6 +395,17 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 	cudaFree(dev_is_keyword_path);
 	cudaFree(dev_is_ignore_case);
 	cudaFree(dev_keywords_length);
+}
+
+size_t find_table_sizeof2(const size_t target)
+{
+	size_t temp = target - 1;
+	temp |= temp >> 1;
+	temp |= temp >> 2;
+	temp |= temp >> 4;
+	temp |= temp >> 8;
+	temp |= temp >> 16;
+	return temp + 1;
 }
 
 void CUDART_CB set_match_done_flag_callback(cudaStream_t, cudaError_t, void* data)

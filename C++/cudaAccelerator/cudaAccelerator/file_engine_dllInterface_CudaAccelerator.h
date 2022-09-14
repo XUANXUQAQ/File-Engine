@@ -18,10 +18,18 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_resetAllRes
 /*
  * Class:     file_engine_dllInterface_CudaAccelerator
  * Method:    match
- * Signature: ([Ljava/lang/String;ZLjava/lang/String;[Ljava/lang/String;[Ljava/lang/String;[ZLjava/util/concurrent/ConcurrentHashMap;)V
+ * Signature: ([Ljava/lang/String;ZLjava/lang/String;[Ljava/lang/String;[Ljava/lang/String;[ZI)V
  */
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_match
-  (JNIEnv *, jobject, jobjectArray, jboolean, jstring, jobjectArray, jobjectArray, jbooleanArray, jobject);
+  (JNIEnv *, jobject, jobjectArray, jboolean, jstring, jobjectArray, jobjectArray, jbooleanArray, jint);
+
+/*
+ * Class:     file_engine_dllInterface_CudaAccelerator
+ * Method:    getOneResult
+ * Signature: (Ljava/lang/String;)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_CudaAccelerator_getOneResult
+  (JNIEnv *, jobject, jstring);
 
 /*
  * Class:     file_engine_dllInterface_CudaAccelerator
@@ -50,9 +58,17 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_CudaAccelerator_isCudaA
 /*
  * Class:     file_engine_dllInterface_CudaAccelerator
  * Method:    hasCache
- * Signature: (Ljava/lang/String;)Z
+ * Signature: ()Z
  */
 JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_CudaAccelerator_hasCache
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     file_engine_dllInterface_CudaAccelerator
+ * Method:    isCacheExist
+ * Signature: (Ljava/lang/String;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_CudaAccelerator_isCacheExist
   (JNIEnv *, jobject, jstring);
 
 /*
@@ -118,6 +134,30 @@ JNIEXPORT jint JNICALL Java_file_engine_dllInterface_CudaAccelerator_getCudaMemU
  */
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_initialize
   (JNIEnv *, jobject);
+
+/*
+ * Class:     file_engine_dllInterface_CudaAccelerator
+ * Method:    release
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_release
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     file_engine_dllInterface_CudaAccelerator
+ * Method:    getDevices
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_CudaAccelerator_getDevices
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     file_engine_dllInterface_CudaAccelerator
+ * Method:    setDevice
+ * Signature: (I)Z
+ */
+JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_CudaAccelerator_setDevice
+  (JNIEnv *, jobject, jint);
 
 #ifdef __cplusplus
 }

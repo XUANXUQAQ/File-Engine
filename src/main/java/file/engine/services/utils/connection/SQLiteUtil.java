@@ -19,6 +19,7 @@ import java.nio.file.Path;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -34,25 +35,28 @@ public class SQLiteUtil {
     private static String currentDatabaseDir = "data";
 
     static {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            Consumer<ConnectionWrapper> checkConnectionAndClose = (conn) -> {
-                if (conn.isIdleTimeout()) {
-                    try {
-                        conn.lock.lock();
-                        if (conn.isIdleTimeout() && !conn.connection.isClosed()) {
-                            System.out.println("长时间未使用 " + conn.url + "  已关闭连接");
-                            conn.connection.close();
+        Consumer<ConnectionWrapper> checkConnectionAndClose = (conn) -> {
+            if (conn.isIdleTimeout()) {
+                try {
+                    conn.lock.lock();
+                    if (conn.isIdleTimeout() && !conn.connection.isClosed()) {
+                        System.out.println("长时间未使用 " + conn.url + "  已关闭连接");
+                        try (Statement stmt = conn.connection.createStatement()) {
+                            stmt.execute("PRAGMA shrink_memory");
                         }
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    } finally {
-                        conn.lock.unlock();
+                        conn.connection.close();
                     }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                } finally {
+                    conn.lock.unlock();
                 }
-            };
-            CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+            }
+        };
+        CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+        cachedThreadPoolUtil.executeTask(() -> {
             long checkTimeMills = 0;
-            final long threshold = 2 * 60 * 1000; // 2min
+            final long threshold = 10_000; // 10s
             try {
                 while (!cachedThreadPoolUtil.isShutdown()) {
                     if (System.currentTimeMillis() - checkTimeMills > threshold) {
@@ -75,6 +79,24 @@ public class SQLiteUtil {
         sqLiteConfig.setOpenMode(SQLiteOpenMode.NOMUTEX);
         sqLiteConfig.setSynchronous(SQLiteConfig.SynchronousMode.OFF);
         sqLiteConfig.setLockingMode(SQLiteConfig.LockingMode.NORMAL);
+    }
+
+    public static void openAllConnection() {
+        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            for (ConnectionWrapper conn : connectionPool.values()) {
+                try {
+                    conn.lock.lock();
+                    if (conn.connection.isClosed()) {
+                        conn.connection = DriverManager.getConnection(conn.url, sqLiteConfig.toProperties());
+                    }
+                    conn.usingTimeMills = System.currentTimeMillis();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                } finally {
+                    conn.lock.unlock();
+                }
+            }
+        });
     }
 
     private static ConnectionWrapper getFromConnectionPool(String key) throws SQLException {
@@ -419,15 +441,18 @@ public class SQLiteUtil {
         private volatile long usingTimeMills;
         private final AtomicInteger connectionUsingCounter = new AtomicInteger();
         private final ReentrantLock lock = new ReentrantLock();
+        private final int randomTimeMills;
+        private static final Random random = new Random();
 
         private ConnectionWrapper(String url) throws SQLException {
             this.url = url;
             this.connection = DriverManager.getConnection(url, sqLiteConfig.toProperties());
             this.usingTimeMills = System.currentTimeMillis();
+            this.randomTimeMills = random.nextInt(9000) + 1000; //随机添加超时时间，从1秒到10秒，防止所有连接同时关闭
         }
 
         private boolean isIdleTimeout() {
-            return System.currentTimeMillis() - this.usingTimeMills > Constants.CLOSE_DATABASE_TIMEOUT_MILLS && connectionUsingCounter.get() == 0;
+            return System.currentTimeMillis() - this.usingTimeMills > Constants.CLOSE_DATABASE_TIMEOUT_MILLS + this.randomTimeMills && connectionUsingCounter.get() == 0;
         }
 
         private boolean isConnectionUsing() {

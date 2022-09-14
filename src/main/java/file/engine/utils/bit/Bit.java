@@ -1,6 +1,7 @@
 package file.engine.utils.bit;
 
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -9,7 +10,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class Bit {
 
     private final AtomicReference<byte[]> bytes = new AtomicReference<>();
-    private final byte[] zero = new byte[]{0};
+    private static final byte[] zero = new byte[]{0};
 
     public Bit(byte[] init) {
         if (init != null && init.length > 0) {
@@ -21,11 +22,15 @@ public class Bit {
 
     public Bit(Bit bit) {
         if (bit != null && bit.bytes.get().length > 0) {
-            byte[] bytes = Arrays.copyOf(bit.bytes.get(), bit.bytes.get().length);
-            this.bytes.compareAndSet(this.bytes.get(), bytes);
+            byte[] newVal = Arrays.copyOf(bit.bytes.get(), bit.bytes.get().length);
+            this.bytes.set(newVal);
         } else {
             throw new RuntimeException("the bytes could not be empty");
         }
+    }
+
+    public byte[] getBytes() {
+        return this.bytes.get();
     }
 
     /**
@@ -35,9 +40,14 @@ public class Bit {
      * @return 当前bit对象
      */
     public Bit shiftLeft(int count) {
-        byte[] newBytes = Arrays.copyOf(bytes.get(), this.bytes.get().length + count);
-        bytes.compareAndSet(bytes.get(), newBytes);
-        return this;
+        byte[] originBytes;
+        while ((originBytes = bytes.get()) != null) {
+            byte[] newBytes = Arrays.copyOf(originBytes, originBytes.length + count);
+            if (bytes.compareAndSet(originBytes, newBytes)) {
+                return this;
+            }
+        }
+        throw new RuntimeException("bit value is null");
     }
 
     /**
@@ -48,33 +58,40 @@ public class Bit {
      */
     public Bit shiftRight(int count) {
         if (bytes.get().length <= count) {
-            bytes.compareAndSet(bytes.get(), zero);
+            bytes.set(zero);
+            return this;
         } else {
-            byte[] newBytes = Arrays.copyOfRange(bytes.get(), 0, bytes.get().length - count);
-            bytes.compareAndSet(bytes.get(), newBytes);
+            byte[] originBytes;
+            while ((originBytes = bytes.get()) != null) {
+                byte[] newBytes = Arrays.copyOfRange(originBytes, 0, originBytes.length - count);
+                if (bytes.compareAndSet(originBytes, newBytes)) {
+                    return this;
+                }
+            }
         }
-        return this;
+        throw new RuntimeException("bit value is null");
     }
 
     /**
      * 与运算
      *
-     * @param bit bit
-     * @return 结果
+     * @param bytes1 bytes1
+     * @param bytes2 bytes2
+     * @return 结果 Bit
      */
-    public Bit and(Bit bit) {
-        boolean isThisBigger = this.bytes.get().length > bit.bytes.get().length;
-        AtomicReference<byte[]> bigger = isThisBigger ? this.bytes : bit.bytes;
-        AtomicReference<byte[]> smaller = isThisBigger ? bit.bytes : this.bytes;
-        int offset = Math.abs(this.bytes.get().length - bit.bytes.get().length);
-        int minLength = smaller.get().length;
+    public static Bit and(byte[] bytes1, byte[] bytes2) {
+        boolean isBytes1Bigger = bytes1.length > bytes2.length;
+        byte[] bigger = isBytes1Bigger ? bytes1 : bytes2;
+        byte[] smaller = isBytes1Bigger ? bytes2 : bytes1;
+        int offset = Math.abs(bytes1.length - bytes2.length);
+        int minLength = smaller.length;
         byte[] res = new byte[minLength];
         for (int i = minLength - 1; i >= 0; i--) {
             byte b1, b2;
-            b1 = smaller.get()[i];
+            b1 = smaller[i];
             int index = i + offset;
-            if (index < bigger.get().length) {
-                b2 = bigger.get()[index];
+            if (index < bigger.length) {
+                b2 = bigger[index];
             } else {
                 b2 = 0;
             }
@@ -86,22 +103,23 @@ public class Bit {
     /**
      * 或运算
      *
-     * @param bit bit
-     * @return 结果
+     * @param bytes1 bytes1
+     * @param bytes2 bytes2
+     * @return 结果 Bit
      */
-    public Bit or(Bit bit) {
-        boolean isThisBigger = this.bytes.get().length > bit.bytes.get().length;
-        AtomicReference<byte[]> bigger = isThisBigger ? this.bytes : bit.bytes;
-        AtomicReference<byte[]> smaller = isThisBigger ? bit.bytes : this.bytes;
-        int offset = Math.abs(this.bytes.get().length - bit.bytes.get().length);
-        int maxLength = bigger.get().length;
+    public static Bit or(byte[] bytes1, byte[] bytes2) {
+        boolean isBytes1Bigger = bytes1.length > bytes2.length;
+        byte[] bigger = isBytes1Bigger ? bytes1 : bytes2;
+        byte[] smaller = isBytes1Bigger ? bytes2 : bytes1;
+        int offset = Math.abs(bytes1.length - bytes2.length);
+        int maxLength = bigger.length;
         byte[] res = new byte[maxLength];
         for (int i = maxLength - 1; i >= 0; i--) {
             byte b1, b2;
             int index;
-            b1 = bigger.get()[i];
-            if ((index = i - offset) >= 0 && index < bigger.get().length) {
-                b2 = smaller.get()[index];
+            b1 = bigger[i];
+            if ((index = i - offset) >= 0) {
+                b2 = smaller[index];
             } else {
                 b2 = 0;
             }
@@ -131,15 +149,14 @@ public class Bit {
     }
 
     /**
-     * 更新值
-     *
-     * @param bit bit
-     * @return this
+     * 更新值，使用cas算法
+     * @param expect 之前值
+     * @param bit 更新的值
+     * @return 是否成功
      */
-    public Bit set(Bit bit) {
+    public boolean set(byte[] expect, Bit bit) {
         byte[] bytes = Arrays.copyOf(bit.bytes.get(), bit.bytes.get().length);
-        this.bytes.compareAndSet(this.bytes.get(), bytes);
-        return this;
+        return this.bytes.compareAndSet(expect, bytes);
     }
 
     @Override
@@ -158,6 +175,13 @@ public class Bit {
             return Arrays.equals(this.bytes.get(), tmp.bytes.get());
         }
         return false;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(bytes);
+        result = 31 * result + Arrays.hashCode(zero);
+        return result;
     }
 
     public int length() {

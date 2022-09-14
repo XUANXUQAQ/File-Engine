@@ -4,7 +4,6 @@
 #include <thread>
 #include "search.h"
 #include <fstream>
-#include "constants.h"
 
 static PriorityMap suffix_priority_map;
 

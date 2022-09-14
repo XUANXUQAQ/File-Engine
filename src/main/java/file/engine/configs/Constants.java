@@ -13,7 +13,7 @@ public class Constants {
 
     public static final int MIN_FRAME_VISIBLE_TIME = 500;
 
-    public static final int CLOSE_DATABASE_TIMEOUT_MILLS = 5 * 60 * 1000;
+    public static final int CLOSE_DATABASE_TIMEOUT_MILLS = 60 * 1000;
 
     public static final String FILE_NAME = "File-Engine.jar";
 
@@ -51,7 +51,7 @@ public class Constants {
         }
 
         public enum DatabaseStatus {
-            NORMAL, VACUUM, MANUAL_UPDATE
+            NORMAL, VACUUM, MANUAL_UPDATE, TEMP
         }
 
         public enum DownloadStatus {

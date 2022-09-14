@@ -92,6 +92,7 @@ public class SettingsFrame {
     private static final AllConfigs allConfigs = AllConfigs.getInstance();
     private static final CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
     private final HashMap<TabNameAndTitle, Component> tabComponentNameMap = new HashMap<>();
+    private final HashMap<String, Integer> cudaDeviceMap = new HashMap<>();
     private HashMap<String, Integer> suffixMap;
     private final Set<Component> excludeComponent = ConcurrentHashMap.newKeySet();
     private final LinkedHashSet<String> diskSet = new LinkedHashSet<>();
@@ -304,6 +305,7 @@ public class SettingsFrame {
     private JLabel labelHolder5;
     private JLabel labelHolder6;
     private JCheckBox checkBoxEnableCuda;
+    private JComboBox<Object> comboBoxCudaDevice;
 
 
     private static volatile SettingsFrame instance = null;
@@ -374,7 +376,7 @@ public class SettingsFrame {
             }
             int isConfirmed = JOptionPane.showConfirmDialog(frame, TRANSLATE_SERVICE.getTranslation("Whether to remove and backup all files on the desktop," + "they will be in the program's Files folder, which may take a few minutes"));
             if (isConfirmed == JOptionPane.YES_OPTION) {
-                Future<Boolean> future = cachedThreadPoolUtil.executeTask(MoveDesktopFilesUtil::start, false);
+                Future<Boolean> future = cachedThreadPoolUtil.executeTask(MoveDesktopFilesUtil::start);
                 try {
                     if (future == null) {
                         return;
@@ -1283,7 +1285,10 @@ public class SettingsFrame {
         checkBoxEnableCuda = new JCheckBox();
         checkBoxEnableCuda.setOpaque(false);
         checkBoxEnableCuda.setText("Enable GPU acceleration");
-        tabSearchSettings.add(checkBoxEnableCuda, new GridConstraints(0, 0, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        tabSearchSettings.add(checkBoxEnableCuda, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        comboBoxCudaDevice = new JComboBox();
+        comboBoxCudaDevice.setOpaque(false);
+        tabSearchSettings.add(comboBoxCudaDevice, new GridConstraints(0, 1, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         tabSearchBarSettings = new JPanel();
         tabSearchBarSettings.setLayout(new GridLayoutManager(18, 9, new Insets(0, 0, 0, 0), -1, -1));
         tabSearchBarSettings.setBackground(new Color(-1));
@@ -2192,7 +2197,7 @@ public class SettingsFrame {
         DefaultTableModel model = new DefaultTableModel() {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return row != 0;
+                return row != 0 && row != 1;
             }
         };
         tableSuffix.setModel(model);
@@ -2295,7 +2300,7 @@ public class SettingsFrame {
     private void addButtonDeleteSuffixListener() {
         buttonDeleteSuffix.addActionListener(e -> {
             String current = getCurrentSelectedTableVal();
-            if (current.isEmpty() || "defaultPriority".equals(current)) {
+            if (current.isEmpty() || "defaultPriority".equals(current) || "dirPriority".equals(current)) {
                 return;
             }
             int ret = JOptionPane.showConfirmDialog(frame, TRANSLATE_SERVICE.getTranslation("Do you sure want to delete this suffix") + "  --  " + current + "?");
@@ -2587,6 +2592,31 @@ public class SettingsFrame {
         }
     }
 
+    private void setComboBoxGui() {
+        boolean cudaAvailableOnSystem = CudaAccelerator.INSTANCE.isCudaAvailableOnSystem();
+        comboBoxCudaDevice.setEnabled(cudaAvailableOnSystem);
+        if (cudaAvailableOnSystem) {
+            var deviceMap = new HashMap<Integer, String>();
+            String devices = CudaAccelerator.INSTANCE.getDevices();
+            String[] split = RegexUtil.semicolon.split(devices);
+            for (String each : split) {
+                String[] cudaInfo = RegexUtil.comma.split(each);
+                Integer deviceNum = Integer.valueOf(cudaInfo[1]);
+                String deviceName = cudaInfo[0];
+                cudaDeviceMap.put(deviceName, deviceNum);
+                deviceMap.put(deviceNum, deviceName);
+            }
+            comboBoxCudaDevice.setModel(new DefaultComboBoxModel<>(new Vector<>(cudaDeviceMap.keySet())));
+            int cudaDeviceNum = allConfigs.getCudaDeviceNum();
+            String item = deviceMap.get(cudaDeviceNum);
+            if (item == null) {
+                comboBoxCudaDevice.setSelectedIndex(0);
+            } else {
+                comboBoxCudaDevice.setSelectedItem(item);
+            }
+        }
+    }
+
     /**
      * 初始化所有选择栏的显示
      */
@@ -2677,6 +2707,7 @@ public class SettingsFrame {
         setColorChooserGui();
         setTextFieldAndTextAreaGui();
         setCheckBoxGui();
+        setComboBoxGui();
         setTableGui();
         initTreeSettings();
         resizeGUI();
@@ -3288,6 +3319,8 @@ public class SettingsFrame {
         configEntity.setDisks(parseDisk());
         configEntity.setAttachExplorer(checkBoxIsAttachExplorer.isSelected());
         configEntity.setEnableCuda(checkBoxEnableCuda.isSelected());
+        String selectedCudaDevice = (String) comboBoxCudaDevice.getSelectedItem();
+        configEntity.setCudaDeviceNum(cudaDeviceMap.getOrDefault(selectedCudaDevice, 0));
         return configEntity;
     }
 

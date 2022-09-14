@@ -18,6 +18,7 @@ import file.engine.event.handler.impl.BootSystemEvent;
 import file.engine.event.handler.impl.ReadConfigsEvent;
 import file.engine.event.handler.impl.SetSwingLaf;
 import file.engine.event.handler.impl.configs.*;
+import file.engine.event.handler.impl.database.cuda.CudaSetDeviceEvent;
 import file.engine.event.handler.impl.download.StartDownloadEvent;
 import file.engine.event.handler.impl.frame.searchBar.*;
 import file.engine.event.handler.impl.frame.settingsFrame.GetExcludeComponentEvent;
@@ -90,6 +91,10 @@ public class AllConfigs {
             }
         }
         return Constants.Enums.SwingThemes.MaterialLighter;
+    }
+
+    public int getCudaDeviceNum() {
+        return configEntity.getCudaDeviceNum();
     }
 
     /**
@@ -540,6 +545,11 @@ public class AllConfigs {
         }
     }
 
+    private void readCudaDeviceNum(Map<String, Object> settingsInJson) {
+        int deviceNumber = getFromJson(settingsInJson, "cudaDeviceNum", 0);
+        configEntity.setCudaDeviceNum(deviceNumber);
+    }
+
     private void readIsAttachExplorer(Map<String, Object> settingsInJson) {
         configEntity.setAttachExplorer(getFromJson(settingsInJson, "isAttachExplorer", true));
     }
@@ -778,6 +788,7 @@ public class AllConfigs {
         readCheckUpdateStartup(settingsInJson);
         readBorderThickness(settingsInJson);
         readIsEnableCuda(settingsInJson);
+        readCudaDeviceNum(settingsInJson);
         initUpdateAddress();
         initCmdSetSettings();
     }
@@ -802,6 +813,7 @@ public class AllConfigs {
         eventManagement.putEvent(new SetSearchBarColorEvent(configEntity.getSearchBarColor()));
         eventManagement.putEvent(new SetSearchBarFontColorEvent(configEntity.getSearchBarFontColor()));
         eventManagement.putEvent(new SetBorderEvent(allConfigs.getBorderType(), configEntity.getBorderColor(), configEntity.getBorderThickness()));
+        eventManagement.putEvent(new CudaSetDeviceEvent(configEntity.getCudaDeviceNum()));
     }
 
     /**

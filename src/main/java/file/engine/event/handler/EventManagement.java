@@ -73,11 +73,11 @@ public class EventManagement {
      * 等待任务
      *
      * @param event 任务实例
+     * @param timeout 超时时间
      * @return true如果任务执行失败， false如果执行正常完成
      */
-    public boolean waitForEvent(Event event) {
+    public boolean waitForEvent(Event event, int timeout) {
         try {
-            final long timeout = 20_000; // 20s
             long startTime = System.currentTimeMillis();
             while (!event.isFailed() && !event.isFinished()) {
                 if (System.currentTimeMillis() - startTime > timeout) {
@@ -90,6 +90,15 @@ public class EventManagement {
             e.printStackTrace();
         }
         return event.isFailed();
+    }
+
+    /**
+     * 等待任务
+     * @param event 任务实例
+     * @return true如果任务执行失败， false如果执行正常完成
+     */
+    public boolean waitForEvent(Event event) {
+        return waitForEvent(event, 20_000);
     }
 
     /**
@@ -331,6 +340,7 @@ public class EventManagement {
 
     /**
      * 全局系统退出标志，用于常驻循环判断标志
+     *
      * @return true如果系统未退出
      */
     public boolean notMainExit() {
@@ -499,13 +509,18 @@ public class EventManagement {
         new Thread(() -> eventHandle(blockEventQueue)).start();
     }
 
+    /**
+     * 事件处理器
+     * 注意，容器不能使用SynchronousQueue，因为事件处理的过程中可能会放入其他事件，会导致putEvent和eventHandle互相等待的问题
+     * @param eventQueue eventQueue
+     */
     private void eventHandle(ConcurrentLinkedQueue<Event> eventQueue) {
         final boolean isDebug = IsDebug.isDebug();
         try {
-            Event event;
             while (isEventHandlerNotExit()) {
                 //取出任务
-                if ((event = eventQueue.poll()) == null) {
+                Event event = eventQueue.poll();
+                if (event == null) {
                     TimeUnit.MILLISECONDS.sleep(5);
                     continue;
                 }

@@ -1,8 +1,6 @@
 package file.engine.dllInterface;
 
 import java.nio.file.Path;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 public enum CudaAccelerator {
     INSTANCE;
@@ -27,7 +25,9 @@ public enum CudaAccelerator {
                              String[] keywords,
                              String[] keywordsLowerCase,
                              boolean[] isKeywordPath,
-                             ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> output);
+                             int maxResultNumber);
+
+    public native String getOneResult(String key);
 
     public boolean isCudaAvailableOnSystem() {
         if (isCudaLoaded) {
@@ -40,8 +40,8 @@ public enum CudaAccelerator {
     public native void stopCollectResults();
 
     private native boolean isCudaAvailable();
-
-    public native boolean hasCache(String key);
+    public native boolean hasCache();
+    public native boolean isCacheExist(String key);
 
     public native void initCache(String key, Object[] records);
 
@@ -58,4 +58,10 @@ public enum CudaAccelerator {
     public native int getCudaMemUsage();
 
     public native void initialize();
+
+    public native void release();
+
+    public native String getDevices();
+
+    public native boolean setDevice(int deviceNum);
 }
