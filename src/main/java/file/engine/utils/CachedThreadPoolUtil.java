@@ -28,17 +28,21 @@ public enum CachedThreadPoolUtil {
     }
 
     /**
-     * 提交任务
+     * 使用虚拟线程提交任务
      *
      * @param task 任务
      * @return Future
      */
     private <T> Future<T> executeTaskVirtual(Callable<T> task) {
-        if (isShutdown.get()) {
-            return null;
-        }
         // FIXME: project loom发布后修改
         return platformThreadPool.submit(task);
+    }
+
+    /**
+     * 使用虚拟线程提交任务
+     */
+    private void executeTaskVirtual(Runnable task) {
+        Thread.ofVirtual().start(task);
     }
 
     /**
@@ -70,7 +74,7 @@ public enum CachedThreadPoolUtil {
             return;
         }
         if (isVirtualThread) {
-            executeTask(task);
+            executeTaskVirtual(task);
         } else {
             platformThreadPool.submit(task);
         }
@@ -82,10 +86,7 @@ public enum CachedThreadPoolUtil {
      * @param task 任务
      */
     public void executeTask(Runnable task) {
-        if (isShutdown.get()) {
-            return;
-        }
-        Thread.ofVirtual().start(task);
+        executeTaskVirtual(task);
     }
 
     /**
