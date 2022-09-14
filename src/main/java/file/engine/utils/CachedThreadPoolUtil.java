@@ -7,18 +7,9 @@ public enum CachedThreadPoolUtil {
     INSTANCE;
     private static final int THREAD_POOL_AWAIT_TIMEOUT = 10;
     private final ExecutorService platformThreadPool;
-    private final ExecutorService virtualThreadPool;
     private final AtomicBoolean isShutdown = new AtomicBoolean(false);
 
     CachedThreadPoolUtil() {
-        virtualThreadPool = new ThreadPoolExecutor(
-                0,
-                Integer.MAX_VALUE,
-                0,
-                TimeUnit.SECONDS,
-                new SynchronousQueue<>(),
-                Thread.ofVirtual().factory()
-        );
         platformThreadPool = new ThreadPoolExecutor(
                 0,
                 100,
@@ -42,11 +33,12 @@ public enum CachedThreadPoolUtil {
      * @param task 任务
      * @return Future
      */
-    public <T> Future<T> executeTask(Callable<T> task) {
+    private <T> Future<T> executeTaskVirtual(Callable<T> task) {
         if (isShutdown.get()) {
             return null;
         }
-        return virtualThreadPool.submit(task);
+        // FIXME: project loom发布后修改
+        return platformThreadPool.submit(task);
     }
 
     /**
@@ -61,7 +53,7 @@ public enum CachedThreadPoolUtil {
             return null;
         }
         if (isVirtualThread) {
-            return executeTask(task);
+            return executeTaskVirtual(task);
         } else {
             return platformThreadPool.submit(task);
         }
@@ -93,7 +85,7 @@ public enum CachedThreadPoolUtil {
         if (isShutdown.get()) {
             return;
         }
-        virtualThreadPool.submit(task);
+        Thread.ofVirtual().start(task);
     }
 
     /**
@@ -101,9 +93,7 @@ public enum CachedThreadPoolUtil {
      */
     public void shutdown() {
         isShutdown.set(true);
-        virtualThreadPool.shutdown();
         platformThreadPool.shutdown();
-        printInfo((ThreadPoolExecutor) virtualThreadPool);
         printInfo((ThreadPoolExecutor) platformThreadPool);
     }
 
