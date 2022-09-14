@@ -62,7 +62,7 @@ public class DatabaseService {
     private final @Getter
     ConcurrentLinkedQueue<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
     private final Set<String> tempResultsForEvent; //在SearchDoneEvent中保存的容器
-    private final AtomicInteger tempResultsRecordCounter = new AtomicInteger();
+    private final AtomicInteger allResultsRecordCounter = new AtomicInteger();
     private final AtomicBoolean shouldStopSearch = new AtomicBoolean(true);
     private final AtomicBoolean isSearchStopped = new AtomicBoolean(true);
     private final AtomicBoolean isCreatingCache = new AtomicBoolean(false);
@@ -605,17 +605,18 @@ public class DatabaseService {
                 isKeywordPath)) {
             //字符串匹配通过
             ret = true;
-            if (!tempResultsForEvent.contains(path)) {
-                if (container == null) {
+            if (container == null) {
+                if (tempResultsForEvent.add(path)) {
+                    allResultsRecordCounter.incrementAndGet();
                     tempResults.add(path);
-                    tempResultsForEvent.add(path);
-                    tempResultsRecordCounter.incrementAndGet();
-                    if (tempResultsRecordCounter.get() > MAX_RESULTS) {
-                        stopSearch();
-                    }
-                } else {
-                    container.add(path);
                 }
+            } else {
+                if (container.add(path)) {
+                    allResultsRecordCounter.incrementAndGet();
+                }
+            }
+            if (allResultsRecordCounter.get() > MAX_RESULTS) {
+                stopSearch();
             }
         }
         return ret;
@@ -706,56 +707,46 @@ public class DatabaseService {
 
     /**
      * 根据上面分配的位信息，从第二位开始，与taskStatus做与运算，并向右偏移，若结果为1，则表示该任务完成
-     *
-     * @param containerMap  任务搜索结果存放容器
-     * @param allTaskStatus 所有的任务信息
-     * @param taskStatus    实时更新的任务完成信息
      */
-    private void waitForTaskAndMergeResults(LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap,
-                                            Bit allTaskStatus,
-                                            Bit taskStatus) {
+    private void waitForTaskAndMergeResults() {
         final Bit zero = new Bit(new byte[]{0});
-        final Bit one = new Bit(new byte[]{1});
-        final int taskTimeoutThreshold = 300;
+        final int taskTimeoutThreshold = 100;
+        final int maxRetryTimes = 2;
         int failedRetryTimes = 0;
         try {
-            while (!taskStatus.equals(allTaskStatus) && !shouldStopSearch.get()) {
+            EventManagement eventManagement = EventManagement.getInstance();
+            while (!PrepareSearchInfo.taskStatus.equals(PrepareSearchInfo.allTaskStatus) && eventManagement.notMainExit()) {
                 //线程状态的记录从第二个位开始，所以初始值为1 0
-                Bit start = new Bit(new byte[]{1, 0});
+                Bit eachTaskStatus = new Bit(new byte[]{1, 0});
                 //循环次数，也是下方与运算结束后需要向右偏移的位数
-                int loopCount = 1;
                 //由于任务的耗时不同，如果阻塞时间过长，则跳过该任务，在下次循环中重新拿取结果
                 long waitTime = 0;
-                while (start.length() <= allTaskStatus.length() || Bit.or(taskStatus.getBytes(), zero.getBytes()).equals(zero)) {
-                    if (shouldStopSearch.get()) {
-                        //用户重新输入，结束当前任务
-                        break;
-                    }
+                while (eachTaskStatus.length() <= PrepareSearchInfo.allTaskStatus.length() ||
+                        Bit.or(PrepareSearchInfo.taskStatus.getBytes(), zero.getBytes()).equals(zero) &&
+                                eventManagement.notMainExit()) {
+                    final boolean isTimeout = System.currentTimeMillis() - waitTime > taskTimeoutThreshold && waitTime != 0;
                     //当线程完成，taskStatus中的位会被设置为1
-                    //这时，将taskStatus和start做与运算，然后移到第一位，如果为1，则线程已完成搜索
-                    Bit and = Bit.and(taskStatus.getBytes(), start.getBytes());
-                    boolean isFailed = System.currentTimeMillis() - waitTime > taskTimeoutThreshold && waitTime != 0;
-                    if ((and.shiftRight(loopCount)).equals(one) || isFailed) {
+                    //这时，将taskStatus和eachTaskStatus做与运算，然后移到第一位，如果为1，则线程已完成搜索
+                    Bit isTaskFinished = Bit.and(PrepareSearchInfo.taskStatus.getBytes(), eachTaskStatus.getBytes());
+                    //任务已完成或等待超时
+                    if (!isTaskFinished.equals(zero) || isTimeout) {
                         // 阻塞时间过长则跳过
                         waitTime = 0;
-                        var results = containerMap.get(start.toString());
+                        var results = PrepareSearchInfo.containerMap.get(eachTaskStatus.toString());
                         if (results != null) {
                             for (String result : results) {
                                 if (tempResultsForEvent.add(result)) {
                                     tempResults.add(result);
-                                    tempResultsRecordCounter.incrementAndGet();
-                                    if (tempResultsRecordCounter.get() > MAX_RESULTS) {
+                                    if (tempResults.size() > MAX_RESULTS) {
                                         stopSearch();
                                         break;
                                     }
                                 }
                             }
-                            if (!isFailed || failedRetryTimes > 5) {
+                            if (!isTimeout || failedRetryTimes > maxRetryTimes) {
                                 failedRetryTimes = 0;
-                                results.clear();
                                 //将start左移，代表当前任务结束，继续拿下一个任务的结果
-                                start.shiftLeft(1);
-                                loopCount++;
+                                eachTaskStatus.shiftLeft(1);
                             } else {
                                 ++failedRetryTimes;
                             }
@@ -772,14 +763,20 @@ public class DatabaseService {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            EventManagement eventManagement = EventManagement.getInstance();
-            eventManagement.putEvent(new SearchDoneEvent(new ConcurrentLinkedQueue<>(tempResultsForEvent)));
-            tempResultsForEvent.clear();
-            isSearchStopped.set(true);
-            PrepareSearchInfo.isSearchPrepared.set(false);
-            if (AllConfigs.getInstance().isEnableCuda() && eventManagement.notMainExit()) {
-                CudaAccelerator.INSTANCE.stopCollectResults();
-            }
+            searchDone();
+        }
+    }
+
+    private void searchDone() {
+        EventManagement eventManagement = EventManagement.getInstance();
+        eventManagement.putEvent(new SearchDoneEvent(new ConcurrentLinkedQueue<>(tempResultsForEvent)));
+        tempResultsForEvent.clear();
+        isSearchStopped.set(true);
+        stopSearch();
+        PrepareSearchInfo.containerMap.clear();
+        PrepareSearchInfo.isSearchPrepared.set(false);
+        if (AllConfigs.getInstance().isEnableCuda() && eventManagement.notMainExit()) {
+            CudaAccelerator.INSTANCE.stopCollectResults();
         }
     }
 
@@ -827,8 +824,7 @@ public class DatabaseService {
                             int priority = Integer.parseInt(getPriorityFromSql(eachSql));
                             String result;
                             for (int count = 0;
-                                 !shouldStopSearch.get() &&
-                                         ((result = ResultPipe.INSTANCE.getResult(eachDisk.charAt(0), listName, priority, count)) != null);
+                                 !shouldStopSearch.get() && ((result = ResultPipe.INSTANCE.getResult(eachDisk.charAt(0), listName, priority, count)) != null);
                                  ++count) {
                                 checkIsMatchedAndAddToList(result, container);
                             }
@@ -1011,8 +1007,10 @@ public class DatabaseService {
             if (!Files.exists(recordPath)) {
                 continue;
             }
-            container.add(record);
-            ++matchedNum;
+            if (container.add(record)) {
+                allResultsRecordCounter.incrementAndGet();
+                ++matchedNum;
+            }
         }
         return matchedNum;
     }
@@ -1079,49 +1077,51 @@ public class DatabaseService {
      * 添加sql语句，并开始搜索
      */
     private void startSearch() {
+        allResultsRecordCounter.set(0);
         isSearchStopped.set(false);
         searchCache();
         searchPriorityFolder();
         searchStartMenu();
         if (shouldStopSearch.get()) {
-            isSearchStopped.set(true);
+            searchDone();
             return;
         }
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+        EventManagement eventManagement = EventManagement.getInstance();
         final int threadNumber = Math.max(1, Runtime.getRuntime().availableProcessors() / PrepareSearchInfo.taskMap.size());
         for (var entry : PrepareSearchInfo.taskMap.entrySet()) {
             for (int i = 0; i < threadNumber; i++) {
                 cachedThreadPoolUtil.executeTask(() -> {
                     String currentDisk = entry.getKey();
                     ConcurrentLinkedQueue<Runnable> taskQueue = entry.getValue();
-                    while (!taskQueue.isEmpty()) {
+                    while (!taskQueue.isEmpty() && eventManagement.notMainExit()) {
                         var runnable = taskQueue.poll();
                         if (runnable == null) continue;
                         searchThreadCount.incrementAndGet();
                         runnable.run();
                         searchThreadCount.decrementAndGet();
-                        if (shouldStopSearch.get()) {
-                            return;
-                        }
                     }
                     //自身任务已经完成，开始扫描其他线程的任务
-                    while (!shouldStopSearch.get() && !isSearchStopped.get()) {
+                    boolean hasTask;
+                    do {
+                        hasTask = false;
                         for (var e : PrepareSearchInfo.taskMap.entrySet()) {
                             String otherDisk = e.getKey();
                             if (otherDisk.equals(currentDisk)) continue;
                             ConcurrentLinkedQueue<Runnable> otherTaskQueue = e.getValue();
                             Runnable otherRunnable;
-                            while ((otherRunnable = otherTaskQueue.poll()) != null && !shouldStopSearch.get()) {
+                            while ((otherRunnable = otherTaskQueue.poll()) != null) {
+                                hasTask = true;
                                 searchThreadCount.incrementAndGet();
                                 otherRunnable.run();
                                 searchThreadCount.decrementAndGet();
                             }
                         }
-                    }
+                    } while (hasTask && eventManagement.notMainExit());
                 });
             }
         }
-        waitForTaskAndMergeResults(PrepareSearchInfo.containerMap, PrepareSearchInfo.allTaskStatus, PrepareSearchInfo.taskStatus);
+        waitForTaskAndMergeResults();
     }
 
     /**
@@ -1570,7 +1570,6 @@ public class DatabaseService {
 
     private void stopSearch() {
         shouldStopSearch.set(true);
-        tempResultsRecordCounter.set(0);
     }
 
     private void executeAllSQLAndWait(@SuppressWarnings("SameParameterValue") int timeoutMills) {// 等待剩余的sql全部执行完成
@@ -1624,7 +1623,7 @@ public class DatabaseService {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    shouldStopSearch.set(true);
+                    stopSearch();
                     setStatus(Constants.Enums.DatabaseStatus.MANUAL_UPDATE);
                     {
                         SQLiteUtil.closeAll();
@@ -1937,6 +1936,7 @@ public class DatabaseService {
         databaseService.tempResults.clear();
         PrepareSearchEvent prepareSearchEvent = (PrepareSearchEvent) event;
         prepareSearchKeywords(prepareSearchEvent.searchText, prepareSearchEvent.searchCase, prepareSearchEvent.keywords);
+        PrepareSearchInfo.prepareSearchTasks();
         if (AllConfigs.getInstance().isEnableCuda()) {
             // 退出上一次搜索
             CudaAccelerator.INSTANCE.stopCollectResults();
@@ -1956,7 +1956,6 @@ public class DatabaseService {
                 PrepareSearchInfo.isCudaThreadRunning.set(false);
             }, false);
         }
-        PrepareSearchInfo.prepareSearchTasks();
         PrepareSearchInfo.isSearchPrepared.set(true);
     }
 

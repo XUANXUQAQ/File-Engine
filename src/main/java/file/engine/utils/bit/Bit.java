@@ -39,6 +39,7 @@ public class Bit {
      * @param count 次数
      * @return 当前bit对象
      */
+    @SuppressWarnings("UnusedReturnValue")
     public Bit shiftLeft(int count) {
         byte[] originBytes;
         while ((originBytes = bytes.get()) != null) {
@@ -56,6 +57,7 @@ public class Bit {
      * @param count 次数
      * @return 当前bit对象
      */
+    @SuppressWarnings({"unused", "UnusedReturnValue"})
     public Bit shiftRight(int count) {
         if (bytes.get().length <= count) {
             bytes.set(zero);
@@ -97,7 +99,7 @@ public class Bit {
             }
             res[i] = (byte) (b1 & b2);
         }
-        return new Bit(res);
+        return new Bit(removeHighZero(res));
     }
 
     /**
@@ -125,38 +127,31 @@ public class Bit {
             }
             res[i] = (byte) (b1 | b2);
         }
-        return new Bit(res);
-    }
-
-    /**
-     * 非运算
-     *
-     * @return 结果
-     */
-    public Bit not() {
-        int index = 0;
-        for (int i = 0; i < this.bytes.get().length; i++) {
-            if (this.bytes.get()[i] == 0) {
-                index = i;
-                break;
-            }
-        }
-        byte[] res = Arrays.copyOfRange(this.bytes.get(), index, this.bytes.get().length);
-        for (int i = 0; i < res.length; i++) {
-            res[i] = (byte) (res[i] == 0 ? 1 : 0);
-        }
-        return new Bit(res);
+        return new Bit(removeHighZero(res));
     }
 
     /**
      * 更新值，使用cas算法
+     *
      * @param expect 之前值
-     * @param bit 更新的值
+     * @param bit    更新的值
      * @return 是否成功
      */
     public boolean set(byte[] expect, Bit bit) {
         byte[] bytes = Arrays.copyOf(bit.bytes.get(), bit.bytes.get().length);
         return this.bytes.compareAndSet(expect, bytes);
+    }
+
+    private static byte[] removeHighZero(byte[] bytesWithHighZero) {
+        if (bytesWithHighZero == null) {
+            throw new IllegalArgumentException("bytes is null");
+        }
+        for (int i = 0; i < bytesWithHighZero.length; i++) {
+            if (bytesWithHighZero[i] != 0) {
+                return Arrays.copyOfRange(bytesWithHighZero, i, bytesWithHighZero.length);
+            }
+        }
+        return zero;
     }
 
     @Override
