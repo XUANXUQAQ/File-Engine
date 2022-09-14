@@ -30,14 +30,15 @@ public enum CachedThreadPoolUtil {
     /**
      * 提交任务
      *
-     * @param task 任务
+     * @param task            任务
+     * @param isVirtualThread 是否使用虚拟线程
      * @return Future
      */
-    private <T> Future<T> executeTaskVirtual(Callable<T> task) {
+    @SuppressWarnings("unused")
+    public <T> Future<T> executeTask(Callable<T> task, boolean isVirtualThread) {
         if (isShutdown.get()) {
             return null;
         }
-        // FIXME: project loom发布后修改
         return platformThreadPool.submit(task);
     }
 
@@ -46,34 +47,13 @@ public enum CachedThreadPoolUtil {
      *
      * @param task            任务
      * @param isVirtualThread 是否使用虚拟线程
-     * @return Future
      */
-    public <T> Future<T> executeTask(Callable<T> task, boolean isVirtualThread) {
-        if (isShutdown.get()) {
-            return null;
-        }
-        if (isVirtualThread) {
-            return executeTaskVirtual(task);
-        } else {
-            return platformThreadPool.submit(task);
-        }
-    }
-
-    /**
-     * 提交任务
-     *
-     * @param task            任务
-     * @param isVirtualThread 是否使用虚拟线程
-     */
+    @SuppressWarnings("unused")
     public void executeTask(Runnable task, boolean isVirtualThread) {
         if (isShutdown.get()) {
             return;
         }
-        if (isVirtualThread) {
-            executeTask(task);
-        } else {
-            platformThreadPool.submit(task);
-        }
+        platformThreadPool.submit(task);
     }
 
     /**
@@ -85,7 +65,7 @@ public enum CachedThreadPoolUtil {
         if (isShutdown.get()) {
             return;
         }
-        Thread.ofVirtual().start(task);
+        platformThreadPool.submit(task);
     }
 
     /**
