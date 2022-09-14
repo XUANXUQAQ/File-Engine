@@ -63,6 +63,7 @@ public class DatabaseService {
     ConcurrentLinkedQueue<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
     private final Set<String> tempResultsForEvent; //在SearchDoneEvent中保存的容器
     private final AtomicInteger allResultsRecordCounter = new AtomicInteger();
+    private final AtomicInteger tempResultsRecordCounter = new AtomicInteger();
     private final AtomicBoolean shouldStopSearch = new AtomicBoolean(true);
     private final AtomicBoolean isSearchStopped = new AtomicBoolean(true);
     private final AtomicBoolean isCreatingCache = new AtomicBoolean(false);
@@ -434,7 +435,8 @@ public class DatabaseService {
                 tableQueueByPriority,
                 isStopCreateCache,
                 1,
-                100000);
+                // 单个缓存最大允许占用128M内存，每个记录在GPU内存中占512字节
+                (128 * 1024 * 1024) / 512);
         saveTableCacheForCuda(isStopCreateCache, tableNeedCache, createCudaCacheThreshold);
         isCreatingCache.set(false);
     }
@@ -608,6 +610,7 @@ public class DatabaseService {
             if (container == null) {
                 if (tempResultsForEvent.add(path)) {
                     allResultsRecordCounter.incrementAndGet();
+                    tempResultsRecordCounter.incrementAndGet();
                     tempResults.add(path);
                 }
             } else {
@@ -737,7 +740,7 @@ public class DatabaseService {
                             for (String result : results) {
                                 if (tempResultsForEvent.add(result)) {
                                     tempResults.add(result);
-                                    if (tempResults.size() > MAX_RESULTS) {
+                                    if (tempResultsRecordCounter.incrementAndGet() > MAX_RESULTS) {
                                         stopSearch();
                                         break;
                                     }
@@ -1078,6 +1081,7 @@ public class DatabaseService {
      */
     private void startSearch() {
         allResultsRecordCounter.set(0);
+        tempResultsRecordCounter.set(0);
         isSearchStopped.set(false);
         searchCache();
         searchPriorityFolder();
@@ -1935,7 +1939,27 @@ public class DatabaseService {
         }
         databaseService.tempResults.clear();
         PrepareSearchEvent prepareSearchEvent = (PrepareSearchEvent) event;
-        prepareSearchKeywords(prepareSearchEvent.searchText, prepareSearchEvent.searchCase, prepareSearchEvent.keywords);
+        prepareSearch(prepareSearchEvent);
+        PrepareSearchInfo.isSearchPrepared.set(true);
+    }
+
+    @EventRegister(registerClass = StartSearchEvent.class)
+    private static void startSearchEvent(Event event) {
+        DatabaseService databaseService = getInstance();
+        while (!databaseService.isSearchStopped.get()) {
+            Thread.onSpinWait();
+        }
+        StartSearchEvent startSearchEvent = (StartSearchEvent) event;
+        if (!PrepareSearchInfo.isSearchPrepared.get()) {
+            prepareSearch(startSearchEvent);
+        }
+        databaseService.shouldStopSearch.set(false);
+        CachedThreadPoolUtil.getInstance().executeTask(databaseService::startSearch);
+        databaseService.startSearchTimeMills.set(System.currentTimeMillis());
+    }
+
+    private static void prepareSearch(StartSearchEvent startSearchEvent) {
+        prepareSearchKeywords(startSearchEvent.searchText, startSearchEvent.searchCase, startSearchEvent.keywords);
         PrepareSearchInfo.prepareSearchTasks();
         if (AllConfigs.getInstance().isEnableCuda()) {
             // 退出上一次搜索
@@ -1956,42 +1980,6 @@ public class DatabaseService {
                 PrepareSearchInfo.isCudaThreadRunning.set(false);
             }, false);
         }
-        PrepareSearchInfo.isSearchPrepared.set(true);
-    }
-
-    @EventRegister(registerClass = StartSearchEvent.class)
-    private static void startSearchEvent(Event event) {
-        DatabaseService databaseService = getInstance();
-        while (!databaseService.isSearchStopped.get()) {
-            Thread.onSpinWait();
-        }
-        StartSearchEvent startSearchEvent = (StartSearchEvent) event;
-        if (!PrepareSearchInfo.isSearchPrepared.get()) {
-            prepareSearchKeywords(startSearchEvent.searchText, startSearchEvent.searchCase, startSearchEvent.keywords);
-            PrepareSearchInfo.prepareSearchTasks();
-            if (AllConfigs.getInstance().isEnableCuda()) {
-                // 退出上一次搜索
-                CudaAccelerator.INSTANCE.stopCollectResults();
-                while (PrepareSearchInfo.isCudaThreadRunning.get())
-                    Thread.onSpinWait();
-                CachedThreadPoolUtil.getInstance().executeTask(() -> {
-                    // 开始进行搜索
-                    CudaAccelerator.INSTANCE.resetAllResultStatus();
-                    PrepareSearchInfo.isCudaThreadRunning.set(true);
-                    CudaAccelerator.INSTANCE.match(searchCase,
-                            isIgnoreCase,
-                            searchText,
-                            keywords,
-                            keywordsLowerCase,
-                            isKeywordPath,
-                            MAX_RESULTS);
-                    PrepareSearchInfo.isCudaThreadRunning.set(false);
-                }, false);
-            }
-        }
-        databaseService.shouldStopSearch.set(false);
-        CachedThreadPoolUtil.getInstance().executeTask(databaseService::startSearch);
-        databaseService.startSearchTimeMills.set(System.currentTimeMillis());
     }
 
     @EventRegister(registerClass = StopSearchEvent.class)
@@ -2188,7 +2176,7 @@ public class DatabaseService {
                         if (System.currentTimeMillis() - startCheckInvalidCacheTime > checkInterval && !GetHandle.INSTANCE.isForegroundFullscreen()) {
                             startCheckInvalidCacheTime = System.currentTimeMillis();
                             String eachKey;
-                            while ((eachKey = invalidCacheKeys.poll()) != null) {
+                            while (eventManagement.notMainExit() && (eachKey = invalidCacheKeys.poll()) != null) {
                                 CudaAccelerator.INSTANCE.clearCache(eachKey);
                             }
                         }
@@ -2206,7 +2194,8 @@ public class DatabaseService {
                 try {
                     while (eventManagement.notMainExit()) {
                         Runnable run;
-                        while (databaseService.isSearchStopped.get() && !GetHandle.INSTANCE.isForegroundFullscreen() && (run = workQueue.poll()) != null) {
+                        while (eventManagement.notMainExit() && databaseService.isSearchStopped.get() &&
+                                !GetHandle.INSTANCE.isForegroundFullscreen() && (run = workQueue.poll()) != null) {
                             run.run();
                         }
                         TimeUnit.SECONDS.sleep(1);
