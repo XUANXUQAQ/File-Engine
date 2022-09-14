@@ -78,7 +78,7 @@ public class DatabaseService {
     private static volatile String[] keywordsLowerCase;
     private static volatile boolean[] isKeywordPath;
     private final AtomicBoolean isSharedMemoryCreated = new AtomicBoolean(false);
-    private final ConcurrentSkipListSet<String> databaseCacheSet = new ConcurrentSkipListSet<>();
+    private final LinkedHashSet<String> databaseCacheSet = new LinkedHashSet<>();
     private final AtomicInteger searchThreadCount = new AtomicInteger(0);
     private final AtomicLong startSearchTimeMills = new AtomicLong(0);
     private static final int MAX_TEMP_QUERY_RESULT_CACHE = 8192;
@@ -596,7 +596,7 @@ public class DatabaseService {
      * @param path 文件路径
      * @return true如果匹配成功
      */
-    private boolean checkIsMatchedAndAddToList(String path, ConcurrentSkipListSet<String> container) {
+    private boolean checkIsMatchedAndAddToList(String path, LinkedList<String> container) {
         boolean ret = false;
         if (PathMatchUtil.check(path,
                 searchCase,
@@ -630,7 +630,7 @@ public class DatabaseService {
      *
      * @param sql sql
      */
-    private int searchAndAddToTempResults(String sql, ConcurrentSkipListSet<String> container, Statement stmt) {
+    private int searchAndAddToTempResults(String sql, LinkedList<String> container, Statement stmt) {
         int matchedResultCount = 0;
         //结果太多则不再进行搜索
         if (shouldStopSearch.get()) {
@@ -713,7 +713,7 @@ public class DatabaseService {
      */
     private void waitForTaskAndMergeResults() {
         final Bit zero = new Bit(new byte[]{0});
-        final int taskTimeoutThreshold = 100;
+        final int taskTimeoutThreshold = 25;
         final int maxRetryTimes = 2;
         int failedRetryTimes = 0;
         try {
@@ -746,13 +746,13 @@ public class DatabaseService {
                                     }
                                 }
                             }
-                            if (!isTimeout || failedRetryTimes > maxRetryTimes) {
-                                failedRetryTimes = 0;
-                                //将start左移，代表当前任务结束，继续拿下一个任务的结果
-                                eachTaskStatus.shiftLeft(1);
-                            } else {
-                                ++failedRetryTimes;
-                            }
+                        }
+                        if (!isTimeout || failedRetryTimes > maxRetryTimes) {
+                            failedRetryTimes = 0;
+                            //将start左移，代表当前任务结束，继续拿下一个任务的结果
+                            eachTaskStatus.shiftLeft(1);
+                        } else {
+                            ++failedRetryTimes;
                         }
                     } else {
                         if (waitTime == 0) {
@@ -787,35 +787,31 @@ public class DatabaseService {
      * 当使用共享内存时，添加搜索任务到队列
      *
      * @param nonFormattedSql sql未被格式化的所有任务
-     * @param taskStatus      用于保存任务信息，这是一个通用变量，从第二个位开始，每一个位代表一个任务，当任务完成，该位将被置为1，否则为0，
+     * PrepareSearchInfo.taskStatus      用于保存任务信息，这是一个通用变量，从第二个位开始，每一个位代表一个任务，当任务完成，该位将被置为1，否则为0，
      *                        例如第一个和第三个任务完成，第二个未完成，则为1010
-     * @param allTaskStatus   所有的任务信息，从第二位开始，只要有任务被创建，该为就为1，例如三个任务被创建，则为1110
-     * @param containerMap    每个任务搜索出来的结果都会被放到一个属于它自己的一个容器中，该容器保存任务与容器的映射关系
-     * @param taskMap         任务
+     * PrepareSearchInfo.allTaskStatus   所有的任务信息，从第二位开始，只要有任务被创建，该为就为1，例如三个任务被创建，则为1110
+     * PrepareSearchInfo.containerMap    每个任务搜索出来的结果都会被放到一个属于它自己的一个容器中，该容器保存任务与容器的映射关系
+     * PrepareSearchInfo.taskMap         任务
      */
-    private void addSearchTasksForSharedMemory(LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> nonFormattedSql,
-                                               Bit taskStatus,
-                                               Bit allTaskStatus,
-                                               LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap,
-                                               ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskMap) {
+    private void addSearchTasksForSharedMemory(LinkedHashMap<LinkedHashMap<String, String>, LinkedList<String>> nonFormattedSql) {
         Bit number = new Bit(new byte[]{1});
         for (String eachDisk : RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks())) {
             ConcurrentLinkedQueue<Runnable> tasks = new ConcurrentLinkedQueue<>();
-            taskMap.put(eachDisk, tasks);
+            PrepareSearchInfo.taskMap.put(eachDisk, tasks);
             for (var entry : nonFormattedSql.entrySet()) {
                 LinkedHashMap<String, String> commandsMap = entry.getKey();
-                ConcurrentSkipListSet<String> container = entry.getValue();
+                LinkedList<String> container = entry.getValue();
                 //为每个任务分配的位，不断左移以不断进行分配
                 number.shiftLeft(1);
                 Bit currentTaskNum = new Bit(number);
                 byte[] originBytes;
-                while ((originBytes = allTaskStatus.getBytes()) != null) {
+                while ((originBytes = PrepareSearchInfo.allTaskStatus.getBytes()) != null) {
                     Bit or = Bit.or(originBytes, currentTaskNum.getBytes());
-                    if (allTaskStatus.set(originBytes, or)) {
+                    if (PrepareSearchInfo.allTaskStatus.set(originBytes, or)) {
                         break;
                     }
                 }
-                containerMap.put(currentTaskNum.toString(), container);
+                PrepareSearchInfo.containerMap.put(currentTaskNum.toString(), container);
                 tasks.add(() -> {
                     try {
                         for (var e : commandsMap.entrySet()) {
@@ -836,9 +832,9 @@ public class DatabaseService {
                         e.printStackTrace();
                     } finally {
                         byte[] originalBytes;
-                        while ((originalBytes = taskStatus.getBytes()) != null) {
+                        while ((originalBytes = PrepareSearchInfo.taskStatus.getBytes()) != null) {
                             Bit or = Bit.or(originalBytes, currentTaskNum.getBytes());
-                            if (taskStatus.set(originalBytes, or)) {
+                            if (PrepareSearchInfo.taskStatus.set(originalBytes, or)) {
                                 break;
                             }
                         }
@@ -865,25 +861,17 @@ public class DatabaseService {
      * 创建搜索任务
      * nonFormattedSql将会生成从list0-40，根据priority从高到低排序的SQL语句，第一个map中key保存未格式化的sql，value保存表名称，第二个set为搜索结果的暂时存储容器
      * containerMap中key为每个任务分配到的位，value为nonFormattedSql中的临时存储容器
-     * 生成任务顺序会根据list的权重和priority来生成，所以使用SkipList保证顺序。
+     * 生成任务顺序会根据list的权重和priority来生成
      *
      * @param nonFormattedSql        未格式化搜索字段的SQL
-     * @param taskStatus             任务执行完成的标志，每个任务会分配到一个位，默认为0，当任务完成，将taskStatus的对应位设为1
-     * @param allTaskStatus          任务全部执行完成之后的位图，当taskStatus全部完成将会等于allTaskStatus
-     * @param containerMap           每个任务被分配到的临时存储结果的容器
-     * @param taskMap                存储任务的Map，第一个参数是disk，即硬盘盘符，第二个参数为Queue，即生成的任务
      * @param isReadFromSharedMemory 是否通过共享内存读取，而不是数据库搜索
      */
-    private void addSearchTasks(LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> nonFormattedSql,
-                                Bit taskStatus,
-                                Bit allTaskStatus,
-                                LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap,
-                                ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskMap,
+    private void addSearchTasks(LinkedHashMap<LinkedHashMap<String, String>, LinkedList<String>> nonFormattedSql,
                                 boolean isReadFromSharedMemory) {
         if (isReadFromSharedMemory) {
-            addSearchTasksForSharedMemory(nonFormattedSql, taskStatus, allTaskStatus, containerMap, taskMap);
+            addSearchTasksForSharedMemory(nonFormattedSql);
         } else {
-            addSearchTasksForDatabase(nonFormattedSql, taskStatus, allTaskStatus, containerMap, taskMap);
+            addSearchTasksForDatabase(nonFormattedSql);
         }
     }
 
@@ -891,38 +879,34 @@ public class DatabaseService {
      * 添加搜索任务到队列
      *
      * @param nonFormattedSql sql未被格式化的所有任务
-     * @param taskStatus      用于保存任务信息，这是一个通用变量，从第二个位开始，每一个位代表一个任务，当任务完成，该位将被置为1，否则为0，
+     * PrepareSearchInfo.taskStatus      用于保存任务信息，这是一个通用变量，从第二个位开始，每一个位代表一个任务，当任务完成，该位将被置为1，否则为0，
      *                        例如第一个和第三个任务完成，第二个未完成，则为1010
-     * @param allTaskStatus   所有的任务信息，从第二位开始，只要有任务被创建，该位就为1，例如三个任务被创建，则为1110
-     * @param containerMap    每个任务搜索出来的结果都会被放到一个属于它自己的一个容器中，该容器保存任务与容器的映射关系
-     * @param taskMap         任务
+     * PrepareSearchInfo.allTaskStatus   所有的任务信息，从第二位开始，只要有任务被创建，该位就为1，例如三个任务被创建，则为1110
+     * PrepareSearchInfo.containerMap    每个任务搜索出来的结果都会被放到一个属于它自己的一个容器中，该容器保存任务与容器的映射关系
+     * PrepareSearchInfo.taskMap         任务
      */
-    private void addSearchTasksForDatabase(LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> nonFormattedSql,
-                                           Bit taskStatus,
-                                           Bit allTaskStatus,
-                                           LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap,
-                                           ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskMap) {
+    private void addSearchTasksForDatabase(LinkedHashMap<LinkedHashMap<String, String>, LinkedList<String>> nonFormattedSql) {
         Bit number = new Bit(new byte[]{1});
         AllConfigs allConfigs = AllConfigs.getInstance();
         String availableDisks = allConfigs.getAvailableDisks();
         for (String eachDisk : RegexUtil.comma.split(availableDisks)) {
             ConcurrentLinkedQueue<Runnable> tasks = new ConcurrentLinkedQueue<>();
-            taskMap.put(eachDisk, tasks);
+            PrepareSearchInfo.taskMap.put(eachDisk, tasks);
             //向任务队列tasks添加任务
             for (var entry : nonFormattedSql.entrySet()) {
                 LinkedHashMap<String, String> commandsMap = entry.getKey();
-                ConcurrentSkipListSet<String> container = entry.getValue();
+                LinkedList<String> container = entry.getValue();
                 //为每个任务分配的位，不断左移以不断进行分配
                 number.shiftLeft(1);
                 Bit currentTaskNum = new Bit(number);
                 byte[] origin;
-                while ((origin = allTaskStatus.getBytes()) != null) {
+                while ((origin = PrepareSearchInfo.allTaskStatus.getBytes()) != null) {
                     Bit or = Bit.or(origin, currentTaskNum.getBytes());
-                    if (allTaskStatus.set(origin, or)) {
+                    if (PrepareSearchInfo.allTaskStatus.set(origin, or)) {
                         break;
                     }
                 }
-                containerMap.put(currentTaskNum.toString(), container);
+                PrepareSearchInfo.containerMap.put(currentTaskNum.toString(), container);
                 //每一个任务负责查询一个priority和list0-list40生成的41个SQL
                 tasks.add(() -> {
                     try {
@@ -952,9 +936,9 @@ public class DatabaseService {
                     } finally {
                         //执行完后将对应的线程flag设为1
                         byte[] originalBytes;
-                        while ((originalBytes = taskStatus.getBytes()) != null) {
+                        while ((originalBytes = PrepareSearchInfo.taskStatus.getBytes()) != null) {
                             Bit or = Bit.or(originalBytes, currentTaskNum.getBytes());
-                            if (taskStatus.set(originalBytes, or)) {
+                            if (PrepareSearchInfo.taskStatus.set(originalBytes, or)) {
                                 break;
                             }
                         }
@@ -973,7 +957,7 @@ public class DatabaseService {
      * @param key       查询key，例如 [C,list10,-1]
      * @return 查询的结果数量
      */
-    private long searchFromDatabaseOrCache(ConcurrentSkipListSet<String> container, String diskStr, String sql, String key) {
+    private long searchFromDatabaseOrCache(LinkedList<String> container, String diskStr, String sql, String key) {
         long matchedNum;
         Cache cache = tableCache.get(key);
         if (cache != null && cache.isCacheValid()) {
@@ -999,7 +983,7 @@ public class DatabaseService {
         return matchedNum;
     }
 
-    private long searchFromCudaCache(ConcurrentSkipListSet<String> container, String key) {
+    private long searchFromCudaCache(LinkedList<String> container, String key) {
         long matchedNum = 0;
         if (IsDebug.isDebug()) {
             System.out.println("CUDA缓存命中" + key);
@@ -1021,16 +1005,16 @@ public class DatabaseService {
     /**
      * 生成未格式化的sql
      * 第一个map中每一个priority加上list0-list40会生成41条SQL作为key，value是搜索的表，即SELECT* FROM [list?]中的[list?];
-     * 第二个SkipListSet作为SQL执行搜索后存储结果的容器
+     * 第二个set作为SQL执行搜索后存储结果的容器
      *
      * @return map
      */
-    private LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> getNonFormattedSqlFromTableQueue() {
+    private LinkedHashMap<LinkedHashMap<String, String>, LinkedList<String>> getNonFormattedSqlFromTableQueue() {
         if (isDatabaseUpdated.get()) {
             isDatabaseUpdated.set(false);
             initPriority();
         }
-        LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> sqlColumnMap = new LinkedHashMap<>();
+        LinkedHashMap<LinkedHashMap<String, String>, LinkedList<String>> sqlColumnMap = new LinkedHashMap<>();
         if (priorityMap.isEmpty()) {
             return sqlColumnMap;
         }
@@ -1058,7 +1042,7 @@ public class DatabaseService {
                 String sql = "SELECT %s FROM " + each + " WHERE PRIORITY=" + "-1";
                 _priorityMap.put(sql, each);
             });
-            sqlColumnMap.put(_priorityMap, new ConcurrentSkipListSet<>());
+            sqlColumnMap.put(_priorityMap, new LinkedList<>());
         } else {
             for (Pair i : priorityMap) {
                 LinkedHashMap<String, String> eachPriorityMap = new LinkedHashMap<>();
@@ -1069,7 +1053,7 @@ public class DatabaseService {
                     String sql = "SELECT %s FROM " + each + " WHERE PRIORITY=" + i.priority;
                     eachPriorityMap.put(sql, each);
                 });
-                sqlColumnMap.put(eachPriorityMap, new ConcurrentSkipListSet<>());
+                sqlColumnMap.put(eachPriorityMap, new LinkedList<>());
             }
         }
         tableQueue.clear();
@@ -1894,7 +1878,7 @@ public class DatabaseService {
     private static class PrepareSearchInfo {
         static AtomicBoolean isCudaThreadRunning = new AtomicBoolean(false);
         static AtomicBoolean isSearchPrepared = new AtomicBoolean(false);
-        static LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap = new LinkedHashMap<>();
+        static LinkedHashMap<String, LinkedList<String>> containerMap = new LinkedHashMap<>();
         //任务队列
         static ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskMap = new ConcurrentHashMap<>();
         static Bit taskStatus = new Bit(new byte[]{0});
@@ -1906,16 +1890,11 @@ public class DatabaseService {
             PrepareSearchInfo.taskMap.clear();
             //每个priority用一个线程，每一个后缀名对应一个优先级
             //按照优先级排列，key是sql和表名的对应，value是容器
-            LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>>
-                    nonFormattedSql = databaseService.getNonFormattedSqlFromTableQueue();
+            var nonFormattedSql = databaseService.getNonFormattedSqlFromTableQueue();
             taskStatus = new Bit(new byte[]{0});
             allTaskStatus = new Bit(new byte[]{0});
             //添加搜索任务到队列
             databaseService.addSearchTasks(nonFormattedSql,
-                    taskStatus,
-                    allTaskStatus,
-                    PrepareSearchInfo.containerMap,
-                    PrepareSearchInfo.taskMap,
                     databaseService.isReadFromSharedMemory.get());
         }
     }
