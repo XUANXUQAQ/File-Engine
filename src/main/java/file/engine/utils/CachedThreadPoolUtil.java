@@ -11,7 +11,14 @@ public enum CachedThreadPoolUtil {
     private final AtomicBoolean isShutdown = new AtomicBoolean(false);
 
     CachedThreadPoolUtil() {
-        virtualThreadPool = Executors.newVirtualThreadPerTaskExecutor();
+        virtualThreadPool = new ThreadPoolExecutor(
+                0,
+                Integer.MAX_VALUE,
+                0,
+                TimeUnit.SECONDS,
+                new SynchronousQueue<>(),
+                Thread.ofVirtual().factory()
+        );
         platformThreadPool = new ThreadPoolExecutor(
                 0,
                 100,
@@ -31,6 +38,7 @@ public enum CachedThreadPoolUtil {
 
     /**
      * 提交任务
+     *
      * @param task 任务
      * @return Future
      */
@@ -43,7 +51,8 @@ public enum CachedThreadPoolUtil {
 
     /**
      * 提交任务
-     * @param task 任务
+     *
+     * @param task            任务
      * @param isVirtualThread 是否使用虚拟线程
      * @return Future
      */
@@ -60,7 +69,8 @@ public enum CachedThreadPoolUtil {
 
     /**
      * 提交任务
-     * @param task 任务
+     *
+     * @param task            任务
      * @param isVirtualThread 是否使用虚拟线程
      */
     public void executeTask(Runnable task, boolean isVirtualThread) {
@@ -76,6 +86,7 @@ public enum CachedThreadPoolUtil {
 
     /**
      * 使用虚拟线程提交任务
+     *
      * @param task 任务
      */
     public void executeTask(Runnable task) {
@@ -98,6 +109,7 @@ public enum CachedThreadPoolUtil {
 
     /**
      * 等待线程池关闭并打印线程池信息
+     *
      * @param threadPoolExecutor 线程池
      */
     private void printInfo(ThreadPoolExecutor threadPoolExecutor) {
