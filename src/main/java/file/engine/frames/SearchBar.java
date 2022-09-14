@@ -78,6 +78,7 @@ public class SearchBar {
     private final AtomicBoolean isRoundRadiusSet = new AtomicBoolean(false);
     private static final AtomicBoolean isPreviewMode = new AtomicBoolean(false);
     private final AtomicBoolean isTutorialMode = new AtomicBoolean(false);
+    private static volatile boolean isSearchStopped = false;
     private Border fullBorder;
     private Border topBorder;
     private Border middleBorder;
@@ -2667,6 +2668,7 @@ public class SearchBar {
     @EventRegister(registerClass = SearchDoneEvent.class)
     private static void showSearchDone(Event event) {
         SwingUtilities.invokeLater(() -> getInstance().searchInfoLabel.setName("done"));
+        isSearchStopped = true;
     }
 
     @EventRegister(registerClass = HideSearchBarEvent.class)
@@ -3242,20 +3244,21 @@ public class SearchBar {
             return;
         }
         isMergeThreadNotExist.set(false);
+        isSearchStopped = false;
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             EventManagement eventManagement = EventManagement.getInstance();
             final long time = System.currentTimeMillis();
             Supplier<Boolean> isStopSearch = () -> startTime > time || !isVisible() || listResultsNum.get() >= MAX_RESULTS_COUNT;
+            ConcurrentLinkedQueue<String> tempResults = databaseService.getTempResults();
+            PluginService pluginService = PluginService.getInstance();
             try {
-                ConcurrentLinkedQueue<String> tempResults = databaseService.getTempResults();
-                while (true) {
-                    if (isStopSearch.get()) {
-                        eventManagement.putEvent(new StopSearchEvent());
-                        return;
-                    }
+                while (!isSearchStopped) {
                     String each;
-                    for (PluginService.PluginInfo eachPlugin : PluginService.getInstance().getAllPlugins()) {
+                    for (var eachPlugin : pluginService.getAllPlugins()) {
                         while ((each = eachPlugin.plugin.pollFromResultQueue()) != null) {
+                            if (isStopSearch.get()) {
+                                return;
+                            }
                             each = "plugin" + pluginResultSplitStr + eachPlugin.plugin.identifier + pluginResultSplitStr + each;
                             listResults.add(each);
                             listResultsNum.incrementAndGet();
@@ -3263,7 +3266,6 @@ public class SearchBar {
                     }
                     while ((each = tempResults.poll()) != null) {
                         if (isStopSearch.get()) {
-                            eventManagement.putEvent(new StopSearchEvent());
                             return;
                         }
                         listResults.add(each);
