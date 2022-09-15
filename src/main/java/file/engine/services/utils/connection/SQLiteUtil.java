@@ -40,9 +40,8 @@ public class SQLiteUtil {
                 try {
                     conn.lock.lock();
                     if (conn.isIdleTimeout() && !conn.connection.isClosed()) {
-                        System.out.println("长时间未使用 " + conn.url + "  已关闭连接");
-                        try (Statement stmt = conn.connection.createStatement()) {
-                            stmt.execute("PRAGMA shrink_memory");
+                        if (IsDebug.isDebug()) {
+                            System.out.println("长时间未使用 " + conn.url + "  已关闭连接");
                         }
                         conn.connection.close();
                     }
@@ -102,7 +101,7 @@ public class SQLiteUtil {
     private static ConnectionWrapper getFromConnectionPool(String key) throws SQLException {
         ConnectionWrapper connectionWrapper = connectionPool.get(key);
         if (connectionWrapper == null) {
-            throw new RuntimeException("no connection named " + key);
+            throw new IllegalArgumentException("no connection named " + key);
         }
         try {
             connectionWrapper.lock.lock();
@@ -169,7 +168,8 @@ public class SQLiteUtil {
             System.err.println("正在关闭数据库连接");
         }
         final int timeout = 30_000; // 30s
-        connectionPool.forEach((k, v) -> {
+        for (var entry : connectionPool.entrySet()) {
+            ConnectionWrapper v = entry.getValue();
             try {
                 v.lock.lock();
                 final long checkTime = System.currentTimeMillis();
@@ -182,7 +182,7 @@ public class SQLiteUtil {
             } finally {
                 v.lock.unlock();
             }
-        });
+        }
         connectionPool.clear();
     }
 

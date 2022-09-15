@@ -78,7 +78,6 @@ public class SearchBar {
     private final AtomicBoolean isRoundRadiusSet = new AtomicBoolean(false);
     private static final AtomicBoolean isPreviewMode = new AtomicBoolean(false);
     private final AtomicBoolean isTutorialMode = new AtomicBoolean(false);
-    private static volatile boolean isSearchStopped = false;
     private Border fullBorder;
     private Border topBorder;
     private Border middleBorder;
@@ -206,9 +205,9 @@ public class SearchBar {
     }
 
     private void initGUI() {
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
-        int width = screenSize.width;
-        int height = screenSize.height;
+        DisplayMode screenSize = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode(); // 获取屏幕大小
+        int width = screenSize.getWidth();
+        int height = screenSize.getHeight();
         int searchBarWidth = (int) (width * 0.3);
         int searchBarHeight = (int) (height * 0.4);
         final int positionX = width / 2 - searchBarWidth / 2;
@@ -2668,7 +2667,6 @@ public class SearchBar {
     @EventRegister(registerClass = SearchDoneEvent.class)
     private static void showSearchDone(Event event) {
         SwingUtilities.invokeLater(() -> getInstance().searchInfoLabel.setName("done"));
-        isSearchStopped = true;
     }
 
     @EventRegister(registerClass = HideSearchBarEvent.class)
@@ -2805,9 +2803,9 @@ public class SearchBar {
                     if (showingMode == Constants.Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
                         getExplorerSizeAndChangeSearchBarSizeExplorerMode();
                     } else {
-                        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
-                        int width = screenSize.width;
-                        int height = screenSize.height;
+                        DisplayMode screenSize = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode(); // 获取屏幕大小
+                        int width = screenSize.getWidth();
+                        int height = screenSize.getHeight();
                         int searchBarWidth = (int) (width * 0.3);
                         int searchBarHeight = (int) (height * 0.4);
                         int positionX, positionY;
@@ -2849,9 +2847,9 @@ public class SearchBar {
         long explorerHeight = (long) (GetHandle.INSTANCE.getExplorerHeight() / dpi);
         long explorerX = (long) (GetHandle.INSTANCE.getExplorerX() / dpi);
         long explorerY = (long) (GetHandle.INSTANCE.getExplorerY() / dpi);
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        DisplayMode screenSize = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode();
         int searchBarWidth = (int) (explorerWidth * 0.3);
-        int searchBarHeight = (int) (screenSize.height * 0.4);
+        int searchBarHeight = (int) (screenSize.getHeight() * 0.4);
 
         int labelHeight = searchBarHeight / 9;
         //explorer窗口大于20像素才开始显示，防止误判其他系统窗口
@@ -3005,8 +3003,8 @@ public class SearchBar {
         } else {
             closeWithoutHideSearchBar();
         }
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
-        int height = screenSize.height;
+        DisplayMode screenSize = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode(); // 获取屏幕大小
+        int height = screenSize.getHeight();
         int searchBarHeight = (int) (height * 0.5);
         //设置字体
         int labelHeight = searchBarHeight / 9;
@@ -3244,7 +3242,6 @@ public class SearchBar {
             return;
         }
         isMergeThreadNotExist.set(false);
-        isSearchStopped = false;
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             EventManagement eventManagement = EventManagement.getInstance();
             final long time = System.currentTimeMillis();
@@ -3252,7 +3249,7 @@ public class SearchBar {
             ConcurrentLinkedQueue<String> tempResults = databaseService.getTempResults();
             PluginService pluginService = PluginService.getInstance();
             try {
-                while (!isSearchStopped) {
+                while (true) {
                     String each;
                     for (var eachPlugin : pluginService.getAllPlugins()) {
                         while ((each = eachPlugin.plugin.pollFromResultQueue()) != null) {
