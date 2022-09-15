@@ -48,7 +48,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -60,7 +59,6 @@ import java.util.stream.Collectors;
 
 @SuppressWarnings({"IndexOfReplaceableByContains", "ListIndexOfReplaceableByContains"})
 public class SearchBar {
-    public static final int MAX_RESULTS_COUNT = 200;
     private static final String RESULT_LABEL_NAME_HOLDER = "filled";
     private final AtomicBoolean isLockMouseMotion = new AtomicBoolean(false);
     private final AtomicBoolean isOpenLastFolderPressed = new AtomicBoolean(false);
@@ -111,12 +109,11 @@ public class SearchBar {
     private int iconSideLength;
     private volatile long visibleStartTime = 0;  //记录窗口开始可见的事件，窗口默认最短可见时间0.5秒，防止窗口快速闪烁
     private volatile long firstResultStartShowingTime = 0;  //记录开始显示结果的时间，用于防止刚开始移动到鼠标导致误触
-    private final ArrayList<String> listResults;  //保存从数据库中找出符合条件的记录（文件路径）
+    private ArrayList<String> listResults;  //保存从数据库中找出符合条件的记录（文件路径）
     private volatile String[] searchCase;
     private volatile String searchText = "";
     private volatile String[] keywords;
     private final DatabaseService databaseService;
-    private final AtomicInteger listResultsNum;  //保存当前listResults中有多少个结果
     private final AtomicInteger currentLabelSelectedPosition;   //保存当前是哪个label被选中 范围 0 - 7
     private volatile Plugin currentUsingPlugin;
     private volatile String currentPluginIdentifier;
@@ -136,7 +133,6 @@ public class SearchBar {
         listResults = new ArrayList<>();
         searchBar = new JFrame();
         currentResultCount = new AtomicInteger(0);
-        listResultsNum = new AtomicInteger(0);
         TranslateService translateService = TranslateService.getInstance();
         open = new JMenuItem(translateService.getTranslation("Open"));
         openAsAdmin = new JMenuItem(translateService.getTranslation("Open as administrator"));
@@ -302,7 +298,7 @@ public class SearchBar {
             if (isPreviewMode.get() || isTutorialMode.get()) {
                 return;
             }
-            if (listResultsNum.get() != 0) {
+            if (!listResults.isEmpty()) {
                 if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
                     setVisible(false);
                 }
@@ -330,7 +326,7 @@ public class SearchBar {
             if (isPreviewMode.get() || isTutorialMode.get()) {
                 return;
             }
-            if (listResultsNum.get() != 0) {
+            if (!listResults.isEmpty()) {
                 if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
                     setVisible(false);
                 }
@@ -358,7 +354,7 @@ public class SearchBar {
             if (isPreviewMode.get() || isTutorialMode.get()) {
                 return;
             }
-            if (listResultsNum.get() != 0) {
+            if (!listResults.isEmpty()) {
                 if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
                     setVisible(false);
                 }
@@ -386,7 +382,7 @@ public class SearchBar {
             if (isPreviewMode.get() || isTutorialMode.get()) {
                 return;
             }
-            if (listResultsNum.get() != 0) {
+            if (!listResults.isEmpty()) {
                 if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
                     setVisible(false);
                 }
@@ -560,7 +556,7 @@ public class SearchBar {
 
             @Override
             public void mousePressed(MouseEvent e) {
-                if (listResultsNum.get() == 0) {
+                if (listResults.isEmpty()) {
                     return;
                 }
                 int count = e.getClickCount();
@@ -582,7 +578,7 @@ public class SearchBar {
                         if (isPreviewMode.get() || isTutorialMode.get()) {
                             return;
                         }
-                        if (listResultsNum.get() != 0) {
+                        if (!listResults.isEmpty()) {
                             if (runningMode != RunningMode.PLUGIN_MODE) {
                                 if (showingMode != Constants.Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
                                     String searchBarText = getSearchBarText();
@@ -636,7 +632,7 @@ public class SearchBar {
                 if (runningMode == RunningMode.PLUGIN_MODE &&
                         showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING &&
                         currentUsingPlugin != null) {
-                    if (listResultsNum.get() != 0) {
+                    if (!listResults.isEmpty()) {
                         String[] split = splitPluginResult(listResults.get(currentResultCount.get()));
                         currentUsingPlugin.mousePressed(e, split[2]);
                         if (count == 2) {
@@ -657,7 +653,7 @@ public class SearchBar {
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                if (listResultsNum.get() == 0) {
+                if (listResults.isEmpty()) {
                     return;
                 }
                 String res = listResults.get(currentResultCount.get());
@@ -749,7 +745,7 @@ public class SearchBar {
                         SwingUtilities.invokeLater(() -> textField.setText(substring));
                     }
                 }
-                if (listResultsNum.get() != 0) {
+                if (!listResults.isEmpty()) {
                     if (38 == key) {
                         //上键被点击
                         if (isFirstPress || System.currentTimeMillis() - pressTime > timeLimit) {
@@ -762,9 +758,9 @@ public class SearchBar {
 
                             if (!getSearchBarText().isEmpty()) {
                                 currentResultCount.decrementAndGet();
-
-                                if (currentResultCount.get() >= listResultsNum.get()) {
-                                    currentResultCount.set(listResultsNum.get() - 1);
+                                int size = listResults.size();
+                                if (currentResultCount.get() >= size) {
+                                    currentResultCount.set(size - 1);
                                 }
                                 if (currentResultCount.get() <= 0) {
                                     currentResultCount.set(0);
@@ -786,9 +782,9 @@ public class SearchBar {
                             if (isNextLabelValid) {
                                 if (!getSearchBarText().isEmpty()) {
                                     currentResultCount.incrementAndGet();
-
-                                    if (currentResultCount.get() >= listResultsNum.get()) {
-                                        currentResultCount.set(listResultsNum.get() - 1);
+                                    int size = listResults.size();
+                                    if (currentResultCount.get() >= size) {
+                                        currentResultCount.set(size - 1);
                                     }
                                     if (currentResultCount.get() <= 0) {
                                         currentResultCount.set(0);
@@ -891,7 +887,7 @@ public class SearchBar {
                 if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
                     if (runningMode == RunningMode.PLUGIN_MODE) {
                         if (key != 38 && key != 40 && currentUsingPlugin != null) {
-                            if (listResultsNum.get() != 0) {
+                            if (!listResults.isEmpty()) {
                                 String[] split = splitPluginResult(listResults.get(currentResultCount.get()));
                                 currentUsingPlugin.keyPressed(arg0, split[2]);
                             }
@@ -906,7 +902,7 @@ public class SearchBar {
             @Override
             public void keyReleased(KeyEvent arg0) {
                 int key = arg0.getKeyCode();
-                if (listResultsNum.get() == 0) {
+                if (listResults.isEmpty()) {
                     return;
                 }
                 String res = listResults.get(currentResultCount.get());
@@ -933,7 +929,7 @@ public class SearchBar {
                 }
 
                 if (runningMode == RunningMode.PLUGIN_MODE) {
-                    if (key != 38 && key != 40 && currentUsingPlugin != null && listResultsNum.get() != 0) {
+                    if (key != 38 && key != 40 && currentUsingPlugin != null && !listResults.isEmpty()) {
                         currentUsingPlugin.keyReleased(arg0, splitPluginResult(listResults.get(currentResultCount.get()))[2]);
                     }
                 }
@@ -942,7 +938,7 @@ public class SearchBar {
             @Override
             public void keyTyped(KeyEvent arg0) {
                 int key = arg0.getKeyCode();
-                if (listResultsNum.get() == 0) {
+                if (listResults.isEmpty()) {
                     return;
                 }
                 String res = listResults.get(currentResultCount.get());
@@ -960,7 +956,7 @@ public class SearchBar {
                     });
                 }
                 if (runningMode == RunningMode.PLUGIN_MODE) {
-                    if (key != 38 && key != 40 && currentUsingPlugin != null && listResultsNum.get() != 0) {
+                    if (key != 38 && key != 40 && currentUsingPlugin != null && !listResults.isEmpty()) {
                         currentUsingPlugin.keyTyped(arg0, splitPluginResult(listResults.get(currentResultCount.get()))[2]);
                     }
                 }
@@ -1264,7 +1260,7 @@ public class SearchBar {
                         mode == RunningMode.NORMAL_MODE ||
                                 mode == RunningMode.COMMAND_MODE
                 );
-                if (isMouseDraggedInWindow.get() && !isIconCreated.get() && listResultsNum.get() > 0) {
+                if (isMouseDraggedInWindow.get() && !isIconCreated.get() && !listResults.isEmpty()) {
                     isIconCreated.set(true);
                     String result = listResults.get(currentResultCount.get());
                     File f = null;
@@ -1357,7 +1353,7 @@ public class SearchBar {
                             } else if (labelPosition8 <= e.getY() && e.getY() < labelPosition9) {
                                 mouseOnWhichLabel = 7;
                             }
-                            if (mouseOnWhichLabel < listResultsNum.get()) {
+                            if (mouseOnWhichLabel < listResults.size()) {
                                 int ret;
                                 if (position < mouseOnWhichLabel) {
                                     ret = mouseOnWhichLabel - position;
@@ -1629,7 +1625,7 @@ public class SearchBar {
                 }
                 break;
             default:
-                if (listResultsNum.get() > 8) {
+                if (listResults.size() > 8) {
                     return true;
                 }
         }
@@ -1678,9 +1674,9 @@ public class SearchBar {
                 if (isNextLabelValid()) {
                     if (!getSearchBarText().isEmpty()) {
                         currentResultCount.incrementAndGet();
-
-                        if (currentResultCount.get() >= listResultsNum.get()) {
-                            currentResultCount.set(listResultsNum.get() - 1);
+                        int size = listResults.size();
+                        if (currentResultCount.get() >= size) {
+                            currentResultCount.set(size - 1);
                         }
                         if (currentResultCount.get() <= 0) {
                             currentResultCount.set(0);
@@ -1696,9 +1692,9 @@ public class SearchBar {
                 }
                 if (!getSearchBarText().isEmpty()) {
                     currentResultCount.getAndDecrement();
-
-                    if (currentResultCount.get() >= listResultsNum.get()) {
-                        currentResultCount.set(listResultsNum.get() - 1);
+                    int size = listResults.size();
+                    if (currentResultCount.get() >= size) {
+                        currentResultCount.set(size - 1);
                     }
                     if (currentResultCount.get() <= 0) {
                         currentResultCount.set(0);
@@ -1720,7 +1716,7 @@ public class SearchBar {
         showSelectInfoOnLabel();
         switch (position) {
             case 0:
-                int size = listResultsNum.get();
+                int size = listResults.size();
                 if (size == 2) {
                     setLabelNotChosen(label1);
                     setLabelChosen(label2);
@@ -1766,7 +1762,7 @@ public class SearchBar {
                 }
                 break;
             case 1:
-                size = listResultsNum.get();
+                size = listResults.size();
                 if (size == 3) {
                     setLabelNotChosen(label1);
                     setLabelNotChosen(label2);
@@ -1809,7 +1805,7 @@ public class SearchBar {
                 }
                 break;
             case 2:
-                size = listResultsNum.get();
+                size = listResults.size();
                 if (size == 4) {
                     setLabelNotChosen(label1);
                     setLabelNotChosen(label2);
@@ -1848,7 +1844,7 @@ public class SearchBar {
                 }
                 break;
             case 3:
-                size = listResultsNum.get();
+                size = listResults.size();
                 if (size == 5) {
                     setLabelNotChosen(label1);
                     setLabelNotChosen(label2);
@@ -1882,7 +1878,7 @@ public class SearchBar {
                 }
                 break;
             case 4:
-                size = listResultsNum.get();
+                size = listResults.size();
                 if (size == 6) {
                     setLabelNotChosen(label1);
                     setLabelNotChosen(label2);
@@ -1910,7 +1906,7 @@ public class SearchBar {
                 }
                 break;
             case 5:
-                size = listResultsNum.get();
+                size = listResults.size();
                 if (size == 7) {
                     setLabelNotChosen(label1);
                     setLabelNotChosen(label2);
@@ -2041,7 +2037,7 @@ public class SearchBar {
      * 尝试显示结果，并将第一个label设置为选中
      */
     private void tryToShowResultsAndSetFirstChosen() {
-        int size = listResultsNum.get();
+        int size = listResults.size();
         if (runningMode == RunningMode.NORMAL_MODE) {
             //到达了最上端，刷新显示
             try {
@@ -2174,7 +2170,7 @@ public class SearchBar {
                 repaint();
                 break;
             case 1:
-                size = listResultsNum.get();
+                size = listResults.size();
                 if (size == 2) {
                     setLabelChosen(label1);
                     setLabelNotChosen(label2);
@@ -2220,7 +2216,7 @@ public class SearchBar {
                 }
                 break;
             case 2:
-                size = listResultsNum.get();
+                size = listResults.size();
                 if (size == 3) {
                     setLabelNotChosen(label1);
                     setLabelChosen(label2);
@@ -2263,7 +2259,7 @@ public class SearchBar {
                 }
                 break;
             case 3:
-                size = listResultsNum.get();
+                size = listResults.size();
                 if (size == 4) {
                     setLabelNotChosen(label1);
                     setLabelNotChosen(label2);
@@ -2302,7 +2298,7 @@ public class SearchBar {
                 }
                 break;
             case 4:
-                size = listResultsNum.get();
+                size = listResults.size();
                 if (size == 5) {
                     setLabelNotChosen(label1);
                     setLabelNotChosen(label2);
@@ -2336,7 +2332,7 @@ public class SearchBar {
                 }
                 break;
             case 5:
-                size = listResultsNum.get();
+                size = listResults.size();
                 if (size == 6) {
                     setLabelNotChosen(label1);
                     setLabelNotChosen(label2);
@@ -2364,7 +2360,7 @@ public class SearchBar {
                 }
                 break;
             case 6:
-                size = listResultsNum.get();
+                size = listResults.size();
                 if (size == 7) {
                     setLabelNotChosen(label1);
                     setLabelNotChosen(label2);
@@ -2398,8 +2394,7 @@ public class SearchBar {
     }
 
     private void clearResults() {
-        listResults.clear();
-        listResultsNum.set(0);
+        listResults = new ArrayList<>();
     }
 
     /**
@@ -2513,6 +2508,7 @@ public class SearchBar {
                     isSearchNotStarted.set(true);
                     isCudaSearchNotStarted.set(true);
                 }
+                EventManagement.getInstance().putEvent(new StopSearchEvent());
             }
 
             @Override
@@ -2525,7 +2521,6 @@ public class SearchBar {
                 if (getSearchBarText().isEmpty()) {
                     lastMousePositionX = 0;
                     lastMousePositionY = 0;
-                    listResultsNum.set(0);
                     currentResultCount.set(0);
                     startTime = System.currentTimeMillis();
                     startSearchSignal.set(false);
@@ -2544,6 +2539,7 @@ public class SearchBar {
                         isCudaSearchNotStarted.set(true);
                     }
                 }
+                EventManagement.getInstance().putEvent(new StopSearchEvent());
             }
 
             @Override
@@ -2552,6 +2548,7 @@ public class SearchBar {
                 startSearchSignal.set(false);
                 isSearchNotStarted.set(false);
                 isCudaSearchNotStarted.set(false);
+                EventManagement.getInstance().putEvent(new StopSearchEvent());
             }
         });
     }
@@ -2609,9 +2606,9 @@ public class SearchBar {
             return;
         }
         double roundRadius = AllConfigs.getInstance().getRoundRadius();
-        int length = Math.min(listResultsNum.get() + 1, 9);
+        int length = Math.min(listResults.size() + 1, 9);
         if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-            if (listResultsNum.get() == 0) {
+            if (listResults.isEmpty()) {
                 if (getSearchBarText().isEmpty() || System.currentTimeMillis() - startTime < 300) {
                     setSearchBarRadius(roundRadius, searchBar.getWidth(), label1.getHeight());
                 } else {
@@ -2621,7 +2618,7 @@ public class SearchBar {
                 setSearchBarRadius(roundRadius, searchBar.getWidth(), length * label1.getHeight());
             }
         } else if (showingMode == Constants.Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
-            if (listResultsNum.get() == 0) {
+            if (listResults.isEmpty()) {
                 if (getSearchBarText().isEmpty()) {
                     setSearchBarRadius(searchInfoLabel.getX(),
                             searchInfoLabel.getY(),
@@ -2880,7 +2877,7 @@ public class SearchBar {
         SwingUtilities.invokeLater(() -> {
             textField.setLocation(0, (int) (labelHeight * 8 + labelHeight * (1 - textFieldHeightRatio)));
             searchInfoLabel.setLocation(0, labelHeight * 8);
-            int offset = 8 - listResultsNum.get();
+            int offset = 8 - listResults.size();
             offset = Math.max(0, offset);
             offset = offset == 8 ? 7 : offset;
             label1.setLocation(0, labelHeight * offset);
@@ -3047,7 +3044,7 @@ public class SearchBar {
     }
 
     private void tryToShowRecordsWhenHasLabelEmpty() {
-        if (currentResultCount.get() < listResultsNum.get()) {
+        if (currentResultCount.get() < listResults.size()) {
             if (
                     isLabelEmpty(label2) ||
                             isLabelEmpty(label3) ||
@@ -3183,7 +3180,7 @@ public class SearchBar {
                 while (!"done".equals(searchInfoLabel.getName()) && isVisible() && startTime < time) {
                     SwingUtilities.invokeLater(() -> searchInfoLabel.setText(TranslateService.INSTANCE.getTranslation("Searching") + "    " +
                             TranslateService.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
-                            TranslateService.INSTANCE.getTranslation("Number of current results") + ": " + listResultsNum.get()));
+                            TranslateService.INSTANCE.getTranslation("Number of current results") + ": " + listResults.size()));
                     repaint();
                     TimeUnit.MILLISECONDS.sleep(250);
                 }
@@ -3191,7 +3188,7 @@ public class SearchBar {
                     SwingUtilities.invokeLater(() -> {
                         searchInfoLabel.setText(TranslateService.INSTANCE.getTranslation("Search Done") + "    " +
                                 TranslateService.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
-                                TranslateService.INSTANCE.getTranslation("Number of current results") + ": " + listResultsNum.get());
+                                TranslateService.INSTANCE.getTranslation("Number of current results") + ": " + listResults.size());
                         searchInfoLabel.setIcon(GetIconUtil.getInstance().getBigIcon("completeIcon", iconSideLength, iconSideLength));
                         CachedThreadPoolUtil.getInstance().executeTask(() -> {
                             long _time = System.currentTimeMillis();
@@ -3229,7 +3226,7 @@ public class SearchBar {
         }
         SwingUtilities.invokeLater(() -> {
             searchInfoLabel.setText(TranslateService.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
-                    TranslateService.INSTANCE.getTranslation("Number of current results") + ": " + listResultsNum.get());
+                    TranslateService.INSTANCE.getTranslation("Number of current results") + ": " + listResults.size());
             searchInfoLabel.setIcon(null);
         });
     }
@@ -3243,37 +3240,28 @@ public class SearchBar {
         }
         isMergeThreadNotExist.set(false);
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            EventManagement eventManagement = EventManagement.getInstance();
             final long time = System.currentTimeMillis();
-            Supplier<Boolean> isStopSearch = () -> startTime > time || !isVisible() || listResultsNum.get() >= MAX_RESULTS_COUNT;
-            ConcurrentLinkedQueue<String> tempResults = databaseService.getTempResults();
+            Supplier<Boolean> isStopSearch = () -> startTime > time || !isVisible();
             PluginService pluginService = PluginService.getInstance();
+            ArrayList<String> listResultsTemp = listResults;
             try {
-                while (true) {
+                while (!isStopSearch.get()) {
                     String each;
                     for (var eachPlugin : pluginService.getAllPlugins()) {
-                        while ((each = eachPlugin.plugin.pollFromResultQueue()) != null) {
-                            if (isStopSearch.get()) {
-                                return;
-                            }
+                        while ((each = eachPlugin.plugin.pollFromResultQueue()) != null && isStopSearch.get()) {
                             each = "plugin" + pluginResultSplitStr + eachPlugin.plugin.identifier + pluginResultSplitStr + each;
-                            listResults.add(each);
-                            listResultsNum.incrementAndGet();
+                            listResultsTemp.add(each);
                         }
                     }
+                    var tempResults = databaseService.getTempResults();
                     while ((each = tempResults.poll()) != null) {
-                        if (isStopSearch.get()) {
-                            return;
-                        }
-                        listResults.add(each);
-                        listResultsNum.incrementAndGet();
+                        listResultsTemp.add(each);
                     }
                     TimeUnit.MILLISECONDS.sleep(1);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } finally {
-                eventManagement.putEvent(new StopSearchEvent());
                 isMergeThreadNotExist.set(true);
             }
         });
@@ -3340,7 +3328,7 @@ public class SearchBar {
                         chooseAndSetBorder(textField, 2);
                         chooseAndSetBorder(searchInfoLabel, 1);
                     }
-                    int resultNum = listResultsNum.get();
+                    int resultNum = listResults.size();
                     if (resultNum == 0 || resultNum == 1) {
                         if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
                             chooseAndSetBorder(label1, 2);
@@ -3537,13 +3525,15 @@ public class SearchBar {
      * @param isMergeThreadNotExist 合并搜索结果线程是否存在
      */
     private void sendSearchEvent(AtomicBoolean isMergeThreadNotExist) {
+        while (!isMergeThreadNotExist.get())
+            Thread.onSpinWait();
         EventManagement eventManagement = EventManagement.getInstance();
         if (!getSearchBarText().isEmpty()) {
             isSearchNotStarted.set(false);
             if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL && runningMode == RunningMode.NORMAL_MODE) {
                 searchCaseToLowerAndRemoveConflict();
                 eventManagement.putEvent(new StartSearchEvent(() -> searchText, () -> searchCase, () -> keywords),
-                        (event) -> addMergeThread(isMergeThreadNotExist), null);
+                        event -> addMergeThread(isMergeThreadNotExist), null);
             }
         }
     }
@@ -3594,7 +3584,6 @@ public class SearchBar {
                                 for (String i : cmdSet) {
                                     String[] cmdInfo = semicolon.split(i);
                                     if (cmdInfo[0].contains(text.substring(1))) {
-                                        listResultsNum.incrementAndGet();
                                         String result = translateService.getTranslation("Run command") + i;
                                         listResults.add(result);
                                     }
@@ -3612,10 +3601,9 @@ public class SearchBar {
                                 } else {
                                     searchBarText = "";
                                 }
-                                ArrayList<PluginService.PluginInfo> pluginInfos = PluginService.getInstance().searchPluginByKeyword(searchBarText);
+                                var pluginInfos = PluginService.getInstance().searchPluginByKeyword(searchBarText);
                                 for (PluginService.PluginInfo pluginInfo : pluginInfos) {
                                     listResults.add(pluginInfo.identifier);
-                                    listResultsNum.incrementAndGet();
                                 }
                             } else {
                                 if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
@@ -3640,7 +3628,6 @@ public class SearchBar {
                                     result = "plugin" + pluginResultSplitStr + currentUsingPlugin.identifier + pluginResultSplitStr + result;
                                     if (!listResults.contains(result)) {
                                         listResults.add(result);
-                                        listResultsNum.incrementAndGet();
                                     }
                                 }
                                 TimeUnit.MILLISECONDS.sleep(10);
