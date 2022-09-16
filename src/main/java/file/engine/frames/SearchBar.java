@@ -201,9 +201,9 @@ public class SearchBar {
     }
 
     private void initGUI() {
-        DisplayMode screenSize = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode(); // 获取屏幕大小
-        int width = screenSize.getWidth();
-        int height = screenSize.getHeight();
+        var screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
+        int width = screenSize.width;
+        int height = screenSize.height;
         int searchBarWidth = (int) (width * 0.3);
         int searchBarHeight = (int) (height * 0.4);
         final int positionX = width / 2 - searchBarWidth / 2;
@@ -2800,9 +2800,9 @@ public class SearchBar {
                     if (showingMode == Constants.Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
                         getExplorerSizeAndChangeSearchBarSizeExplorerMode();
                     } else {
-                        DisplayMode screenSize = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode(); // 获取屏幕大小
-                        int width = screenSize.getWidth();
-                        int height = screenSize.getHeight();
+                        var screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
+                        int width = screenSize.width;
+                        int height = screenSize.height;
                         int searchBarWidth = (int) (width * 0.3);
                         int searchBarHeight = (int) (height * 0.4);
                         int positionX, positionY;
@@ -2844,9 +2844,9 @@ public class SearchBar {
         long explorerHeight = (long) (GetHandle.INSTANCE.getExplorerHeight() / dpi);
         long explorerX = (long) (GetHandle.INSTANCE.getExplorerX() / dpi);
         long explorerY = (long) (GetHandle.INSTANCE.getExplorerY() / dpi);
-        DisplayMode screenSize = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode();
+        var screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         int searchBarWidth = (int) (explorerWidth * 0.3);
-        int searchBarHeight = (int) (screenSize.getHeight() * 0.4);
+        int searchBarHeight = (int) (screenSize.height * 0.4);
 
         int labelHeight = searchBarHeight / 9;
         //explorer窗口大于20像素才开始显示，防止误判其他系统窗口
@@ -3000,8 +3000,8 @@ public class SearchBar {
         } else {
             closeWithoutHideSearchBar();
         }
-        DisplayMode screenSize = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode(); // 获取屏幕大小
-        int height = screenSize.getHeight();
+        var screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
+        int height = screenSize.height;
         int searchBarHeight = (int) (height * 0.5);
         //设置字体
         int labelHeight = searchBarHeight / 9;
