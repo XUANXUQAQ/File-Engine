@@ -2158,6 +2158,7 @@ public class DatabaseService {
                 EventManagement eventManagement = EventManagement.getInstance();
                 DatabaseService databaseService = DatabaseService.getInstance();
                 try {
+                    final int removeRecordsThreshold = 20;
                     while (eventManagement.notMainExit()) {
                         if (databaseService.isSearchStopped.get() &&
                                 !GetHandle.INSTANCE.isForegroundFullscreen() &&
@@ -2175,7 +2176,7 @@ public class DatabaseService {
                             for (var entry : recordsToRemove.entrySet()) {
                                 String key = entry.getKey();
                                 Set<String> container = entry.getValue();
-                                if (container.isEmpty()) continue;
+                                if (container.size() < removeRecordsThreshold) continue;
                                 var records = container.toArray();
                                 CudaAccelerator.INSTANCE.removeRecordsFromCache(key, records);
                                 for (Object record : records) {
