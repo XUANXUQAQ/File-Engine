@@ -1055,7 +1055,7 @@ public class DatabaseService {
                     String currentDisk = entry.getKey();
                     ConcurrentLinkedQueue<Runnable> taskQueue = entry.getValue();
                     while (!taskQueue.isEmpty() && eventManagement.notMainExit()) {
-                        if (shouldStopSearch.get()) return;
+                        if (shouldStopSearch.get() || isSearchStopped.get()) return;
                         var runnable = taskQueue.poll();
                         if (runnable == null) continue;
                         searchThreadCount.incrementAndGet();
@@ -1072,7 +1072,7 @@ public class DatabaseService {
                             ConcurrentLinkedQueue<Runnable> otherTaskQueue = e.getValue();
                             Runnable otherRunnable;
                             while ((otherRunnable = otherTaskQueue.poll()) != null) {
-                                if (shouldStopSearch.get()) return;
+                                if (shouldStopSearch.get() || isSearchStopped.get()) return;
                                 hasTask = true;
                                 searchThreadCount.incrementAndGet();
                                 otherRunnable.run();
@@ -2125,7 +2125,8 @@ public class DatabaseService {
     @SuppressWarnings("unused")
     private static class CudaCacheService {
         private static final ConcurrentLinkedQueue<String> invalidCacheKeys = new ConcurrentLinkedQueue<>();
-        private static final ConcurrentLinkedQueue<Runnable> workQueue = new ConcurrentLinkedQueue<>();
+        private static final ConcurrentHashMap<String, Set<String>> recordsToAdd = new ConcurrentHashMap<>();
+        private static final ConcurrentHashMap<String, Set<String>> recordsToRemove = new ConcurrentHashMap<>();
 
         private static void clearInvalidCacheThread() {
             //检测缓存是否有效并删除缓存
@@ -2156,10 +2157,29 @@ public class DatabaseService {
                 DatabaseService databaseService = DatabaseService.getInstance();
                 try {
                     while (eventManagement.notMainExit()) {
-                        Runnable run;
-                        while (eventManagement.notMainExit() && databaseService.isSearchStopped.get() &&
-                                !GetHandle.INSTANCE.isForegroundFullscreen() && (run = workQueue.poll()) != null) {
-                            run.run();
+                        if (databaseService.isSearchStopped.get() &&
+                                !GetHandle.INSTANCE.isForegroundFullscreen() &&
+                                (!recordsToAdd.isEmpty() || !recordsToRemove.isEmpty())) {
+                            for (var entry : recordsToAdd.entrySet()) {
+                                String k = entry.getKey();
+                                Set<String> container = entry.getValue();
+                                if (container.isEmpty()) continue;
+                                var records = container.toArray();
+                                CudaAccelerator.INSTANCE.addRecordsToCache(k, records);
+                                for (Object record : records) {
+                                    container.remove((String) record);
+                                }
+                            }
+                            for (var entry : recordsToRemove.entrySet()) {
+                                String key = entry.getKey();
+                                Set<String> container = entry.getValue();
+                                if (container.isEmpty()) continue;
+                                var records = container.toArray();
+                                CudaAccelerator.INSTANCE.removeRecordsFromCache(key, records);
+                                for (Object record : records) {
+                                    container.remove((String) record);
+                                }
+                            }
                         }
                         TimeUnit.SECONDS.sleep(1);
                     }
@@ -2172,12 +2192,28 @@ public class DatabaseService {
             if (CudaAccelerator.INSTANCE.isCacheExist(key) && !CudaAccelerator.INSTANCE.isCacheValid(key)) {
                 invalidCacheKeys.add(key);
             } else {
-                workQueue.add(() -> CudaAccelerator.INSTANCE.addOneRecordToCache(key, record));
+                Set<String> container;
+                if (recordsToAdd.containsKey(key)) {
+                    container = recordsToAdd.get(key);
+                    container.add(record);
+                } else {
+                    container = ConcurrentHashMap.newKeySet();
+                    container.add(record);
+                    recordsToAdd.put(key, container);
+                }
             }
         }
 
         private static void removeRecord(String key, String record) {
-            workQueue.add(() -> CudaAccelerator.INSTANCE.removeOneRecordFromCache(key, record));
+            Set<String> container;
+            if (recordsToRemove.containsKey(key)) {
+                container = recordsToRemove.get(key);
+                container.add(record);
+            } else {
+                container = ConcurrentHashMap.newKeySet();
+                container.add(record);
+                recordsToRemove.put(key, container);
+            }
         }
 
         @EventListener(listenClass = BootSystemEvent.class)
@@ -2187,9 +2223,7 @@ public class DatabaseService {
             }
             clearInvalidCacheThread();
             //向cuda缓存添加或删除记录线程
-            for (int i = 0; i < 2; i++) {
-                execWorkQueueThread();
-            }
+            execWorkQueueThread();
         }
 
         @EventRegister(registerClass = CudaAddRecordEvent.class)

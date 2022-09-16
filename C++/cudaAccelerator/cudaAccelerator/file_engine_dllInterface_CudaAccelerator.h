@@ -81,19 +81,19 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_initCache
 
 /*
  * Class:     file_engine_dllInterface_CudaAccelerator
- * Method:    addOneRecordToCache
- * Signature: (Ljava/lang/String;Ljava/lang/String;)V
+ * Method:    addRecordsToCache
+ * Signature: (Ljava/lang/String;[Ljava/lang/Object;)V
  */
-JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_addOneRecordToCache
-  (JNIEnv *, jobject, jstring, jstring);
+JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_addRecordsToCache
+  (JNIEnv *, jobject, jstring, jobjectArray);
 
 /*
  * Class:     file_engine_dllInterface_CudaAccelerator
- * Method:    removeOneRecordFromCache
- * Signature: (Ljava/lang/String;Ljava/lang/String;)V
+ * Method:    removeRecordsFromCache
+ * Signature: (Ljava/lang/String;[Ljava/lang/Object;)V
  */
-JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_removeOneRecordFromCache
-  (JNIEnv *, jobject, jstring, jstring);
+JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_removeRecordsFromCache
+  (JNIEnv *, jobject, jstring, jobjectArray);
 
 /*
  * Class:     file_engine_dllInterface_CudaAccelerator
