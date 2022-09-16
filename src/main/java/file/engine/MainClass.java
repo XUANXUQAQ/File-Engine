@@ -52,7 +52,7 @@ public class MainClass {
     private static final String SHORTCUT_GEN_MD5 = "fa4e26f99f3dcd58d827828c411ea5d7";
     private static final String RESULT_PIPE_MD5 = "e91b7783a6add81d8123e2698c52efb6";
     private static final String GET_DPI_MD5 = "2d835577b3505af292966411b50e93b4";
-    private static final String GET_START_MENU_MD5 = "b446b307fae7646f9d7cd0064f55d1af";
+    private static final String GET_KNOWN_FOLDER_MD5 = "ebba6f89849fd2583934c7d48ec1e224";
     private static final String SQLITE_JDBC_MD5 = "607931b6a0655945daf1db51312b4473";
     private static final String EMPTY_RECYCLE_BIN_MD5 = "431225a47e74fe343b42e4bba741b80b";
     private static final String CUDA_ACCELERATOR_MD5 = "f0fbdbdfa8d93311865faed62f617322";
@@ -415,7 +415,7 @@ public class MainClass {
         copyOrIgnoreFile("user/shortcutGenerator.vbs", "/shortcutGenerator.vbs", SHORTCUT_GEN_MD5);
         copyOrIgnoreFile("user/resultPipe.dll", "/win32-native/resultPipe.dll", RESULT_PIPE_MD5);
         copyOrIgnoreFile("user/getDpi.exe", "/win32-native/getDpi.exe", GET_DPI_MD5);
-        copyOrIgnoreFile("user/getStartMenu.dll", "/win32-native/getStartMenu.dll", GET_START_MENU_MD5);
+        copyOrIgnoreFile("user/getWindowsKnownFolder.dll", "/win32-native/getWindowsKnownFolder.dll", GET_KNOWN_FOLDER_MD5);
         copyOrIgnoreFile("user/sqliteJDBC.dll", "/win32-native/sqliteJDBC.dll", SQLITE_JDBC_MD5);
         copyOrIgnoreFile("user/emptyRecycleBin.dll", "/win32-native/emptyRecycleBin.dll", EMPTY_RECYCLE_BIN_MD5);
         copyOrIgnoreFile("user/cudaAccelerator.dll", "/win32-native/cudaAccelerator.dll", CUDA_ACCELERATOR_MD5);

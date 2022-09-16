@@ -11,6 +11,7 @@ import com.google.gson.Gson;
 import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.dllInterface.CudaAccelerator;
+import file.engine.dllInterface.GetWindowsKnownFolder;
 import file.engine.dllInterface.IsLocalDisk;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
@@ -579,7 +580,8 @@ public class AllConfigs {
     }
 
     private void readIgnorePath(Map<String, Object> settingsInJson) {
-        configEntity.setIgnorePath(getFromJson(settingsInJson, "ignorePath", "C:\\Windows,"));
+        String defaultIgnore = "C:\\Windows," + GetWindowsKnownFolder.INSTANCE.getKnownFolder("{AE50C081-EBD2-438A-8655-8A092E34987A}") + ",";
+        configEntity.setIgnorePath(getFromJson(settingsInJson, "ignorePath", defaultIgnore));
     }
 
     private void readUpdateTimeLimit(Map<String, Object> settingsInJson) {
@@ -951,6 +953,7 @@ public class AllConfigs {
 
     /**
      * 检查系统是否支持cuda加速，不支持则将isEnableCuda设置为false
+     *
      * @param configEntity configEntity
      */
     private void checkCudaSetting(ConfigEntity configEntity) {

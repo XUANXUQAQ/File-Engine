@@ -282,14 +282,8 @@ public class DatabaseService {
      * 搜索文件夹
      */
     private void searchStartMenu() {
-        String startMenu = GetStartMenu.INSTANCE.getStartMenu();
-        String[] split = RegexUtil.semicolon.split(startMenu);
-        if (split == null || split.length == 0) {
-            return;
-        }
-        for (String s : split) {
-            searchFolder(s);
-        }
+        searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{A4115719-D62E-491D-AA7C-E74B8BE3B067}"));
+        searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{625B53C3-AB48-4EC1-BA1F-A1EF4146FC19}"));
     }
 
     /**
