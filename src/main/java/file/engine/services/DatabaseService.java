@@ -43,10 +43,7 @@ import java.sql.Statement;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -85,7 +82,7 @@ public class DatabaseService {
     private static final int MAX_TEMP_QUERY_RESULT_CACHE = 8192;
     private static final int MAX_CACHED_RECORD_NUM = 10240 * 5;
     private static final int MAX_SQL_NUM = 5000;
-    private static final int MAX_RESULTS = 500;
+    private static final int MAX_RESULTS = 200;
 
     private static volatile DatabaseService INSTANCE = null;
 
@@ -118,7 +115,7 @@ public class DatabaseService {
     private DatabaseService() {
         tableSet = ConcurrentHashMap.newKeySet();
         tempResults = new ConcurrentLinkedQueue<>();
-        tempResultsForEvent = ConcurrentHashMap.newKeySet();
+        tempResultsForEvent = new ConcurrentSkipListSet<>();
     }
 
     private void invalidateAllCache() {
@@ -741,7 +738,7 @@ public class DatabaseService {
                         // 阻塞时间过长则跳过
                         waitTime = 0;
                         var results = PrepareSearchInfo.containerMap.get(eachTaskStatus.toString());
-                        if (results != null) {
+                        if (results != null && !results.isEmpty()) {
                             for (String result : results) {
                                 if (tempResultsForEvent.add(result)) {
                                     tempResults.add(result);
@@ -764,12 +761,17 @@ public class DatabaseService {
                 }
                 TimeUnit.NANOSECONDS.sleep(100);
             }
+            int size = tempResultsForEvent.size();
             for (var containerEntry : PrepareSearchInfo.containerMap.entrySet()) {
                 var results = containerEntry.getValue();
                 if (results == null || results.isEmpty()) continue;
                 for (String result : results) {
+                    if (size >= MAX_RESULTS) {
+                        return;
+                    }
                     if (tempResultsForEvent.add(result)) {
                         tempResults.add(result);
+                        ++size;
                     }
                 }
             }
