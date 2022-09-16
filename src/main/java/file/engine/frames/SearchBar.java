@@ -3235,9 +3235,8 @@ public class SearchBar {
      * 将tempResults以及插件返回的结果转移到listResults中来显示
      */
     private void addMergeThread(AtomicBoolean isMergeThreadNotExist) {
-        if (!isMergeThreadNotExist.get()) {
-            return;
-        }
+        while (!isMergeThreadNotExist.get())
+            Thread.onSpinWait();
         isMergeThreadNotExist.set(false);
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             final long time = System.currentTimeMillis();
@@ -3521,19 +3520,14 @@ public class SearchBar {
 
     /**
      * 发送开始搜索事件
-     *
-     * @param isMergeThreadNotExist 合并搜索结果线程是否存在
      */
-    private void sendSearchEvent(AtomicBoolean isMergeThreadNotExist) {
-        while (!isMergeThreadNotExist.get())
-            Thread.onSpinWait();
+    private void sendSearchEvent() {
         EventManagement eventManagement = EventManagement.getInstance();
         if (!getSearchBarText().isEmpty()) {
             isSearchNotStarted.set(false);
             if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL && runningMode == RunningMode.NORMAL_MODE) {
                 searchCaseToLowerAndRemoveConflict();
-                eventManagement.putEvent(new StartSearchEvent(() -> searchText, () -> searchCase, () -> keywords),
-                        event -> addMergeThread(isMergeThreadNotExist), null);
+                eventManagement.putEvent(new StartSearchEvent(() -> searchText, () -> searchCase, () -> keywords));
             }
         }
     }
@@ -3557,12 +3551,13 @@ public class SearchBar {
                         setSearchKeywordsAndSearchCase();
                         sendPrepareCudaSearchEvent();
                     }
-                    if ((endTime - startTime > 250) && isSearchNotStarted.get() && startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
+                    if ((endTime - startTime > 150) && isSearchNotStarted.get() && startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
                         setSearchKeywordsAndSearchCase();
-                        sendSearchEvent(isMergeThreadNotExist);
+                        sendSearchEvent();
                     }
 
                     if ((endTime - startTime > 300) && startSearchSignal.get()) {
+                        addMergeThread(isMergeThreadNotExist);
                         startSearchSignal.set(false); //开始搜索 计时停止
                         currentResultCount.set(0);
                         currentLabelSelectedPosition.set(0);
@@ -3639,7 +3634,7 @@ public class SearchBar {
                             clearAllLabels();
                         }
                     }
-                    TimeUnit.MILLISECONDS.sleep(25);
+                    TimeUnit.MILLISECONDS.sleep(10);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
