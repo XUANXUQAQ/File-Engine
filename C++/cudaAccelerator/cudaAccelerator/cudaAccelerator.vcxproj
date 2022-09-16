@@ -164,7 +164,6 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="str_convert.cuh" />
     <ClInclude Include="str_utils.cuh" />
-    <ClInclude Include="sync_queue.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cache.cpp" />

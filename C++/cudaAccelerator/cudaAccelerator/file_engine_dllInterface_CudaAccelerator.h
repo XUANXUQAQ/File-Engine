@@ -18,18 +18,10 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_resetAllRes
 /*
  * Class:     file_engine_dllInterface_CudaAccelerator
  * Method:    match
- * Signature: ([Ljava/lang/String;ZLjava/lang/String;[Ljava/lang/String;[Ljava/lang/String;[ZI)V
+ * Signature: ([Ljava/lang/String;ZLjava/lang/String;[Ljava/lang/String;[Ljava/lang/String;[ZILjava/util/function/BiConsumer;)V
  */
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_match
-  (JNIEnv *, jobject, jobjectArray, jboolean, jstring, jobjectArray, jobjectArray, jbooleanArray, jint);
-
-/*
- * Class:     file_engine_dllInterface_CudaAccelerator
- * Method:    getOneResult
- * Signature: (Ljava/lang/String;)Ljava/lang/String;
- */
-JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_CudaAccelerator_getOneResult
-  (JNIEnv *, jobject, jstring);
+  (JNIEnv *, jobject, jobjectArray, jboolean, jstring, jobjectArray, jobjectArray, jbooleanArray, jint, jobject);
 
 /*
  * Class:     file_engine_dllInterface_CudaAccelerator
@@ -37,6 +29,14 @@ JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_CudaAccelerator_getOneRe
  * Signature: (Ljava/lang/String;)Z
  */
 JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_CudaAccelerator_isMatchDone
+  (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     file_engine_dllInterface_CudaAccelerator
+ * Method:    matchedNumber
+ * Signature: (Ljava/lang/String;)I
+ */
+JNIEXPORT jint JNICALL Java_file_engine_dllInterface_CudaAccelerator_matchedNumber
   (JNIEnv *, jobject, jstring);
 
 /*

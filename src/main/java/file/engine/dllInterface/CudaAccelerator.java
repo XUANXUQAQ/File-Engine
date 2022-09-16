@@ -1,6 +1,7 @@
 package file.engine.dllInterface;
 
 import java.nio.file.Path;
+import java.util.function.BiConsumer;
 
 public enum CudaAccelerator {
     INSTANCE;
@@ -25,10 +26,8 @@ public enum CudaAccelerator {
                              String[] keywords,
                              String[] keywordsLowerCase,
                              boolean[] isKeywordPath,
-                             int maxResultNumber);
-
-    public native String getOneResult(String key);
-
+                             int maxResultNumber,
+                             BiConsumer<String, String> resultCollector);
     public boolean isCudaAvailableOnSystem() {
         if (isCudaLoaded) {
           return isCudaAvailable();
@@ -37,10 +36,14 @@ public enum CudaAccelerator {
     }
     public native boolean isMatchDone(String key);
 
+    public native int matchedNumber(String key);
+
     public native void stopCollectResults();
 
     private native boolean isCudaAvailable();
+
     public native boolean hasCache();
+
     public native boolean isCacheExist(String key);
 
     public native void initCache(String key, Object[] records);

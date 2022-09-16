@@ -742,8 +742,11 @@ public class DatabaseService {
                         waitTime = 0;
                         var results = PrepareSearchInfo.containerMap.get(eachTaskStatus.toString());
                         if (results != null) {
-                            tempResultsForEvent.addAll(results);
-                            tempResults.addAll(results);
+                            for (String result : results) {
+                                if (tempResultsForEvent.add(result)) {
+                                    tempResults.add(result);
+                                }
+                            }
                         }
                         if (!isTimeout || failedRetryTimes > maxRetryTimes) {
                             failedRetryTimes = 0;
@@ -782,7 +785,6 @@ public class DatabaseService {
         eventManagement.putEvent(new SearchDoneEvent(new ConcurrentLinkedQueue<>(tempResultsForEvent)));
         tempResultsForEvent.clear();
         isSearchStopped.set(true);
-        stopSearch();
         PrepareSearchInfo.containerMap.clear();
         PrepareSearchInfo.isSearchPrepared.set(false);
         if (AllConfigs.getInstance().isEnableCuda() && eventManagement.notMainExit()) {
@@ -816,9 +818,12 @@ public class DatabaseService {
      *
      * @param nonFormattedSql        未格式化搜索字段的SQL
      * @param isReadFromSharedMemory 是否通过共享内存读取，而不是数据库搜索
+     *
+     * @return cuda搜索容器
      */
-    private void addSearchTasks(LinkedList<LinkedHashMap<String, String>> nonFormattedSql,
-                                boolean isReadFromSharedMemory) {
+    private ConcurrentHashMap<String, Set<String>> addSearchTasks(LinkedList<LinkedHashMap<String, String>> nonFormattedSql,
+                                                                  boolean isReadFromSharedMemory) {
+        ConcurrentHashMap<String, Set<String>> cudaSearchContainer = new ConcurrentHashMap<>();
         Bit number = new Bit(new byte[]{1});
         AllConfigs allConfigs = AllConfigs.getInstance();
         String availableDisks = allConfigs.getAvailableDisks();
@@ -847,8 +852,17 @@ public class DatabaseService {
                 } else {
                     addTaskForDatabase0(eachDisk, tasks, container, commandsMap, currentTaskNum);
                 }
+                //为cuda搜索生成的container
+                for (var sqlAndTableName : commandsMap.entrySet()) {
+                    String eachSql = sqlAndTableName.getKey();
+                    String tableName = sqlAndTableName.getValue();
+                    String priority = getPriorityFromSql(eachSql);
+                    String key = eachDisk.charAt(0) + "," + tableName + "," + priority;
+                    cudaSearchContainer.put(key, container);
+                }
             }
         }
+        return cudaSearchContainer;
     }
 
     private void addTaskForDatabase0(String diskChar,
@@ -869,7 +883,11 @@ public class DatabaseService {
                     String key = diskStr + "," + tableName + "," + priority;
                     final long matchedNum;
                     if (AllConfigs.getInstance().isEnableCuda() && CudaAccelerator.INSTANCE.isMatchDone(key)) {
-                        matchedNum = searchFromCudaCache(resultContainer, key);
+                        //cuda搜索已经放入container，只需要获取matchedNum修改权重即可
+                        matchedNum = CudaAccelerator.INSTANCE.matchedNumber(key);
+                        if (allResultsRecordCounter.addAndGet(Math.toIntExact(matchedNum)) > MAX_RESULTS) {
+                            stopSearch();
+                        }
                     } else {
                         matchedNum = searchFromDatabaseOrCache(resultContainer, diskStr, eachSql, key);
                     }
@@ -956,27 +974,6 @@ public class DatabaseService {
                     formattedSql,
                     container,
                     diskStr);
-        }
-        return matchedNum;
-    }
-
-    private long searchFromCudaCache(Collection<String> container, String key) {
-        long matchedNum = 0;
-        if (IsDebug.isDebug()) {
-            System.out.println("CUDA缓存命中" + key);
-        }
-        String record;
-        while ((record = CudaAccelerator.INSTANCE.getOneResult(key)) != null && !shouldStopSearch.get()) {
-            Path recordPath = Path.of(record);
-            if (!Files.exists(recordPath)) {
-                continue;
-            }
-            if (!tempResultsForEvent.contains(record) && !container.contains(record) && container.add(record)) {
-                if (allResultsRecordCounter.incrementAndGet() > MAX_RESULTS) {
-                    stopSearch();
-                }
-                ++matchedNum;
-            }
         }
         return matchedNum;
     }
@@ -1858,7 +1855,7 @@ public class DatabaseService {
         static Bit taskStatus = new Bit(new byte[]{0});
         static Bit allTaskStatus = new Bit(new byte[]{0});
 
-        private static void prepareSearchTasks() {
+        private static ConcurrentHashMap<String, Set<String>> prepareSearchTasks() {
             DatabaseService databaseService = DatabaseService.getInstance();
             PrepareSearchInfo.taskMap.clear();
             //每个priority用一个线程，每一个后缀名对应一个优先级
@@ -1867,7 +1864,7 @@ public class DatabaseService {
             taskStatus = new Bit(new byte[]{0});
             allTaskStatus = new Bit(new byte[]{0});
             //添加搜索任务到队列
-            databaseService.addSearchTasks(nonFormattedSql,
+            return databaseService.addSearchTasks(nonFormattedSql,
                     databaseService.isReadFromSharedMemory.get());
         }
     }
@@ -1921,7 +1918,7 @@ public class DatabaseService {
      */
     private static synchronized void prepareSearch(StartSearchEvent startSearchEvent) {
         prepareSearchKeywords(startSearchEvent.searchText, startSearchEvent.searchCase, startSearchEvent.keywords);
-        PrepareSearchInfo.prepareSearchTasks();
+        ConcurrentHashMap<String, Set<String>> cudaSearchContainer = PrepareSearchInfo.prepareSearchTasks();
         if (AllConfigs.getInstance().isEnableCuda()) {
             // 退出上一次搜索
             CudaAccelerator.INSTANCE.stopCollectResults();
@@ -1937,7 +1934,12 @@ public class DatabaseService {
                         keywords,
                         keywordsLowerCase,
                         isKeywordPath,
-                        MAX_RESULTS);
+                        MAX_RESULTS,
+                        (key, result) -> {
+                            if (cudaSearchContainer.containsKey(key)) {
+                                cudaSearchContainer.get(key).add(result);
+                            }
+                        });
                 PrepareSearchInfo.isCudaThreadRunning.set(false);
             }, false);
         }
