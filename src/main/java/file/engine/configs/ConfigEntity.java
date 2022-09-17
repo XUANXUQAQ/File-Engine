@@ -112,4 +112,7 @@ public class ConfigEntity {
 
     @SerializedName("cudaDeviceNum")
     private int cudaDeviceNum;
+
+    @SerializedName("searchThreadNumber")
+    private int searchThreadNumber;
 }

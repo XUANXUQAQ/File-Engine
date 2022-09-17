@@ -46,6 +46,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.Consumer;
 
 import static file.engine.configs.Constants.DEFAULT_SWING_THEME;
 import static file.engine.configs.Constants.Enums;
@@ -425,6 +426,10 @@ public class AllConfigs {
         return configEntity.getDisks();
     }
 
+    public int getSearchThreadNumber() {
+        return configEntity.getSearchThreadNumber();
+    }
+
     /**
      * 是否响应双击Ctrl键
      *
@@ -655,6 +660,15 @@ public class AllConfigs {
         translateService.setLanguage(language);
     }
 
+    private void readSearchThreadNumber(Map<String, Object> settingsInJson) {
+        int availableProcessors = Runtime.getRuntime().availableProcessors();
+        int searchThreadNumber = getFromJson(settingsInJson, "searchThreadNumber", availableProcessors);
+        if (searchThreadNumber > availableProcessors || searchThreadNumber < 1) {
+            searchThreadNumber = availableProcessors;
+        }
+        configEntity.setSearchThreadNumber(searchThreadNumber);
+    }
+
     private void readProxy(Map<String, Object> settingsInJson) {
         configEntity.setProxyAddress(getFromJson(settingsInJson, "proxyAddress", ""));
         configEntity.setProxyPort(getFromJson(settingsInJson, "proxyPort", 0));
@@ -791,6 +805,7 @@ public class AllConfigs {
         readBorderThickness(settingsInJson);
         readIsEnableCuda(settingsInJson);
         readCudaDeviceNum(settingsInJson);
+        readSearchThreadNumber(settingsInJson);
         initUpdateAddress();
         initCmdSetSettings();
     }
@@ -951,15 +966,8 @@ public class AllConfigs {
         return true;
     }
 
-    /**
-     * 检查系统是否支持cuda加速，不支持则将isEnableCuda设置为false
-     *
-     * @param configEntity configEntity
-     */
-    private void checkCudaSetting(ConfigEntity configEntity) {
-        if (configEntity.isEnableCuda()) {
-            configEntity.setEnableCuda(CudaAccelerator.INSTANCE.isCudaAvailableOnSystem());
-        }
+    private void setInvalidConfigs(ConfigEntity configEntity, Consumer<ConfigEntity> check) {
+        check.accept(configEntity);
     }
 
     /**
@@ -1086,7 +1094,16 @@ public class AllConfigs {
         AllConfigs allConfigs = getInstance();
         ConfigEntity tempConfigEntity = ((SaveConfigsEvent) event).configEntity;
         if (allConfigs.noNullValue(tempConfigEntity)) {
-            allConfigs.checkCudaSetting(tempConfigEntity);
+            allConfigs.setInvalidConfigs(tempConfigEntity, (config) -> {
+                if (config.isEnableCuda()) {
+                    config.setEnableCuda(CudaAccelerator.INSTANCE.isCudaAvailableOnSystem());
+                }
+                int availableProcessors = Runtime.getRuntime().availableProcessors();
+                int searchThreadNumber = config.getSearchThreadNumber();
+                if (searchThreadNumber > availableProcessors || searchThreadNumber < 1) {
+                    config.setSearchThreadNumber(availableProcessors);
+                }
+            });
             allConfigs.configEntity = tempConfigEntity;
             allConfigs.saveAllSettings();
         } else {

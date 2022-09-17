@@ -240,3 +240,4 @@ Searching=ricerca
 Number of current results=Numero di risultati attuali
 Currently selected=Attualmente selezionato
 Enable GPU acceleration=Abilita accelerazione GPU
+Number of search threads=numero di thread di ricerca

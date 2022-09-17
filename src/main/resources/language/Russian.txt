@@ -240,3 +240,4 @@ Searching=Поиск в
 Number of current results=Количество текущих результатов
 Currently selected=Выбрано в настоящее время
 Enable GPU acceleration=Включить ускорение графического процессора
+Number of search threads=количество поисковых потоков

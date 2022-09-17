@@ -243,7 +243,7 @@
                       </component>
                     </children>
                   </grid>
-                  <grid id="21c26" binding="tabSearchSettings" layout-manager="GridLayoutManager" row-count="12" column-count="6" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+                  <grid id="21c26" binding="tabSearchSettings" layout-manager="GridLayoutManager" row-count="13" column-count="6" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                     <margin top="0" left="0" bottom="0" right="0"/>
                     <constraints>
                       <tabbedpane title="Search settings"/>
@@ -258,7 +258,7 @@
                     <children>
                       <component id="11d25" class="javax.swing.JLabel" binding="labelSetIgnorePathTip">
                         <constraints>
-                          <grid row="6" column="0" row-span="1" col-span="6" vsize-policy="0" hsize-policy="0" anchor="9" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="7" column="0" row-span="1" col-span="6" vsize-policy="0" hsize-policy="0" anchor="9" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value="Set ignore folder:"/>
@@ -266,7 +266,7 @@
                       </component>
                       <component id="7bc79" class="javax.swing.JLabel" binding="placeholdersearch0">
                         <constraints>
-                          <grid row="2" column="0" row-span="1" col-span="3" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="3" column="0" row-span="1" col-span="3" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value="     "/>
@@ -282,7 +282,7 @@
                       </component>
                       <component id="5035f" class="javax.swing.JLabel" binding="labelPlaceHolder">
                         <constraints>
-                          <grid row="5" column="0" row-span="1" col-span="3" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="6" column="0" row-span="1" col-span="3" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value="     "/>
@@ -290,7 +290,7 @@
                       </component>
                       <component id="78f12" class="javax.swing.JLabel" binding="labelConstIgnorePathTip">
                         <constraints>
-                          <grid row="7" column="0" row-span="1" col-span="3" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="8" column="0" row-span="1" col-span="3" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value="Separate different paths with commas, and ignore C:\Windows by default"/>
@@ -298,7 +298,7 @@
                       </component>
                       <scrollpane id="f84cd" binding="scrollpaneIgnorePath">
                         <constraints>
-                          <grid row="8" column="0" row-span="1" col-span="4" vsize-policy="7" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                          <grid row="9" column="0" row-span="1" col-span="4" vsize-policy="7" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties/>
                         <border type="none"/>
@@ -335,7 +335,7 @@
                       </component>
                       <component id="32215" class="javax.swing.JLabel" binding="labelVacuumTip2">
                         <constraints>
-                          <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="5" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value="but it will consume a lot of time."/>
@@ -343,7 +343,7 @@
                       </component>
                       <component id="6c653" class="javax.swing.JLabel" binding="labelVacuumStatus">
                         <constraints>
-                          <grid row="3" column="3" row-span="2" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="4" column="3" row-span="2" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value="      "/>
@@ -351,7 +351,7 @@
                       </component>
                       <component id="27965" class="javax.swing.JButton" binding="buttonVacuum">
                         <constraints>
-                          <grid row="3" column="2" row-span="2" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="4" column="2" row-span="2" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value="SQLite Vacuum"/>
@@ -359,7 +359,7 @@
                       </component>
                       <component id="6b59" class="javax.swing.JLabel" binding="labelVacuumTip">
                         <constraints>
-                          <grid row="3" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="0" anchor="10" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="4" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="0" anchor="10" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value="Click to organize the database and reduce the size of the database"/>
@@ -367,7 +367,7 @@
                       </component>
                       <component id="7410f" class="javax.swing.JButton" binding="buttonChooseFile">
                         <constraints>
-                          <grid row="8" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="9" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value="Choose"/>
@@ -375,7 +375,7 @@
                       </component>
                       <component id="6eaef" class="javax.swing.JLabel" binding="placeholderSearch">
                         <constraints>
-                          <grid row="7" column="5" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="8" column="5" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value="   "/>
@@ -383,7 +383,7 @@
                       </component>
                       <component id="5b7b6" class="javax.swing.JLabel" binding="labelSearchSettingsPlaceholder">
                         <constraints>
-                          <grid row="11" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="12" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value=""/>
@@ -391,7 +391,7 @@
                       </component>
                       <component id="15f7e" class="javax.swing.JLabel" binding="labelSearchSettingsPlaceholder2">
                         <constraints>
-                          <grid row="10" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="11" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value="  "/>
@@ -399,7 +399,7 @@
                       </component>
                       <component id="cbad5" class="javax.swing.JLabel" binding="labelHolder6">
                         <constraints>
-                          <grid row="9" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="10" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value="  "/>
@@ -417,6 +417,22 @@
                       <component id="2962d" class="javax.swing.JComboBox" binding="comboBoxCudaDevice">
                         <constraints>
                           <grid row="0" column="1" row-span="1" col-span="3" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                        <properties>
+                          <opaque value="false"/>
+                        </properties>
+                      </component>
+                      <component id="3a70c" class="javax.swing.JLabel" binding="labelSearchThread">
+                        <constraints>
+                          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                        <properties>
+                          <text value="Number of search threads"/>
+                        </properties>
+                      </component>
+                      <component id="fe16f" class="javax.swing.JComboBox" binding="comboBoxSearchThread">
+                        <constraints>
+                          <grid row="2" column="1" row-span="1" col-span="2" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <opaque value="false"/>

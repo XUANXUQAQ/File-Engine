@@ -1040,7 +1040,7 @@ public class DatabaseService {
         }
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         EventManagement eventManagement = EventManagement.getInstance();
-        final int threadNumberPerDisk = Math.max(1, Runtime.getRuntime().availableProcessors() / PrepareSearchInfo.taskMap.size());
+        final int threadNumberPerDisk = Math.max(1, AllConfigs.getInstance().getSearchThreadNumber() / PrepareSearchInfo.taskMap.size());
         Consumer<ConcurrentLinkedQueue<Runnable>> taskHandler = (taskQueue) -> {
             while (!taskQueue.isEmpty() && eventManagement.notMainExit() && !shouldStopSearch.get() && !isSearchStopped.get()) {
                 var runnable = taskQueue.poll();
