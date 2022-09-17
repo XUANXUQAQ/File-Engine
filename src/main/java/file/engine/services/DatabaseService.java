@@ -1046,14 +1046,13 @@ public class DatabaseService {
                 var runnable = taskQueue.poll();
                 if (runnable == null)
                     continue;
-                searchThreadCount.incrementAndGet();
                 runnable.run();
-                searchThreadCount.decrementAndGet();
             }
         };
         for (var entry : PrepareSearchInfo.taskMap.entrySet()) {
             for (int i = 0; i < threadNumberPerDisk; i++) {
                 cachedThreadPoolUtil.executeTask(() -> {
+                    searchThreadCount.incrementAndGet();
                     var taskQueue = entry.getValue();
                     taskHandler.accept(taskQueue);
                     //自身任务已经完成，开始扫描其他线程的任务
@@ -1069,7 +1068,8 @@ public class DatabaseService {
                             }
                             taskHandler.accept(otherTaskQueue);
                         }
-                    } while (hasTask && eventManagement.notMainExit());
+                    } while (hasTask && eventManagement.notMainExit() && !shouldStopSearch.get() && !isSearchStopped.get());
+                    searchThreadCount.decrementAndGet();
                 });
             }
         }
