@@ -42,6 +42,7 @@ std::atomic_uint remove_record_thread_count(0);
 std::mutex modify_cache_lock;
 std::hash<std::string> hasher;
 std::atomic_int task_complete_count;
+std::atomic_bool exit_flag = false;
 
 /*
  * Class:     file_engine_dllInterface_CudaAccelerator
@@ -87,6 +88,7 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_CudaAccelerator_setDevi
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_release
 (JNIEnv*, jobject)
 {
+	exit_flag = true;
 	release_all();
 }
 
@@ -696,6 +698,10 @@ void add_records_to_cache(const std::string& key, const std::vector<std::string>
 		gpuErrchk(cudaStreamCreate(&stream), true, nullptr);
 		for (auto&& record : records)
 		{
+			if (exit_flag.load())
+			{
+				break;
+			}
 			const auto record_len = record.length();
 			if (record_len >= MAX_PATH_LENGTH)
 			{
@@ -755,6 +761,10 @@ void remove_records_from_cache(const std::string& key, std::vector<std::string>&
 			char tmp[MAX_PATH_LENGTH]{ 0 };
 			for (size_t i = 0; i < cache->str_data.record_num; ++i)
 			{
+				if (exit_flag.load())
+				{
+					break;
+				}
 				const auto str_address = cache->str_data.dev_cache_str + i;
 				//拷贝GPU中的字符串到tmp
 				gpuErrchk(cudaMemcpy(tmp, str_address,
