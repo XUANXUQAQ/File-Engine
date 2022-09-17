@@ -4,7 +4,6 @@
 #include <Windows.h>
 #include <ShlObj.h>
 #include <atlcomcli.h>  // for COM smart pointers
-#include <iostream>
 #include <vector>
 #include <system_error>
 #include <memory>
@@ -118,7 +117,7 @@ std::string getPathByHWND(const HWND& hwnd)
 {
     if (!IsWindow(hwnd))
     {
-        std::cout << "hwnd is not valid" << std::endl;
+        printf("%s\n", "hwnd is not valid");
         return "";
     }
     //判断是否是桌面窗口句柄
@@ -146,13 +145,14 @@ std::string getPathByHWND(const HWND& hwnd)
                     const std::wstring path_wstr(path);
                     return to_utf8(path_wstr);
                 }
-                std::cout << "error, cannot find matched hwnd" << std::endl;
+                printf("error, cannot find matched hwnd");
             }
         }
     }
     catch (std::system_error& e)
     {
-        std::cerr << "ERROR: " << e.what() << "\nError code: " << e.code() << "\n";
+        auto&& err = std::string("ERROR: ") + e.what();
+        fprintf(stderr, "%s\n", err.c_str());
     }
     CoUninitialize();
     return "";

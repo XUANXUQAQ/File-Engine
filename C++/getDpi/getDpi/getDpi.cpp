@@ -1,8 +1,8 @@
 ﻿// getDpi.cpp : 此文件包含 "main" 函数。程序执行将在此处开始并结束。
 //
 
+#include <cstdio>
 #include <Windows.h>
-#include <iostream>
 #pragma comment(lib, "User32.lib")
 #pragma comment(lib, "Gdi32.lib")
 
@@ -12,8 +12,8 @@ double getDpi();
 
 int main()
 {
-    double dpi = getDpi();
-    cout << dpi;
+    const double dpi = getDpi();
+    printf("%f", dpi);
 }
 
 /**
@@ -23,7 +23,7 @@ double getDpi()
 {
     SetProcessDPIAware();
     // Get desktop dc
-    HDC desktopDc = GetDC(nullptr);
+    auto&& desktopDc = GetDC(nullptr);
     // Get native resolution
     const int dpi = GetDeviceCaps(desktopDc, LOGPIXELSX);
     auto ret = 1 + (dpi - 96.0) / 24.0 * 0.25;
@@ -31,7 +31,6 @@ double getDpi()
     {
         ret = 1;
     }
-
     ReleaseDC(nullptr, desktopDc);
     return ret;
 }

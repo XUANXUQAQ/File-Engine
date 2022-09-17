@@ -1,6 +1,8 @@
 ﻿#include "file_search_usn.h"
 #include "string_to_utf8.h"
+#ifdef TEST
 #include <iostream>
+#endif
 #include <thread>
 #include "search.h"
 #include <fstream>
@@ -54,7 +56,7 @@ inline bool init_priority_map(PriorityMap& priority_map, const char* priorityDbP
 	const size_t ret = sqlite3_get_table(cacheDb, sql.c_str(), &pResult, &row, &column, &error);
 	if (ret != SQLITE_OK)
 	{
-		cerr << "error init priority map" << error << endl;
+		fprintf(stderr, "error init priority map\n");
 		sqlite3_free(error);
 		return false;
 	}
@@ -110,7 +112,7 @@ int main()
 	ifstream input("MFTSearchInfo.dat", ios::in);
 	if (!input)
 	{
-		cerr << "open MFTSearchInfo.dat failed";
+		fprintf(stderr, "open MFTSearchInfo.dat failed\n");
 		return 1;
 	}
 	input.getline(disk_path, 500);
@@ -160,7 +162,7 @@ int main()
 #endif
 			if (SQLITE_OK != ret)
 			{
-				cout << "error opening database" << endl;
+				fprintf(stderr, "error opening database");
 				return 1;
 			}
 			tmp_db_path[strlen(tmp_db_path) - 4] = '\0';

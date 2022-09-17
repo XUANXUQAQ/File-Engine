@@ -42,16 +42,16 @@ import java.util.concurrent.TimeUnit;
 
 public class MainClass {
     private static final int UPDATE_DATABASE_THRESHOLD = 3;
-    private static final String FILE_MONITOR_MD5 = "f9637b1af0496d393fe02f67e0310541";
-    private static final String GET_ASC_II_MD5 = "c63eec19bde81456693feb715c4e0313";
+    private static final String FILE_MONITOR_MD5 = "024e0f16487806e69bbbbe2bf4bd3290";
+    private static final String GET_ASC_II_MD5 = "647c48fd0b56cc9a276775be6288ed97";
     private static final String HOTKEY_LISTENER_MD5 = "6d71f646529b69cff9d50fcce8d4b6e4";
-    private static final String IS_LOCAL_DISK_MD5 = "4d612bd2728d720e1ce724d26d48bdb9";
-    private static final String FILE_SEARCHER_USN_MD5 = "a3dec14d9f0376796a10527a5a700349";
+    private static final String IS_LOCAL_DISK_MD5 = "f9794b94942a1ecb0acd078dfb789024";
+    private static final String FILE_SEARCHER_USN_MD5 = "5a662e3ecc98b43b6c79fd1522dfa927";
     private static final String SQLITE3_MD5 = "dade4d608e258014e311867c764acf77";
-    private static final String GET_HANDLE_MD5 = "c3b769814eeb5d469c19cec04e0c3ff4";
+    private static final String GET_HANDLE_MD5 = "41418ee9061e5940d061aeeb0db91316";
     private static final String SHORTCUT_GEN_MD5 = "fa4e26f99f3dcd58d827828c411ea5d7";
     private static final String RESULT_PIPE_MD5 = "e91b7783a6add81d8123e2698c52efb6";
-    private static final String GET_DPI_MD5 = "2d835577b3505af292966411b50e93b4";
+    private static final String GET_DPI_MD5 = "31c3080b7a46a85e3245ed9781a0fcb3";
     private static final String GET_KNOWN_FOLDER_MD5 = "ebba6f89849fd2583934c7d48ec1e224";
     private static final String SQLITE_JDBC_MD5 = "607931b6a0655945daf1db51312b4473";
     private static final String EMPTY_RECYCLE_BIN_MD5 = "431225a47e74fe343b42e4bba741b80b";

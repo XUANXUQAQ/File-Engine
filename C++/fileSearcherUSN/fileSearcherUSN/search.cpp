@@ -1,5 +1,7 @@
 ﻿#include "search.h"
+#ifdef TEST
 #include <iostream>
+#endif
 #include <unordered_map>
 #include <string>
 #include <vector>
@@ -73,29 +75,31 @@ void volume::init_volume()
 		try
 		{
 			search_internal();
-			cout << "collect complete." << endl;
+			printf("collect complete.\n");
 			thread save_results_to_db_thread([this]
 				{
 					save_all_results_to_db();
 				});
-			cout << "start copy disk " << this->getDiskPath() << " to shared memory" << endl;
+			auto&& info = "start copy disk " + std::to_string(this->getDiskPath()) + " to shared memory";
+			printf("%s\n", info.c_str());
 			copy_results_to_shared_memory();
 			set_complete_signal();
 			++* complete_task_count;
-			cout << "copy to shared memory complete. save to database." << endl;
+			printf("copy to shared memory complete. save to database.\n");
 			if (save_results_to_db_thread.joinable())
 				save_results_to_db_thread.join();
 		}
 		catch (exception& e)
 		{
-			cerr << e.what() << endl;
+			fprintf(stderr, "%s\n", e.what());
 		}
 	}
 	else
 	{
-		std::cerr << "init usn journal failed." << std::endl;
+		fprintf(stderr, "init usn journal failed.");
 	}
-	std::cout << "disk " << this->getDiskPath() << " complete" << std::endl;
+	auto&& info = "disk " + std::to_string(this->getDiskPath()) + " complete";
+	printf("%s\n", info.c_str());
 }
 
 void volume::copy_results_to_shared_memory()
@@ -180,7 +184,7 @@ void volume::collect_result_to_result_map(const int ascii, const std::string& fu
 	}
 	catch (std::exception& e)
 	{
-		std::cerr << e.what() << std::endl;
+		fprintf(stderr, "%s\n", e.what());
 	}
 	if (priority_str_list != nullptr)
 	{
@@ -283,8 +287,8 @@ void volume::init_single_prepare_statement(sqlite3_stmt** statement, const char*
 	const size_t ret = sqlite3_prepare_v2(db, init, static_cast<long>(strlen(init)), statement, nullptr);
 	if (SQLITE_OK != ret)
 	{
-		std::cerr << "error preparing stmt \"" << init << "\"" << std::endl;
-		std::cerr << "disk: " << this->getDiskPath() << std::endl;
+		auto&& err_info = "error preparing stmt \"" + std::string(init) + "\"  disk: " + this->getDiskPath();
+		fprintf(stderr, "%s\n", err_info.c_str());
 	}
 }
 
@@ -583,7 +587,9 @@ bool volume::get_handle()
 	{
 		return true;
 	}
-	std::cerr << "create file handle failed. " << lpFileName << "error code: " << GetLastError() << std::endl;
+	auto&& info = std::wstring(L"create file handle failed. ") + lpFileName.GetString() +
+		L"error code: " + std::to_wstring(GetLastError());
+	fprintf(stderr, "%ls", info.c_str());
 	return false;
 }
 
@@ -606,7 +612,8 @@ bool volume::create_usn()
 	{
 		return true;
 	}
-	std::cerr << "create usn error. Error code: " << GetLastError() << std::endl;
+	auto&& info = "create usn error. Error code: " + std::to_string(GetLastError());
+	fprintf(stderr, "%s\n", info.c_str());
 	return false;
 }
 
@@ -627,7 +634,8 @@ bool volume::get_usn_info()
 	{
 		return true;
 	}
-	std::cerr << "query usn error. Error code: " << GetLastError() << std::endl;
+	auto&& info = "query usn error. Error code: " + std::to_string(GetLastError());
+	fprintf(stderr, "%s\n", info.c_str());
 	return false;
 }
 
@@ -718,7 +726,7 @@ bool init_complete_signal_memory()
 	create_file_mapping(handle, tmp, sizeof(bool), "sharedMemory:complete:status");
 	if (tmp == nullptr)
 	{
-		std::cerr << GetLastError() << std::endl;
+		fprintf(stderr, "%d\n", GetLastError());
 		return false;
 	}
 	is_complete_ptr.store(tmp);

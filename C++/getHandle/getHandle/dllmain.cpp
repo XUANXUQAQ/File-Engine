@@ -1,7 +1,6 @@
 ﻿// dllmain.cpp : 定义 DLL 应用程序的入口点。
 #include "pch.h"
 #include <Windows.h>
-#include <iostream>
 #include <TlHelp32.h>
 #include <tchar.h>
 #include <thread>
@@ -12,7 +11,6 @@
 #pragma comment(lib, "dwmapi")
 #pragma comment(lib, "user32")
 #pragma comment(lib, "kernel32")
-//#define TEST
 
 using namespace std;
 
