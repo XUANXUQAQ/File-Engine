@@ -47,6 +47,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
@@ -56,11 +57,11 @@ public class DatabaseService {
     private volatile Constants.Enums.DatabaseStatus status = Constants.Enums.DatabaseStatus.NORMAL;
     private final AtomicBoolean isExecuteImmediately = new AtomicBoolean(false);
     private final AtomicInteger databaseCacheNum = new AtomicInteger(0);
-    private final Set<TableNameWeightInfo> tableSet;    //保存从0-40数据库的表，使用频率和名字对应，使经常使用的表最快被搜索到
+    private final Set<TableNameWeightInfo> tableSet = ConcurrentHashMap.newKeySet();    //保存从0-40数据库的表，使用频率和名字对应，使经常使用的表最快被搜索到
     private final AtomicBoolean isDatabaseUpdated = new AtomicBoolean(false);
     private final AtomicBoolean isReadFromSharedMemory = new AtomicBoolean(false);
-    private final ConcurrentLinkedQueue<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
-    private final Set<String> tempResultsForEvent; //在SearchDoneEvent中保存的容器
+    private final ConcurrentLinkedQueue<String> tempResults = new ConcurrentLinkedQueue<>();  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
+    private final Set<String> tempResultsForEvent = new ConcurrentSkipListSet<>(); //在SearchDoneEvent中保存的容器
     private final AtomicInteger allResultsRecordCounter = new AtomicInteger();
     private final AtomicBoolean shouldStopSearch = new AtomicBoolean(false);
     private final AtomicBoolean isSearchStopped = new AtomicBoolean(true);
@@ -113,9 +114,6 @@ public class DatabaseService {
     }
 
     private DatabaseService() {
-        tableSet = ConcurrentHashMap.newKeySet();
-        tempResults = new ConcurrentLinkedQueue<>();
-        tempResultsForEvent = new ConcurrentSkipListSet<>();
     }
 
     private void invalidateAllCache() {
@@ -751,7 +749,6 @@ public class DatabaseService {
                             waitTime = System.currentTimeMillis();
                         }
                     }
-                    TimeUnit.NANOSECONDS.sleep(100);
                 }
                 TimeUnit.NANOSECONDS.sleep(100);
             }
@@ -814,7 +811,6 @@ public class DatabaseService {
      *
      * @param nonFormattedSql        未格式化搜索字段的SQL
      * @param isReadFromSharedMemory 是否通过共享内存读取，而不是数据库搜索
-     *
      * @return cuda搜索容器
      */
     private ConcurrentHashMap<String, Set<String>> addSearchTasks(LinkedList<LinkedHashMap<String, String>> nonFormattedSql,
@@ -1044,36 +1040,34 @@ public class DatabaseService {
         }
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         EventManagement eventManagement = EventManagement.getInstance();
-        final int threadNumber = Math.max(1, Runtime.getRuntime().availableProcessors() / PrepareSearchInfo.taskMap.size());
+        final int threadNumberPerDisk = Math.max(1, Runtime.getRuntime().availableProcessors() / PrepareSearchInfo.taskMap.size());
+        Consumer<ConcurrentLinkedQueue<Runnable>> taskHandler = (taskQueue) -> {
+            while (!taskQueue.isEmpty() && eventManagement.notMainExit() && !shouldStopSearch.get() && !isSearchStopped.get()) {
+                var runnable = taskQueue.poll();
+                if (runnable == null)
+                    continue;
+                searchThreadCount.incrementAndGet();
+                runnable.run();
+                searchThreadCount.decrementAndGet();
+            }
+        };
         for (var entry : PrepareSearchInfo.taskMap.entrySet()) {
-            for (int i = 0; i < threadNumber; i++) {
+            for (int i = 0; i < threadNumberPerDisk; i++) {
                 cachedThreadPoolUtil.executeTask(() -> {
-                    String currentDisk = entry.getKey();
-                    ConcurrentLinkedQueue<Runnable> taskQueue = entry.getValue();
-                    while (!taskQueue.isEmpty() && eventManagement.notMainExit()) {
-                        if (shouldStopSearch.get() || isSearchStopped.get()) return;
-                        var runnable = taskQueue.poll();
-                        if (runnable == null) continue;
-                        searchThreadCount.incrementAndGet();
-                        runnable.run();
-                        searchThreadCount.decrementAndGet();
-                    }
+                    var taskQueue = entry.getValue();
+                    taskHandler.accept(taskQueue);
                     //自身任务已经完成，开始扫描其他线程的任务
                     boolean hasTask;
                     do {
                         hasTask = false;
                         for (var e : PrepareSearchInfo.taskMap.entrySet()) {
-                            String otherDisk = e.getKey();
-                            if (otherDisk.equals(currentDisk)) continue;
-                            ConcurrentLinkedQueue<Runnable> otherTaskQueue = e.getValue();
-                            Runnable otherRunnable;
-                            while ((otherRunnable = otherTaskQueue.poll()) != null) {
-                                if (shouldStopSearch.get() || isSearchStopped.get()) return;
-                                hasTask = true;
-                                searchThreadCount.incrementAndGet();
-                                otherRunnable.run();
-                                searchThreadCount.decrementAndGet();
+                            var otherTaskQueue = e.getValue();
+                            // 如果hasTask为false，则检查otherTaskQueue是否为空
+                            if (!hasTask) {
+                                // 不为空则设置hasTask为true
+                                hasTask = !otherTaskQueue.isEmpty();
                             }
+                            taskHandler.accept(otherTaskQueue);
                         }
                     } while (hasTask && eventManagement.notMainExit());
                 });

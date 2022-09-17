@@ -3149,7 +3149,7 @@ public class SearchBar {
                             searchInfoLabel.setIcon(null);
                         }
                     });
-                    TimeUnit.MILLISECONDS.sleep(16);
+                    TimeUnit.MILLISECONDS.sleep(1);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -3243,16 +3243,17 @@ public class SearchBar {
             Supplier<Boolean> isStopSearch = () -> startTime > time || !isVisible();
             PluginService pluginService = PluginService.getInstance();
             ArrayList<String> listResultsTemp = listResults;
+            var tempResults = databaseService.getTempResults();
+            var allPlugins = pluginService.getAllPlugins();
             try {
                 while (!isStopSearch.get()) {
                     String each;
-                    for (var eachPlugin : pluginService.getAllPlugins()) {
-                        while ((each = eachPlugin.plugin.pollFromResultQueue()) != null && isStopSearch.get()) {
+                    for (var eachPlugin : allPlugins) {
+                        while ((each = eachPlugin.plugin.pollFromResultQueue()) != null) {
                             each = "plugin" + pluginResultSplitStr + eachPlugin.plugin.identifier + pluginResultSplitStr + each;
                             listResultsTemp.add(each);
                         }
                     }
-                    var tempResults = databaseService.getTempResults();
                     while ((each = tempResults.poll()) != null) {
                         listResultsTemp.add(each);
                     }
