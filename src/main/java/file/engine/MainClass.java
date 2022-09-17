@@ -55,7 +55,7 @@ public class MainClass {
     private static final String GET_KNOWN_FOLDER_MD5 = "ebba6f89849fd2583934c7d48ec1e224";
     private static final String SQLITE_JDBC_MD5 = "607931b6a0655945daf1db51312b4473";
     private static final String EMPTY_RECYCLE_BIN_MD5 = "431225a47e74fe343b42e4bba741b80b";
-    private static final String CUDA_ACCELERATOR_MD5 = "f0fbdbdfa8d93311865faed62f617322";
+    private static final String CUDA_ACCELERATOR_MD5 = "de648861fcbbf84fe79ca74e60d294d7";
     private static final String CUDA_RUNTIME_MD5 = "d7cfc69c62e8eb977d827f46bab408da";
 
     public static void main(String[] args) {
