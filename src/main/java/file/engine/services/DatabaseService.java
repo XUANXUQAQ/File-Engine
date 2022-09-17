@@ -442,7 +442,6 @@ public class DatabaseService {
      * @param tableNeedCache    需要缓存的表
      */
     private void saveTableCacheForCuda(Supplier<Boolean> isStopCreateCache, LinkedHashMap<String, Integer> tableNeedCache, int createCudaCacheThreshold) {
-        out:
         for (Map.Entry<String, Cache> entry : tableCache.entrySet()) {
             String key = entry.getKey();
             if (tableNeedCache.containsKey(key)) {
@@ -452,14 +451,15 @@ public class DatabaseService {
                 String[] info = RegexUtil.comma.split(key);
                 try (Statement stmt = SQLiteUtil.getStatement(info[0]);
                      ResultSet resultSet = stmt.executeQuery("SELECT PATH FROM " + info[1] + " " + "WHERE PRIORITY=" + info[2])) {
-                    LinkedList<String> strings = new LinkedList<>();
-                    while (resultSet.next()) {
-                        if (isStopCreateCache.get()) {
-                            break out;
+                    CudaAccelerator.INSTANCE.initCache(key, () -> {
+                        try {
+                            if (resultSet.next()) {
+                                return resultSet.getString("PATH");
+                            }
+                        } catch (Exception ignored) {
                         }
-                        strings.add(resultSet.getString("PATH"));
-                    }
-                    CudaAccelerator.INSTANCE.initCache(key, strings.toArray());
+                        return null;
+                    });
                     if (isStopCreateCache.get()) {
                         break;
                     }

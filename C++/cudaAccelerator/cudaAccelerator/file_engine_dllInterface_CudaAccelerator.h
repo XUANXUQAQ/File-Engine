@@ -74,10 +74,10 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_CudaAccelerator_isCache
 /*
  * Class:     file_engine_dllInterface_CudaAccelerator
  * Method:    initCache
- * Signature: (Ljava/lang/String;[Ljava/lang/Object;)V
+ * Signature: (Ljava/lang/String;Ljava/util/function/Supplier;)V
  */
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_initCache
-  (JNIEnv *, jobject, jstring, jobjectArray);
+  (JNIEnv *, jobject, jstring, jobject);
 
 /*
  * Class:     file_engine_dllInterface_CudaAccelerator

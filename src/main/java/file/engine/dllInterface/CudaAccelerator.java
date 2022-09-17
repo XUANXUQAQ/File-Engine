@@ -2,6 +2,7 @@ package file.engine.dllInterface;
 
 import java.nio.file.Path;
 import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 
 public enum CudaAccelerator {
     INSTANCE;
@@ -46,7 +47,7 @@ public enum CudaAccelerator {
 
     public native boolean isCacheExist(String key);
 
-    public native void initCache(String key, Object[] records);
+    public native void initCache(String key, Supplier<String> recordSupplier);
 
     public native void addRecordsToCache(String key, Object[] records);
 

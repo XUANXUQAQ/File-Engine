@@ -287,17 +287,23 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_CudaAccelerator_isCache
 /*
  * Class:     file_engine_dllInterface_CudaAccelerator
  * Method:    initCache
- * Signature: (Ljava/lang/String;[Ljava/lang/Object;)V
+ * Signature: (Ljava/lang/String;Ljava/util/function/Supplier;)V
  */
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_initCache
-(JNIEnv* env, jobject, jstring key_jstring, jobjectArray records)
+(JNIEnv* env, jobject, jstring key_jstring, jobject record_supplier)
 {
-	const jsize _length = env->GetArrayLength(records);
+	const jclass supplier_class = env->GetObjectClass(record_supplier);
+	const jmethodID get_function = env->GetMethodID(supplier_class, "get", "()Ljava/lang/Object;");
 	std::vector<std::string> records_vec;
 	unsigned record_count = 0;
-	for (jsize i = 0; i < _length; ++i)
+	while (true)
 	{
-		const auto jstring_val = reinterpret_cast<jstring>(env->GetObjectArrayElement(records, i));
+		const jobject record_from_supplier = env->CallObjectMethod(record_supplier, get_function);
+		if (record_from_supplier == nullptr)
+		{
+			break;
+		}
+		const auto jstring_val = reinterpret_cast<jstring>(record_from_supplier);
 		const auto record = env->GetStringUTFChars(jstring_val, nullptr);
 		if (const auto record_len = strlen(record); record_len < MAX_PATH_LENGTH)
 		{
@@ -305,7 +311,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_initCache
 			++record_count;
 		}
 		env->ReleaseStringUTFChars(jstring_val, record);
-		env->DeleteLocalRef(jstring_val);
+		env->DeleteLocalRef(record_from_supplier);
 	}
 	const auto _key = env->GetStringUTFChars(key_jstring, nullptr);
 	std::string key(_key);
@@ -339,6 +345,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_initCache
 	gpuErrchk(cudaStreamDestroy(stream), true, nullptr);
 	cache_map.insert(std::make_pair(key, cache));
 	env->ReleaseStringUTFChars(key_jstring, _key);
+	env->DeleteLocalRef(supplier_class);
 }
 
 /*
@@ -485,8 +492,8 @@ JNIEXPORT jint JNICALL Java_file_engine_dllInterface_CudaAccelerator_getCudaMemU
 void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_uint& result_counter,
 	const unsigned max_results, const std::vector<std::string>& search_case_vec)
 {
-	jclass biconsumer_class = thread_env->GetObjectClass(result_collector);
-	jmethodID collector = thread_env->GetMethodID(biconsumer_class, "accept", "(Ljava/lang/Object;Ljava/lang/Object;)V");
+	const jclass biconsumer_class = thread_env->GetObjectClass(result_collector);
+	const jmethodID collector = thread_env->GetMethodID(biconsumer_class, "accept", "(Ljava/lang/Object;Ljava/lang/Object;)V");
 	bool all_complete;
 	const auto stop_func = [&]
 	{
