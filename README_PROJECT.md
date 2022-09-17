@@ -9,63 +9,63 @@
     下层是jvm运行环境以及C++库提供的基础支持。C++库在dllInterface文件夹下。
 
     由服务层调用C++库并注册事件响应，提供基本功能，UI层响应用户的操作并发送事件进行调用。
-
-├─MainClass.java     主启动类，初始化依赖并发出启动事件   
-├─utils                        公用工具类   
+```
+├─MainClass.java                    主启动类，初始化依赖并发出启动事件   
+├─utils                             公用工具类   
 |    ├─......   
 ├─services   
-| ├─CheckHotKeyService.java    全局快捷键服务，注册和检测键盘快捷键   
-| ├─DaemonService.java            守护进程服务，开启和停止守护进程   
-| ├─DatabaseService.java           数据库维护服务，负责文件搜索和同步   
+| ├─CheckHotKeyService.java         全局快捷键服务，注册和检测键盘快捷键   
+| ├─DaemonService.java              守护进程服务，开启和停止守护进程   
+| ├─DatabaseService.java            数据库维护服务，负责文件搜索和同步   
 | ├─OpenFileService.java            打开可执行文件服务   
 | ├─TranslateService.java           翻译服务   
 | ├─plugin   
 | | ├─system   
-| | | ├─Plugin.java                        插件对象   
-| | | └PluginService.java              插件服务，提供插件的查询和方法调用   
+| | | ├─Plugin.java                 插件对象   
+| | | └PluginService.java           插件服务，提供插件的查询和方法调用   
 | ├─download   
 | | ├─BasicAuthenticator.java   
 | | ├─DownloadManager.java   
 | | └DownloadService.java           下载服务，负责下载文件   
-| ├─utils                       仅供service调用工具类   
+| ├─utils                           仅供service调用工具类   
 | | ├─......   
 ├─frames   
 | ├─PluginMarket.form   
-| ├─PluginMarket.java                   插件市场UI界面   
-| ├─SearchBar.java                         搜索框界面   
+| ├─PluginMarket.java               插件市场UI界面   
+| ├─SearchBar.java                  搜索框界面   
 | ├─SetDownloadProgress.java    
 | ├─SettingsFrame.form   
-| ├─SettingsFrame.java                  设置UI界面   
-| ├─TaskBar.java                             Windows任务栏图标   
-| ├─components                             通用Swing组件   
+| ├─SettingsFrame.java              设置UI界面   
+| ├─TaskBar.java                    Windows任务栏图标   
+| ├─components                      通用Swing组件   
 | | ├─LoadingPanel.java   
 | | ├─MouseDragInfo.java   
 | | └RoundBorder.java   
 ├─event   
 | ├─handler   
-| | ├─Event.java                                事件基类   
-| | ├─EventManagement.java        事件处理工具   
-| | ├─impl                                          具体事件实现   
+| | ├─Event.java                    事件基类   
+| | ├─EventManagement.java          事件处理工具   
+| | ├─impl                          具体事件实现   
 | | | ├─......   
 ├─dllInterface   
-| ├─CudaAccelerator.java                    NVIDIA显卡加速工具   
-| ├─EmptyRecycleBin.java                   清空回收站工具   
-| ├─FileMonitor.java                             文件改动监测工具   
-| ├─GetAscII.java                                   获取String UTF8值工具   
-| ├─GetHandle.java                              检测windows资源管理器并进行互操作工具   
-| ├─GetWindowsKnownFolder.java   获取Windows默认文件夹，如开始菜单，详见[SHGetKnownFolderPath](https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/nf-shlobj_core-shgetknownfolderpath)   
-| ├─HotkeyListener.java                       Windows全局快捷键注册工具   
-| ├─IsLocalDisk.java                              检测硬盘是否为本地硬盘以及NTFS文件系统工具   
-| └ResultPipe.java                                  共享内存读取工具，当创建索引时fileSearcherUSN.exe会先创建共享内存，然后再写入硬盘   
+| ├─CudaAccelerator.java            NVIDIA显卡加速工具   
+| ├─EmptyRecycleBin.java            清空回收站工具   
+| ├─FileMonitor.java                文件改动监测工具   
+| ├─GetAscII.java                   获取String UTF8值工具   
+| ├─GetHandle.java                  检测windows资源管理器并进行互操作工具   
+| ├─GetWindowsKnownFolder.java      获取Windows默认文件夹，如开始菜单，详见MSDN(SHGetKnownFolderPath)
+| ├─HotkeyListener.java             Windows全局快捷键注册工具   
+| ├─IsLocalDisk.java                检测硬盘是否为本地硬盘以及NTFS文件系统工具   
+| └ResultPipe.java                  共享内存读取工具，当创建索引时fileSearcherUSN.exe会先创建共享内存，然后再写入硬盘   
 ├─configs   
-| ├─AllConfigs.java                           全局配置中心   
-| ├─ConfigEntity.java                       配置对象   
-| ├─Constants.java                           全局常量   
-| └ProxyInfo.java                              网络代理对象，如http socks5   
+| ├─AllConfigs.java                 全局配置中心   
+| ├─ConfigEntity.java               配置对象   
+| ├─Constants.java                  全局常量   
+| └ProxyInfo.java                   网络代理对象，如http socks5   
 ├─annotation   
-| ├─EventListener.java                    事件监听注解，添加该注解可以将函数注册为对应事件的回调函数   
-| └EventRegister.java                       事件处理注解，添加该注解可以将函数注册为相应事件的处理函数。**注意：一个事件只能有一个处理函数，可以有多个回调函数。**   
-
+| ├─EventListener.java              事件监听注解，添加该注解可以将函数注册为对应事件的回调函数   
+| └EventRegister.java               事件处理注解，添加该注解可以将函数注册为相应事件的处理函数。**注意：一个事件只能有一个处理函数，可以有多个回调函数。**   
+```
 事件处理系统详见[Event_Management](https://github.com/XUANXUQAQ/File-Engine/blob/master/Event_Mangement.md)
 
 ## 下面是各个包以及各个依赖的作用。
