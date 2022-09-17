@@ -64,7 +64,7 @@
 | └ProxyInfo.java                   网络代理对象，如http socks5   
 ├─annotation   
 | ├─EventListener.java              事件监听注解，添加该注解可以将函数注册为对应事件的回调函数   
-| └EventRegister.java               事件处理注解，添加该注解可以将函数注册为相应事件的处理函数。**注意：一个事件只能有一个处理函数，可以有多个回调函数。**   
+| └EventRegister.java               事件处理注解，添加该注解可以将函数注册为相应事件的处理函数。注意：一个事件只能有一个处理函数，可以有多个回调函数。
 ```
 事件处理系统详见[Event_Management](https://github.com/XUANXUQAQ/File-Engine/blob/master/Event_Mangement.md)
 
