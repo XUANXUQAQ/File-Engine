@@ -102,7 +102,6 @@ public class SearchBar {
     private Color fontColorWithCoverage;
     private Color labelFontColor;
     private volatile long startTime = 0;
-    private final Pattern semicolon;
     private volatile RunningMode runningMode;
     private volatile Constants.Enums.ShowingSearchBarMode showingMode;
     private long mouseWheelTime = 0;
@@ -113,7 +112,6 @@ public class SearchBar {
     private volatile String[] searchCase;
     private volatile String searchText = "";
     private volatile String[] keywords;
-    private final DatabaseService databaseService;
     private final AtomicInteger currentLabelSelectedPosition;   //保存当前是哪个label被选中 范围 0 - 7
     private volatile Plugin currentUsingPlugin;
     private volatile String currentPluginIdentifier;
@@ -146,9 +144,6 @@ public class SearchBar {
         runningMode = RunningMode.NORMAL_MODE;
         showingMode = Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING;
         currentLabelSelectedPosition = new AtomicInteger(0);
-        semicolon = RegexUtil.semicolon;
-
-        databaseService = DatabaseService.getInstance();
 
         initGUI();
 
@@ -310,7 +305,7 @@ public class SearchBar {
                     }
                     openWithoutAdmin(res);
                 } else {
-                    String[] commandInfo = semicolon.split(res);
+                    String[] commandInfo = RegexUtil.semicolon.split(res);
                     boolean isExecuted = runInternalCommand(RegexUtil.colon.split(commandInfo[0])[1]);
                     if (isExecuted) {
                         return;
@@ -338,7 +333,7 @@ public class SearchBar {
                     }
                     openWithAdmin(res);
                 } else {
-                    String[] commandInfo = semicolon.split(res);
+                    String[] commandInfo = RegexUtil.semicolon.split(res);
                     boolean isExecuted = runInternalCommand(RegexUtil.colon.split(commandInfo[0])[1]);
                     if (isExecuted) {
                         return;
@@ -366,7 +361,7 @@ public class SearchBar {
                     }
                     copyToClipBoard(res, true);
                 } else {
-                    String[] commandInfo = semicolon.split(res);
+                    String[] commandInfo = RegexUtil.semicolon.split(res);
                     boolean isExecuted = runInternalCommand(RegexUtil.colon.split(commandInfo[0])[1]);
                     if (isExecuted) {
                         return;
@@ -394,7 +389,7 @@ public class SearchBar {
                     }
                     openFolderByExplorer(res);
                 } else {
-                    String[] commandInfo = semicolon.split(res);
+                    String[] commandInfo = RegexUtil.semicolon.split(res);
                     boolean isExecuted = runInternalCommand(RegexUtil.colon.split(commandInfo[0])[1]);
                     if (isExecuted) {
                         return;
@@ -606,7 +601,7 @@ public class SearchBar {
                                         }
                                     }
                                 } else if (runningMode == RunningMode.COMMAND_MODE) {
-                                    String[] commandInfo = semicolon.split(res);
+                                    String[] commandInfo = RegexUtil.semicolon.split(res);
                                     boolean isExecuted = runInternalCommand(RegexUtil.colon.split(commandInfo[0])[1]);
                                     if (isExecuted) {
                                         return;
@@ -842,7 +837,7 @@ public class SearchBar {
                                         }
                                     }
                                 } else if (runningMode == RunningMode.COMMAND_MODE) {
-                                    String[] commandInfo = semicolon.split(res);
+                                    String[] commandInfo = RegexUtil.semicolon.split(res);
                                     boolean isExecuted = runInternalCommand(RegexUtil.colon.split(commandInfo[0])[1]);
                                     if (isExecuted) {
                                         return;
@@ -1056,6 +1051,7 @@ public class SearchBar {
         final int maxWaiting = 30;
         AtomicBoolean isCanceled = new AtomicBoolean(false);
         TranslateService translateService = TranslateService.getInstance();
+        DatabaseService databaseService = DatabaseService.getInstance();
         //检查数据库是否正常
         if (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL) {
             JFrame frame = new JFrame();
@@ -1268,7 +1264,7 @@ public class SearchBar {
                         //普通模式直接获取文件路径
                         f = new File(result);
                     } else if (runningMode == RunningMode.COMMAND_MODE) {
-                        String[] commandInfo = semicolon.split(result);
+                        String[] commandInfo = RegexUtil.semicolon.split(result);
                         //获取命令后的文件路径
                         if (commandInfo == null || commandInfo.length <= 1) {
                             return;
@@ -2571,6 +2567,7 @@ public class SearchBar {
             isWaiting.set(true);
             CachedThreadPoolUtil.getInstance().executeTask(() -> {
                 try {
+                    DatabaseService databaseService = DatabaseService.getInstance();
                     while (isWaiting.get()) {
                         if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
                             startTime = System.currentTimeMillis() - 300;
@@ -3243,7 +3240,7 @@ public class SearchBar {
             Supplier<Boolean> isStopSearch = () -> startTime > time || !isVisible();
             PluginService pluginService = PluginService.getInstance();
             ArrayList<String> listResultsTemp = listResults;
-            var tempResults = databaseService.getTempResults();
+            var tempResults = DatabaseService.getInstance().getTempResults();
             var allPlugins = pluginService.getAllPlugins();
             try {
                 while (!isStopSearch.get()) {
@@ -3493,7 +3490,7 @@ public class SearchBar {
                         searchCase = null;
                     } else {
                         searchText = searchBarText.substring(0, i);
-                        String[] tmpSearchCase = semicolon.split(searchBarText.substring(i + 1));
+                        String[] tmpSearchCase = RegexUtil.semicolon.split(searchBarText.substring(i + 1));
                         searchCase = new String[tmpSearchCase.length];
                         for (int j = 0; j < tmpSearchCase.length; j++) {
                             searchCase[j] = tmpSearchCase[j].trim();
@@ -3504,7 +3501,7 @@ public class SearchBar {
                     searchCase = null;
                 }
             }
-            keywords = semicolon.split(searchText);
+            keywords = RegexUtil.semicolon.split(searchText);
         }
     }
 
@@ -3512,7 +3509,7 @@ public class SearchBar {
         EventManagement eventManagement = EventManagement.getInstance();
         if (!getSearchBarText().isEmpty()) {
             isCudaSearchNotStarted.set(false);
-            if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL && runningMode == RunningMode.NORMAL_MODE) {
+            if (DatabaseService.getInstance().getStatus() == Constants.Enums.DatabaseStatus.NORMAL && runningMode == RunningMode.NORMAL_MODE) {
                 searchCaseToLowerAndRemoveConflict();
                 eventManagement.putEvent(new PrepareSearchEvent(() -> searchText, () -> searchCase, () -> keywords));
             }
@@ -3526,7 +3523,7 @@ public class SearchBar {
         EventManagement eventManagement = EventManagement.getInstance();
         if (!getSearchBarText().isEmpty()) {
             isSearchNotStarted.set(false);
-            if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL && runningMode == RunningMode.NORMAL_MODE) {
+            if (DatabaseService.getInstance().getStatus() == Constants.Enums.DatabaseStatus.NORMAL && runningMode == RunningMode.NORMAL_MODE) {
                 searchCaseToLowerAndRemoveConflict();
                 eventManagement.putEvent(new StartSearchEvent(() -> searchText, () -> searchCase, () -> keywords));
             }
@@ -3578,7 +3575,7 @@ public class SearchBar {
                                 cmdSet.add(":help;" + translateService.getTranslation("View help"));
                                 cmdSet.add(":version;" + translateService.getTranslation("View Version"));
                                 for (String i : cmdSet) {
-                                    String[] cmdInfo = semicolon.split(i);
+                                    String[] cmdInfo = RegexUtil.semicolon.split(i);
                                     if (cmdInfo[0].contains(text.substring(1))) {
                                         String result = translateService.getTranslation("Run command") + i;
                                         listResults.add(result);
@@ -3602,6 +3599,7 @@ public class SearchBar {
                                     listResults.add(pluginInfo.identifier);
                                 }
                             } else {
+                                DatabaseService databaseService = DatabaseService.getInstance();
                                 if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
                                     addShowSearchStatusThread(isShowSearchStatusThreadNotExist);
                                 } else if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.MANUAL_UPDATE) {
@@ -3629,7 +3627,7 @@ public class SearchBar {
                                 TimeUnit.MILLISECONDS.sleep(10);
                             }
                         }
-                        if (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL) {
+                        if (DatabaseService.getInstance().getStatus() != Constants.Enums.DatabaseStatus.NORMAL) {
                             //开启线程等待搜索完成
                             addSearchWaiter(isWaiting);
                             clearAllLabels();
@@ -3829,7 +3827,7 @@ public class SearchBar {
         isParentPathEmpty[0] = false;
         if (path == null) {
             // 命令模式
-            String[] info = semicolon.split(command);
+            String[] info = RegexUtil.semicolon.split(command);
             String commandPath = info[1];
             String commandName = info[0];
             int maxShowCharNum = getMaxShowCharsNum(label1);
@@ -3963,7 +3961,10 @@ public class SearchBar {
      */
     private void showCommandOnLabel(String command, JLabel label, boolean isChosen) {
         GetIconUtil getIconUtil = GetIconUtil.getInstance();
-        String[] info = semicolon.split(command);
+        String[] info = RegexUtil.semicolon.split(command);
+        if (info.length != 2) {
+            return;
+        }
         String path = info[1];
         String name = info[0];
         String showStr = getHtml(null, command, new boolean[1]);
