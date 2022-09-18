@@ -3234,8 +3234,8 @@ public class SearchBar {
     private void addMergeThread(AtomicBoolean isMergeThreadNotExist) {
         while (!isMergeThreadNotExist.get())
             Thread.onSpinWait();
-        isMergeThreadNotExist.set(false);
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            isMergeThreadNotExist.set(false);
             final long time = System.currentTimeMillis();
             Supplier<Boolean> isStopSearch = () -> startTime > time || !isVisible();
             PluginService pluginService = PluginService.getInstance();
@@ -3505,7 +3505,7 @@ public class SearchBar {
         }
     }
 
-    private void sendPrepareCudaSearchEvent() {
+    private void sendPrepareSearchEvent() {
         EventManagement eventManagement = EventManagement.getInstance();
         if (!getSearchBarText().isEmpty()) {
             isCudaSearchNotStarted.set(false);
@@ -3547,9 +3547,9 @@ public class SearchBar {
                     final long endTime = System.currentTimeMillis();
                     if ((endTime - startTime > 50) && isCudaSearchNotStarted.get() && startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
                         setSearchKeywordsAndSearchCase();
-                        sendPrepareCudaSearchEvent();
+                        sendPrepareSearchEvent();
                     }
-                    if ((endTime - startTime > 150) && isSearchNotStarted.get() && startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
+                    if ((endTime - startTime > 250) && isSearchNotStarted.get() && startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
                         setSearchKeywordsAndSearchCase();
                         sendSearchEvent();
                     }

@@ -1031,9 +1031,6 @@ public class DatabaseService {
      */
     private void startSearch() {
         isSearchStopped.set(false);
-        searchCache();
-        searchPriorityFolder();
-        searchStartMenu();
         if (shouldStopSearch.get()) {
             searchDone();
             return;
@@ -1894,7 +1891,6 @@ public class DatabaseService {
         }
         databaseService.shouldStopSearch.set(false);
         //tempResultsForEvent和PrepareSearchInfo.containerMap在searchDone()中发送SearchDoneEvent后就已经清除，所以不需要清除，只清理tempResults
-        databaseService.tempResults.clear();
         databaseService.allResultsRecordCounter.set(0);
         //启动搜索线程
         CachedThreadPoolUtil.getInstance().executeTask(databaseService::startSearch);
@@ -1909,6 +1905,11 @@ public class DatabaseService {
     private static synchronized void prepareSearch(StartSearchEvent startSearchEvent) {
         prepareSearchKeywords(startSearchEvent.searchText, startSearchEvent.searchCase, startSearchEvent.keywords);
         ConcurrentHashMap<String, Set<String>> cudaSearchContainer = PrepareSearchInfo.prepareSearchTasks();
+        DatabaseService databaseService = getInstance();
+        databaseService.tempResults.clear();
+        databaseService.searchCache();
+        databaseService.searchPriorityFolder();
+        databaseService.searchStartMenu();
         if (AllConfigs.getInstance().isEnableCuda()) {
             // 退出上一次搜索
             CudaAccelerator.INSTANCE.stopCollectResults();
