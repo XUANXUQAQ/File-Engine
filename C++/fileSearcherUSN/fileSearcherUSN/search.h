@@ -22,7 +22,7 @@ typedef std::unordered_map<DWORDLONG, pfrn_name> Frn_Pfrn_Name_Map;
 class volume
 {
 public:
-	volume(char vol, sqlite3* database, std::vector<std::string>* ignorePaths, PriorityMap* priorityMap);
+	volume(char vol, sqlite3* database, std::vector<std::string>* ignore_paths, PriorityMap* priority_map);
 
 	~volume() = default;
 
@@ -127,4 +127,4 @@ bool init_complete_signal_memory();
 
 void close_shared_memory();
 
-void create_file_mapping(HANDLE& hMapFile, LPVOID& pBuf, size_t memorySize, const char* sharedMemoryName);
+void create_file_mapping(HANDLE& h_map_file, LPVOID& p_buf, size_t memory_size, const char* shared_memory_name);

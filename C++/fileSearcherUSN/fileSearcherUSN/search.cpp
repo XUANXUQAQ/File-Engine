@@ -18,14 +18,14 @@ static std::atomic_int* complete_task_count = new std::atomic_int(0);
 static std::atomic_int* all_task_count = new std::atomic_int(0);
 static std::atomic<LPVOID> is_complete_ptr(nullptr);
 
-volume::volume(const char vol, sqlite3* database, std::vector<std::string>* ignorePaths, PriorityMap* priorityMap)
+volume::volume(const char vol, sqlite3* database, std::vector<std::string>* ignore_paths, PriorityMap* priority_map)
 {
 	this->vol = vol;
-	this->priority_map_ = priorityMap;
+	this->priority_map_ = priority_map;
 	hVol = nullptr;
 	path = "";
 	db = database;
-	ignore_path_vector_ = ignorePaths;
+	ignore_path_vector_ = ignore_paths;
 	++* all_task_count;
 }
 
@@ -49,26 +49,25 @@ void volume::init_volume()
 		cout << "starting " << thread_num << " threads to collect results" << endl;
 		cout << "fileMap size: " << map_size << endl;
 #endif
-		auto _collect_internal = [this](const Frn_Pfrn_Name_Map::iterator& iter)
+		auto collect_internal = [this](const Frn_Pfrn_Name_Map::iterator& map_iterator)
 		{
-			const auto& name = iter->second.filename;
+			const auto& name = map_iterator->second.filename;
 			const int ascii = get_asc_ii_sum(to_utf8(wstring(name)));
 			CString result_path = _T("\0");
-			get_path(iter->first, result_path);
-			CString record = vol + result_path;
-			const auto full_path = to_utf8(wstring(record));
-			if (!is_ignore(full_path))
+			get_path(map_iterator->first, result_path);
+			const CString record = vol + result_path;
+			if (const auto full_path = to_utf8(wstring(record)); !is_ignore(full_path))
 			{
 				collect_result_to_result_map(ascii, full_path);
 			}
 		};
-		auto search_internal = [this, &_collect_internal]
+		auto search_internal = [this, &collect_internal]
 		{
-			auto start_iter = frnPfrnNameMap.begin();
-			auto end_iter = frnPfrnNameMap.end();
+			auto&& start_iter = frnPfrnNameMap.begin();
+			auto&& end_iter = frnPfrnNameMap.end();
 			while (start_iter != end_iter)
 			{
-				_collect_internal(start_iter);
+				collect_internal(start_iter);
 				++start_iter;
 			}
 		};
@@ -80,7 +79,7 @@ void volume::init_volume()
 				{
 					save_all_results_to_db();
 				});
-			auto&& info = "start copy disk " + std::to_string(this->getDiskPath()) + " to shared memory";
+			auto&& info = string("start to copy disk ") + this->getDiskPath() + " to shared memory";
 			printf("%s\n", info.c_str());
 			copy_results_to_shared_memory();
 			set_complete_signal();
@@ -91,14 +90,14 @@ void volume::init_volume()
 		}
 		catch (exception& e)
 		{
-			fprintf(stderr, "%s\n", e.what());
+			fprintf(stderr, "fileSearcherUSN: %s\n", e.what());
 		}
 	}
 	else
 	{
-		fprintf(stderr, "init usn journal failed.");
+		fprintf(stderr, "fileSearcherUSN: init usn journal failed.");
 	}
-	auto&& info = "disk " + std::to_string(this->getDiskPath()) + " complete";
+	auto&& info = std::string("disk ") + this->getDiskPath() + " complete";
 	printf("%s\n", info.c_str());
 }
 
@@ -106,14 +105,15 @@ void volume::copy_results_to_shared_memory()
 {
 	for (int i = 0; i <= 40; ++i)
 	{
-		for (const auto& eachPriority : *priority_map_)
+		for (const auto& [fst, snd] : *priority_map_)
 		{
-			static const char* listNamePrefix = "list";
-			static const char* prefix = "sharedMemory:";
-			std::string eachListName = std::string(listNamePrefix) + std::to_string(i);
-			const auto& sharedMemoryName = std::string(prefix) + getDiskPath() + ":" + eachListName + ":" + std::to_string(
-				eachPriority.second); // 共享内存名为 sharedMemory:[path]:list[num]:[priority]
-			create_shared_memory_and_copy(eachListName, eachPriority.second, sharedMemoryName);
+			static auto list_name_prefix = "list";
+			static auto prefix = "sharedMemory:";
+			std::string each_list_name = std::string(list_name_prefix) + std::to_string(i);
+			const auto& shared_memory_name = 
+				// 共享内存名为 sharedMemory:[path]:list[num]:[priority]
+				std::string(prefix) + getDiskPath() + ":" + each_list_name + ":" + std::to_string(snd);
+			create_shared_memory_and_copy(each_list_name, snd, shared_memory_name);
 		}
 	}
 }
@@ -140,8 +140,8 @@ void volume::collect_result_to_result_map(const int ascii, const std::string& fu
 		}
 		catch (std::exception&)
 		{
-			std::lock_guard<std::mutex> lock_guard(add_priority_lock);
-			auto iter = tmp_results->find(priority);
+			std::lock_guard lock_guard(add_priority_lock);
+			auto&& iter = tmp_results->find(priority);
 			if (iter == tmp_results->end())
 			{
 				priority_str_list = new CONCURRENT_QUEUE<std::string>();
@@ -156,21 +156,21 @@ void volume::collect_result_to_result_map(const int ascii, const std::string& fu
 	catch (std::out_of_range&)
 	{
 		static std::mutex add_list_lock;
-		std::lock_guard<std::mutex> lock_guard(add_list_lock);
-		auto iter = all_results_map.find(list_name);
+		std::lock_guard lock_guard(add_list_lock);
+		auto&& iter = all_results_map.find(list_name);
 		if (iter == all_results_map.end())
 		{
 			priority_str_list = new CONCURRENT_QUEUE<std::string>();
 			tmp_results = new CONCURRENT_MAP<int, CONCURRENT_QUEUE<std::string>&>();
 			tmp_results->insert(std::pair<int, CONCURRENT_QUEUE<std::string>&>(priority, *priority_str_list));
 			all_results_map.insert(
-				std::pair<std::string, CONCURRENT_MAP<int, CONCURRENT_QUEUE<std::string>&>*>(list_name, tmp_results));
+				std::pair(list_name, tmp_results));
 		}
 		else
 		{
 			tmp_results = iter->second;
-			std::lock_guard<std::mutex> lock_guard2(add_priority_lock);
-			auto iter2 = tmp_results->find(priority);
+			std::lock_guard lock_guard2(add_priority_lock);
+			auto&& iter2 = tmp_results->find(priority);
 			if (iter2 == tmp_results->end())
 			{
 				priority_str_list = new CONCURRENT_QUEUE<std::string>();
@@ -184,7 +184,7 @@ void volume::collect_result_to_result_map(const int ascii, const std::string& fu
 	}
 	catch (std::exception& e)
 	{
-		fprintf(stderr, "%s\n", e.what());
+		fprintf(stderr, "fileSearcherUSN: %s\n", e.what());
 	}
 	if (priority_str_list != nullptr)
 	{
@@ -211,49 +211,48 @@ void volume::create_shared_memory_and_copy(const std::string& list_name, const i
 		return;
 	}
 	CONCURRENT_QUEUE<std::string>& result = table->at(priority);
-	size_t resultSize = result.unsafe_size();
-	resultSize = resultSize > MAX_RECORD_COUNT ? MAX_RECORD_COUNT : resultSize;
-	const size_t memorySize = resultSize * RECORD_MAX_PATH;
+	size_t result_size = result.unsafe_size();
+	result_size = result_size > MAX_RECORD_COUNT ? MAX_RECORD_COUNT : result_size;
+	const size_t memory_size = result_size * RECORD_MAX_PATH;
 
 	// 创建共享文件句柄
-	HANDLE hMapFile;
-	LPVOID pBuf = nullptr;
-	create_file_mapping(hMapFile, pBuf, memorySize, shared_memory_name.c_str());
-	if (pBuf == nullptr)
+	HANDLE h_map_file;
+	LPVOID p_buf = nullptr;
+	create_file_mapping(h_map_file, p_buf, memory_size, shared_memory_name.c_str());
+	if (p_buf == nullptr)
 	{
 		return;
 	}
-	unsigned long long count = 0;
+	size_t count = 0;
 	for (auto iterator = result.unsafe_begin();
-		iterator != result.unsafe_end() && count <= MAX_RECORD_COUNT;
+		iterator != result.unsafe_end() && count < MAX_RECORD_COUNT;
 		++iterator)
 	{
 		if (iterator->length() >= RECORD_MAX_PATH)
 		{
 			continue;
 		}
-		memcpy_s(reinterpret_cast<void*>(reinterpret_cast<unsigned long long>(pBuf) + count * RECORD_MAX_PATH),
+		memcpy_s(reinterpret_cast<void*>(reinterpret_cast<size_t>(p_buf) + count * RECORD_MAX_PATH),
 			RECORD_MAX_PATH,
 			iterator->c_str(), iterator->length());
 		++count;
 	}
 	// 保存该结果的大小信息
-	create_file_mapping(hMapFile, pBuf, sizeof size_t, (shared_memory_name + "size").c_str());
-	memcpy_s(pBuf, sizeof size_t, &memorySize, sizeof size_t);
+	create_file_mapping(h_map_file, p_buf, sizeof size_t, (shared_memory_name + "size").c_str());
+	memcpy_s(p_buf, sizeof size_t, &memory_size, sizeof size_t);
 }
 
 void volume::save_all_results_to_db()
 {
 	init_all_prepare_statement();
-	for (auto& eachTable : all_results_map)
+	for (auto& [fst, snd] : all_results_map)
 	{
-		const int asciiGroup = stoi(eachTable.first.substr(4));
-		for (auto& eachResult : *eachTable.second)
+		const int ascii_group = stoi(fst.substr(4));
+		for (auto& [priority, result_container] : *snd)
 		{
-			const int priority = eachResult.first;
-			for (auto iter = eachResult.second.unsafe_begin(); iter != eachResult.second.unsafe_end(); ++iter)
+			for (auto&& iter = result_container.unsafe_begin(); iter != result_container.unsafe_end(); ++iter)
 			{
-				save_result(*iter, get_asc_ii_sum(get_file_name(*iter)), asciiGroup, priority);
+				save_result(*iter, get_asc_ii_sum(get_file_name(*iter)), ascii_group, priority);
 			}
 		}
 	}
@@ -262,7 +261,7 @@ void volume::save_all_results_to_db()
 
 int volume::get_priority_by_suffix(const std::string& suffix) const
 {
-	const auto& iter = priority_map_->find(suffix);
+	auto&& iter = priority_map_->find(suffix);
 	if (iter == priority_map_->end())
 	{
 		if (suffix.find('\\') != std::string::npos)
@@ -284,11 +283,10 @@ int volume::get_priority_by_path(const std::string& _path) const
 
 void volume::init_single_prepare_statement(sqlite3_stmt** statement, const char* init) const
 {
-	const size_t ret = sqlite3_prepare_v2(db, init, static_cast<long>(strlen(init)), statement, nullptr);
-	if (SQLITE_OK != ret)
+	if (const size_t ret = sqlite3_prepare_v2(db, init, static_cast<long>(strlen(init)), statement, nullptr); SQLITE_OK != ret)
 	{
-		auto&& err_info = "error preparing stmt \"" + std::string(init) + "\"  disk: " + this->getDiskPath();
-		fprintf(stderr, "%s\n", err_info.c_str());
+		auto&& err_info = std::string("error preparing stmt \"") + init + "\"  disk: " + this->getDiskPath();
+		fprintf(stderr, "fileSearcherUSN: %s\n", err_info.c_str());
 	}
 }
 
@@ -397,11 +395,11 @@ bool volume::is_ignore(const std::string& _path) const
 	{
 		return true;
 	}
-	std::string _path0(_path);
-	transform(_path0.begin(), _path0.end(), _path0.begin(), tolower);
-	return std::any_of(ignore_path_vector_->begin(), ignore_path_vector_->end(), [_path0](const std::string& each)
+	std::string path0(_path);
+	transform(path0.begin(), path0.end(), path0.begin(), tolower);
+	return std::any_of(ignore_path_vector_->begin(), ignore_path_vector_->end(), [path0](const std::string& each)
 		{
-			return _path0.find(each) != std::string::npos;
+			return path0.find(each) != std::string::npos;
 		});
 }
 
@@ -570,11 +568,11 @@ void volume::get_path(DWORDLONG frn, CString& output_path)
 bool volume::get_handle()
 {
 	// 为\\.\C:的形式
-	CString lpFileName(_T("\\\\.\\c:"));
-	lpFileName.SetAt(4, vol);
+	CString lp_file_name(_T("\\\\.\\c:"));
+	lp_file_name.SetAt(4, vol);
 
 
-	hVol = CreateFile(lpFileName,
+	hVol = CreateFile(lp_file_name,
 		GENERIC_READ | GENERIC_WRITE, // 可以为0
 		FILE_SHARE_READ | FILE_SHARE_WRITE, // 必须包含有FILE_SHARE_WRITE
 		nullptr,
@@ -587,9 +585,9 @@ bool volume::get_handle()
 	{
 		return true;
 	}
-	auto&& info = std::wstring(L"create file handle failed. ") + lpFileName.GetString() +
+	auto&& info = std::wstring(L"create file handle failed. ") + lp_file_name.GetString() +
 		L"error code: " + std::to_wstring(GetLastError());
-	fprintf(stderr, "%ls", info.c_str());
+	fprintf(stderr, "fileSearcherUSN: %ls", info.c_str());
 	return false;
 }
 
@@ -613,7 +611,7 @@ bool volume::create_usn()
 		return true;
 	}
 	auto&& info = "create usn error. Error code: " + std::to_string(GetLastError());
-	fprintf(stderr, "%s\n", info.c_str());
+	fprintf(stderr, "fileSearcherUSN: %s\n", info.c_str());
 	return false;
 }
 
@@ -635,7 +633,7 @@ bool volume::get_usn_info()
 		return true;
 	}
 	auto&& info = "query usn error. Error code: " + std::to_string(GetLastError());
-	fprintf(stderr, "%s\n", info.c_str());
+	fprintf(stderr, "fileSearcherUSN: %s\n", info.c_str());
 	return false;
 }
 
@@ -652,40 +650,40 @@ bool volume::get_usn_journal()
 
 	constexpr auto BUF_LEN = sizeof(USN) + 0x100000; // 尽可能地大，提高效率;
 
-	CHAR* Buffer = new CHAR[BUF_LEN];
-	DWORD usnDataSize;
-	pfrn_name pfrnName;
+	CHAR* buffer = new CHAR[BUF_LEN];
+	DWORD usn_data_size;
+	pfrn_name pfrn_name;
 
 	while (0 != DeviceIoControl(hVol,
 		FSCTL_ENUM_USN_DATA,
 		&med,
 		sizeof med,
-		Buffer,
+		buffer,
 		BUF_LEN,
-		&usnDataSize,
+		&usn_data_size,
 		nullptr))
 	{
-		DWORD dwRetBytes = usnDataSize - sizeof(USN);
+		DWORD dw_ret_bytes = usn_data_size - sizeof(USN);
 		// 找到第一个 USN 记录  
-		auto UsnRecord = reinterpret_cast<PUSN_RECORD>(Buffer + sizeof(USN));
+		auto usn_record = reinterpret_cast<PUSN_RECORD>(buffer + sizeof(USN));
 
-		while (dwRetBytes > 0)
+		while (dw_ret_bytes > 0)
 		{
 			// 获取到的信息  	
-			const CString CfileName(UsnRecord->FileName, UsnRecord->FileNameLength / 2);
-			pfrnName.filename = CfileName;
-			pfrnName.pfrn = UsnRecord->ParentFileReferenceNumber;
+			const CString cfile_name(usn_record->FileName, usn_record->FileNameLength / 2);
+			pfrn_name.filename = cfile_name;
+			pfrn_name.pfrn = usn_record->ParentFileReferenceNumber;
 			// frnPfrnNameMap[UsnRecord->FileReferenceNumber] = pfrnName;
-			frnPfrnNameMap.insert(std::make_pair(UsnRecord->FileReferenceNumber, pfrnName));
+			frnPfrnNameMap.insert(std::make_pair(usn_record->FileReferenceNumber, pfrn_name));
 			// 获取下一个记录  
-			const auto recordLen = UsnRecord->RecordLength;
-			dwRetBytes -= recordLen;
-			UsnRecord = reinterpret_cast<PUSN_RECORD>(reinterpret_cast<PCHAR>(UsnRecord) + recordLen);
+			const auto record_len = usn_record->RecordLength;
+			dw_ret_bytes -= record_len;
+			usn_record = reinterpret_cast<PUSN_RECORD>(reinterpret_cast<PCHAR>(usn_record) + record_len);
 		}
 		// 获取下一页数据 
-		med.StartFileReferenceNumber = *reinterpret_cast<DWORDLONG*>(Buffer);
+		med.StartFileReferenceNumber = *reinterpret_cast<DWORDLONG*>(buffer);
 	}
-	delete[] Buffer;
+	delete[] buffer;
 	return true;
 }
 
@@ -715,8 +713,8 @@ bool volume::delete_usn() const
 
 std::string get_file_name(const std::string& path)
 {
-	std::string fileName = path.substr(path.find_last_of('\\') + 1);
-	return fileName;
+	std::string file_name = path.substr(path.find_last_of('\\') + 1);
+	return file_name;
 }
 
 bool init_complete_signal_memory()
@@ -726,7 +724,7 @@ bool init_complete_signal_memory()
 	create_file_mapping(handle, tmp, sizeof(bool), "sharedMemory:complete:status");
 	if (tmp == nullptr)
 	{
-		fprintf(stderr, "%d\n", GetLastError());
+		fprintf(stderr, "fileSearcherUSN: %ld\n", GetLastError());
 		return false;
 	}
 	is_complete_ptr.store(tmp);
@@ -735,31 +733,31 @@ bool init_complete_signal_memory()
 
 void close_shared_memory()
 {
-	for (const auto& each : shared_memory_map)
+	for (const auto& [fst, snd] : shared_memory_map)
 	{
-		UnmapViewOfFile(each.second);
-		CloseHandle(each.first);
+		UnmapViewOfFile(snd);
+		CloseHandle(fst);
 	}
 }
 
-void create_file_mapping(HANDLE& hMapFile, LPVOID& pBuf, size_t memorySize, const char* sharedMemoryName)
+void create_file_mapping(HANDLE& h_map_file, LPVOID& p_buf, const size_t memory_size, const char* shared_memory_name)
 {
 	// 创建共享文件句柄
-	hMapFile = CreateFileMappingA(
+	h_map_file = CreateFileMappingA(
 		INVALID_HANDLE_VALUE, // 物理文件句柄
 		nullptr, // 默认安全级别
 		PAGE_READWRITE, // 可读可写
 		0, // 高位文件大小
-		static_cast<DWORD>(memorySize), // 低位文件大小
-		sharedMemoryName
+		static_cast<DWORD>(memory_size), // 低位文件大小
+		shared_memory_name
 	);
 
-	pBuf = MapViewOfFile(
-		hMapFile, // 共享内存的句柄
+	p_buf = MapViewOfFile(
+		h_map_file, // 共享内存的句柄
 		FILE_MAP_ALL_ACCESS, // 可读写许可
 		0,
 		0,
-		memorySize
+		memory_size
 	);
-	shared_memory_map.insert(std::pair<HANDLE, LPVOID>(hMapFile, pBuf));
+	shared_memory_map.insert(std::pair(h_map_file, p_buf));
 }

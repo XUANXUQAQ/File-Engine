@@ -36,27 +36,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Date;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 
 public class MainClass {
     private static final int UPDATE_DATABASE_THRESHOLD = 3;
-    private static final String FILE_MONITOR_MD5 = "024e0f16487806e69bbbbe2bf4bd3290";
-    private static final String GET_ASC_II_MD5 = "647c48fd0b56cc9a276775be6288ed97";
-    private static final String HOTKEY_LISTENER_MD5 = "6d71f646529b69cff9d50fcce8d4b6e4";
-    private static final String IS_LOCAL_DISK_MD5 = "f9794b94942a1ecb0acd078dfb789024";
-    private static final String FILE_SEARCHER_USN_MD5 = "5a662e3ecc98b43b6c79fd1522dfa927";
-    private static final String SQLITE3_MD5 = "dade4d608e258014e311867c764acf77";
-    private static final String GET_HANDLE_MD5 = "41418ee9061e5940d061aeeb0db91316";
-    private static final String SHORTCUT_GEN_MD5 = "fa4e26f99f3dcd58d827828c411ea5d7";
-    private static final String RESULT_PIPE_MD5 = "e91b7783a6add81d8123e2698c52efb6";
-    private static final String GET_DPI_MD5 = "31c3080b7a46a85e3245ed9781a0fcb3";
-    private static final String GET_KNOWN_FOLDER_MD5 = "ebba6f89849fd2583934c7d48ec1e224";
-    private static final String SQLITE_JDBC_MD5 = "607931b6a0655945daf1db51312b4473";
-    private static final String EMPTY_RECYCLE_BIN_MD5 = "431225a47e74fe343b42e4bba741b80b";
-    private static final String CUDA_ACCELERATOR_MD5 = "b1fba8f78a68596c73d5290ab0a8c97f";
-    private static final String CUDA_RUNTIME_MD5 = "d7cfc69c62e8eb977d827f46bab408da";
 
     public static void main(String[] args) {
         try {
@@ -405,32 +391,33 @@ public class MainClass {
     }
 
     private static void releaseAllDependence() throws IOException {
-        copyOrIgnoreFile("user/fileMonitor.dll", "/win32-native/fileMonitor.dll", FILE_MONITOR_MD5);
-        copyOrIgnoreFile("user/getAscII.dll", "/win32-native/getAscII.dll", GET_ASC_II_MD5);
-        copyOrIgnoreFile("user/hotkeyListener.dll", "/win32-native/hotkeyListener.dll", HOTKEY_LISTENER_MD5);
-        copyOrIgnoreFile("user/isLocalDisk.dll", "/win32-native/isLocalDisk.dll", IS_LOCAL_DISK_MD5);
-        copyOrIgnoreFile("user/fileSearcherUSN.exe", "/win32-native/fileSearcherUSN.exe", FILE_SEARCHER_USN_MD5);
-        copyOrIgnoreFile("user/sqlite3.dll", "/win32-native/sqlite3.dll", SQLITE3_MD5);
-        copyOrIgnoreFile("user/getHandle.dll", "/win32-native/getHandle.dll", GET_HANDLE_MD5);
-        copyOrIgnoreFile("user/shortcutGenerator.vbs", "/shortcutGenerator.vbs", SHORTCUT_GEN_MD5);
-        copyOrIgnoreFile("user/resultPipe.dll", "/win32-native/resultPipe.dll", RESULT_PIPE_MD5);
-        copyOrIgnoreFile("user/getDpi.exe", "/win32-native/getDpi.exe", GET_DPI_MD5);
-        copyOrIgnoreFile("user/getWindowsKnownFolder.dll", "/win32-native/getWindowsKnownFolder.dll", GET_KNOWN_FOLDER_MD5);
-        copyOrIgnoreFile("user/sqliteJDBC.dll", "/win32-native/sqliteJDBC.dll", SQLITE_JDBC_MD5);
-        copyOrIgnoreFile("user/emptyRecycleBin.dll", "/win32-native/emptyRecycleBin.dll", EMPTY_RECYCLE_BIN_MD5);
-        copyOrIgnoreFile("user/cudaAccelerator.dll", "/win32-native/cudaAccelerator.dll", CUDA_ACCELERATOR_MD5);
-        copyOrIgnoreFile("cudart64_110.dll", "/win32-native/cudart64_110.dll", CUDA_RUNTIME_MD5);
+        copyOrIgnoreFile("user/fileMonitor.dll", "/win32-native/fileMonitor.dll");
+        copyOrIgnoreFile("user/getAscII.dll", "/win32-native/getAscII.dll");
+        copyOrIgnoreFile("user/hotkeyListener.dll", "/win32-native/hotkeyListener.dll");
+        copyOrIgnoreFile("user/isLocalDisk.dll", "/win32-native/isLocalDisk.dll");
+        copyOrIgnoreFile("user/fileSearcherUSN.exe", "/win32-native/fileSearcherUSN.exe");
+        copyOrIgnoreFile("user/sqlite3.dll", "/win32-native/sqlite3.dll");
+        copyOrIgnoreFile("user/getHandle.dll", "/win32-native/getHandle.dll");
+        copyOrIgnoreFile("user/shortcutGenerator.vbs", "/shortcutGenerator.vbs");
+        copyOrIgnoreFile("user/resultPipe.dll", "/win32-native/resultPipe.dll");
+        copyOrIgnoreFile("user/getDpi.exe", "/win32-native/getDpi.exe");
+        copyOrIgnoreFile("user/getWindowsKnownFolder.dll", "/win32-native/getWindowsKnownFolder.dll");
+        copyOrIgnoreFile("user/sqliteJDBC.dll", "/win32-native/sqliteJDBC.dll");
+        copyOrIgnoreFile("user/emptyRecycleBin.dll", "/win32-native/emptyRecycleBin.dll");
+        copyOrIgnoreFile("user/cudaAccelerator.dll", "/win32-native/cudaAccelerator.dll");
+        copyOrIgnoreFile("cudart64_110.dll", "/win32-native/cudart64_110.dll");
     }
 
-    private static void copyOrIgnoreFile(String path, String rootPath, String md5) throws IOException {
-        File target = new File(path);
-        String fileMd5 = Md5Util.getMD5(target.getAbsolutePath());
-        if (!target.exists() || !md5.equals(fileMd5)) {
-            if (IsDebug.isDebug()) {
-                System.out.println("正在重新释放文件：" + path);
-            }
-            try (InputStream resource = MainClass.class.getResourceAsStream(rootPath)) {
-                FileUtil.copyFile(resource, target);
+    private static void copyOrIgnoreFile(String path, String rootPath) throws IOException {
+        try (InputStream insideJar = Objects.requireNonNull(MainClass.class.getResourceAsStream(rootPath))) {
+            File target = new File(path);
+            String fileMd5 = Md5Util.getMD5(target.getAbsolutePath());
+            String md5InsideJar = Md5Util.getMD5(insideJar);
+            if (!target.exists() || !md5InsideJar.equals(fileMd5)) {
+                if (IsDebug.isDebug()) {
+                    System.out.println("正在重新释放文件：" + path);
+                }
+                FileUtil.copyFile(insideJar, target);
             }
         }
     }

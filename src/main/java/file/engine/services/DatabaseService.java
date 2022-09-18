@@ -244,36 +244,20 @@ public class DatabaseService {
         if (null == files || files.length == 0) {
             return;
         }
-        LinkedList<String> listRemainDir = new LinkedList<>();
-        for (File each : files) {
-            if (shouldStopSearch.get()) {
-                return;
-            }
-            checkIsMatchedAndAddToList(each.getAbsolutePath(), null);
-            if (each.isDirectory()) {
-                listRemainDir.add(each.getAbsolutePath());
-            }
-        }
-        out:
-        while (!listRemainDir.isEmpty()) {
-            String remain = listRemainDir.poll();
-            if (remain == null || remain.isEmpty()) {
+        LinkedList<File> listRemainDir = new LinkedList<>(List.of(files));
+        do {
+            File remain = listRemainDir.poll();
+            if (remain == null) {
                 continue;
             }
-            File[] allFiles = new File(remain).listFiles();
-            if (allFiles == null || allFiles.length == 0) {
-                continue;
-            }
-            for (File each : allFiles) {
-                checkIsMatchedAndAddToList(each.getAbsolutePath(), null);
-                if (shouldStopSearch.get()) {
-                    break out;
-                }
-                if (each.isDirectory()) {
-                    listRemainDir.add(each.getAbsolutePath());
+            checkIsMatchedAndAddToList(remain.getAbsolutePath(), null);
+            if (remain.isDirectory()) {
+                File[] subFiles = remain.listFiles();
+                if (subFiles != null) {
+                    listRemainDir.addAll(List.of(subFiles));
                 }
             }
-        }
+        } while (!listRemainDir.isEmpty() && !shouldStopSearch.get());
     }
 
     /**
@@ -1907,6 +1891,7 @@ public class DatabaseService {
         ConcurrentHashMap<String, Set<String>> cudaSearchContainer = PrepareSearchInfo.prepareSearchTasks();
         DatabaseService databaseService = getInstance();
         databaseService.tempResults.clear();
+        databaseService.tempResultsForEvent.clear();
         databaseService.searchCache();
         databaseService.searchPriorityFolder();
         databaseService.searchStartMenu();
