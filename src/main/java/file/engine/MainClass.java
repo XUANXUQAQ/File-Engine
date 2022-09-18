@@ -417,7 +417,7 @@ public class MainClass {
                 if (IsDebug.isDebug()) {
                     System.out.println("正在重新释放文件：" + path);
                 }
-                FileUtil.copyFile(insideJar, target);
+                FileUtil.copyFile(MainClass.class.getResourceAsStream(rootPath), target);
             }
         }
     }
