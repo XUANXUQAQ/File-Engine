@@ -48,6 +48,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -3231,7 +3232,7 @@ public class SearchBar {
     /**
      * 将tempResults以及插件返回的结果转移到listResults中来显示
      */
-    private void addMergeThread(AtomicBoolean isMergeThreadNotExist) {
+    private void addMergeThread(AtomicBoolean isMergeThreadNotExist, ConcurrentLinkedQueue<String> tempResults) {
         while (!isMergeThreadNotExist.get())
             Thread.onSpinWait();
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
@@ -3240,7 +3241,6 @@ public class SearchBar {
             Supplier<Boolean> isStopSearch = () -> startTime > time || !isVisible();
             PluginService pluginService = PluginService.getInstance();
             ArrayList<String> listResultsTemp = listResults;
-            var tempResults = DatabaseService.getInstance().getTempResults();
             var allPlugins = pluginService.getAllPlugins();
             try {
                 while (!isStopSearch.get()) {
@@ -3519,15 +3519,22 @@ public class SearchBar {
     /**
      * 发送开始搜索事件
      */
-    private void sendSearchEvent() {
+    private Optional<ConcurrentLinkedQueue<String>> sendSearchEvent() {
         EventManagement eventManagement = EventManagement.getInstance();
         if (!getSearchBarText().isEmpty()) {
             isSearchNotStarted.set(false);
-            if (DatabaseService.getInstance().getStatus() == Constants.Enums.DatabaseStatus.NORMAL && runningMode == RunningMode.NORMAL_MODE) {
+            if (DatabaseService.getInstance().getStatus() == Constants.Enums.DatabaseStatus.NORMAL &&
+                    runningMode == RunningMode.NORMAL_MODE) {
                 searchCaseToLowerAndRemoveConflict();
-                eventManagement.putEvent(new StartSearchEvent(() -> searchText, () -> searchCase, () -> keywords));
+                var startSearchEvent = new StartSearchEvent(() -> searchText, () -> searchCase, () -> keywords);
+                eventManagement.putEvent(startSearchEvent);
+                if (eventManagement.waitForEvent(startSearchEvent)) {
+                    throw new RuntimeException("wait for event failed.");
+                }
+                return startSearchEvent.getReturnValue();
             }
         }
+        return Optional.empty();
     }
 
     private void sendSignalAndShowCommandThread() {
@@ -3542,6 +3549,9 @@ public class SearchBar {
             final AtomicBoolean isMergeThreadNotExist = new AtomicBoolean(true);
             final AtomicBoolean isShowSearchStatusThreadNotExist = new AtomicBoolean(true);
             final AtomicBoolean isWaiting = new AtomicBoolean(false);
+            var resultsWrap = new Object() {
+                ConcurrentLinkedQueue<String> results;
+            };
             while (eventManagement.notMainExit()) {
                 try {
                     final long endTime = System.currentTimeMillis();
@@ -3551,11 +3561,12 @@ public class SearchBar {
                     }
                     if ((endTime - startTime > 250) && isSearchNotStarted.get() && startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
                         setSearchKeywordsAndSearchCase();
-                        sendSearchEvent();
+                        var resultsOptional = sendSearchEvent();
+                        resultsOptional.ifPresentOrElse(res -> resultsWrap.results = res, () -> resultsWrap.results = new ConcurrentLinkedQueue<>());
                     }
 
                     if ((endTime - startTime > 300) && startSearchSignal.get()) {
-                        addMergeThread(isMergeThreadNotExist);
+                        addMergeThread(isMergeThreadNotExist, resultsWrap.results);
                         startSearchSignal.set(false); //开始搜索 计时停止
                         currentResultCount.set(0);
                         currentLabelSelectedPosition.set(0);

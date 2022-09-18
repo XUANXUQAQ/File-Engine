@@ -128,10 +128,6 @@ public class DatabaseService {
         tableCacheCount.set(0);
     }
 
-    public ConcurrentLinkedQueue<String> getTempResults() {
-        return tempResults;
-    }
-
     /**
      * 通过表名获得表的权重信息
      *
@@ -588,13 +584,13 @@ public class DatabaseService {
             if (container == null) {
                 if (tempResultsForEvent.add(path)) {
                     tempResults.add(path);
-                    if (allResultsRecordCounter.incrementAndGet() > MAX_RESULTS) {
+                    if (allResultsRecordCounter.incrementAndGet() >= MAX_RESULTS) {
                         stopSearch();
                     }
                 }
             } else {
                 if (!tempResultsForEvent.contains(path) && !container.contains(path) && container.add(path)) {
-                    if (allResultsRecordCounter.incrementAndGet() > MAX_RESULTS) {
+                    if (allResultsRecordCounter.incrementAndGet() >= MAX_RESULTS) {
                         stopSearch();
                     }
                 }
@@ -693,7 +689,7 @@ public class DatabaseService {
     private void waitForTaskAndMergeResults() {
         try {
             EventManagement eventManagement = EventManagement.getInstance();
-            while (!PrepareSearchInfo.taskStatus.equals(PrepareSearchInfo.allTaskStatus) && eventManagement.notMainExit() && !shouldStopSearch.get()) {
+            while (!PrepareSearchInfo.taskStatus.equals(PrepareSearchInfo.allTaskStatus) && eventManagement.notMainExit()) {
                 TimeUnit.MILLISECONDS.sleep(10);
             }
         } catch (Exception e) {
@@ -805,9 +801,6 @@ public class DatabaseService {
                     if (AllConfigs.getInstance().isEnableCuda() && CudaAccelerator.INSTANCE.isMatchDone(key)) {
                         //cuda搜索已经放入container，只需要获取matchedNum修改权重即可
                         matchedNum = CudaAccelerator.INSTANCE.matchedNumber(key);
-                        if (allResultsRecordCounter.addAndGet(Math.toIntExact(matchedNum)) > MAX_RESULTS) {
-                            stopSearch();
-                        }
                     } else {
                         matchedNum = searchFromDatabaseOrCache(resultContainer, diskStr, eachSql, key);
                     }
@@ -820,17 +813,19 @@ public class DatabaseService {
             } catch (Exception ex) {
                 ex.printStackTrace();
             } finally {
+                for (String s : resultContainer) {
+                    if (tempResultsForEvent.size() >= MAX_RESULTS)
+                        break;
+                    if (tempResultsForEvent.add(s)) {
+                        tempResults.add(s);
+                    }
+                }
                 //执行完后将对应的线程flag设为1
                 byte[] originalBytes;
                 while ((originalBytes = PrepareSearchInfo.taskStatus.getBytes()) != null) {
                     Bit or = Bit.or(originalBytes, currentTaskNum.getBytes());
                     if (PrepareSearchInfo.taskStatus.set(originalBytes, or)) {
                         break;
-                    }
-                }
-                for (String s : resultContainer) {
-                    if (tempResultsForEvent.add(s)) {
-                        tempResults.add(s);
                     }
                 }
             }
@@ -861,16 +856,18 @@ public class DatabaseService {
             } catch (Exception ex) {
                 ex.printStackTrace();
             } finally {
+                for (String s : resultContainer) {
+                    if (tempResults.size() >= MAX_RESULTS)
+                        break;
+                    if (tempResultsForEvent.add(s)) {
+                        tempResults.add(s);
+                    }
+                }
                 byte[] originalBytes;
                 while ((originalBytes = PrepareSearchInfo.taskStatus.getBytes()) != null) {
                     Bit or = Bit.or(originalBytes, currentTaskNum.getBytes());
                     if (PrepareSearchInfo.taskStatus.set(originalBytes, or)) {
                         break;
-                    }
-                }
-                for (String s : resultContainer) {
-                    if (tempResultsForEvent.add(s)) {
-                        tempResults.add(s);
                     }
                 }
             }
@@ -977,7 +974,7 @@ public class DatabaseService {
         EventManagement eventManagement = EventManagement.getInstance();
         final int threadNumberPerDisk = Math.max(1, AllConfigs.getInstance().getSearchThreadNumber() / PrepareSearchInfo.taskMap.size());
         Consumer<ConcurrentLinkedQueue<Runnable>> taskHandler = (taskQueue) -> {
-            while (!taskQueue.isEmpty() && eventManagement.notMainExit() && !shouldStopSearch.get() && !isSearchStopped.get()) {
+            while (!taskQueue.isEmpty() && eventManagement.notMainExit()) {
                 var runnable = taskQueue.poll();
                 if (runnable == null)
                     continue;
@@ -1003,7 +1000,7 @@ public class DatabaseService {
                             }
                             taskHandler.accept(otherTaskQueue);
                         }
-                    } while (hasTask && eventManagement.notMainExit() && !shouldStopSearch.get() && !isSearchStopped.get());
+                    } while (hasTask && eventManagement.notMainExit());
                     searchThreadCount.decrementAndGet();
                 });
             }
@@ -1832,6 +1829,7 @@ public class DatabaseService {
         //启动搜索线程
         CachedThreadPoolUtil.getInstance().executeTask(databaseService::startSearch);
         databaseService.startSearchTimeMills.set(System.currentTimeMillis());
+        event.setReturnValue(databaseService.tempResults);
     }
 
     /**
@@ -1864,9 +1862,14 @@ public class DatabaseService {
                         keywordsLowerCase,
                         isKeywordPath,
                         MAX_RESULTS,
-                        (key, result) -> {
+                        (key, path) -> {
                             if (cudaSearchContainer.containsKey(key)) {
-                                cudaSearchContainer.get(key).add(result);
+                                Set<String> cudaContainer = cudaSearchContainer.get(key);
+                                if (!databaseService.tempResultsForEvent.contains(path) && !cudaContainer.contains(path) && cudaContainer.add(path)) {
+                                    if (databaseService.allResultsRecordCounter.incrementAndGet() >= MAX_RESULTS) {
+                                        databaseService.stopSearch();
+                                    }
+                                }
                             }
                         });
                 PrepareSearchInfo.isCudaThreadRunning.set(false);
