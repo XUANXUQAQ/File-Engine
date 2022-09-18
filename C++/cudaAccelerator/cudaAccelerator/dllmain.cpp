@@ -41,7 +41,6 @@ std::atomic_uint add_record_thread_count(0);
 std::atomic_uint remove_record_thread_count(0);
 std::mutex modify_cache_lock;
 std::hash<std::string> hasher;
-std::atomic_int task_complete_count;
 std::atomic_bool exit_flag = false;
 
 /*
@@ -204,7 +203,6 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_match
 	start_kernel(cache_map, search_case_vec, is_ignore_case, search_text_chars, keywords_vec, keywords_lower_vec,
 		is_keyword_path_ptr, streams, stream_count);
 	std::atomic_uint result_counter = 0;
-	task_complete_count = 0;
 	collect_results(env, result_collector, result_counter, max_results, search_case_vec);
 	env->ReleaseStringUTFChars(search_text, search_text_chars);
 	// 等待执行完成
