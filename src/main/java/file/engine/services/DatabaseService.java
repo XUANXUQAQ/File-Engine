@@ -691,64 +691,10 @@ public class DatabaseService {
      * 根据上面分配的位信息，从第二位开始，与taskStatus做与运算，并向右偏移，若结果为1，则表示该任务完成
      */
     private void waitForTaskAndMergeResults() {
-        final Bit zero = new Bit(new byte[]{0});
-        final int taskTimeoutThreshold = 25;
-        final int maxRetryTimes = 2;
         try {
-            int failedRetryTimes = 0;
             EventManagement eventManagement = EventManagement.getInstance();
             while (!PrepareSearchInfo.taskStatus.equals(PrepareSearchInfo.allTaskStatus) && eventManagement.notMainExit() && !shouldStopSearch.get()) {
-                //线程状态的记录从第二个位开始，所以初始值为1 0
-                Bit eachTaskStatus = new Bit(new byte[]{1, 0});
-                //循环次数，也是下方与运算结束后需要向右偏移的位数
-                //由于任务的耗时不同，如果阻塞时间过长，则跳过该任务，在下次循环中重新拿取结果
-                long waitTime = 0;
-                while (eachTaskStatus.length() <= PrepareSearchInfo.allTaskStatus.length() &&
-                        eventManagement.notMainExit() && !shouldStopSearch.get()) {
-                    final boolean isTimeout = System.currentTimeMillis() - waitTime > taskTimeoutThreshold && waitTime != 0;
-                    //当线程完成，taskStatus中的位会被设置为1
-                    //这时，将taskStatus和eachTaskStatus做与运算，然后移到第一位，如果为1，则线程已完成搜索
-                    Bit isTaskFinished = Bit.and(PrepareSearchInfo.taskStatus.getBytes(), eachTaskStatus.getBytes());
-                    //任务已完成或等待超时
-                    if (!isTaskFinished.equals(zero) || isTimeout) {
-                        // 阻塞时间过长则跳过
-                        waitTime = 0;
-                        var results = PrepareSearchInfo.containerMap.get(eachTaskStatus.toString());
-                        if (results != null && !results.isEmpty()) {
-                            for (String result : results) {
-                                if (tempResultsForEvent.add(result)) {
-                                    tempResults.add(result);
-                                }
-                            }
-                        }
-                        if (!isTimeout || failedRetryTimes > maxRetryTimes) {
-                            failedRetryTimes = 0;
-                            //将start左移，代表当前任务结束，继续拿下一个任务的结果
-                            eachTaskStatus.shiftLeft(1);
-                        } else {
-                            ++failedRetryTimes;
-                        }
-                    } else {
-                        if (waitTime == 0) {
-                            waitTime = System.currentTimeMillis();
-                        }
-                    }
-                }
-                TimeUnit.NANOSECONDS.sleep(100);
-            }
-            int size = tempResultsForEvent.size();
-            for (var containerEntry : PrepareSearchInfo.containerMap.entrySet()) {
-                var results = containerEntry.getValue();
-                if (results == null || results.isEmpty()) continue;
-                for (String result : results) {
-                    if (size >= MAX_RESULTS) {
-                        return;
-                    }
-                    if (tempResultsForEvent.add(result)) {
-                        tempResults.add(result);
-                        ++size;
-                    }
-                }
+                TimeUnit.MILLISECONDS.sleep(10);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -762,7 +708,6 @@ public class DatabaseService {
         eventManagement.putEvent(new SearchDoneEvent(new ConcurrentLinkedQueue<>(tempResultsForEvent)));
         tempResultsForEvent.clear();
         isSearchStopped.set(true);
-        PrepareSearchInfo.containerMap.clear();
         PrepareSearchInfo.isSearchPrepared.set(false);
         if (AllConfigs.getInstance().isEnableCuda() && eventManagement.notMainExit()) {
             CudaAccelerator.INSTANCE.stopCollectResults();
@@ -821,7 +766,6 @@ public class DatabaseService {
                     }
                 }
                 Set<String> container = ConcurrentHashMap.newKeySet();
-                PrepareSearchInfo.containerMap.put(currentTaskNum.toString(), container);
                 //每一个任务负责查询一个priority和list0-list40生成的41个SQL
                 if (isReadFromSharedMemory) {
                     addTaskForSharedMemory0(eachDisk, tasks, container, commandsMap, currentTaskNum);
@@ -884,6 +828,11 @@ public class DatabaseService {
                         break;
                     }
                 }
+                for (String s : resultContainer) {
+                    if (tempResultsForEvent.add(s)) {
+                        tempResults.add(s);
+                    }
+                }
             }
         });
     }
@@ -917,6 +866,11 @@ public class DatabaseService {
                     Bit or = Bit.or(originalBytes, currentTaskNum.getBytes());
                     if (PrepareSearchInfo.taskStatus.set(originalBytes, or)) {
                         break;
+                    }
+                }
+                for (String s : resultContainer) {
+                    if (tempResultsForEvent.add(s)) {
+                        tempResults.add(s);
                     }
                 }
             }
@@ -1820,8 +1774,7 @@ public class DatabaseService {
     private static class PrepareSearchInfo {
         static AtomicBoolean isCudaThreadRunning = new AtomicBoolean(false);
         static AtomicBoolean isSearchPrepared = new AtomicBoolean(false);
-        static LinkedHashMap<String, Collection<String>> containerMap = new LinkedHashMap<>();
-        //任务队列
+        //taskMap任务队列，key为磁盘盘符，value为任务
         static ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskMap = new ConcurrentHashMap<>();
         static Bit taskStatus = new Bit(new byte[]{0});
         static Bit allTaskStatus = new Bit(new byte[]{0});
@@ -1888,7 +1841,7 @@ public class DatabaseService {
      */
     private static synchronized void prepareSearch(StartSearchEvent startSearchEvent) {
         prepareSearchKeywords(startSearchEvent.searchText, startSearchEvent.searchCase, startSearchEvent.keywords);
-        ConcurrentHashMap<String, Set<String>> cudaSearchContainer = PrepareSearchInfo.prepareSearchTasks();
+        var cudaSearchContainer = PrepareSearchInfo.prepareSearchTasks();
         DatabaseService databaseService = getInstance();
         databaseService.tempResults.clear();
         databaseService.tempResultsForEvent.clear();
