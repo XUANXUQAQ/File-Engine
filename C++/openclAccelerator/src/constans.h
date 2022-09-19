@@ -1,0 +1,8 @@
+﻿#pragma once
+#define MAX_PATH_LENGTH 512
+#define MAX_THREAD_PER_BLOCK 1024
+#define MAX_RECORD_ADD_COUNT 512
+#define MAX_KEYWORDS_NUMBER 150
+#define COLLECT_THREAD_NUMBER 2
+
+// #define DEBUG_OUTPUT

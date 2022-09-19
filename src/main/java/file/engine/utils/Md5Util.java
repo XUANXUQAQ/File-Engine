@@ -1,10 +1,8 @@
 package file.engine.utils;
 
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 public class Md5Util {
 
@@ -17,8 +15,8 @@ public class Md5Util {
     public static String getMD5(String filePath) {
         try (var stream = new FileInputStream(filePath)) {
             return getMD5(stream);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            return "";
         }
     }
 
@@ -41,8 +39,8 @@ public class Md5Util {
                 hexValue.append(Integer.toHexString(val));
             }
             return hexValue.toString();
-        } catch (IOException | NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            return "";
         }
     }
 }

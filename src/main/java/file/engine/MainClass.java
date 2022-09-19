@@ -4,7 +4,7 @@ import com.github.promeg.pinyinhelper.Pinyin;
 import com.github.promeg.tinypinyin.lexicons.java.cncity.CnCityDict;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.Constants;
-import file.engine.dllInterface.CudaAccelerator;
+import file.engine.dllInterface.gpu.GPUAccelerator;
 import file.engine.dllInterface.GetHandle;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
@@ -57,8 +57,8 @@ public class MainClass {
             initFoldersAndFiles();
             Class.forName("org.sqlite.JDBC");
             initializeDllInterface();
-            if (CudaAccelerator.INSTANCE.isCudaAvailableOnSystem()) {
-                CudaAccelerator.INSTANCE.initialize();
+            if (GPUAccelerator.INSTANCE.isGPUAvailableOnSystem()) {
+                GPUAccelerator.INSTANCE.initialize();
             }
             initEventManagement();
             updateLauncher();
@@ -98,7 +98,8 @@ public class MainClass {
         Class.forName("file.engine.dllInterface.GetHandle");
         Class.forName("file.engine.dllInterface.ResultPipe");
         Class.forName("file.engine.dllInterface.EmptyRecycleBin");
-        Class.forName("file.engine.dllInterface.CudaAccelerator");
+        Class.forName("file.engine.dllInterface.gpu.GPUAccelerator");
+        Class.forName("file.engine.dllInterface.gpu.OpenclAccelerator");
     }
 
     /**
@@ -406,6 +407,7 @@ public class MainClass {
         copyOrIgnoreFile("user/emptyRecycleBin.dll", "/win32-native/emptyRecycleBin.dll");
         copyOrIgnoreFile("user/cudaAccelerator.dll", "/win32-native/cudaAccelerator.dll");
         copyOrIgnoreFile("cudart64_110.dll", "/win32-native/cudart64_110.dll");
+        copyOrIgnoreFile("user/openclAccelerator.dll", "/win32-native/openclAccelerator.dll");
     }
 
     private static void copyOrIgnoreFile(String path, String rootPath) throws IOException {

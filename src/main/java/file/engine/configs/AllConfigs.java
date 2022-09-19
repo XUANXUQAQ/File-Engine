@@ -10,9 +10,9 @@ import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMaterialLighte
 import com.google.gson.Gson;
 import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
-import file.engine.dllInterface.CudaAccelerator;
 import file.engine.dllInterface.GetWindowsKnownFolder;
 import file.engine.dllInterface.IsLocalDisk;
+import file.engine.dllInterface.gpu.GPUAccelerator;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.BootSystemEvent;
@@ -545,7 +545,7 @@ public class AllConfigs {
     private void readIsEnableCuda(Map<String, Object> settingsInJson) {
         boolean isEnableCuda = getFromJson(settingsInJson, "isEnableCuda", true);
         if (isEnableCuda) {
-            configEntity.setEnableCuda(CudaAccelerator.INSTANCE.isCudaAvailableOnSystem());
+            configEntity.setEnableCuda(GPUAccelerator.INSTANCE.isGPUAvailableOnSystem());
         } else {
             configEntity.setEnableCuda(false);
         }
@@ -1096,7 +1096,7 @@ public class AllConfigs {
         if (allConfigs.noNullValue(tempConfigEntity)) {
             allConfigs.setInvalidConfigs(tempConfigEntity, (config) -> {
                 if (config.isEnableCuda()) {
-                    config.setEnableCuda(CudaAccelerator.INSTANCE.isCudaAvailableOnSystem());
+                    config.setEnableCuda(GPUAccelerator.INSTANCE.isGPUAvailableOnSystem());
                 }
                 int availableProcessors = Runtime.getRuntime().availableProcessors();
                 int searchThreadNumber = config.getSearchThreadNumber();

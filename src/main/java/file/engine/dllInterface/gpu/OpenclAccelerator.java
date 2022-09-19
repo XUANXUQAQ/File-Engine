@@ -1,21 +1,21 @@
-package file.engine.dllInterface;
+package file.engine.dllInterface.gpu;
 
 import java.nio.file.Path;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
-public enum CudaAccelerator {
+enum OpenclAccelerator implements IGPUInterface {
     INSTANCE;
 
-    private static boolean isCudaLoaded;
+    private static boolean isOpenclLoaded;
 
     static {
         try {
-            System.load(Path.of("user/cudaAccelerator.dll").toAbsolutePath().toString());
-            isCudaLoaded = true;
+            System.load(Path.of("user/openclAccelerator.dll").toAbsolutePath().toString());
+            isOpenclLoaded = true;
         } catch (UnsatisfiedLinkError | Exception e) {
             e.printStackTrace();
-            isCudaLoaded = false;
+            isOpenclLoaded = false;
         }
     }
 
@@ -29,19 +29,21 @@ public enum CudaAccelerator {
                              boolean[] isKeywordPath,
                              int maxResultNumber,
                              BiConsumer<String, String> resultCollector);
-    public boolean isCudaAvailableOnSystem() {
-        if (isCudaLoaded) {
-          return isCudaAvailable();
+
+    public boolean isGPUAvailableOnSystem() {
+        if (isOpenclLoaded) {
+            return isOpenCLAvailable();
         }
         return false;
     }
+
+    private native boolean isOpenCLAvailable();
+
     public native boolean isMatchDone(String key);
 
     public native int matchedNumber(String key);
 
     public native void stopCollectResults();
-
-    private native boolean isCudaAvailable();
 
     public native boolean hasCache();
 
@@ -59,7 +61,7 @@ public enum CudaAccelerator {
 
     public native boolean isCacheValid(String key);
 
-    public native int getCudaMemUsage();
+    public native int getGPUMemUsage();
 
     public native void initialize();
 

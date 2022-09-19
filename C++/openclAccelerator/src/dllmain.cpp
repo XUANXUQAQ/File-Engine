@@ -1,17 +1,13 @@
-﻿// dllmain.cpp : 定义 DLL 应用程序的入口点。
-#include "pch.h"
 #include <concurrent_unordered_map.h>
-#include "kernels.cuh"
-#include "file_engine_dllInterface_gpu_CudaAccelerator.h"
+#include "file_engine_dllInterface_gpu_OpenclAccelerator.h"
 #include "cache.h"
 #include "constans.h"
-#include "cuda_copy_vector_util.h"
-#include "str_convert.cuh"
+#include <Windows.h>
+#include <string>
+#include "file_utils.h"
 #ifdef DEBUG_OUTPUT
 #include <iostream>
 #endif
-
-#pragma comment(lib, "cudart.lib")
 
 void clear_cache(const std::string& key);
 void clear_all_cache();
@@ -23,8 +19,14 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 	unsigned max_results, const std::vector<std::string>& search_case_vec);
 bool is_record_repeat(const std::string& record, const list_cache* cache);
 void release_all();
-int is_dir_or_file(const char* path);
-std::wstring string2wstring(const std::string& str);
+bool set_using_device(unsigned device_num);
+void start_kernel(const std::vector<std::string>& search_case,
+	bool is_ignore_case,
+	const char* search_text,
+	const std::vector<std::string>& keywords,
+	const std::vector<std::string>& keywords_lower_case,
+	const bool* is_keyword_path);
+size_t find_table_sizeof2(size_t target);
 
 //lock
 inline void wait_for_clear_cache();
@@ -42,119 +44,112 @@ std::atomic_uint remove_record_thread_count(0);
 std::mutex modify_cache_lock;
 std::hash<std::string> hasher;
 std::atomic_bool exit_flag = false;
-static int current_using_device = 0;
+static unsigned current_using_device = 0;
+Device current_device;
+Memory<char>* p_stop_signal;
 
 /*
- * Class:     file_engine_dllInterface_gpu_CudaAccelerator
+ * Class:     file_engine_dllInterface_gpu_OpenclAccelerator
  * Method:    getDevices
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_getDevices
+JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_getDevices
 (JNIEnv* env, jobject)
 {
-	int device_count = 0;
 	std::string device_string;
 	std::string ret;
-	gpuErrchk(cudaGetDeviceCount(&device_count), false, "get device number failed.");
-	for (int i = 0; i < device_count; ++i)
+	auto&& devices = get_devices();
+	const auto device_count = devices.size();
+	for (size_t i = 0; i < device_count; ++i)
 	{
-		cudaDeviceProp prop;
-		gpuErrchk(cudaGetDeviceProperties(&prop, i), false, "get device info failed.");
-		device_string.append(prop.name).append(",").append(std::to_string(i)).append(";");
+		device_string.append(devices[i].name).append(",").append(std::to_string(i)).append(";");
 	}
 	if (device_count)
 	{
-		ret = device_string.substr(0, device_string.length() - 1);
+		ret = device_string.substr(0, strlen(device_string.c_str()) - 1);
 	}
 	return env->NewStringUTF(ret.c_str());
 }
 
 /*
- * Class:     file_engine_dllInterface_gpu_CudaAccelerator
+ * Class:     file_engine_dllInterface_gpu_OpenclAccelerator
  * Method:    setDevice
  * Signature: (I)Z
  */
-JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_setDevice
+JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_setDevice
 (JNIEnv*, jobject, jint device_number_jint)
 {
 	if (device_number_jint == current_using_device)
 		return true;
 	release_all();
-	if (set_using_device(device_number_jint))
-	{
-		current_using_device = device_number_jint;
-		init_stop_signal();
-		init_cuda_search_memory();
-		init_str_convert();
-		return true;
-	}
-	return false;
+	return set_using_device(device_number_jint);
 }
 
 /*
- * Class:     file_engine_dllInterface_gpu_CudaAccelerator
+ * Class:     file_engine_dllInterface_gpu_OpenclAccelerator
  * Method:    release
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_release
+JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_release
 (JNIEnv*, jobject)
 {
 	exit_flag = true;
+	(*p_stop_signal)[0] = 1;
+	p_stop_signal->write_to_device();
 	release_all();
 }
 
 /*
- * Class:     file_engine_dllInterface_gpu_CudaAccelerator
+ * Class:     file_engine_dllInterface_gpu_OpenclAccelerator
  * Method:    initialize
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_initialize
+JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_initialize
 (JNIEnv*, jobject)
 {
-	init_stop_signal();
-	init_cuda_search_memory();
-	init_str_convert();
-	//默认使用第一个设备,current_using_device=0
-	set_using_device(current_using_device);
+	current_device = Device(select_device_with_id(current_using_device));
+	p_stop_signal = new Memory<char>(current_device, 1);
+	(*p_stop_signal)[0] = 0;
+	p_stop_signal->write_to_device();
 }
 
 /*
- * Class:     file_engine_dllInterface_gpu_CudaAccelerator
+ * Class:     file_engine_dllInterface_gpu_OpenclAccelerator
  * Method:    resetAllResultStatus
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_resetAllResultStatus
+JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_resetAllResultStatus
 (JNIEnv*, jobject)
 {
-	set_stop(false);
+	(*p_stop_signal)[0] = 0;
+	p_stop_signal->write_to_device();
 	// 初始化is_match_done is_output_done为false
 	for (const auto& [key, val] : cache_map)
 	{
 		val->is_match_done = false;
 		val->is_output_done = 0;
-		gpuErrchk(cudaMemset(val->dev_output, 0,
-			val->str_data.record_num + val->str_data.remain_blank_num), true, nullptr);
+		val->dev_output.reset();
 	}
 	matched_result_number_map.clear();
 }
 
 /*
- * Class:     file_engine_dllInterface_gpu_CudaAccelerator
+ * Class:     file_engine_dllInterface_gpu_OpenclAccelerator
  * Method:    stopCollectResults
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_stopCollectResults
+JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_stopCollectResults
 (JNIEnv*, jobject)
 {
-	set_stop(true);
+	(*p_stop_signal)[0] = 1;
 }
 
 /*
- * Class:     file_engine_dllInterface_gpu_CudaAccelerator
+ * Class:     file_engine_dllInterface_gpu_OpenclAccelerator
  * Method:    match
  * Signature: ([Ljava/lang/String;ZLjava/lang/String;[Ljava/lang/String;[Ljava/lang/String;[ZILjava/util/function/BiConsumer;)V
  */
-JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_match
+JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_match
 (JNIEnv* env, jobject, jobjectArray search_case, jboolean is_ignore_case, jstring search_text,
 	jobjectArray keywords, jobjectArray keywords_lower, jbooleanArray is_keyword_path, jint max_results, jobject result_collector)
 {
@@ -171,14 +166,14 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_match
 		generate_search_case(env, search_case_vec, search_case);
 	}
 	//生成搜索关键字 keywords_vec keywords_lower_vec is_keyword_path_ptr
-	std::vector<std::string> keywords_vec;
-	std::vector<std::string> keywords_lower_vec;
 	const auto keywords_length = env->GetArrayLength(keywords);
 	if (keywords_length > MAX_KEYWORDS_NUMBER)
 	{
 		fprintf(stderr, "too many keywords.\n");
 		return;
 	}
+	std::vector<std::string> keywords_vec;
+	std::vector<std::string> keywords_lower_vec;
 	bool is_keyword_path_ptr[MAX_KEYWORDS_NUMBER]{ false };
 	const auto is_keyword_path_ptr_bool_array = env->GetBooleanArrayElements(is_keyword_path, nullptr);
 	for (jsize i = 0; i < keywords_length; ++i)
@@ -206,36 +201,19 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_match
 	env->ReleaseBooleanArrayElements(is_keyword_path, is_keyword_path_ptr_bool_array, JNI_ABORT);
 	//复制全字匹配字符串 search_text
 	const auto search_text_chars = env->GetStringUTFChars(search_text, nullptr);
-	const auto stream_count = cache_map.size();
-	const auto streams = new cudaStream_t[stream_count];
-	//初始化流
-	for (size_t i = 0; i < stream_count; ++i)
-	{
-		gpuErrchk(cudaStreamCreate(&streams[i]), true, nullptr);
-	}
-	//GPU并行计算
-	start_kernel(cache_map, search_case_vec, is_ignore_case, search_text_chars, keywords_vec, keywords_lower_vec,
-		is_keyword_path_ptr, streams, stream_count);
 	std::atomic_uint result_counter = 0;
+	//GPU并行计算
+	start_kernel(search_case_vec, is_ignore_case, search_text_chars, keywords_vec, keywords_lower_vec, is_keyword_path_ptr);
 	collect_results(env, result_collector, result_counter, max_results, search_case_vec);
 	env->ReleaseStringUTFChars(search_text, search_text_chars);
-	// 等待执行完成
-	const auto cudaStatus = cudaDeviceSynchronize();
-	if (cudaStatus != cudaSuccess)
-		fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launch!\n", cudaStatus);
-	for (size_t i = 0; i < stream_count; ++i)
-	{
-		gpuErrchk(cudaStreamDestroy(streams[i]), true, nullptr);
-	}
-	delete[] streams;
 }
 
 /*
- * Class:     file_engine_dllInterface_gpu_CudaAccelerator
+ * Class:     file_engine_dllInterface_gpu_OpenclAccelerator
  * Method:    isMatchDone
  * Signature: (Ljava/lang/String;)Z
  */
-JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_isMatchDone
+JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_isMatchDone
 (JNIEnv* env, jobject, jstring key_jstring)
 {
 	const auto _key = env->GetStringUTFChars(key_jstring, nullptr);
@@ -243,17 +221,17 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_isM
 	env->ReleaseStringUTFChars(key_jstring, _key);
 	if (iter == cache_map.end())
 	{
-		return FALSE;
+		return JNI_FALSE;
 	}
 	return iter->second->is_output_done.load() == 2;
 }
 
 /*
- * Class:     file_engine_dllInterface_gpu_CudaAccelerator
+ * Class:     file_engine_dllInterface_gpu_OpenclAccelerator
  * Method:    matchedNumber
  * Signature: (Ljava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_matchedNumber
+JNIEXPORT jint JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_matchedNumber
 (JNIEnv* env, jobject, jstring key_jstring)
 {
 	const auto key = env->GetStringUTFChars(key_jstring, nullptr);
@@ -271,22 +249,22 @@ JNIEXPORT jint JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_matched
 }
 
 /*
- * Class:     file_engine_dllInterface_gpu_CudaAccelerator
+ * Class:     file_engine_dllInterface_gpu_OpenclAccelerator
  * Method:    hasCache
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_hasCache
+JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_hasCache
 (JNIEnv*, jobject)
 {
 	return !cache_map.empty();
 }
 
 /*
- * Class:     file_engine_dllInterface_gpu_CudaAccelerator
+ * Class:     file_engine_dllInterface_gpu_OpenclAccelerator
  * Method:    isCacheExist
  * Signature: (Ljava/lang/String;)Z
  */
-JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_isCacheExist
+JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_isCacheExist
 (JNIEnv* env, jobject, jstring key_jstring)
 {
 	const auto _key = env->GetStringUTFChars(key_jstring, nullptr);
@@ -297,11 +275,11 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_isC
 }
 
 /*
- * Class:     file_engine_dllInterface_gpu_CudaAccelerator
+ * Class:     file_engine_dllInterface_gpu_OpenclAccelerator
  * Method:    initCache
  * Signature: (Ljava/lang/String;Ljava/util/function/Supplier;)V
  */
-JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_initCache
+JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_initCache
 (JNIEnv* env, jobject, jstring key_jstring, jobject record_supplier)
 {
 	const jclass supplier_class = env->GetObjectClass(record_supplier);
@@ -331,41 +309,45 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_initCac
 	cache->str_data.record_num = record_count;
 	cache->str_data.remain_blank_num = MAX_RECORD_ADD_COUNT;
 	const size_t total_results_size = static_cast<size_t>(record_count) + MAX_RECORD_ADD_COUNT;
-	gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&cache->str_data.dev_total_number), sizeof(size_t)), true, nullptr);
-	gpuErrchk(cudaMemcpy(cache->str_data.dev_total_number, &total_results_size, sizeof(size_t), cudaMemcpyHostToDevice), true, nullptr);
-	gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&cache->str_data.dev_cache_str),
-		total_results_size * MAX_PATH_LENGTH), true, get_cache_info(key, cache).c_str());
-	gpuErrchk(cudaMemset(cache->str_data.dev_cache_str, 0, MAX_PATH_LENGTH), true, nullptr);
-	gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&cache->dev_output), total_results_size), true,
-		get_cache_info(key, cache).c_str());
+
+	const auto cl_context = current_device.get_cl_context();
+	const auto cl_queue = current_device.get_cl_queue();
+	int error = 0;
+	cache->str_data.dev_total_number = cl::Buffer(cl_context, CL_MEM_READ_WRITE, sizeof(size_t), nullptr, &error);
+	if (error) print_error("OpenCL Buffer allocation failed with error code " + to_string(error) + ".");
+	cl_queue.enqueueWriteBuffer(cache->str_data.dev_total_number, true, 0u, sizeof(size_t), &total_results_size);
+	current_device.info.memory_used += sizeof(size_t);
+
+	const auto alloc_bytes = total_results_size * MAX_PATH_LENGTH;
+	cache->str_data.dev_cache_str = cl::Buffer(cl_context, CL_MEM_READ_WRITE, alloc_bytes, nullptr, &error);
+	if (error) print_error("OpenCL Buffer allocation failed with error code " + to_string(error) + ".");
+	current_device.info.memory_used += alloc_bytes;
+
+	cache->dev_output = Memory<char>(current_device, total_results_size);
 	cache->is_cache_valid = true;
 	cache->is_match_done = false;
 	cache->is_output_done = 0;
 
-	cudaStream_t stream;
-	gpuErrchk(cudaStreamCreate(&stream), true, nullptr);
-	unsigned address_offset = 0;
+	size_t address_offset = 0;
 	for (const std::string& record : records_vec)
 	{
-		const auto target_address = cache->str_data.dev_cache_str + address_offset;
-		gpuErrchk(cudaMemcpyAsync(target_address, record.c_str(), record.length(), cudaMemcpyHostToDevice, stream),
-			true, nullptr);
+		cl_queue.enqueueWriteBuffer(cache->str_data.dev_cache_str, false,
+			address_offset * MAX_PATH_LENGTH, record.length(), record.c_str());
 		cache->str_data.record_hash.insert(hasher(record));
 		++address_offset;
 	}
-	gpuErrchk(cudaStreamSynchronize(stream), true, nullptr);
-	gpuErrchk(cudaStreamDestroy(stream), true, nullptr);
+	cl_queue.finish();
 	cache_map.insert(std::make_pair(key, cache));
 	env->ReleaseStringUTFChars(key_jstring, _key);
 	env->DeleteLocalRef(supplier_class);
 }
 
 /*
- * Class:     file_engine_dllInterface_gpu_CudaAccelerator
+ * Class:     file_engine_dllInterface_gpu_OpenclAccelerator
  * Method:    addRecordsToCache
  * Signature: (Ljava/lang/String;[Ljava/lang/Object;)V
  */
-JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_addRecordsToCache
+JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_addRecordsToCache
 (JNIEnv* env, jobject, jstring key_jstring, jobjectArray records)
 {
 	const auto _key = env->GetStringUTFChars(key_jstring, nullptr);
@@ -385,11 +367,11 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_addReco
 }
 
 /*
- * Class:     file_engine_dllInterface_gpu_CudaAccelerator
+ * Class:     file_engine_dllInterface_gpu_OpenclAccelerator
  * Method:    removeRecordsFromCache
  * Signature: (Ljava/lang/String;[Ljava/lang/Object;)V
  */
-JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_removeRecordsFromCache
+JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_removeRecordsFromCache
 (JNIEnv* env, jobject, jstring key_jstring, jobjectArray records)
 {
 	const auto _key = env->GetStringUTFChars(key_jstring, nullptr);
@@ -409,11 +391,11 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_removeR
 }
 
 /*
- * Class:     file_engine_dllInterface_gpu_CudaAccelerator
+ * Class:     file_engine_dllInterface_gpu_OpenclAccelerator
  * Method:    clearCache
  * Signature: (Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_clearCache
+JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_clearCache
 (JNIEnv* env, jobject, jstring key_jstring)
 {
 	const auto _key = env->GetStringUTFChars(key_jstring, nullptr);
@@ -422,80 +404,55 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_clearCa
 }
 
 /*
- * Class:     file_engine_dllInterface_gpu_CudaAccelerator
- * Method:    isCudaAvailable
+ * Class:     file_engine_dllInterface_gpu_OpenclAccelerator
+ * Method:    isOpenCLAvailable
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_isCudaAvailable
+JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_isOpenCLAvailable
 (JNIEnv*, jobject)
 {
-	cudaError_t cudaStatus;
-	int device_num = 0;
-	cudaStatus = cudaGetDeviceCount(&device_num);
-	if (cudaStatus != cudaSuccess)
-	{
-		return FALSE;
-	}
-	if (device_num > 0)
-	{
-		void* test_ptr;
-		bool ret = FALSE;
-		// 测试分配内存
-		do
-		{
-			cudaStatus = cudaMalloc(&test_ptr, 1);
-			if (cudaStatus == cudaSuccess)
-			{
-				ret = TRUE;
-			}
-		} while (false);
-		cudaFree(test_ptr);
-		return ret;
-	}
-	return FALSE;
+	return !get_devices().empty();
 }
 
 /*
- * Class:     file_engine_dllInterface_gpu_CudaAccelerator
+ * Class:     file_engine_dllInterface_gpu_OpenclAccelerator
  * Method:    isCacheValid
  * Signature: (Ljava/lang/String;)Z
  */
-JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_isCacheValid
+JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_isCacheValid
 (JNIEnv* env, jobject, jstring key_jstring)
 {
 	const auto _key = env->GetStringUTFChars(key_jstring, nullptr);
 	auto iter = cache_map.find(_key);
 	if (iter == cache_map.end())
 	{
-		return FALSE;
+		return JNI_FALSE;
 	}
 	return iter->second->is_cache_valid;
 }
 
 /*
- * Class:     file_engine_dllInterface_gpu_CudaAccelerator
+ * Class:     file_engine_dllInterface_gpu_OpenclAccelerator
  * Method:    clearAllCache
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_clearAllCache
+JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_clearAllCache
 (JNIEnv*, jobject)
 {
 	clear_all_cache();
 }
 
 /*
- * Class:     file_engine_dllInterface_gpu_CudaAccelerator
+ * Class:     file_engine_dllInterface_gpu_OpenclAccelerator
  * Method:    getGPUMemUsage
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_getGPUMemUsage
+JNIEXPORT jint JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_getGPUMemUsage
 (JNIEnv*, jobject)
 {
-	size_t avail;
-	size_t total;
-	cudaMemGetInfo(&avail, &total);
-	const size_t used = total - avail;
-	return static_cast<long>(used * 100 / total);
+	const auto mem_used = current_device.info.memory_used;
+	const auto total_mem = current_device.info.memory;
+	return static_cast<jint>(mem_used * 100 / total_mem);
 }
 
 /**
@@ -509,7 +466,7 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 	bool all_complete;
 	const auto stop_func = [&]
 	{
-		return is_stop() || result_counter.load() >= max_results;
+		return (*p_stop_signal)[0] || result_counter.load() >= max_results;
 	};
 	auto _collect_func = [&](const std::string& _key, char _matched_record_str[MAX_PATH_LENGTH], unsigned* matched_number)
 	{
@@ -521,6 +478,7 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 		thread_env->DeleteLocalRef(key_jstring);
 		++* matched_number;
 	};
+	const auto cl_queue = current_device.get_cl_queue();
 	do
 	{
 		//尝试退出
@@ -542,11 +500,7 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 				continue;
 			}
 			unsigned matched_number = 0;
-			//复制结果数组到host，dev_output下标对应dev_cache中的下标，若dev_output[i]中的值为1，则对应dev_cache[i]字符串匹配成功
-			const auto output_ptr = new char[val->str_data.record_num + val->str_data.remain_blank_num];
-			//将dev_output拷贝到output_ptr
-			gpuErrchk(cudaMemcpy(output_ptr, val->dev_output, val->str_data.record_num, cudaMemcpyDeviceToHost), false,
-				"collect results failed");
+			val->dev_output.read_from_device();
 			for (size_t i = 0; i < val->str_data.record_num.load(); ++i)
 			{
 				if (stop_func())
@@ -554,12 +508,12 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 					break;
 				}
 				//dev_cache[i]字符串匹配成功
-				if (static_cast<bool>(output_ptr[i]))
+				if (val->dev_output[i])
 				{
 					char matched_record_str[MAX_PATH_LENGTH]{ 0 };
-					const auto str_address = val->str_data.dev_cache_str + i;
-					//拷贝GPU中的字符串到host
-					gpuErrchk(cudaMemcpy(matched_record_str, str_address, MAX_PATH_LENGTH, cudaMemcpyDeviceToHost), false, "collect results failed");
+					cl_queue.enqueueReadBuffer(val->str_data.dev_cache_str, true,
+						i * MAX_PATH_LENGTH, MAX_PATH_LENGTH, matched_record_str);
+					cl_queue.finish();
 					// 判断文件和文件夹
 					if (search_case_vec.empty())
 					{
@@ -590,45 +544,9 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 			}
 			matched_result_number_map.insert(std::make_pair(key, matched_number));
 			val->is_output_done = 2;
-			delete[] output_ptr;
 		}
-	} while (!all_complete && !is_stop() && result_counter.load() < max_results);
+	} while (!all_complete && !(*p_stop_signal)[0] && result_counter.load() < max_results);
 	thread_env->DeleteLocalRef(biconsumer_class);
-}
-
-/**
- * \brief 检查是文件还是文件夹
- * \param path path
- * \return 如果是文件返回1，文件夹返回0，错误返回-1
- */
-int is_dir_or_file(const char* path)
-{
-	const auto w_path = string2wstring(path);
-	DWORD dwAttrib = GetFileAttributes(w_path.c_str());
-	if (dwAttrib != INVALID_FILE_ATTRIBUTES)
-	{
-		if (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)
-		{
-			return 0;
-		}
-		return 1;
-	}
-	return -1;
-}
-
-std::wstring string2wstring(const std::string& str)
-{
-	std::wstring result;
-	//获取缓冲区大小，并申请空间，缓冲区大小按字符计算  
-	const int len = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), static_cast<int>(str.size()), nullptr, 0);
-	const auto buffer = new TCHAR[len + 1];
-	//多字节编码转换成宽字节编码  
-	MultiByteToWideChar(CP_UTF8, 0, str.c_str(), static_cast<int>(str.size()), buffer, len);
-	buffer[len] = '\0';
-	//删除缓冲区并返回值  
-	result.append(buffer);
-	delete[] buffer;
-	return result;
 }
 
 /**
@@ -713,16 +631,14 @@ void add_records_to_cache(const std::string& key, const std::vector<std::string>
 		const auto& cache = cache_map.at(key);
 		//对当前cache加锁，防止一边add一边remove导致脏数据产生
 		std::lock_guard lock_guard(cache->str_data.lock);
-		cudaStream_t stream;
-		gpuErrchk(cudaStreamCreate(&stream), true, nullptr);
+		const auto cl_queue = current_device.get_cl_queue();
 		for (auto&& record : records)
 		{
 			if (exit_flag.load())
 			{
 				break;
 			}
-			const auto record_len = record.length();
-			if (record_len >= MAX_PATH_LENGTH)
+			if (const auto record_len = strlen(record.c_str()); record_len >= MAX_PATH_LENGTH)
 			{
 				continue;
 			}
@@ -733,11 +649,8 @@ void add_records_to_cache(const std::string& key, const std::vector<std::string>
 					if (cache->str_data.remain_blank_num.load() > 0)
 					{
 						const auto index = cache->str_data.record_num.load();
-						//计算下一个空位的内存地址
-						const auto target_address = cache->str_data.dev_cache_str + index;
-						//记录到下一空位内存地址target_address
-						gpuErrchk(cudaMemcpyAsync(target_address, record.c_str(), record_len,
-							cudaMemcpyHostToDevice, stream), true, get_cache_info(key, cache).c_str());
+						cl_queue.enqueueWriteBuffer(cache->str_data.dev_cache_str,
+							false, index * MAX_PATH_LENGTH, MAX_PATH_LENGTH, record.c_str());
 #ifdef DEBUG_OUTPUT
 						std::cout << "successfully add record: " << record << "    key: " << key << std::endl;
 #endif
@@ -754,8 +667,7 @@ void add_records_to_cache(const std::string& key, const std::vector<std::string>
 				}
 			}
 		}
-		gpuErrchk(cudaStreamSynchronize(stream), true, nullptr);
-		gpuErrchk(cudaStreamDestroy(stream), true, nullptr);
+		cl_queue.finish();
 	}
 	//释放clear_cache锁
 	free_clear_cache(add_record_thread_count);
@@ -773,46 +685,41 @@ void remove_records_from_cache(const std::string& key, std::vector<std::string>&
 	{
 		const auto& cache = cache_map.at(key);
 		std::lock_guard lock_guard(cache->str_data.lock);
-		cudaStream_t stream;
-		gpuErrchk(cudaStreamCreate(&stream), true, nullptr);
 		if (cache->is_cache_valid)
 		{
 			char tmp[MAX_PATH_LENGTH]{ 0 };
+			const auto cl_queue = current_device.get_cl_queue();
 			for (size_t i = 0; i < cache->str_data.record_num; ++i)
 			{
 				if (exit_flag.load())
 				{
 					break;
 				}
-				const auto str_address = cache->str_data.dev_cache_str + i;
-				//拷贝GPU中的字符串到tmp
-				gpuErrchk(cudaMemcpy(tmp, str_address,
-					MAX_PATH_LENGTH, cudaMemcpyDeviceToHost), true,
-					get_cache_info(key, cache).c_str());
-				if (auto&& record = std::find(records.begin(), records.end(), tmp); record != records.end())
+				cl_queue.enqueueReadBuffer(cache->str_data.dev_cache_str,
+					true, i * MAX_PATH_LENGTH, MAX_PATH_LENGTH, tmp);
+				current_device.finish_queue();
+				if (auto&& record = std::find(records.begin(), records.end(), tmp);
+					record != records.end())
 				{
 #ifdef DEBUG_OUTPUT
-					printf("removing record: %s\n", record.c_str());
+					printf("removing record: %s\n", record->c_str());
 #endif
 					//成功找到字符串
 					const auto last_index = cache->str_data.record_num - 1;
-					const auto last_str_address = cache->str_data.dev_cache_str + last_index;
-					if (last_str_address == str_address)
+					if (last_index == i)
 					{
 						continue;
 					}
 					//复制最后一个结果到当前空位
-					gpuErrchk(cudaMemcpyAsync(str_address, last_str_address,
-						MAX_PATH_LENGTH, cudaMemcpyDeviceToDevice, stream), true, get_cache_info(key, cache).c_str());
-					gpuErrchk(cudaMemsetAsync(last_str_address, 0, MAX_PATH_LENGTH, stream), true, nullptr);
+					cl_queue.enqueueCopyBuffer(cache->str_data.dev_cache_str, cache->str_data.dev_cache_str,
+						i * MAX_PATH_LENGTH, last_index * MAX_PATH_LENGTH, MAX_PATH_LENGTH);
 					--cache->str_data.record_num;
 					++cache->str_data.remain_blank_num;
 					cache->str_data.record_hash.unsafe_erase(hasher(*record));
 				}
 			}
+			cl_queue.finish();
 		}
-		gpuErrchk(cudaStreamSynchronize(stream), true, nullptr);
-		gpuErrchk(cudaStreamDestroy(stream), true, nullptr);
 	}
 	//释放clear_cache锁
 	free_clear_cache(remove_record_thread_count);
@@ -856,11 +763,11 @@ void clear_cache(const std::string& key)
 		{
 			//对当前cache加锁
 			std::lock_guard lock_guard(cache->str_data.lock);
-			gpuErrchk(cudaFree(cache->str_data.dev_cache_str), false, get_cache_info(key, cache).c_str());
-			gpuErrchk(cudaFree(cache->dev_output), false, get_cache_info(key, cache).c_str());
-			gpuErrchk(cudaFree(cache->str_data.dev_total_number), true, nullptr);
+			// dev_cache_str
+			current_device.info.memory_used -= (cache->str_data.record_num + cache->str_data.remain_blank_num) * MAX_PATH_LENGTH;
+			current_device.info.memory_used -= sizeof(size_t); // dev_total_number
+			delete cache;
 		}
-		delete cache;
 		cache_map.unsafe_erase(key);
 	}
 	catch (std::out_of_range&)
@@ -889,6 +796,121 @@ void clear_all_cache()
 void release_all()
 {
 	clear_all_cache();
-	free_cuda_search_memory();
-	free_stop_signal();
+}
+
+bool set_using_device(const unsigned device_num)
+{
+	if (auto&& devices = get_devices(); device_num < devices.size())
+	{
+		current_using_device = device_num;
+		current_device = Device(select_device_with_id(device_num));
+		delete p_stop_signal;
+		p_stop_signal = new Memory<char>(current_device, 1);
+		(*p_stop_signal)[0] = 0;
+		p_stop_signal->write_to_device();
+		return true;
+	}
+	return false;
+}
+
+void start_kernel(const std::vector<std::string>& search_case,
+	bool is_ignore_case,
+	const char* search_text,
+	const std::vector<std::string>& keywords,
+	const std::vector<std::string>& keywords_lower_case,
+	const bool* is_keyword_path)
+{
+	const auto keywords_num = keywords.size();
+
+	// 复制search case
+	// 第一位为1表示有F，第二位为1表示有D，第三位为1表示有FULL，CASE由File-Engine主程序进行判断，传入参数is_ignore_case为false表示有CASE
+	int search_case_num = 0;
+	for (auto& each_case : search_case)
+	{
+		if (each_case == "full")
+		{
+			search_case_num |= 4;
+		}
+	}
+	Memory<int> dev_search_case(current_device, 1);
+	dev_search_case[0] = search_case_num;
+	dev_search_case.write_to_device();
+
+	// 复制search text
+	Memory<char> dev_search_text(current_device, MAX_PATH_LENGTH);
+	strcpy_s(dev_search_text.data(), MAX_PATH_LENGTH, search_text);
+	dev_search_text.write_to_device();
+
+	// 复制keywords
+	Memory<char> dev_keywords(current_device, keywords_num * MAX_PATH_LENGTH);
+	for (unsigned i = 0; i < keywords_num; ++i)
+	{
+		strcpy_s(&dev_keywords[i * MAX_PATH_LENGTH], MAX_PATH_LENGTH, keywords[i].c_str());
+	}
+	dev_keywords.write_to_device();
+
+	// 复制keywords_lower_case
+	Memory<char> dev_keywords_lower_case(current_device, keywords_num * MAX_PATH_LENGTH);
+	for (unsigned i = 0; i < keywords_num; ++i)
+	{
+		strcpy_s(&dev_keywords_lower_case[i * MAX_PATH_LENGTH], MAX_PATH_LENGTH, keywords_lower_case[i].c_str());
+	}
+	dev_keywords_lower_case.write_to_device();
+
+	//复制keywords_length
+	Memory<size_t> dev_keywords_length(current_device, 1);
+	dev_keywords_length[0] = keywords_num;
+	dev_keywords_length.write_to_device();
+
+	// 复制is_keyword_path
+	Memory<char> dev_is_keyword_path(current_device, keywords_num);
+	for (unsigned i = 0; i < keywords_num; ++i)
+	{
+		dev_is_keyword_path[i] = static_cast<char>(is_keyword_path[i]);
+	}
+	dev_is_keyword_path.write_to_device();
+
+	// 复制is_ignore_case
+	Memory<bool> dev_is_ignore_case(current_device, 1);
+	dev_is_ignore_case[0] = is_ignore_case;
+
+	auto context = current_device.get_cl_context();
+	for (auto& [key, cache] : cache_map)
+	{
+		if (!cache->is_cache_valid)
+		{
+			continue;
+		}
+		const auto total = cache->str_data.record_num.load() + cache->str_data.remain_blank_num.load();
+		const auto max_pow_of_2 = find_table_sizeof2(total);
+		Kernel search_kernel(current_device, max_pow_of_2, "check",
+			cache->str_data.dev_cache_str,
+			cache->str_data.dev_total_number,
+			dev_search_case,
+			dev_is_ignore_case,
+			dev_search_text,
+			dev_keywords,
+			dev_keywords_lower_case,
+			dev_keywords_length,
+			dev_is_keyword_path,
+			cache->dev_output,
+			*p_stop_signal);
+		search_kernel.enqueue_run();
+	}
+	current_device.finish_queue();
+	for (auto& [_, cache] : cache_map)
+	{
+		cache->is_match_done = true;
+	}
+}
+
+size_t find_table_sizeof2(const size_t target)
+{
+	size_t temp = target - 1;
+	temp |= temp >> 1;
+	temp |= temp >> 2;
+	temp |= temp >> 4;
+	temp |= temp >> 8;
+	temp |= temp >> 16;
+	return temp + 1;
 }

@@ -8,7 +8,7 @@ import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.ConfigEntity;
 import file.engine.configs.Constants;
-import file.engine.dllInterface.CudaAccelerator;
+import file.engine.dllInterface.gpu.GPUAccelerator;
 import file.engine.dllInterface.IsLocalDisk;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
@@ -2608,11 +2608,11 @@ public class SettingsFrame {
         }
         comboBoxSearchThread.setModel(new DefaultComboBoxModel<>(new Vector<>(threads)));
         comboBoxSearchThread.setSelectedItem(allConfigs.getSearchThreadNumber());
-        boolean cudaAvailableOnSystem = CudaAccelerator.INSTANCE.isCudaAvailableOnSystem();
+        boolean cudaAvailableOnSystem = GPUAccelerator.INSTANCE.isGPUAvailableOnSystem();
         comboBoxCudaDevice.setEnabled(cudaAvailableOnSystem);
         if (cudaAvailableOnSystem) {
             var deviceMap = new HashMap<Integer, String>();
-            String devices = CudaAccelerator.INSTANCE.getDevices();
+            String devices = GPUAccelerator.INSTANCE.getDevices();
             String[] split = RegexUtil.semicolon.split(devices);
             for (String each : split) {
                 String[] cudaInfo = RegexUtil.comma.split(each);
@@ -2648,7 +2648,7 @@ public class SettingsFrame {
         checkBoxCheckUpdate.setSelected(allConfigs.isCheckUpdateStartup());
         checkBoxIsAttachExplorer.setSelected(allConfigs.isAttachExplorer());
         checkBoxEnableCuda.setSelected(allConfigs.isEnableCuda());
-        checkBoxEnableCuda.setEnabled(CudaAccelerator.INSTANCE.isCudaAvailableOnSystem());
+        checkBoxEnableCuda.setEnabled(GPUAccelerator.INSTANCE.isGPUAvailableOnSystem());
     }
 
     /**
