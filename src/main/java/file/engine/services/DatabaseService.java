@@ -683,7 +683,7 @@ public class DatabaseService {
     /**
      * 根据上面分配的位信息，从第二位开始，与taskStatus做与运算，并向右偏移，若结果为1，则表示该任务完成
      */
-    private void waitForTaskAndMergeResults() {
+    private void waitForTasks() {
         try {
             EventManagement eventManagement = EventManagement.getInstance();
             while (!PrepareSearchInfo.taskStatus.equals(PrepareSearchInfo.allTaskStatus) && eventManagement.notMainExit()) {
@@ -994,7 +994,7 @@ public class DatabaseService {
                 });
             }
         }
-        waitForTaskAndMergeResults();
+        waitForTasks();
     }
 
     /**
@@ -1866,7 +1866,7 @@ public class DatabaseService {
                         (key, path) -> {
                             if (cudaSearchContainer.containsKey(key)) {
                                 Set<String> cudaContainer = cudaSearchContainer.get(key);
-                                if (!databaseService.tempResultsForEvent.contains(path) && !cudaContainer.contains(path) && cudaContainer.add(path)) {
+                                if (!databaseService.tempResultsForEvent.contains(path) && cudaContainer.add(path)) {
                                     if (databaseService.allResultsRecordCounter.incrementAndGet() >= MAX_RESULTS) {
                                         databaseService.stopSearch();
                                     }
