@@ -47,6 +47,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
@@ -54,18 +55,15 @@ import java.util.stream.Collectors;
 
 public class DatabaseService {
     private final ConcurrentLinkedQueue<SQLWithTaskId> commandQueue = new ConcurrentLinkedQueue<>();
-    private volatile Constants.Enums.DatabaseStatus status = Constants.Enums.DatabaseStatus.NORMAL;
+    private final AtomicReference<Constants.Enums.DatabaseStatus> status = new AtomicReference<>(Constants.Enums.DatabaseStatus.NORMAL);
     private final AtomicBoolean isExecuteImmediately = new AtomicBoolean(false);
     private final AtomicInteger databaseCacheNum = new AtomicInteger(0);
     private final Set<TableNameWeightInfo> tableSet = ConcurrentHashMap.newKeySet();    //保存从0-40数据库的表，使用频率和名字对应，使经常使用的表最快被搜索到
     private final AtomicBoolean isDatabaseUpdated = new AtomicBoolean(false);
-    private final AtomicBoolean isReadFromSharedMemory = new AtomicBoolean(false);
     private final ConcurrentLinkedQueue<String> tempResults = new ConcurrentLinkedQueue<>();  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
     private final Set<String> tempResultsForEvent = new ConcurrentSkipListSet<>(); //在SearchDoneEvent中保存的容器
     private final AtomicInteger allResultsRecordCounter = new AtomicInteger();
     private final AtomicBoolean shouldStopSearch = new AtomicBoolean(false);
-    private final AtomicBoolean isSearchStopped = new AtomicBoolean(true);
-    private final AtomicBoolean isCreatingCache = new AtomicBoolean(false);
     private final ConcurrentLinkedQueue<Pair> priorityMap = new ConcurrentLinkedQueue<>();
     //tableCache 数据表缓存，在初始化时将会放入所有的key和一个空的cache，后续需要缓存直接放入空的cache中，不再创建新的cache实例
     private final ConcurrentHashMap<String, Cache> tableCache = new ConcurrentHashMap<>();
@@ -185,7 +183,7 @@ public class DatabaseService {
                     if (isExecuteImmediately.get()) {
                         try {
                             isExecuteImmediately.set(false);
-                            if (!isReadFromSharedMemory.get()) {
+                            if (getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
                                 executeAllCommands();
                             }
                         } catch (Exception e) {
@@ -329,10 +327,10 @@ public class DatabaseService {
                 boolean isCreatedOnDatabaseUpdate = false;
             };
             final Supplier<Boolean> isStopCreateCache =
-                    () -> !isSearchStopped.get() || !eventManagement.notMainExit() || status != Constants.Enums.DatabaseStatus.NORMAL;
+                    () -> !eventManagement.notMainExit() || searchThreadCount.get() != 0 ||
+                            (getStatus() != Constants.Enums.DatabaseStatus.NORMAL);
             final Supplier<Boolean> isStartSaveCache =
-                    () -> (isSearchStopped.get() &&
-                            System.currentTimeMillis() - startCheckInfo.startCheckTimeMills > checkTimeInterval &&
+                    () -> (System.currentTimeMillis() - startCheckInfo.startCheckTimeMills > checkTimeInterval &&
                             !GetHandle.INSTANCE.isForegroundFullscreen()) ||
                             (isDatabaseUpdated.get() && !startCheckInfo.isCreatedOnDatabaseUpdate);
             try {
@@ -345,18 +343,21 @@ public class DatabaseService {
                         if (isDatabaseUpdated.get()) {
                             startCheckInfo.isCreatedOnDatabaseUpdate = true;
                         }
-                        startCheckInfo.startCheckTimeMills = System.currentTimeMillis();
-                        if (allConfigs.isEnableCuda()) {
-                            final int cudaMemUsage = CudaAccelerator.INSTANCE.getCudaMemUsage();
-                            if (cudaMemUsage < createCudaCacheThreshold) {
-                                createCudaCache(isStopCreateCache, createCudaCacheThreshold);
-                            }
-                        } else {
-                            final double memoryUsage = SystemInfoUtil.getMemoryUsage();
-                            if (memoryUsage * 100 < createMemoryThreshold) {
-                                createMemoryCache(isStopCreateCache);
+                        if (casSetStatus(Constants.Enums.DatabaseStatus.NORMAL, Constants.Enums.DatabaseStatus._CREATING_CACHE)) {
+                            startCheckInfo.startCheckTimeMills = System.currentTimeMillis();
+                            if (allConfigs.isEnableCuda()) {
+                                final int cudaMemUsage = CudaAccelerator.INSTANCE.getCudaMemUsage();
+                                if (cudaMemUsage < createCudaCacheThreshold) {
+                                    createCudaCache(isStopCreateCache, createCudaCacheThreshold);
+                                }
+                            } else {
+                                final double memoryUsage = SystemInfoUtil.getMemoryUsage();
+                                if (memoryUsage * 100 < createMemoryThreshold) {
+                                    createMemoryCache(isStopCreateCache);
+                                }
                             }
                         }
+                        casSetStatus(Constants.Enums.DatabaseStatus._CREATING_CACHE, Constants.Enums.DatabaseStatus.NORMAL);
                     } else {
                         if (!isDatabaseUpdated.get()) {
                             startCheckInfo.isCreatedOnDatabaseUpdate = false;
@@ -386,7 +387,6 @@ public class DatabaseService {
         System.out.println("添加缓存");
         String availableDisks = AllConfigs.getInstance().getAvailableDisks();
         ConcurrentLinkedQueue<String> tableQueueByPriority = initTableQueueByPriority();
-        isCreatingCache.set(true);
         // 系统内存使用少于70%
         String[] disks = RegexUtil.comma.split(availableDisks);
         LinkedHashMap<String, Integer> tableNeedCache = scanDatabaseAndSelectCacheTable(disks,
@@ -395,7 +395,6 @@ public class DatabaseService {
                 100,
                 2000);
         saveTableCache(isStopCreateCache, tableNeedCache);
-        isCreatingCache.set(false);
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -403,7 +402,6 @@ public class DatabaseService {
         System.out.println("添加cuda缓存");
         String availableDisks = AllConfigs.getInstance().getAvailableDisks();
         ConcurrentLinkedQueue<String> tableQueueByPriority = initTableQueueByPriority();
-        isCreatingCache.set(true);
         String[] disks = RegexUtil.comma.split(availableDisks);
         LinkedHashMap<String, Integer> tableNeedCache = scanDatabaseAndSelectCacheTable(disks,
                 tableQueueByPriority,
@@ -412,7 +410,6 @@ public class DatabaseService {
                 // 单个缓存最大允许占用128M内存，每个记录在GPU内存中占512字节
                 (128 * 1024 * 1024) / 512);
         saveTableCacheForCuda(isStopCreateCache, tableNeedCache, createCudaCacheThreshold);
-        isCreatingCache.set(false);
     }
 
     /**
@@ -703,7 +700,6 @@ public class DatabaseService {
         EventManagement eventManagement = EventManagement.getInstance();
         eventManagement.putEvent(new SearchDoneEvent(new ConcurrentLinkedQueue<>(tempResultsForEvent)));
         tempResultsForEvent.clear();
-        isSearchStopped.set(true);
         PrepareSearchInfo.isSearchPrepared.set(false);
         if (AllConfigs.getInstance().isEnableCuda() && eventManagement.notMainExit()) {
             CudaAccelerator.INSTANCE.stopCollectResults();
@@ -734,12 +730,10 @@ public class DatabaseService {
      * PrepareSearchInfo.containerMap    每个任务搜索出来的结果都会被放到一个属于它自己的一个容器中，该容器保存任务与容器的映射关系
      * PrepareSearchInfo.taskMap         任务
      *
-     * @param nonFormattedSql        未格式化搜索字段的SQL
-     * @param isReadFromSharedMemory 是否通过共享内存读取，而不是数据库搜索
+     * @param nonFormattedSql 未格式化搜索字段的SQL
      * @return cuda搜索容器
      */
-    private ConcurrentHashMap<String, Set<String>> addSearchTasks(LinkedList<LinkedHashMap<String, String>> nonFormattedSql,
-                                                                  boolean isReadFromSharedMemory) {
+    private ConcurrentHashMap<String, Set<String>> addSearchTasks(LinkedList<LinkedHashMap<String, String>> nonFormattedSql) {
         ConcurrentHashMap<String, Set<String>> cudaSearchContainer = new ConcurrentHashMap<>();
         Bit number = new Bit(new byte[]{1});
         AllConfigs allConfigs = AllConfigs.getInstance();
@@ -763,7 +757,7 @@ public class DatabaseService {
                 }
                 Set<String> container = ConcurrentHashMap.newKeySet();
                 //每一个任务负责查询一个priority和list0-list40生成的41个SQL
-                if (isReadFromSharedMemory) {
+                if (status.get() == Constants.Enums.DatabaseStatus._SHARED_MEMORY) {
                     addTaskForSharedMemory0(eachDisk, tasks, container, commandsMap, currentTaskNum);
                 } else {
                     addTaskForDatabase0(eachDisk, tasks, container, commandsMap, currentTaskNum);
@@ -965,11 +959,6 @@ public class DatabaseService {
      * 添加sql语句，并开始搜索
      */
     private void startSearch() {
-        isSearchStopped.set(false);
-        if (shouldStopSearch.get()) {
-            searchDone();
-            return;
-        }
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         EventManagement eventManagement = EventManagement.getInstance();
         final int threadNumberPerDisk = Math.max(1, AllConfigs.getInstance().getSearchThreadNumber() / PrepareSearchInfo.taskMap.size());
@@ -1278,7 +1267,7 @@ public class DatabaseService {
      */
     private void addToCommandQueue(SQLWithTaskId sql) {
         if (commandQueue.size() < MAX_SQL_NUM) {
-            if (status == Constants.Enums.DatabaseStatus.MANUAL_UPDATE) {
+            if (getStatus() == Constants.Enums.DatabaseStatus.MANUAL_UPDATE) {
                 return;
             }
             commandQueue.add(sql);
@@ -1310,24 +1299,28 @@ public class DatabaseService {
      * @return 装填
      */
     public Constants.Enums.DatabaseStatus getStatus() {
-        switch (status) {
+        var currentStatus = status.get();
+        switch (currentStatus) {
             case NORMAL:
-            case TEMP:
+            case _TEMP:
+            case _SHARED_MEMORY:
+            case _CREATING_CACHE:
                 return Constants.Enums.DatabaseStatus.NORMAL;
-            case MANUAL_UPDATE:
-            case VACUUM:
             default:
-                return status;
+                return currentStatus;
         }
     }
 
-    /**
-     * 设置数据库状态
-     *
-     * @param status 状态
-     */
-    private void setStatus(Constants.Enums.DatabaseStatus status) {
-        this.status = status;
+    public boolean casSetStatus(Constants.Enums.DatabaseStatus expect, Constants.Enums.DatabaseStatus newVal) {
+        final long start = System.currentTimeMillis();
+        final long timeout = 1000;
+        try {
+            while (!status.compareAndSet(expect, newVal) && System.currentTimeMillis() - start < timeout) {
+                TimeUnit.MILLISECONDS.sleep(1);
+            }
+        } catch (InterruptedException ignored) {
+        }
+        return status.get() == newVal;
     }
 
     /**
@@ -1434,7 +1427,7 @@ public class DatabaseService {
             try {
                 SearchBar searchBar = SearchBar.getInstance();
                 while (isSharedMemoryCreated.get()) {
-                    if (isSearchStopped.get() && !searchBar.isVisible()) {
+                    if (getStatus() == Constants.Enums.DatabaseStatus.NORMAL && !searchBar.isVisible()) {
                         isSharedMemoryCreated.set(false);
                         ResultPipe.INSTANCE.closeAllSharedMemory();
                         if (IsDebug.isDebug()) {
@@ -1459,7 +1452,7 @@ public class DatabaseService {
             final long time = System.currentTimeMillis();
             // 将在队列中的sql全部执行并等待搜索线程全部完成
             System.out.println("等待所有sql执行完成，并且退出搜索");
-            while (!isSearchStopped.get() || isCreatingCache.get() || searchThreadCount.get() != 0 || !commandQueue.isEmpty()) {
+            while (searchThreadCount.get() != 0 || !commandQueue.isEmpty()) {
                 TimeUnit.MILLISECONDS.sleep(10);
                 if (System.currentTimeMillis() - time > timeoutMills) {
                     System.out.println("等待超时");
@@ -1472,55 +1465,49 @@ public class DatabaseService {
     }
 
     private void waitForSearchAndSwitchDatabase(Process searchByUsn) {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            final long start = System.currentTimeMillis();
-            final long timeLimit = 10 * 60 * 1000;
-            // 阻塞等待程序将共享内存配置完成
+        final long start = System.currentTimeMillis();
+        final long timeLimit = 10 * 60 * 1000;
+        // 阻塞等待程序将共享内存配置完成
+        try {
+            while (!ResultPipe.INSTANCE.isComplete() && ProcessUtil.isProcessExist("fileSearcherUSN.exe")) {
+                if (System.currentTimeMillis() - start > timeLimit) {
+                    break;
+                }
+                TimeUnit.SECONDS.sleep(1);
+            }
+        } catch (InterruptedException | IOException e) {
+            e.printStackTrace();
+        }
+        casSetStatus(Constants.Enums.DatabaseStatus._TEMP, Constants.Enums.DatabaseStatus._SHARED_MEMORY);
+        // 搜索完成并写入数据库后，重新建立数据库连接
+        try {
+            ProcessUtil.waitForProcess("fileSearcherUSN.exe", 1000);
+            readSearchUsnOutput(searchByUsn);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            stopSearch();
             try {
-                while (!ResultPipe.INSTANCE.isComplete() && ProcessUtil.isProcessExist("fileSearcherUSN.exe")) {
-                    if (System.currentTimeMillis() - start > timeLimit) {
-                        break;
-                    }
-                    TimeUnit.SECONDS.sleep(1);
+                final long startWaitingTime = System.currentTimeMillis();
+                //等待所有搜索线程结束，最多等待1分钟
+                while (searchThreadCount.get() != 0 && System.currentTimeMillis() - startWaitingTime < 60 * 1000) {
+                    TimeUnit.MILLISECONDS.sleep(20);
                 }
-            } catch (InterruptedException | IOException e) {
-                e.printStackTrace();
+            } catch (InterruptedException ignored) {
             }
-            isReadFromSharedMemory.set(true);
-            // 搜索完成并写入数据库后，重新建立数据库连接
+            casSetStatus(Constants.Enums.DatabaseStatus._SHARED_MEMORY, Constants.Enums.DatabaseStatus.MANUAL_UPDATE);
             {
-                try {
-                    ProcessUtil.waitForProcess("fileSearcherUSN.exe", 1000);
-                    readSearchUsnOutput(searchByUsn);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
-                    try {
-                        final long startWaitingTime = System.currentTimeMillis();
-                        //最多等待5分钟
-                        while (searchThreadCount.get() != 0 && System.currentTimeMillis() - startWaitingTime < 5 * 60 * 1000) {
-                            TimeUnit.MILLISECONDS.sleep(20);
-                        }
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    stopSearch();
-                    setStatus(Constants.Enums.DatabaseStatus.MANUAL_UPDATE);
-                    {
-                        SQLiteUtil.closeAll();
-                        invalidateAllCache();
-                        SQLiteUtil.initAllConnections();
-                        createAllIndex();
-                    }
-                    setStatus(Constants.Enums.DatabaseStatus.NORMAL);
-                    //关闭共享内存
-                    closeSharedMemoryOnIdle();
-                    // 搜索完成，更新isDatabaseUpdated标志，结束UpdateDatabaseEvent事件等待
-                    isDatabaseUpdated.set(true);
-                    isReadFromSharedMemory.set(false);
-                }
+                SQLiteUtil.closeAll();
+                invalidateAllCache();
+                SQLiteUtil.initAllConnections();
+                createAllIndex();
             }
-        });
+            casSetStatus(Constants.Enums.DatabaseStatus.MANUAL_UPDATE, Constants.Enums.DatabaseStatus.NORMAL);
+            //关闭共享内存
+            closeSharedMemoryOnIdle();
+            // 搜索完成，更新isDatabaseUpdated标志，结束UpdateDatabaseEvent事件等待
+            isDatabaseUpdated.set(true);
+        }
     }
 
     private static void readSearchUsnOutput(Process searchByUsn) {
@@ -1550,12 +1537,14 @@ public class DatabaseService {
      */
     @SneakyThrows
     private boolean updateLists(String ignorePath, boolean isDropPrevious) {
-        if (status == Constants.Enums.DatabaseStatus.MANUAL_UPDATE || ProcessUtil.isProcessExist("fileSearcherUSN.exe")) {
+        if (getStatus() == Constants.Enums.DatabaseStatus.MANUAL_UPDATE || ProcessUtil.isProcessExist("fileSearcherUSN.exe")) {
             throw new RuntimeException("already searching");
         }
         // 复制数据库到tmp
         SQLiteUtil.copyDatabases("data", "tmp");
-        setStatus(Constants.Enums.DatabaseStatus.MANUAL_UPDATE);
+        if (!casSetStatus(Constants.Enums.DatabaseStatus.NORMAL, Constants.Enums.DatabaseStatus.MANUAL_UPDATE)) {
+            throw new RuntimeException("databaseService status设置MANUAL UPDATE状态失败");
+        }
         // 停止搜索
         stopSearch();
         executeAllSQLAndWait(3000);
@@ -1565,7 +1554,13 @@ public class DatabaseService {
         if (IsDebug.isDebug()) {
             System.out.println("成功切换到临时数据库");
         }
-
+        if (!casSetStatus(Constants.Enums.DatabaseStatus.MANUAL_UPDATE, Constants.Enums.DatabaseStatus._TEMP)) {
+            //恢复data目录的数据库
+            SQLiteUtil.closeAll();
+            SQLiteUtil.initAllConnections();
+            casSetStatus(Constants.Enums.DatabaseStatus.MANUAL_UPDATE, Constants.Enums.DatabaseStatus.NORMAL);
+            throw new RuntimeException("databaseService status设置TEMP状态失败");
+        }
         // 检查数据库文件大小，过大则删除
         checkDbFileSize(isDropPrevious);
 
@@ -1665,11 +1660,9 @@ public class DatabaseService {
             try {
                 EventManagement eventManagement = EventManagement.getInstance();
                 while (eventManagement.notMainExit()) {
-                    if ((status == Constants.Enums.DatabaseStatus.NORMAL && System.currentTimeMillis() - startSearchTimeMills.get() < timeout) ||
-                            (status == Constants.Enums.DatabaseStatus.NORMAL && commandQueue.size() > 100)) {
-                        if (isSearchStopped.get()) {
-                            sendExecuteSQLSignal();
-                        }
+                    if ((getStatus() == Constants.Enums.DatabaseStatus.NORMAL && System.currentTimeMillis() - startSearchTimeMills.get() < timeout) ||
+                            (getStatus() == Constants.Enums.DatabaseStatus.NORMAL && commandQueue.size() > 100)) {
+                        sendExecuteSQLSignal();
                     }
                     TimeUnit.SECONDS.sleep(updateTimeLimit);
                 }
@@ -1785,8 +1778,7 @@ public class DatabaseService {
             taskStatus = new Bit(new byte[]{0});
             allTaskStatus = new Bit(new byte[]{0});
             //添加搜索任务到队列
-            return databaseService.addSearchTasks(nonFormattedSql,
-                    databaseService.isReadFromSharedMemory.get());
+            return databaseService.addSearchTasks(nonFormattedSql);
         }
     }
 
@@ -1803,33 +1795,42 @@ public class DatabaseService {
 
     @EventRegister(registerClass = PrepareSearchEvent.class)
     private static void prepareCudaSearch(Event event) {
-        DatabaseService databaseService = DatabaseService.getInstance();
-        while (!databaseService.isSearchStopped.get()) {
-            Thread.onSpinWait();
-        }
-        PrepareSearchInfo.isSearchPrepared.set(false);
-        PrepareSearchEvent prepareSearchEvent = (PrepareSearchEvent) event;
-        prepareSearch(prepareSearchEvent);
-        PrepareSearchInfo.isSearchPrepared.set(true);
+        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            DatabaseService databaseService = DatabaseService.getInstance();
+            final long startWaiting = System.currentTimeMillis();
+            final long timeout = 3000;
+            while (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL && System.currentTimeMillis() - startWaiting < timeout) {
+                Thread.onSpinWait();
+            }
+            PrepareSearchInfo.isSearchPrepared.set(false);
+            PrepareSearchEvent prepareSearchEvent = (PrepareSearchEvent) event;
+            prepareSearch(prepareSearchEvent);
+            PrepareSearchInfo.isSearchPrepared.set(true);
+        });
     }
 
     @EventRegister(registerClass = StartSearchEvent.class)
     private static void startSearchEvent(Event event) {
-        DatabaseService databaseService = getInstance();
-        while (!databaseService.isSearchStopped.get()) {
-            Thread.onSpinWait();
-        }
-        StartSearchEvent startSearchEvent = (StartSearchEvent) event;
-        if (!PrepareSearchInfo.isSearchPrepared.get()) {
-            prepareSearch(startSearchEvent);
-        }
-        databaseService.shouldStopSearch.set(false);
-        //tempResultsForEvent和PrepareSearchInfo.containerMap在searchDone()中发送SearchDoneEvent后就已经清除，所以不需要清除，只清理tempResults
-        databaseService.allResultsRecordCounter.set(0);
-        //启动搜索线程
-        CachedThreadPoolUtil.getInstance().executeTask(databaseService::startSearch);
-        databaseService.startSearchTimeMills.set(System.currentTimeMillis());
-        event.setReturnValue(databaseService.tempResults);
+        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            DatabaseService databaseService = getInstance();
+            final long startWaiting = System.currentTimeMillis();
+            final long timeout = 3000;
+            while (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL &&
+                    System.currentTimeMillis() - startWaiting < timeout) {
+                Thread.onSpinWait();
+            }
+            StartSearchEvent startSearchEvent = (StartSearchEvent) event;
+            if (!PrepareSearchInfo.isSearchPrepared.get()) {
+                prepareSearch(startSearchEvent);
+            }
+            databaseService.shouldStopSearch.set(false);
+            //tempResultsForEvent和PrepareSearchInfo.containerMap在searchDone()中发送SearchDoneEvent后就已经清除，所以不需要清除，只清理tempResults
+            databaseService.allResultsRecordCounter.set(0);
+            //启动搜索线程
+            CachedThreadPoolUtil.getInstance().executeTask(databaseService::startSearch);
+            databaseService.startSearchTimeMills.set(System.currentTimeMillis());
+            event.setReturnValue(databaseService.tempResults);
+        });
     }
 
     /**
@@ -1909,7 +1910,7 @@ public class DatabaseService {
         DatabaseService databaseService = getInstance();
         String path = ((AddToCacheEvent) event).path;
         databaseService.databaseCacheSet.add(path);
-        if (databaseService.isReadFromSharedMemory.get()) {
+        if (databaseService.status.get() == Constants.Enums.DatabaseStatus._SHARED_MEMORY) {
             return;
         }
         databaseService.addFileToCache(path);
@@ -1921,7 +1922,7 @@ public class DatabaseService {
         DatabaseService databaseService = getInstance();
         String path = ((DeleteFromCacheEvent) event).path;
         databaseService.databaseCacheSet.remove(path);
-        if (databaseService.isReadFromSharedMemory.get()) {
+        if (databaseService.status.get() == Constants.Enums.DatabaseStatus._SHARED_MEMORY) {
             return;
         }
         databaseService.removeFileFromCache(path);
@@ -1931,38 +1932,25 @@ public class DatabaseService {
     @EventRegister(registerClass = UpdateDatabaseEvent.class)
     private static void updateDatabaseEvent(Event event) {
         DatabaseService databaseService = getInstance();
-        if (databaseService.isReadFromSharedMemory.get()) {
+        if (databaseService.status.get() == Constants.Enums.DatabaseStatus._SHARED_MEMORY) {
             return;
         }
         UpdateDatabaseEvent updateDatabaseEvent = (UpdateDatabaseEvent) event;
-        try {
-            // 在这里设置数据库状态为manual update
-            if (!databaseService.updateLists(AllConfigs.getInstance().getIgnorePath(), updateDatabaseEvent.isDropPrevious)) {
-                throw new RuntimeException("search failed");
-            }
-        } finally {
-            databaseService.setStatus(Constants.Enums.DatabaseStatus.TEMP);
-            if (IsDebug.isDebug()) {
-                System.out.println("搜索已经可用");
-            }
-            try {
-                // 等待搜索进程结束
-                while (!databaseService.isDatabaseUpdated.get()) {
-                    TimeUnit.MILLISECONDS.sleep(20);
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        // 在这里设置数据库状态为manual update
+        if (!databaseService.updateLists(AllConfigs.getInstance().getIgnorePath(), updateDatabaseEvent.isDropPrevious)) {
+            throw new RuntimeException("search failed");
         }
     }
 
     @EventRegister(registerClass = OptimiseDatabaseEvent.class)
     private static void optimiseDatabaseEvent(Event event) {
         DatabaseService databaseService = getInstance();
-        if (databaseService.isReadFromSharedMemory.get()) {
+        if (databaseService.status.get() == Constants.Enums.DatabaseStatus._SHARED_MEMORY) {
             return;
         }
-        databaseService.setStatus(Constants.Enums.DatabaseStatus.VACUUM);
+        if (databaseService.casSetStatus(Constants.Enums.DatabaseStatus.NORMAL, Constants.Enums.DatabaseStatus.VACUUM)) {
+            throw new RuntimeException("databaseService status设置VACUUM状态失败");
+        }
         //执行VACUUM命令
         for (String eachDisk : RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks())) {
             try (Statement stmt = SQLiteUtil.getStatement(String.valueOf(eachDisk.charAt(0)))) {
@@ -1975,13 +1963,15 @@ public class DatabaseService {
                 }
             }
         }
-        databaseService.setStatus(Constants.Enums.DatabaseStatus.NORMAL);
+        if (databaseService.casSetStatus(Constants.Enums.DatabaseStatus.VACUUM, Constants.Enums.DatabaseStatus.NORMAL)) {
+            throw new RuntimeException("databaseService status从VACUUM修改为NORMAL失败");
+        }
     }
 
     @EventRegister(registerClass = AddToSuffixPriorityMapEvent.class)
     private static void addToSuffixPriorityMapEvent(Event event) {
         DatabaseService databaseService = getInstance();
-        if (databaseService.isReadFromSharedMemory.get()) {
+        if (databaseService.status.get() == Constants.Enums.DatabaseStatus._SHARED_MEMORY) {
             return;
         }
         AddToSuffixPriorityMapEvent event1 = (AddToSuffixPriorityMapEvent) event;
@@ -1994,7 +1984,7 @@ public class DatabaseService {
     @EventRegister(registerClass = ClearSuffixPriorityMapEvent.class)
     private static void clearSuffixPriorityMapEvent(Event event) {
         DatabaseService databaseService = getInstance();
-        if (databaseService.isReadFromSharedMemory.get()) {
+        if (databaseService.status.get() == Constants.Enums.DatabaseStatus._SHARED_MEMORY) {
             return;
         }
         databaseService.addToCommandQueue(new SQLWithTaskId("DELETE FROM priority;", SqlTaskIds.UPDATE_SUFFIX, "cache"));
@@ -2008,7 +1998,7 @@ public class DatabaseService {
     private static void deleteFromSuffixPriorityMapEvent(Event event) {
         DeleteFromSuffixPriorityMapEvent delete = (DeleteFromSuffixPriorityMapEvent) event;
         DatabaseService databaseService = getInstance();
-        if (databaseService.isReadFromSharedMemory.get()) {
+        if (databaseService.status.get() == Constants.Enums.DatabaseStatus._SHARED_MEMORY) {
             return;
         }
         if ("dirPriority".equals(delete.suffix) || "defaultPriority".equals(delete.suffix)) {
@@ -2020,7 +2010,7 @@ public class DatabaseService {
     @EventRegister(registerClass = UpdateSuffixPriorityEvent.class)
     private static void updateSuffixPriorityEvent(Event event) {
         DatabaseService databaseService = DatabaseService.getInstance();
-        if (databaseService.isReadFromSharedMemory.get()) {
+        if (databaseService.status.get() == Constants.Enums.DatabaseStatus._SHARED_MEMORY) {
             return;
         }
         EventManagement eventManagement = EventManagement.getInstance();
@@ -2090,7 +2080,7 @@ public class DatabaseService {
                 try {
                     final int removeRecordsThreshold = 20;
                     while (eventManagement.notMainExit()) {
-                        if (databaseService.isSearchStopped.get() &&
+                        if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL &&
                                 !GetHandle.INSTANCE.isForegroundFullscreen() &&
                                 (!recordsToAdd.isEmpty() || !recordsToRemove.isEmpty())) {
                             for (var entry : recordsToAdd.entrySet()) {
@@ -2182,10 +2172,7 @@ public class DatabaseService {
             if (!AllConfigs.getInstance().isEnableCuda()) {
                 return;
             }
-            DatabaseService databaseService = DatabaseService.getInstance();
-            if (databaseService.isSearchStopped.get()) {
-                CudaAccelerator.INSTANCE.clearAllCache();
-            }
+            CudaAccelerator.INSTANCE.clearAllCache();
         }
     }
 }
