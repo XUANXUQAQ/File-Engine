@@ -42,6 +42,7 @@ std::atomic_uint remove_record_thread_count(0);
 std::mutex modify_cache_lock;
 std::hash<std::string> hasher;
 std::atomic_bool exit_flag = false;
+static int current_using_device = 0;
 
 /*
  * Class:     file_engine_dllInterface_CudaAccelerator
@@ -76,7 +77,18 @@ JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_CudaAccelerator_getDevic
 JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_CudaAccelerator_setDevice
 (JNIEnv*, jobject, jint device_number_jint)
 {
-	return set_using_device(device_number_jint);
+	if (device_number_jint == current_using_device)
+		return true;
+	release_all();
+	if (set_using_device(device_number_jint))
+	{
+		current_using_device = device_number_jint;
+		init_stop_signal();
+		init_cuda_search_memory();
+		init_str_convert();
+		return true;
+	}
+	return false;
 }
 
 /*
@@ -102,6 +114,8 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_initialize
 	init_stop_signal();
 	init_cuda_search_memory();
 	init_str_convert();
+	//默认使用第一个设备,current_using_device=0
+	set_using_device(current_using_device);
 }
 
 /*
