@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <cuda_runtime.h>
 
 void init_str_convert();

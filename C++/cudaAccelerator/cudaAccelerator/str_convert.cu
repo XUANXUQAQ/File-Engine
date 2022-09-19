@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include "str_convert.cuh"
 #include <stdlib.h>
 #include "cuda_runtime.h"

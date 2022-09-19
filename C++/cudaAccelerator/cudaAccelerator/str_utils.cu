@@ -33,13 +33,13 @@ __device__ char* strlwr_cuda(char* src)
 __device__ char* strstr_cuda(char* s1, char* s2)
 {
 	int n;
-	if (*s2) //Á½ÖÖÇé¿ö¿¼ÂÇ
+	if (*s2) //ä¸¤ç§æƒ…å†µè€ƒè™‘
 	{
 		while (*s1)
 		{
 			for (n = 0; *(s1 + n) == *(s2 + n); ++n)
 			{
-				if (!*(s2 + n + 1)) //²éÕÒµÄÏÂÒ»¸ö×Ö·ûÊÇ·ñÎª'\0'
+				if (!*(s2 + n + 1)) //æŸ¥æ‰¾çš„ä¸‹ä¸€ä¸ªå­—ç¬¦æ˜¯å¦ä¸º'\0'
 				{
 					return s1;
 				}
@@ -100,17 +100,17 @@ __device__ char* strcat_cuda(char* dst, char const* src)
 
 	char* tmp = dst;
 
-	while (*dst != '\0') //Õâ¸öÑ­»·½áÊøÖ®ºó£¬dstÖ¸Ïò'\0'
+	while (*dst != '\0') //è¿™ä¸ªå¾ªçŽ¯ç»“æŸä¹‹åŽï¼ŒdstæŒ‡å‘'\0'
 	{
 		dst++;
 	}
 
 	while (*src != '\0')
 	{
-		*dst++ = *src++; //°ÑsrcÖ¸ÏòµÄÄÚÈÝ¸³Öµ¸ødst
+		*dst++ = *src++; //æŠŠsrcæŒ‡å‘çš„å†…å®¹èµ‹å€¼ç»™dst
 	}
 
-	*dst = '\0'; //Õâ¾äÒ»¶¨Òª¼Ó£¬·ñÔò×îºóÒ»¸ö×Ö·û»áÂÒÂë
+	*dst = '\0'; //è¿™å¥ä¸€å®šè¦åŠ ï¼Œå¦åˆ™æœ€åŽä¸€ä¸ªå­—ç¬¦ä¼šä¹±ç 
 	return tmp;
 }
 

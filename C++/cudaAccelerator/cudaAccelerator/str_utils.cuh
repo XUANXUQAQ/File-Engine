@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "cuda_runtime.h"
 
 __device__ int strcmp_cuda(const char* str1, const char* str2);
