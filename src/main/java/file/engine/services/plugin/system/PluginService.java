@@ -8,6 +8,7 @@ import file.engine.configs.Constants;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.BuildEventRequestEvent;
+import file.engine.event.handler.impl.configs.SetConfigsEvent;
 import file.engine.event.handler.impl.frame.searchBar.SearchBarReadyEvent;
 import file.engine.event.handler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import file.engine.event.handler.impl.plugin.*;
@@ -571,10 +572,10 @@ public class PluginService {
         getInstance().removeFromPluginsCanUpdate(((RemoveFromPluginsCanUpdateEvent) event).pluginName);
     }
 
-    @EventRegister(registerClass = ConfigsChangedEvent.class)
+    @EventListener(listenClass = SetConfigsEvent.class)
     private static void setPluginsCurrentThemeEvent(Event event) {
-        ConfigsChangedEvent task1 = (ConfigsChangedEvent) event;
-        getInstance().configsChanged(task1.defaultColor, task1.chosenColor, task1.borderColor, AllConfigs.getInstance().getConfigMap());
+        var configs = AllConfigs.getInstance().getConfigMap();
+        getInstance().configsChanged((Integer) configs.get("defaultBackground"), (Integer) configs.get("labelColor"), (Integer) configs.get("borderColor"), configs);
     }
 
     @EventListener(listenClass = SearchBarReadyEvent.class)

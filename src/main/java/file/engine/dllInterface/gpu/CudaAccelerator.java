@@ -4,7 +4,7 @@ import java.nio.file.Path;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
-enum CudaAccelerator implements IGPUInterface {
+enum CudaAccelerator implements IGPUAccelerator {
     INSTANCE;
 
     private static boolean isCudaLoaded;

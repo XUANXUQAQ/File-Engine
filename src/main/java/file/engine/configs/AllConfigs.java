@@ -19,14 +19,9 @@ import file.engine.event.handler.impl.BootSystemEvent;
 import file.engine.event.handler.impl.ReadConfigsEvent;
 import file.engine.event.handler.impl.SetSwingLaf;
 import file.engine.event.handler.impl.configs.*;
-import file.engine.event.handler.impl.database.cuda.CudaSetDeviceEvent;
 import file.engine.event.handler.impl.download.StartDownloadEvent;
-import file.engine.event.handler.impl.frame.searchBar.*;
 import file.engine.event.handler.impl.frame.settingsFrame.GetExcludeComponentEvent;
-import file.engine.event.handler.impl.hotkey.RegisterHotKeyEvent;
-import file.engine.event.handler.impl.hotkey.ResponseCtrlEvent;
 import file.engine.event.handler.impl.monitor.disk.StartMonitorDiskEvent;
-import file.engine.event.handler.impl.plugin.ConfigsChangedEvent;
 import file.engine.event.handler.impl.plugin.LoadAllPluginsEvent;
 import file.engine.event.handler.impl.stop.CloseEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
@@ -95,8 +90,8 @@ public class AllConfigs {
         return Constants.Enums.SwingThemes.MaterialLighter;
     }
 
-    public int getCudaDeviceNum() {
-        return configEntity.getCudaDeviceNum();
+    public String getGpuDevice() {
+        return configEntity.getGpuDevice();
     }
 
     /**
@@ -551,9 +546,14 @@ public class AllConfigs {
         }
     }
 
-    private void readCudaDeviceNum(Map<String, Object> settingsInJson) {
-        int deviceNumber = getFromJson(settingsInJson, "cudaDeviceNum", 0);
-        configEntity.setCudaDeviceNum(deviceNumber);
+    private void readGpuDevice(Map<String, Object> settingsInJson) {
+        String deviceNumber = getFromJson(settingsInJson, "gpuDevice", "");
+        Map<String, String> devices = GPUAccelerator.INSTANCE.getDevices();
+        if (!deviceNumber.isEmpty() && devices.containsValue(deviceNumber)) {
+            configEntity.setGpuDevice(deviceNumber);
+        } else {
+            configEntity.setGpuDevice("");
+        }
     }
 
     private void readIsAttachExplorer(Map<String, Object> settingsInJson) {
@@ -804,33 +804,10 @@ public class AllConfigs {
         readCheckUpdateStartup(settingsInJson);
         readBorderThickness(settingsInJson);
         readIsEnableCuda(settingsInJson);
-        readCudaDeviceNum(settingsInJson);
+        readGpuDevice(settingsInJson);
         readSearchThreadNumber(settingsInJson);
         initUpdateAddress();
         initCmdSetSettings();
-    }
-
-    /**
-     * 使所有配置生效
-     */
-    private void setAllSettings() {
-        EventManagement eventManagement = EventManagement.getInstance();
-        AllConfigs allConfigs = AllConfigs.getInstance();
-        eventManagement.putEvent(new ConfigsChangedEvent(
-                allConfigs.getDefaultBackgroundColor(),
-                allConfigs.getLabelColor(),
-                allConfigs.getBorderColor()));
-        eventManagement.putEvent(new RegisterHotKeyEvent(configEntity.getHotkey()));
-        eventManagement.putEvent(new ResponseCtrlEvent(configEntity.isDoubleClickCtrlOpen()));
-        eventManagement.putEvent(new SetSearchBarTransparencyEvent(configEntity.getTransparency()));
-        eventManagement.putEvent(new SetSearchBarDefaultBackgroundEvent(configEntity.getDefaultBackgroundColor()));
-        eventManagement.putEvent(new SetSearchBarLabelColorEvent(configEntity.getLabelColor()));
-        eventManagement.putEvent(new SetSearchBarFontColorWithCoverageEvent(configEntity.getFontColorWithCoverage()));
-        eventManagement.putEvent(new SetSearchBarLabelFontColorEvent(configEntity.getFontColor()));
-        eventManagement.putEvent(new SetSearchBarColorEvent(configEntity.getSearchBarColor()));
-        eventManagement.putEvent(new SetSearchBarFontColorEvent(configEntity.getSearchBarFontColor()));
-        eventManagement.putEvent(new SetBorderEvent(allConfigs.getBorderType(), configEntity.getBorderColor(), configEntity.getBorderThickness()));
-        eventManagement.putEvent(new CudaSetDeviceEvent(configEntity.getCudaDeviceNum()));
     }
 
     /**
@@ -1079,7 +1056,10 @@ public class AllConfigs {
 
     @EventRegister(registerClass = SetConfigsEvent.class)
     private static void setAllConfigsEvent(Event event) {
-        getInstance().setAllSettings();
+        SetConfigsEvent setConfigsEvent = (SetConfigsEvent) event;
+        if (setConfigsEvent.getConfigs() == null) {
+            setConfigsEvent.setConfigs(getInstance().configEntity);
+        }
     }
 
     @EventRegister(registerClass = SetSwingLaf.class)

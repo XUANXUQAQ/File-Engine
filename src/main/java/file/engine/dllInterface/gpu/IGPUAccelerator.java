@@ -3,7 +3,7 @@ package file.engine.dllInterface.gpu;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
-public interface IGPUInterface {
+public interface IGPUAccelerator {
 
     void resetAllResultStatus();
 
@@ -46,6 +46,10 @@ public interface IGPUInterface {
 
     void release();
 
+    /**
+     * 返回格式为[设备名],[设备id];[设备名],[设备id];....
+     * @return 设备信息
+     */
     String getDevices();
 
     boolean setDevice(int deviceNum);

@@ -8,8 +8,8 @@ import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.ConfigEntity;
 import file.engine.configs.Constants;
-import file.engine.dllInterface.gpu.GPUAccelerator;
 import file.engine.dllInterface.IsLocalDisk;
+import file.engine.dllInterface.gpu.GPUAccelerator;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.SetSwingLaf;
@@ -25,9 +25,11 @@ import file.engine.event.handler.impl.frame.searchBar.HideSearchBarEvent;
 import file.engine.event.handler.impl.frame.searchBar.PreviewSearchBarEvent;
 import file.engine.event.handler.impl.frame.searchBar.StartPreviewEvent;
 import file.engine.event.handler.impl.frame.searchBar.StopPreviewEvent;
-import file.engine.event.handler.impl.frame.settingsFrame.*;
+import file.engine.event.handler.impl.frame.settingsFrame.AddCacheEvent;
+import file.engine.event.handler.impl.frame.settingsFrame.GetExcludeComponentEvent;
+import file.engine.event.handler.impl.frame.settingsFrame.IsCacheExistEvent;
+import file.engine.event.handler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import file.engine.event.handler.impl.hotkey.CheckHotKeyAvailableEvent;
-import file.engine.event.handler.impl.hotkey.ResponseCtrlEvent;
 import file.engine.event.handler.impl.plugin.AddPluginsCanUpdateEvent;
 import file.engine.event.handler.impl.plugin.GetPluginByNameEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
@@ -92,7 +94,7 @@ public class SettingsFrame {
     private static final AllConfigs allConfigs = AllConfigs.getInstance();
     private static final CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
     private final HashMap<TabNameAndTitle, Component> tabComponentNameMap = new HashMap<>();
-    private final HashMap<String, Integer> cudaDeviceMap = new HashMap<>();
+    private Map<String, String> cudaDeviceMap = new HashMap<>();
     private HashMap<String, Integer> suffixMap;
     private final Set<Component> excludeComponent = ConcurrentHashMap.newKeySet();
     private final LinkedHashSet<String> diskSet = new LinkedHashSet<>();
@@ -2611,23 +2613,15 @@ public class SettingsFrame {
         boolean cudaAvailableOnSystem = GPUAccelerator.INSTANCE.isGPUAvailableOnSystem();
         comboBoxCudaDevice.setEnabled(cudaAvailableOnSystem);
         if (cudaAvailableOnSystem) {
-            var deviceMap = new HashMap<Integer, String>();
-            String devices = GPUAccelerator.INSTANCE.getDevices();
-            String[] split = RegexUtil.semicolon.split(devices);
-            for (String each : split) {
-                String[] cudaInfo = RegexUtil.comma.split(each);
-                Integer deviceNum = Integer.valueOf(cudaInfo[1]);
-                String deviceName = cudaInfo[0];
-                cudaDeviceMap.put(deviceName, deviceNum);
-                deviceMap.put(deviceNum, deviceName);
-            }
+            cudaDeviceMap = GPUAccelerator.INSTANCE.getDevices();
             comboBoxCudaDevice.setModel(new DefaultComboBoxModel<>(new Vector<>(cudaDeviceMap.keySet())));
-            int cudaDeviceNum = allConfigs.getCudaDeviceNum();
-            String item = deviceMap.get(cudaDeviceNum);
-            if (item == null) {
+            String gpuDevice = allConfigs.getGpuDevice();
+            if (gpuDevice == null || gpuDevice.isEmpty()) {
                 comboBoxCudaDevice.setSelectedIndex(0);
             } else {
-                comboBoxCudaDevice.setSelectedItem(item);
+                HashMap<String, String> map = new HashMap<>();
+                cudaDeviceMap.forEach((k, v) -> map.put(v, k));
+                comboBoxCudaDevice.setSelectedItem(map.get(gpuDevice));
             }
         }
     }
@@ -3336,7 +3330,7 @@ public class SettingsFrame {
         configEntity.setAttachExplorer(checkBoxIsAttachExplorer.isSelected());
         configEntity.setEnableCuda(checkBoxEnableCuda.isSelected());
         String selectedCudaDevice = (String) comboBoxCudaDevice.getSelectedItem();
-        configEntity.setCudaDeviceNum(cudaDeviceMap.getOrDefault(selectedCudaDevice, 0));
+        configEntity.setGpuDevice(cudaDeviceMap.getOrDefault(selectedCudaDevice, ""));
         var threadNum = (Integer) comboBoxSearchThread.getSelectedItem();
         configEntity.setSearchThreadNumber(threadNum == null ? Runtime.getRuntime().availableProcessors() : threadNum);
         return configEntity;
@@ -3380,12 +3374,10 @@ public class SettingsFrame {
         //使所有配置生效
         ConfigEntity configEntity = getConfigEntity();
 
-        eventManagement.putEvent(new ResponseCtrlEvent(checkBoxResponseCtrl.isSelected()));
-
         SaveConfigsEvent event = new SaveConfigsEvent(configEntity);
         eventManagement.putEvent(event);
         eventManagement.waitForEvent(event);
-        eventManagement.putEvent(new SetConfigsEvent());
+        eventManagement.putEvent(new SetConfigsEvent(configEntity));
 
         Color tmp_color = new Color(allConfigs.getLabelColor());
         labelColorChooser.setBackground(tmp_color);

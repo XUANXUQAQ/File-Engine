@@ -4,7 +4,7 @@ import java.nio.file.Path;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
-enum OpenclAccelerator implements IGPUInterface {
+enum OpenclAccelerator implements IGPUAccelerator {
     INSTANCE;
 
     private static boolean isOpenclLoaded;

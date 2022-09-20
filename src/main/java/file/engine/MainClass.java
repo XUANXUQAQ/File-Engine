@@ -57,9 +57,7 @@ public class MainClass {
             initFoldersAndFiles();
             Class.forName("org.sqlite.JDBC");
             initializeDllInterface();
-            if (GPUAccelerator.INSTANCE.isGPUAvailableOnSystem()) {
-                GPUAccelerator.INSTANCE.initialize();
-            }
+            GPUAccelerator.INSTANCE.initialize();
             initEventManagement();
             updateLauncher();
             //清空tmp
@@ -67,15 +65,13 @@ public class MainClass {
             readAllConfigs();
             initDatabase();
             initPinyin();
-
+            checkConfigs();
+            setAllConfigs();
             // 初始化全部完成，发出启动系统事件
             if (sendBootSystemSignal()) {
                 JOptionPane.showMessageDialog(null, "Boot system failed", "ERROR", JOptionPane.ERROR_MESSAGE);
                 throw new RuntimeException("Boot System Failed");
             }
-
-            checkConfigs();
-            setAllConfigs();
             checkVersion();
 
             mainLoop();
@@ -99,7 +95,6 @@ public class MainClass {
         Class.forName("file.engine.dllInterface.ResultPipe");
         Class.forName("file.engine.dllInterface.EmptyRecycleBin");
         Class.forName("file.engine.dllInterface.gpu.GPUAccelerator");
-        Class.forName("file.engine.dllInterface.gpu.OpenclAccelerator");
     }
 
     /**
@@ -216,7 +211,7 @@ public class MainClass {
 
     private static void setAllConfigs() {
         EventManagement eventManagement = EventManagement.getInstance();
-        SetConfigsEvent setConfigsEvent = new SetConfigsEvent();
+        SetConfigsEvent setConfigsEvent = new SetConfigsEvent(null);
         eventManagement.putEvent(setConfigsEvent);
         if (eventManagement.waitForEvent(setConfigsEvent)) {
             JOptionPane.showMessageDialog(null, "Set configs failed", "ERROR", JOptionPane.ERROR_MESSAGE);

@@ -1,17 +1,41 @@
 package file.engine.dllInterface.gpu;
 
+import file.engine.utils.RegexUtil;
+
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
-public enum GPUAccelerator implements IGPUInterface {
+public enum GPUAccelerator {
     INSTANCE;
-    private static IGPUInterface gpuAccelerator = null;
+    private static IGPUAccelerator gpuAccelerator;
+    private static final CudaAccelerator cudaAccelerator = CudaAccelerator.INSTANCE;
+    private static final OpenclAccelerator openclAccelerator = OpenclAccelerator.INSTANCE;
 
-    static {
-        if (CudaAccelerator.INSTANCE.isGPUAvailableOnSystem()) {
-            gpuAccelerator = CudaAccelerator.INSTANCE;
-        } else if (OpenclAccelerator.INSTANCE.isGPUAvailableOnSystem()) {
-            gpuAccelerator = OpenclAccelerator.INSTANCE;
+    enum Category {
+        CUDA("cuda"), OPENCL("opencl");
+        final String category;
+
+        Category(String category) {
+            this.category = category;
+        }
+
+        @Override
+        public String toString() {
+            return this.category;
+        }
+
+        static Category categoryFromString(String c) {
+            switch (c) {
+                case "cuda":
+                    return CUDA;
+                case "opencl":
+                    return OPENCL;
+                default:
+                    return null;
+            }
         }
     }
 
@@ -48,9 +72,7 @@ public enum GPUAccelerator implements IGPUInterface {
     }
 
     public boolean isGPUAvailableOnSystem() {
-        if (gpuAccelerator == null)
-            return false;
-        return gpuAccelerator.isGPUAvailableOnSystem();
+        return cudaAccelerator.isGPUAvailableOnSystem() || openclAccelerator.isGPUAvailableOnSystem();
     }
 
     public boolean hasCache() {
@@ -99,8 +121,12 @@ public enum GPUAccelerator implements IGPUInterface {
     }
 
     public void initialize() {
-        checkAvailable();
-        gpuAccelerator.initialize();
+        if (cudaAccelerator.isGPUAvailableOnSystem()) {
+            cudaAccelerator.initialize();
+        }
+        if (openclAccelerator.isGPUAvailableOnSystem()) {
+            openclAccelerator.initialize();
+        }
     }
 
     public void release() {
@@ -108,14 +134,67 @@ public enum GPUAccelerator implements IGPUInterface {
         gpuAccelerator.release();
     }
 
-    public String getDevices() {
-        checkAvailable();
-        return gpuAccelerator.getDevices();
+    /**
+     * key: 设备名
+     * value: [设备种类(cuda, opencl)];[设备id]
+     *
+     * @return map
+     */
+    public Map<String, String> getDevices() {
+        LinkedHashMap<String, String> deviceMap = new LinkedHashMap<>();
+        getDeviceToMap(cudaAccelerator, deviceMap, Category.CUDA);
+        getDeviceToMap(openclAccelerator, deviceMap, Category.OPENCL);
+        return deviceMap;
     }
 
-    public boolean setDevice(int deviceNum) {
-        checkAvailable();
-        return gpuAccelerator.setDevice(deviceNum);
+    private void getDeviceToMap(IGPUAccelerator igpuAccelerator, HashMap<String, String> deviceMap, Category category) {
+        if (igpuAccelerator.isGPUAvailableOnSystem()) {
+            String devices = igpuAccelerator.getDevices();
+            String[] deviceInfo = RegexUtil.semicolon.split(devices);
+            if (deviceInfo != null && deviceInfo.length != 0) {
+                for (var eachDeviceInfo : deviceInfo) {
+                    String[] nameAndId = RegexUtil.comma.split(eachDeviceInfo);
+                    String deviceName = nameAndId[0];
+                    int deviceId = Integer.parseInt(nameAndId[1]);
+                    if (!deviceMap.containsKey(deviceName)) {
+                        deviceMap.put(deviceName, category + ";" + deviceId);
+                    }
+                }
+            }
+        }
+    }
+
+    public boolean setDevice(String deviceCategoryAndId) {
+        if (gpuAccelerator != null) {
+            // 切换GPU设备重启生效，运行中不允许切换
+            return true;
+        }
+        if (deviceCategoryAndId.isEmpty()) {
+            if (cudaAccelerator.isGPUAvailableOnSystem() && cudaAccelerator.setDevice(0)) {
+                gpuAccelerator = cudaAccelerator;
+                return true;
+            }
+            if (openclAccelerator.isGPUAvailableOnSystem() && openclAccelerator.setDevice(0)) {
+                gpuAccelerator = openclAccelerator;
+                return true;
+            }
+            return false;
+        }
+        String[] info = RegexUtil.semicolon.split(deviceCategoryAndId);
+        String deviceCategory = info[0];
+        int id = Integer.parseInt(info[1]);
+        var category = Category.categoryFromString(deviceCategory);
+        if (category != null) {
+            switch (category) {
+                case CUDA:
+                    gpuAccelerator = cudaAccelerator;
+                    return cudaAccelerator.setDevice(id);
+                case OPENCL:
+                    gpuAccelerator = openclAccelerator;
+                    return openclAccelerator.setDevice(id);
+            }
+        }
+        return false;
     }
 
     private void checkAvailable() {

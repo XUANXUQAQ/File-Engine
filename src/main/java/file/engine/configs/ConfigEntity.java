@@ -110,8 +110,8 @@ public class ConfigEntity {
     @SerializedName("isEnableCuda")
     private boolean isEnableCuda;
 
-    @SerializedName("cudaDeviceNum")
-    private int cudaDeviceNum;
+    @SerializedName("gpuDevice")
+    private String gpuDevice;
 
     @SerializedName("searchThreadNumber")
     private int searchThreadNumber;

@@ -10,11 +10,11 @@ import file.engine.dllInterface.gpu.GPUAccelerator;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.BootSystemEvent;
+import file.engine.event.handler.impl.configs.SetConfigsEvent;
 import file.engine.event.handler.impl.database.*;
-import file.engine.event.handler.impl.database.cuda.CudaAddRecordEvent;
-import file.engine.event.handler.impl.database.cuda.CudaClearCacheEvent;
-import file.engine.event.handler.impl.database.cuda.CudaRemoveRecordEvent;
-import file.engine.event.handler.impl.database.cuda.CudaSetDeviceEvent;
+import file.engine.event.handler.impl.database.gpu.GPUAddRecordEvent;
+import file.engine.event.handler.impl.database.gpu.GPUClearCacheEvent;
+import file.engine.event.handler.impl.database.gpu.GPURemoveRecordEvent;
 import file.engine.event.handler.impl.frame.searchBar.SearchBarReadyEvent;
 import file.engine.event.handler.impl.monitor.disk.StartMonitorDiskEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
@@ -113,10 +113,21 @@ public class DatabaseService {
     }
 
     private DatabaseService() {
+        initDatabaseCacheNum();
+        initPriority();
+        initTableMap();
+        prepareDatabaseCache();
+        for (String diskPath : RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks())) {
+            for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
+                for (Pair pair : priorityMap) {
+                    tableCache.put(diskPath.charAt(0) + "," + "list" + i + "," + pair.priority, new Cache());
+                }
+            }
+        }
     }
 
     private void invalidateAllCache() {
-        CudaClearCacheEvent cudaClearCacheEvent = new CudaClearCacheEvent();
+        GPUClearCacheEvent cudaClearCacheEvent = new GPUClearCacheEvent();
         EventManagement eventManagement = EventManagement.getInstance();
         eventManagement.putEvent(cudaClearCacheEvent);
         eventManagement.waitForEvent(cudaClearCacheEvent, 60_000);
@@ -329,7 +340,7 @@ public class DatabaseService {
             };
             final Supplier<Boolean> isStopCreateCache =
                     () -> !eventManagement.notMainExit() || searchThreadCount.get() != 0 ||
-                            (getStatus() != Constants.Enums.DatabaseStatus.NORMAL);
+                            (status.get() != Constants.Enums.DatabaseStatus.NORMAL && status.get() != Constants.Enums.DatabaseStatus._CREATING_CACHE);
             final Supplier<Boolean> isStartSaveCache =
                     () -> (System.currentTimeMillis() - startCheckInfo.startCheckTimeMills > checkTimeInterval &&
                             !GetHandle.INSTANCE.isForegroundFullscreen()) ||
@@ -369,7 +380,7 @@ public class DatabaseService {
                                 // 防止显存占用超过70%后仍然扫描数据库
                                 startCheckInfo.startCheckTimeMills = System.currentTimeMillis();
                                 if (GPUAccelerator.INSTANCE.hasCache()) {
-                                    CudaClearCacheEvent cudaClearCacheEvent = new CudaClearCacheEvent();
+                                    GPUClearCacheEvent cudaClearCacheEvent = new GPUClearCacheEvent();
                                     eventManagement.putEvent(cudaClearCacheEvent);
                                     eventManagement.waitForEvent(cudaClearCacheEvent);
                                 }
@@ -378,7 +389,7 @@ public class DatabaseService {
                     }
                     TimeUnit.SECONDS.sleep(1);
                 }
-            } catch (InterruptedException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         });
@@ -429,9 +440,10 @@ public class DatabaseService {
                 String[] info = RegexUtil.comma.split(key);
                 try (Statement stmt = SQLiteUtil.getStatement(info[0]);
                      ResultSet resultSet = stmt.executeQuery("SELECT PATH FROM " + info[1] + " " + "WHERE PRIORITY=" + info[2])) {
+                    EventManagement eventManagement = EventManagement.getInstance();
                     GPUAccelerator.INSTANCE.initCache(key, () -> {
                         try {
-                            if (resultSet.next()) {
+                            if (resultSet.next() && eventManagement.notMainExit()) {
                                 return resultSet.getString("PATH");
                             }
                         } catch (Exception ignored) {
@@ -1089,7 +1101,7 @@ public class DatabaseService {
             String tableName = "list" + asciiGroup;
             String key = path.charAt(0) + "," + tableName + "," + priorityBySuffix;
             if (AllConfigs.getInstance().isEnableCuda()) {
-                EventManagement.getInstance().putEvent(new CudaRemoveRecordEvent(key, path));
+                EventManagement.getInstance().putEvent(new GPURemoveRecordEvent(key, path));
             }
             Cache cache = tableCache.get(key);
             if (cache.isCached.get()) {
@@ -1171,7 +1183,7 @@ public class DatabaseService {
         String tableName = "list" + asciiGroup;
         String key = path.charAt(0) + "," + tableName + "," + priorityBySuffix;
         if (AllConfigs.getInstance().isEnableCuda()) {
-            EventManagement.getInstance().putEvent(new CudaAddRecordEvent(key, path));
+            EventManagement.getInstance().putEvent(new GPUAddRecordEvent(key, path));
         }
         Cache cache = tableCache.get(key);
         if (cache.isCacheValid()) {
@@ -1544,7 +1556,7 @@ public class DatabaseService {
         }
         // 复制数据库到tmp
         SQLiteUtil.copyDatabases("data", "tmp");
-        if (!casSetStatus(Constants.Enums.DatabaseStatus.NORMAL, Constants.Enums.DatabaseStatus.MANUAL_UPDATE)) {
+        if (!casSetStatus(status.get(), Constants.Enums.DatabaseStatus.MANUAL_UPDATE)) {
             throw new RuntimeException("databaseService status设置MANUAL UPDATE状态失败");
         }
         // 停止搜索
@@ -1556,11 +1568,11 @@ public class DatabaseService {
         if (IsDebug.isDebug()) {
             System.out.println("成功切换到临时数据库");
         }
-        if (!casSetStatus(Constants.Enums.DatabaseStatus.MANUAL_UPDATE, Constants.Enums.DatabaseStatus._TEMP)) {
+        if (!casSetStatus(status.get(), Constants.Enums.DatabaseStatus._TEMP)) {
             //恢复data目录的数据库
             SQLiteUtil.closeAll();
             SQLiteUtil.initAllConnections();
-            casSetStatus(Constants.Enums.DatabaseStatus.MANUAL_UPDATE, Constants.Enums.DatabaseStatus.NORMAL);
+            casSetStatus(status.get(), Constants.Enums.DatabaseStatus.NORMAL);
             throw new RuntimeException("databaseService status设置TEMP状态失败");
         }
         // 检查数据库文件大小，过大则删除
@@ -1784,13 +1796,12 @@ public class DatabaseService {
         }
     }
 
-    @EventRegister(registerClass = CudaSetDeviceEvent.class)
-    private static void setCudaDevice(Event event) {
+    @EventListener(listenClass = SetConfigsEvent.class)
+    private static void setGpuDevice(Event event) {
         if (AllConfigs.getInstance().isEnableCuda()) {
-            CudaSetDeviceEvent cudaSetDeviceEvent = (CudaSetDeviceEvent) event;
-            if (!GPUAccelerator.INSTANCE.setDevice(cudaSetDeviceEvent.deviceNum)) {
-                System.err.println("cuda设备id" + cudaSetDeviceEvent.deviceNum + "无效");
-                GPUAccelerator.INSTANCE.setDevice(0);
+            SetConfigsEvent setConfigsEvent = (SetConfigsEvent) event;
+            if (!GPUAccelerator.INSTANCE.setDevice(setConfigsEvent.getConfigs().getGpuDevice())) {
+                System.err.println("gpu设备" + setConfigsEvent.getConfigs().getGpuDevice() + "无效");
             }
         }
     }
@@ -1882,7 +1893,6 @@ public class DatabaseService {
     }
 
     @EventRegister(registerClass = StopSearchEvent.class)
-    @EventListener(listenClass = RestartEvent.class)
     private static void stopSearchEvent(Event event) {
         DatabaseService databaseService = getInstance();
         databaseService.stopSearch();
@@ -1891,20 +1901,9 @@ public class DatabaseService {
     @EventListener(listenClass = BootSystemEvent.class)
     private static void init(Event event) {
         DatabaseService databaseService = getInstance();
-        databaseService.initDatabaseCacheNum();
-        databaseService.initPriority();
         databaseService.syncFileChangesThread();
         databaseService.checkTimeAndSendExecuteSqlSignalThread();
         databaseService.executeSqlCommandsThread();
-        databaseService.initTableMap();
-        databaseService.prepareDatabaseCache();
-        for (String diskPath : RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks())) {
-            for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
-                for (Pair pair : databaseService.priorityMap) {
-                    databaseService.tableCache.put(diskPath.charAt(0) + "," + "list" + i + "," + pair.priority, new Cache());
-                }
-            }
-        }
         databaseService.saveTableCacheThread();
     }
 
@@ -2028,9 +2027,12 @@ public class DatabaseService {
     @EventListener(listenClass = RestartEvent.class)
     private static void restartEvent(Event event) {
         FileMonitor.INSTANCE.stop_monitor();
-        getInstance().executeAllCommands();
+        DatabaseService databaseService = getInstance();
+        databaseService.executeAllCommands();
+        databaseService.stopSearch();
         SQLiteUtil.closeAll();
         if (AllConfigs.getInstance().isEnableCuda()) {
+            GPUAccelerator.INSTANCE.stopCollectResults();
             GPUAccelerator.INSTANCE.release();
         }
     }
@@ -2152,25 +2154,25 @@ public class DatabaseService {
             execWorkQueueThread();
         }
 
-        @EventRegister(registerClass = CudaAddRecordEvent.class)
+        @EventRegister(registerClass = GPUAddRecordEvent.class)
         private static void addToGPUMemory(Event event) {
             if (!AllConfigs.getInstance().isEnableCuda()) {
                 return;
             }
-            CudaAddRecordEvent cudaAddRecordEvent = (CudaAddRecordEvent) event;
-            addRecord(cudaAddRecordEvent.key, cudaAddRecordEvent.record);
+            GPUAddRecordEvent GPUAddRecordEvent = (GPUAddRecordEvent) event;
+            addRecord(GPUAddRecordEvent.key, GPUAddRecordEvent.record);
         }
 
-        @EventRegister(registerClass = CudaRemoveRecordEvent.class)
+        @EventRegister(registerClass = GPURemoveRecordEvent.class)
         private static void removeFromGPUMemory(Event event) {
             if (!AllConfigs.getInstance().isEnableCuda()) {
                 return;
             }
-            CudaRemoveRecordEvent cudaRemoveRecordEvent = (CudaRemoveRecordEvent) event;
+            GPURemoveRecordEvent cudaRemoveRecordEvent = (GPURemoveRecordEvent) event;
             removeRecord(cudaRemoveRecordEvent.key, cudaRemoveRecordEvent.record);
         }
 
-        @EventRegister(registerClass = CudaClearCacheEvent.class)
+        @EventRegister(registerClass = GPUClearCacheEvent.class)
         private static void clearCacheCuda(Event event) {
             if (!AllConfigs.getInstance().isEnableCuda()) {
                 return;
