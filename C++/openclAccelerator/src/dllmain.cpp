@@ -1,4 +1,4 @@
-#include <concurrent_unordered_map.h>
+﻿#include <concurrent_unordered_map.h>
 #include "file_engine_dllInterface_gpu_OpenclAccelerator.h"
 #include "cache.h"
 #include "constans.h"
@@ -44,7 +44,6 @@ std::atomic_uint remove_record_thread_count(0);
 std::mutex modify_cache_lock;
 std::hash<std::string> hasher;
 std::atomic_bool exit_flag = false;
-static unsigned current_using_device = 0;
 Device current_device;
 Memory<char>* p_stop_signal;
 
@@ -62,7 +61,8 @@ JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_ge
 	const auto device_count = devices.size();
 	for (size_t i = 0; i < device_count; ++i)
 	{
-		device_string.append(devices[i].name).append(",").append(std::to_string(i)).append(";");
+		if (devices[i].memory > 2147483648)
+			device_string.append(devices[i].name).append(",").append(std::to_string(i)).append(";");
 	}
 	if (device_count)
 	{
@@ -79,8 +79,6 @@ JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_ge
 JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_setDevice
 (JNIEnv*, jobject, jint device_number_jint)
 {
-	if (device_number_jint == current_using_device)
-		return true;
 	release_all();
 	return set_using_device(device_number_jint);
 }
@@ -107,7 +105,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_relea
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_initialize
 (JNIEnv*, jobject)
 {
-	current_device = Device(select_device_with_id(current_using_device));
+	current_device = Device(select_device_with_id(0));
 	p_stop_signal = new Memory<char>(current_device, 1);
 	(*p_stop_signal)[0] = 0;
 	p_stop_signal->write_to_device();
@@ -802,7 +800,6 @@ bool set_using_device(const unsigned device_num)
 {
 	if (auto&& devices = get_devices(); device_num < devices.size())
 	{
-		current_using_device = device_num;
 		current_device = Device(select_device_with_id(device_num));
 		delete p_stop_signal;
 		p_stop_signal = new Memory<char>(current_device, 1);
@@ -874,8 +871,7 @@ void start_kernel(const std::vector<std::string>& search_case,
 	Memory<bool> dev_is_ignore_case(current_device, 1);
 	dev_is_ignore_case[0] = is_ignore_case;
 
-	auto context = current_device.get_cl_context();
-	for (auto& [key, cache] : cache_map)
+	for (auto& [_, cache] : cache_map)
 	{
 		if (!cache->is_cache_valid)
 		{
@@ -895,9 +891,18 @@ void start_kernel(const std::vector<std::string>& search_case,
 			dev_is_keyword_path,
 			cache->dev_output,
 			*p_stop_signal);
-		search_kernel.enqueue_run();
+		cl_int ret;
+		search_kernel.enqueue_run(&ret);
+		if (ret != CL_SUCCESS)
+		{
+			fprintf(stderr, "OpenCL: start kernel function failed. error code: %d\n", ret);
+			break;
+		}
 	}
 	current_device.finish_queue();
+#ifdef DEBUG_OUTPUT
+	std::cout << "all finished" << std::endl;
+#endif
 	for (auto& [_, cache] : cache_map)
 	{
 		cache->is_match_done = true;

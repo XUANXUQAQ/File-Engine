@@ -232,11 +232,18 @@ private:
 		this->cl_queue = device.get_cl_queue();
 		if(allocate_device) {
 			device.info.memory_used += capacity(); // track device memory usage
-			if(device.info.memory_used>device.info.memory) print_error("Device \""+device.info.name+"\" does not have enough memory. Allocating another "+to_string((uint)(capacity()/1048576ull))+" MB would use a total of "+to_string(device.info.memory_used)+" bytes / "+to_string(device.info.memory)+" bytes.");
+			if(device.info.memory_used>device.info.memory) 
+				print_error("Device \""+device.info.name+"\" does not have enough memory. Allocating another "
+					+to_string((uint)(capacity()/1048576ull))+" MB would use a total of "
+					+to_string(device.info.memory_used)+" bytes / "+to_string(device.info.memory)+" bytes.");
 			int error = 0;
 			device_buffer = cl::Buffer(device.get_cl_context(), CL_MEM_READ_WRITE, capacity(), nullptr, &error);
-			if(error==-61) print_error("Memory size is too large at "+to_string((uint)(capacity()/1048576ull))+" MB. Device \""+device.info.name+"\" accepts a maximum buffer size of "+to_string(device.info.max_global_buffer)+" MB.");
-			else if(error) print_error("Device buffer allocation failed with error code "+to_string(error)+".");
+			if(error==-61) 
+				print_error("Memory size is too large at "
+					+to_string((uint)(capacity()/1048576ull))+" MB. Device \""+device.info.name+"\" accepts a maximum buffer size of "
+					+to_string(device.info.max_global_buffer)+" MB.");
+			else if(error) 
+				print_error("Device buffer allocation failed with error code "+to_string(error)+".");
 			device_buffer_exists = true;
 		}
 	}
@@ -533,9 +540,13 @@ public:
 		link_parameters(starting_position, parameters...); // expand variadic template to link kernel parameters
 		return *this;
 	}
-	inline Kernel& enqueue_run(const uint t=1u) {
+	inline Kernel& enqueue_run(cl_int* ret_info, const uint t=1u) {
 		for(uint i=0u; i<t; i++) {
-			cl_queue.enqueueNDRangeKernel(cl_kernel, cl::NullRange, cl_range_global, cl_range_local, nullptr, nullptr);
+			const auto ret = cl_queue.enqueueNDRangeKernel(cl_kernel, cl::NullRange, cl_range_global, cl_range_local, nullptr, nullptr);
+			if (ret_info != nullptr)
+			{
+				*ret_info = ret;
+			}
 		}
 		return *this;
 	}
@@ -544,7 +555,7 @@ public:
 		return *this;
 	}
 	inline Kernel& run(const uint t=1u) {
-		enqueue_run(t);
+		enqueue_run(nullptr, t);
 		finish_queue();
 		return *this;
 	}

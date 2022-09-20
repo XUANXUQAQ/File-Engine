@@ -7,6 +7,7 @@
 
 #pragma warning(disable:26451)
 #pragma warning(disable:6386)
+#include "constans.h"
 #include <cmath>
 #include <vector>
 #ifdef UTILITIES_REGEX
@@ -14,7 +15,9 @@
 #else // UTILITIES_REGEX
 #include <string>
 #endif // UTILITIES_REGEX
+#ifdef DEBUG_OUTPUT
 #include <iostream>
+#endif
 #include <thread> // contains <chrono>
 #undef min
 #undef max
@@ -531,16 +534,24 @@ template<typename T> inline string alignr(const uint n, const T x) { // converts
 }
 
 inline void print(const string& s="") {
+#ifdef DEBUG_OUTPUT
 	std::cout << s;
+#endif
 }
 inline void println(const string& s="") {
+#ifdef DEBUG_OUTPUT
 	std::cout << s+'\n';
+#endif
 }
 inline void reprint(const string& s="") {
+#ifdef DEBUG_OUTPUT
 	std::cout << "\r"+s;
+#endif
 }
 inline void wait() {
+#ifdef DEBUG_OUTPUT
 	std::cin.get();
+#endif
 }
 template<typename T> inline void println(const T x) {
 	println(to_string(x));
@@ -608,7 +619,7 @@ inline void print_error(const string& s) { // print formatted error message
 #ifdef _WIN32
 	wait();
 #endif //_WIN32
-	exit(1);
+	std::quick_exit(1);
 }
 inline void print_warning(const string& s) { // print formatted warning message
 	print_message(s, "Warning: ");
