@@ -187,11 +187,15 @@ public enum GPUAccelerator {
         if (category != null) {
             switch (category) {
                 case CUDA:
-                    gpuAccelerator = cudaAccelerator;
-                    return cudaAccelerator.setDevice(id);
+                    if (cudaAccelerator.isGPUAvailableOnSystem() && cudaAccelerator.setDevice(id)) {
+                        gpuAccelerator = cudaAccelerator;
+                        return true;
+                    }
                 case OPENCL:
-                    gpuAccelerator = openclAccelerator;
-                    return openclAccelerator.setDevice(id);
+                    if (openclAccelerator.isGPUAvailableOnSystem() && openclAccelerator.setDevice(id)) {
+                        gpuAccelerator = openclAccelerator;
+                        return true;
+                    }
             }
         }
         return false;

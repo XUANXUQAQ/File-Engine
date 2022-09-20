@@ -15,7 +15,6 @@ import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.SetSwingLaf;
 import file.engine.event.handler.impl.configs.AddCmdEvent;
 import file.engine.event.handler.impl.configs.DeleteCmdEvent;
-import file.engine.event.handler.impl.configs.SaveConfigsEvent;
 import file.engine.event.handler.impl.configs.SetConfigsEvent;
 import file.engine.event.handler.impl.database.*;
 import file.engine.event.handler.impl.download.StartDownloadEvent;
@@ -3374,9 +3373,6 @@ public class SettingsFrame {
         //使所有配置生效
         ConfigEntity configEntity = getConfigEntity();
 
-        SaveConfigsEvent event = new SaveConfigsEvent(configEntity);
-        eventManagement.putEvent(event);
-        eventManagement.waitForEvent(event);
         eventManagement.putEvent(new SetConfigsEvent(configEntity));
 
         Color tmp_color = new Color(allConfigs.getLabelColor());

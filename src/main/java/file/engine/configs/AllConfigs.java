@@ -55,6 +55,7 @@ public class AllConfigs {
     private final LinkedHashMap<String, AddressUrl> updateAddressMap = new LinkedHashMap<>();
     private final LinkedHashSet<String> cmdSet = new LinkedHashSet<>();
     private static boolean isFirstRunApp = false;
+    private volatile boolean isEnableGPUAccelerator = false;
 
     private static volatile AllConfigs instance = null;
 
@@ -441,6 +442,10 @@ public class AllConfigs {
      */
     public boolean isEnableCuda() {
         return configEntity.isEnableCuda();
+    }
+
+    public boolean isGPUAcceleratorEnabled() {
+        return isEnableGPUAccelerator;
     }
 
     /**
@@ -1052,13 +1057,36 @@ public class AllConfigs {
         if (isFirstRunApp) {
             checkRunningDirAtDiskC();
         }
+        AllConfigs allConfigs = getInstance();
+        allConfigs.isEnableGPUAccelerator = allConfigs.isEnableCuda();
     }
 
     @EventRegister(registerClass = SetConfigsEvent.class)
     private static void setAllConfigsEvent(Event event) {
         SetConfigsEvent setConfigsEvent = (SetConfigsEvent) event;
+        AllConfigs allConfigs = getInstance();
         if (setConfigsEvent.getConfigs() == null) {
-            setConfigsEvent.setConfigs(getInstance().configEntity);
+            // MainClass初始化
+            setConfigsEvent.setConfigs(allConfigs.configEntity);
+        } else {
+            // 更新设置
+            ConfigEntity tempConfigEntity = ((SetConfigsEvent) event).getConfigs();
+            if (allConfigs.noNullValue(tempConfigEntity)) {
+                allConfigs.setInvalidConfigs(tempConfigEntity, (config) -> {
+                    if (config.isEnableCuda()) {
+                        config.setEnableCuda(GPUAccelerator.INSTANCE.isGPUAvailableOnSystem());
+                    }
+                    int availableProcessors = Runtime.getRuntime().availableProcessors();
+                    int searchThreadNumber = config.getSearchThreadNumber();
+                    if (searchThreadNumber > availableProcessors || searchThreadNumber < 1) {
+                        config.setSearchThreadNumber(availableProcessors);
+                    }
+                });
+                allConfigs.configEntity = tempConfigEntity;
+                allConfigs.saveAllSettings();
+            } else {
+                throw new NullPointerException("configEntity中有Null值");
+            }
         }
     }
 
@@ -1067,28 +1095,6 @@ public class AllConfigs {
         AllConfigs instance = getInstance();
         String theme = ((SetSwingLaf) event).theme;
         setSwingLaf(instance.swingThemesMapper(theme));
-    }
-
-    @EventRegister(registerClass = SaveConfigsEvent.class)
-    private static void saveConfigsEvent(Event event) {
-        AllConfigs allConfigs = getInstance();
-        ConfigEntity tempConfigEntity = ((SaveConfigsEvent) event).configEntity;
-        if (allConfigs.noNullValue(tempConfigEntity)) {
-            allConfigs.setInvalidConfigs(tempConfigEntity, (config) -> {
-                if (config.isEnableCuda()) {
-                    config.setEnableCuda(GPUAccelerator.INSTANCE.isGPUAvailableOnSystem());
-                }
-                int availableProcessors = Runtime.getRuntime().availableProcessors();
-                int searchThreadNumber = config.getSearchThreadNumber();
-                if (searchThreadNumber > availableProcessors || searchThreadNumber < 1) {
-                    config.setSearchThreadNumber(availableProcessors);
-                }
-            });
-            allConfigs.configEntity = tempConfigEntity;
-            allConfigs.saveAllSettings();
-        } else {
-            throw new NullPointerException("configEntity中有Null值");
-        }
     }
 
     @EventListener(listenClass = BootSystemEvent.class)
