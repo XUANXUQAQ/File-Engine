@@ -2640,7 +2640,7 @@ public class SettingsFrame {
         checkBoxResponseCtrl.setSelected(allConfigs.isResponseCtrl());
         checkBoxCheckUpdate.setSelected(allConfigs.isCheckUpdateStartup());
         checkBoxIsAttachExplorer.setSelected(allConfigs.isAttachExplorer());
-        checkBoxEnableCuda.setSelected(allConfigs.isEnableCuda());
+        checkBoxEnableCuda.setSelected(allConfigs.isEnableGpuAccelerate());
         checkBoxEnableCuda.setEnabled(GPUAccelerator.INSTANCE.isGPUAvailableOnSystem());
     }
 
@@ -3327,7 +3327,7 @@ public class SettingsFrame {
         configEntity.setCheckUpdateStartup(checkBoxCheckUpdate.isSelected());
         configEntity.setDisks(parseDisk());
         configEntity.setAttachExplorer(checkBoxIsAttachExplorer.isSelected());
-        configEntity.setEnableCuda(checkBoxEnableCuda.isSelected());
+        configEntity.setEnableGpuAccelerate(checkBoxEnableCuda.isSelected());
         String selectedCudaDevice = (String) comboBoxCudaDevice.getSelectedItem();
         configEntity.setGpuDevice(cudaDeviceMap.getOrDefault(selectedCudaDevice, ""));
         var threadNum = (Integer) comboBoxSearchThread.getSelectedItem();

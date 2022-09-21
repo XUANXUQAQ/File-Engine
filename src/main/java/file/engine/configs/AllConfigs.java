@@ -436,12 +436,14 @@ public class AllConfigs {
     }
 
     /**
-     * 是否启动GPU加速
+     * 是否启动GPU加速，仅在初始化时，显示设置界面时使用
+     * 当前启动GPU加速状态由isGPUAcceleratorEnabled()判断
+     * @see #isGPUAcceleratorEnabled()
      *
      * @return boolean
      */
-    public boolean isEnableCuda() {
-        return configEntity.isEnableCuda();
+    public boolean isEnableGpuAccelerate() {
+        return configEntity.isEnableGpuAccelerate();
     }
 
     public boolean isGPUAcceleratorEnabled() {
@@ -542,12 +544,12 @@ public class AllConfigs {
         configEntity.setDisks(stringBuilder.toString());
     }
 
-    private void readIsEnableCuda(Map<String, Object> settingsInJson) {
-        boolean isEnableCuda = getFromJson(settingsInJson, "isEnableCuda", true);
-        if (isEnableCuda) {
-            configEntity.setEnableCuda(GPUAccelerator.INSTANCE.isGPUAvailableOnSystem());
+    private void readIsEnableGpuAccelerate(Map<String, Object> settingsInJson) {
+        boolean isEnableGpuAccelerate = getFromJson(settingsInJson, "isEnableGpuAccelerate", true);
+        if (isEnableGpuAccelerate) {
+            configEntity.setEnableGpuAccelerate(GPUAccelerator.INSTANCE.isGPUAvailableOnSystem());
         } else {
-            configEntity.setEnableCuda(false);
+            configEntity.setEnableGpuAccelerate(false);
         }
     }
 
@@ -808,7 +810,7 @@ public class AllConfigs {
         readDisks(settingsInJson);
         readCheckUpdateStartup(settingsInJson);
         readBorderThickness(settingsInJson);
-        readIsEnableCuda(settingsInJson);
+        readIsEnableGpuAccelerate(settingsInJson);
         readGpuDevice(settingsInJson);
         readSearchThreadNumber(settingsInJson);
         initUpdateAddress();
@@ -1058,7 +1060,7 @@ public class AllConfigs {
             checkRunningDirAtDiskC();
         }
         AllConfigs allConfigs = getInstance();
-        allConfigs.isEnableGPUAccelerator = allConfigs.isEnableCuda();
+        allConfigs.isEnableGPUAccelerator = allConfigs.isEnableGpuAccelerate();
     }
 
     @EventRegister(registerClass = SetConfigsEvent.class)
@@ -1073,8 +1075,8 @@ public class AllConfigs {
             ConfigEntity tempConfigEntity = ((SetConfigsEvent) event).getConfigs();
             if (allConfigs.noNullValue(tempConfigEntity)) {
                 allConfigs.setInvalidConfigs(tempConfigEntity, (config) -> {
-                    if (config.isEnableCuda()) {
-                        config.setEnableCuda(GPUAccelerator.INSTANCE.isGPUAvailableOnSystem());
+                    if (config.isEnableGpuAccelerate()) {
+                        config.setEnableGpuAccelerate(GPUAccelerator.INSTANCE.isGPUAvailableOnSystem());
                     }
                     int availableProcessors = Runtime.getRuntime().availableProcessors();
                     int searchThreadNumber = config.getSearchThreadNumber();

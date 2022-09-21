@@ -142,7 +142,7 @@ public enum GPUAccelerator {
     }
 
     public void initialize() {
-        if (AllConfigs.getInstance().isEnableCuda()) {
+        if (AllConfigs.getInstance().isEnableGpuAccelerate()) {
             if (cudaAccelerator.isGPUAvailableOnSystem()) {
                 cudaAccelerator.initialize();
             }
