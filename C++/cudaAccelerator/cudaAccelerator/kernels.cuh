@@ -48,7 +48,7 @@ __device__ bool not_matched(const char* path,
 	const bool* is_keyword_path);
 
 
-__global__ void check(const char(*str_address_ptr_array)[MAX_PATH_LENGTH],
+__global__ void check(const size_t* str_address_records,
 	const size_t* total_num,
 	const int* search_case,
 	const bool* is_ignore_case,

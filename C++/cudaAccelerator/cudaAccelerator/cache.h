@@ -2,24 +2,23 @@
 #include <atomic>
 #include <mutex>
 #include <concurrent_unordered_set.h>
-#include "constans.h"
 
 /**
  * \brief 存储数据结构
- * dev_cache_str：指向显存的指针，总长度为(remain_blank_num + record_num) * MAX_PATH_LENGTH
  * remain_blank_num：当前dev_cache_str有多少空闲空间，每一块大小为MAX_PATH_LENGTH
  * record_num：当前有多少个record，每个record长度为MAX_PATH_LENGTH
  * record_hash：每个record的hash，用于判断重复
  */
-typedef struct cache_data
+using cache_data = struct cache_data
 {
-	char(*dev_cache_str)[MAX_PATH_LENGTH] = nullptr;
+	char *dev_strs = nullptr;
+	size_t* dev_str_addr = nullptr;
 	std::atomic_uint64_t remain_blank_num;
 	std::atomic_uint64_t record_num;
 	size_t* dev_total_number = nullptr;
 	std::mutex lock;
 	concurrency::concurrent_unordered_set<size_t> record_hash;
-} cache_data;
+};
 
 
 /**
@@ -30,21 +29,21 @@ typedef struct cache_data
  * is_match_done：是否匹配全部完成 
  * is_output_done：是否已经存入容器 0 代表没有开始  1 代表正在收集  2代表完成
  */
-typedef struct cache_struct
+using list_cache = struct cache_struct
 {
 	cache_data str_data;
 	char* dev_output = nullptr;
 	bool is_cache_valid = false;
 	std::atomic_bool is_match_done;
 	std::atomic_int is_output_done;
-} list_cache;
+};
 
 
-typedef struct stop_signal_struct
+using stop_signal = struct stop_signal_struct
 {
 	bool is_stop_collect = false;
 	bool* dev_is_stop_collect = nullptr;
-} stop_signal;
+};
 
 std::string get_cache_info(const std::string& key, const list_cache* cache);
 bool is_stop();

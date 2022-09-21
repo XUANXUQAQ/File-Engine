@@ -203,9 +203,8 @@ __device__ bool not_matched(const char* path,
 			}
 			char gbk_buffer[MAX_PATH_LENGTH * 2]{ 0 };
 			char* gbk_buffer_ptr = gbk_buffer;
-			unsigned gbk_buffer_size = MAX_PATH_LENGTH * 2;
 			// utf-8编码转换gbk
-			utf8_to_gbk(match_str, static_cast<unsigned>(strlen_cuda(match_str)), &gbk_buffer_ptr, &gbk_buffer_size);
+			utf8_to_gbk(match_str, static_cast<unsigned>(strlen_cuda(match_str)), &gbk_buffer_ptr, nullptr);
 			char converted_pinyin[MAX_PATH_LENGTH * 6]{ 0 };
 			convert_to_pinyin(gbk_buffer, converted_pinyin);
 			if (strstr_cuda(converted_pinyin, each_keyword) == nullptr)
@@ -217,7 +216,7 @@ __device__ bool not_matched(const char* path,
 	return false;
 }
 
-__global__ void check(const char(*str_address_ptr_array)[MAX_PATH_LENGTH],
+__global__ void check(const size_t* str_address_records,
 	const size_t* total_num,
 	const int* search_case,
 	const bool* is_ignore_case,
@@ -234,11 +233,11 @@ __global__ void check(const char(*str_address_ptr_array)[MAX_PATH_LENGTH],
 	{
 		return;
 	}
-	const auto path = reinterpret_cast<const char*>(str_address_ptr_array + thread_id);
 	if (*is_stop_collect_var)
 	{
 		return;
 	}
+	const auto path = reinterpret_cast<const char*>(str_address_records[thread_id]);
 	if (path == nullptr || !path[0])
 	{
 		return;
@@ -257,7 +256,7 @@ __global__ void check(const char(*str_address_ptr_array)[MAX_PATH_LENGTH],
 	{
 		// 全字匹配
 		strlwr_cuda(search_text);
-		char file_name[MAX_PATH_LENGTH];
+		char file_name[MAX_PATH_LENGTH]{ 0 };
 		get_file_name(path, file_name);
 		strlwr_cuda(file_name);
 		if (strcmp_cuda(search_text, file_name) != 0)
@@ -364,7 +363,7 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 		cudaStreamAddCallback(streams[count], set_match_done_flag_callback, cache, 0);
 
 		check << <block_num, thread_num, 0, streams[count] >> >
-			(cache->str_data.dev_cache_str,
+			(cache->str_data.dev_str_addr,
 				cache->str_data.dev_total_number,
 				dev_search_case,
 				dev_is_ignore_case,
