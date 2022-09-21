@@ -45,7 +45,7 @@ std::mutex modify_cache_lock;
 std::hash<std::string> hasher;
 std::atomic_bool exit_flag = false;
 Device current_device;
-Memory<char>* p_stop_signal;
+Memory<char>* p_stop_signal = nullptr;
 
 /*
  * Class:     file_engine_dllInterface_gpu_OpenclAccelerator
@@ -80,7 +80,9 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_s
 (JNIEnv*, jobject, jint device_number_jint)
 {
 	release_all();
-	return set_using_device(device_number_jint);
+	if (set_using_device(device_number_jint))
+		return JNI_TRUE;
+	return JNI_FALSE;
 }
 
 /*
@@ -254,7 +256,9 @@ JNIEXPORT jint JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_match
 JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_hasCache
 (JNIEnv*, jobject)
 {
-	return !cache_map.empty();
+	if (cache_map.empty())
+		return JNI_FALSE;
+	return JNI_TRUE;
 }
 
 /*
@@ -268,8 +272,9 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_i
 	const auto _key = env->GetStringUTFChars(key_jstring, nullptr);
 	const std::string key(_key);
 	env->ReleaseStringUTFChars(key_jstring, _key);
-	const bool ret = has_cache(key);
-	return ret;
+	if (has_cache(key))
+		return JNI_TRUE;
+	return JNI_FALSE;
 }
 
 /*
@@ -409,7 +414,11 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_clear
 JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_isOpenCLAvailable
 (JNIEnv*, jobject)
 {
-	return !get_devices().empty();
+	auto&& devices = get_devices();
+	if (devices.empty())
+		return JNI_FALSE;
+
+	return JNI_TRUE;
 }
 
 /*
@@ -426,7 +435,9 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_i
 	{
 		return JNI_FALSE;
 	}
-	return iter->second->is_cache_valid;
+	if (iter->second->is_cache_valid)
+		return JNI_TRUE;
+	return JNI_FALSE;
 }
 
 /*
