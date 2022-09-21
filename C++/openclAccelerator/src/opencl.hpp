@@ -514,9 +514,9 @@ private:
 		cl_range_local = cl::NDRange(workgroup_size);
 	}
 public:
-	template<class... T> inline Kernel(const Device& device, const ulong N, const string& name, const T&... parameters) { // accepts Memory<T> objects and fundamental data type constants
+	template<class... T> inline Kernel(const Device& device, const ulong N, const string& name, cl_int* ret, const T&... parameters) { // accepts Memory<T> objects and fundamental data type constants
 		if(!device.is_initialized()) print_error("No Device selected. Call Device constructor.");
-		cl_kernel = cl::Kernel(device.get_cl_program(), name.c_str());
+		cl_kernel = cl::Kernel(device.get_cl_program(), name.c_str(), ret);
 		link_parameters(number_of_parameters, parameters...); // expand variadic template to link kernel parameters
 		initialize_ranges(N);
 		cl_queue = device.get_cl_queue();
@@ -554,12 +554,12 @@ public:
 		cl_queue.finish();
 		return *this;
 	}
-	inline Kernel& run(const uint t=1u) {
-		enqueue_run(nullptr, t);
+	inline Kernel& run(cl_int* ret_info, const uint t=1u) {
+		enqueue_run(ret_info, t);
 		finish_queue();
 		return *this;
 	}
-	inline Kernel& operator()(const uint t=1u) {
-		return run(t);
+	inline Kernel& operator()(cl_int* ret_info, const uint t=1u) {
+		return run(ret_info, t);
 	}
 };
