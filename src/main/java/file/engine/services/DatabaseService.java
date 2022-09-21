@@ -1865,7 +1865,7 @@ public class DatabaseService {
                         isKeywordPath,
                         MAX_RESULTS,
                         (key, path) -> {
-                            if (gpuSearchContainer.containsKey(key) && !eventManagement.notMainExit()) {
+                            if (gpuSearchContainer.containsKey(key) && eventManagement.notMainExit()) {
                                 Set<String> gpuContainer = gpuSearchContainer.get(key);
                                 if (!databaseService.tempResultsForEvent.contains(path) && gpuContainer.add(path)) {
                                     if (databaseService.allResultsRecordCounter.incrementAndGet() >= MAX_RESULTS) {

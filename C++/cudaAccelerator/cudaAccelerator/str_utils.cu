@@ -30,7 +30,7 @@ __device__ char* strlwr_cuda(char* src)
 }
 
 
-__device__ char* strstr_cuda(char* s1, char* s2)
+__device__ const char* strstr_cuda(const char* s1, const char* s2)
 {
 	int n;
 	if (*s2) //两种情况考虑
