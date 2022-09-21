@@ -129,7 +129,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_reset
 	{
 		val->is_match_done = false;
 		val->is_output_done = 0;
-		val->dev_output.reset();
+		val->dev_output->reset();
 	}
 	matched_result_number_map.clear();
 }
@@ -317,17 +317,17 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_initC
 	const auto cl_context = current_device.get_cl_context();
 	const auto cl_queue = current_device.get_cl_queue();
 	int error = 0;
-	cache->str_data.dev_total_number = cl::Buffer(cl_context, CL_MEM_READ_WRITE, sizeof(size_t), nullptr, &error);
+	cache->str_data.dev_total_number = new cl::Buffer(cl_context, CL_MEM_READ_WRITE, sizeof(size_t), nullptr, &error);
 	if (error) print_error("OpenCL Buffer allocation failed with error code " + to_string(error) + ".");
-	cl_queue.enqueueWriteBuffer(cache->str_data.dev_total_number, true, 0u, sizeof(size_t), &total_results_size);
+	cl_queue.enqueueWriteBuffer(*cache->str_data.dev_total_number, true, 0u, sizeof(size_t), &total_results_size);
 	current_device.info.memory_used += sizeof(size_t);
 
 	const auto alloc_bytes = total_results_size * MAX_PATH_LENGTH;
-	cache->str_data.dev_cache_str = cl::Buffer(cl_context, CL_MEM_READ_WRITE, alloc_bytes, nullptr, &error);
+	cache->str_data.dev_cache_str = new cl::Buffer(cl_context, CL_MEM_READ_WRITE, alloc_bytes, nullptr, &error);
 	if (error) print_error("OpenCL Buffer allocation failed with error code " + to_string(error) + ".");
 	current_device.info.memory_used += alloc_bytes;
 
-	cache->dev_output = Memory<char>(current_device, total_results_size);
+	cache->dev_output = new Memory<char>(current_device, total_results_size);
 	cache->is_cache_valid = true;
 	cache->is_match_done = false;
 	cache->is_output_done = 0;
@@ -335,7 +335,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_initC
 	size_t address_offset = 0;
 	for (const std::string& record : records_vec)
 	{
-		cl_queue.enqueueWriteBuffer(cache->str_data.dev_cache_str, false,
+		cl_queue.enqueueWriteBuffer(*cache->str_data.dev_cache_str, false,
 			address_offset * MAX_PATH_LENGTH, record.length(), record.c_str());
 		cache->str_data.record_hash.insert(hasher(record));
 		++address_offset;
@@ -511,7 +511,7 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 				continue;
 			}
 			unsigned matched_number = 0;
-			val->dev_output.read_from_device();
+			val->dev_output->read_from_device();
 			for (size_t i = 0; i < val->str_data.record_num.load(); ++i)
 			{
 				if (stop_func())
@@ -519,10 +519,10 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 					break;
 				}
 				//dev_cache[i]字符串匹配成功
-				if (val->dev_output[i])
+				if ((*val->dev_output)[i])
 				{
 					char matched_record_str[MAX_PATH_LENGTH]{ 0 };
-					cl_queue.enqueueReadBuffer(val->str_data.dev_cache_str, true,
+					cl_queue.enqueueReadBuffer(*val->str_data.dev_cache_str, true,
 						i * MAX_PATH_LENGTH, MAX_PATH_LENGTH, matched_record_str);
 					cl_queue.finish();
 					// 判断文件和文件夹
@@ -660,7 +660,7 @@ void add_records_to_cache(const std::string& key, const std::vector<std::string>
 					if (cache->str_data.remain_blank_num.load() > 0)
 					{
 						const auto index = cache->str_data.record_num.load();
-						cl_queue.enqueueWriteBuffer(cache->str_data.dev_cache_str,
+						cl_queue.enqueueWriteBuffer(*cache->str_data.dev_cache_str,
 							false, index * MAX_PATH_LENGTH, MAX_PATH_LENGTH, record.c_str());
 #ifdef DEBUG_OUTPUT
 						std::cout << "successfully add record: " << record << "    key: " << key << std::endl;
@@ -706,7 +706,7 @@ void remove_records_from_cache(const std::string& key, std::vector<std::string>&
 				{
 					break;
 				}
-				cl_queue.enqueueReadBuffer(cache->str_data.dev_cache_str,
+				cl_queue.enqueueReadBuffer(*cache->str_data.dev_cache_str,
 					true, i * MAX_PATH_LENGTH, MAX_PATH_LENGTH, tmp);
 				current_device.finish_queue();
 				if (auto&& record = std::find(records.begin(), records.end(), tmp);
@@ -722,7 +722,7 @@ void remove_records_from_cache(const std::string& key, std::vector<std::string>&
 						continue;
 					}
 					//复制最后一个结果到当前空位
-					cl_queue.enqueueCopyBuffer(cache->str_data.dev_cache_str, cache->str_data.dev_cache_str,
+					cl_queue.enqueueCopyBuffer(*cache->str_data.dev_cache_str, *cache->str_data.dev_cache_str,
 						i * MAX_PATH_LENGTH, last_index * MAX_PATH_LENGTH, MAX_PATH_LENGTH);
 					--cache->str_data.record_num;
 					++cache->str_data.remain_blank_num;
@@ -777,8 +777,11 @@ void clear_cache(const std::string& key)
 			// dev_cache_str
 			current_device.info.memory_used -= (cache->str_data.record_num + cache->str_data.remain_blank_num) * MAX_PATH_LENGTH;
 			current_device.info.memory_used -= sizeof(size_t); // dev_total_number
-			delete cache;
+			delete cache->dev_output;
+			delete cache->str_data.dev_cache_str;
+			delete cache->str_data.dev_total_number;
 		}
+		delete cache;
 		cache_map.unsafe_erase(key);
 	}
 	catch (std::out_of_range&)
@@ -905,8 +908,8 @@ void start_kernel(const std::vector<std::string>& search_case,
 		const auto total = cache->str_data.record_num.load() + cache->str_data.remain_blank_num.load();
 		cl_int ret = 0;
 		Kernel search_kernel(current_device, total, "check", &ret,
-			cache->str_data.dev_cache_str,
-			cache->str_data.dev_total_number,
+			*cache->str_data.dev_cache_str,
+			*cache->str_data.dev_total_number,
 			dev_search_case,
 			dev_is_ignore_case,
 			dev_search_text,
@@ -914,7 +917,7 @@ void start_kernel(const std::vector<std::string>& search_case,
 			dev_keywords_lower_case,
 			dev_keywords_length,
 			dev_is_keyword_path,
-			cache->dev_output,
+			*cache->dev_output,
 			*p_stop_signal,
 			p_utf162gbk);
 		if (ret != CL_SUCCESS)
