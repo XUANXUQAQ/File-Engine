@@ -61,7 +61,8 @@ JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_ge
 	const auto device_count = devices.size();
 	for (size_t i = 0; i < device_count; ++i)
 	{
-		if (devices[i].memory > 2147483648)
+		// 内存大于2G，并且是GPU
+		if (devices[i].memory > 2147483648 && devices[i].is_gpu)
 			device_string.append(devices[i].name).append(",").append(std::to_string(i)).append(";");
 	}
 	if (device_count)

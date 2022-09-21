@@ -1,5 +1,6 @@
 package file.engine.dllInterface.gpu;
 
+import file.engine.configs.AllConfigs;
 import file.engine.utils.RegexUtil;
 
 import java.util.HashMap;
@@ -40,8 +41,9 @@ public enum GPUAccelerator {
     }
 
     public void resetAllResultStatus() {
-        checkAvailable();
-        gpuAccelerator.resetAllResultStatus();
+        if (gpuAccelerator != null && AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+            gpuAccelerator.resetAllResultStatus();
+        }
     }
 
     public void match(String[] searchCase,
@@ -52,23 +54,29 @@ public enum GPUAccelerator {
                       boolean[] isKeywordPath,
                       int maxResultNumber,
                       BiConsumer<String, String> resultCollector) {
-        checkAvailable();
-        gpuAccelerator.match(searchCase, isIgnoreCase, searchText, keywords, keywordsLowerCase, isKeywordPath, maxResultNumber, resultCollector);
+        if (gpuAccelerator != null && AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+            gpuAccelerator.match(searchCase, isIgnoreCase, searchText, keywords, keywordsLowerCase, isKeywordPath, maxResultNumber, resultCollector);
+        }
     }
 
     public boolean isMatchDone(String key) {
-        checkAvailable();
-        return gpuAccelerator.isMatchDone(key);
+        if (gpuAccelerator != null && AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+            return gpuAccelerator.isMatchDone(key);
+        }
+        return false;
     }
 
     public int matchedNumber(String key) {
-        checkAvailable();
-        return gpuAccelerator.matchedNumber(key);
+        if (gpuAccelerator != null && AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+            return gpuAccelerator.matchedNumber(key);
+        }
+        return 0;
     }
 
     public void stopCollectResults() {
-        checkAvailable();
-        gpuAccelerator.stopCollectResults();
+        if (gpuAccelerator != null && AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+            gpuAccelerator.stopCollectResults();
+        }
     }
 
     public boolean isGPUAvailableOnSystem() {
@@ -76,62 +84,78 @@ public enum GPUAccelerator {
     }
 
     public boolean hasCache() {
-        checkAvailable();
-        return gpuAccelerator.hasCache();
+        if (gpuAccelerator != null && AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+            return gpuAccelerator.hasCache();
+        }
+        return false;
     }
 
     public boolean isCacheExist(String key) {
-        checkAvailable();
-        return gpuAccelerator.isCacheExist(key);
+        if (gpuAccelerator != null && AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+            return gpuAccelerator.isCacheExist(key);
+        }
+        return false;
     }
 
     public void initCache(String key, Supplier<String> recordSupplier) {
-        checkAvailable();
-        gpuAccelerator.initCache(key, recordSupplier);
+        if (gpuAccelerator != null && AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+            gpuAccelerator.initCache(key, recordSupplier);
+        }
     }
 
     public void addRecordsToCache(String key, Object[] records) {
-        checkAvailable();
-        gpuAccelerator.addRecordsToCache(key, records);
+        if (gpuAccelerator != null && AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+            gpuAccelerator.addRecordsToCache(key, records);
+        }
     }
 
     public void removeRecordsFromCache(String key, Object[] records) {
-        checkAvailable();
-        gpuAccelerator.removeRecordsFromCache(key, records);
+        if (gpuAccelerator != null && AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+            gpuAccelerator.removeRecordsFromCache(key, records);
+        }
     }
 
     public void clearCache(String key) {
-        checkAvailable();
-        gpuAccelerator.clearCache(key);
+        if (gpuAccelerator != null && AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+            gpuAccelerator.clearCache(key);
+        }
     }
 
     public void clearAllCache() {
-        checkAvailable();
-        gpuAccelerator.clearAllCache();
+        if (gpuAccelerator != null && AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+            gpuAccelerator.clearAllCache();
+        }
     }
 
     public boolean isCacheValid(String key) {
-        checkAvailable();
-        return gpuAccelerator.isCacheValid(key);
+        if (gpuAccelerator != null && AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+            return gpuAccelerator.isCacheValid(key);
+        }
+        return false;
     }
 
     public int getGPUMemUsage() {
-        checkAvailable();
-        return gpuAccelerator.getGPUMemUsage();
+        if (gpuAccelerator != null && AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+            return gpuAccelerator.getGPUMemUsage();
+        }
+        return 0;
     }
 
     public void initialize() {
-        if (cudaAccelerator.isGPUAvailableOnSystem()) {
-            cudaAccelerator.initialize();
-        }
-        if (openclAccelerator.isGPUAvailableOnSystem()) {
-            openclAccelerator.initialize();
+        if (AllConfigs.getInstance().isEnableCuda()) {
+            if (cudaAccelerator.isGPUAvailableOnSystem()) {
+                cudaAccelerator.initialize();
+            }
+            if (openclAccelerator.isGPUAvailableOnSystem()) {
+                openclAccelerator.initialize();
+            }
         }
     }
 
     public void release() {
-        checkAvailable();
-        gpuAccelerator.release();
+        if (gpuAccelerator != null && AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+            gpuAccelerator.release();
+        }
     }
 
     /**
@@ -165,7 +189,7 @@ public enum GPUAccelerator {
     }
 
     public boolean setDevice(String deviceCategoryAndId) {
-        if (gpuAccelerator != null) {
+        if (gpuAccelerator != null && AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
             // 切换GPU设备重启生效，运行中不允许切换
             return true;
         }
@@ -199,11 +223,5 @@ public enum GPUAccelerator {
             }
         }
         return false;
-    }
-
-    private void checkAvailable() {
-        if (gpuAccelerator == null) {
-            throw new RuntimeException("gpu accelerate not available");
-        }
     }
 }

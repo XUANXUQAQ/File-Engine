@@ -57,12 +57,12 @@ public class MainClass {
             initFoldersAndFiles();
             Class.forName("org.sqlite.JDBC");
             initializeDllInterface();
-            GPUAccelerator.INSTANCE.initialize();
             initEventManagement();
             updateLauncher();
             //清空tmp
             FileUtil.deleteDir(new File("tmp"));
             readAllConfigs();
+            GPUAccelerator.INSTANCE.initialize();
             initDatabase();
             initPinyin();
             checkConfigs();
