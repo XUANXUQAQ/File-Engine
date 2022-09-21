@@ -19,6 +19,11 @@ uint start_kernel(JNIEnv* env,
 	jobject result_collector);
 uint collect_results(JNIEnv* thread_env, jobject result_collector, const std::vector<std::string>& search_case_vec,
 	Memory<char>& output, Memory<char>& records, unsigned int records_num);
+
+
+Device current_device;
+
+
 /*
  * Class:     file_engine_dllInterface_OpenCLMatchUtil
  * Method:    isOpenCLAvailable
@@ -29,6 +34,7 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_OpenCLMatchUtil_isOpenC
 {
 	if (auto&& devices = get_devices(); devices.empty())
 		return JNI_FALSE;
+	current_device = Device(select_device_with_most_flops());
 	return JNI_TRUE;
 }
 
@@ -124,8 +130,6 @@ uint start_kernel(JNIEnv* env,
 	const bool* is_keyword_path,
 	jobject result_collector)
 {
-	Device current_device(select_device_with_most_flops());
-
 	// 复制search case
 	// 第一位为1表示有F，第二位为1表示有D，第三位为1表示有FULL，CASE由File-Engine主程序进行判断，传入参数is_ignore_case为false表示有CASE
 	int search_case_num = 0;
