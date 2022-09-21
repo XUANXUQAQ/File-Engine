@@ -402,7 +402,7 @@ public class MainClass {
         copyOrIgnoreFile("user/emptyRecycleBin.dll", "/win32-native/emptyRecycleBin.dll");
         copyOrIgnoreFile("user/cudaAccelerator.dll", "/win32-native/cudaAccelerator.dll");
         copyOrIgnoreFile("cudart64_110.dll", "/win32-native/cudart64_110.dll");
-        copyOrIgnoreFile("user/openclAccelerator.dll", "/win32-native/openclAccelerator.dll");
+//        copyOrIgnoreFile("user/openclAccelerator.dll", "/win32-native/openclAccelerator.dll");
     }
 
     private static void copyOrIgnoreFile(String path, String rootPath) throws IOException {

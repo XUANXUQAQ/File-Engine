@@ -1,6 +1,5 @@
 package file.engine.dllInterface.gpu;
 
-import java.nio.file.Path;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
@@ -10,13 +9,14 @@ enum OpenclAccelerator implements IGPUAccelerator {
     private static boolean isOpenclLoaded;
 
     static {
-        try {
-            System.load(Path.of("user/openclAccelerator.dll").toAbsolutePath().toString());
-            isOpenclLoaded = true;
-        } catch (UnsatisfiedLinkError | Exception e) {
-            e.printStackTrace();
-            isOpenclLoaded = false;
-        }
+//        try {
+//            System.load(Path.of("user/openclAccelerator.dll").toAbsolutePath().toString());
+//            isOpenclLoaded = true;
+//        } catch (UnsatisfiedLinkError | Exception e) {
+//            e.printStackTrace();
+//            isOpenclLoaded = false;
+//        }
+        isOpenclLoaded = false;
     }
 
     public native void resetAllResultStatus();
