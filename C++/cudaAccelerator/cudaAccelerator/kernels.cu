@@ -337,6 +337,7 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 	// 复制is_ignore_case
 	gpuErrchk(cudaMemcpy(dev_is_ignore_case, &is_ignore_case, sizeof(bool), cudaMemcpyHostToDevice), true, nullptr);
 	unsigned count = 0;
+	std::vector<size_t*> dev_ptrs;
 	for (auto& each : cache_map)
 	{
 		if (count >= stream_count)
@@ -362,9 +363,14 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 		//注册回调
 		cudaStreamAddCallback(streams[count], set_match_done_flag_callback, cache, 0);
 
+		size_t* dev_total_number = nullptr;
+		gpuErrchk(cudaMalloc(&dev_total_number, sizeof(size_t)), true, nullptr);
+		dev_ptrs.emplace_back(dev_total_number);
+		const auto total_number = cache->str_data.record_num + cache->str_data.remain_blank_num;
+		gpuErrchk(cudaMemcpy(dev_total_number, &total_number, sizeof(size_t), cudaMemcpyHostToDevice), true, nullptr);
 		check << <block_num, thread_num, 0, streams[count] >> >
 			(cache->str_data.dev_str_addr,
-				cache->str_data.dev_total_number,
+				dev_total_number,
 				dev_search_case,
 				dev_is_ignore_case,
 				dev_search_text,
@@ -382,6 +388,15 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 	if (cudaStatus != cudaSuccess)
 	{
 		fprintf(stderr, "check launch failed: %s\n", cudaGetErrorString(cudaStatus));
+	}
+	// 等待执行完成
+	cudaStatus = cudaDeviceSynchronize();
+	if (cudaStatus != cudaSuccess)
+		fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launch!\n", cudaStatus);
+
+	for (size_t* each_ptr : dev_ptrs)
+	{
+		gpuErrchk(cudaFree(each_ptr), false, nullptr);
 	}
 }
 

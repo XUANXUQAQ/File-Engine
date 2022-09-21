@@ -13,9 +13,9 @@ using cache_data = struct cache_data
 {
 	char *dev_strs = nullptr;
 	size_t* dev_str_addr = nullptr;
+	size_t* str_length = nullptr;
 	std::atomic_uint64_t remain_blank_num;
 	std::atomic_uint64_t record_num;
-	size_t* dev_total_number = nullptr;
 	std::mutex lock;
 	concurrency::concurrent_unordered_set<size_t> record_hash;
 };
