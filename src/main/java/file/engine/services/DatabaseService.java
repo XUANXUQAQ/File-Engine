@@ -116,10 +116,10 @@ public class DatabaseService {
     }
 
     private void invalidateAllCache() {
-        GPUClearCacheEvent cudaClearCacheEvent = new GPUClearCacheEvent();
+        GPUClearCacheEvent gpuClearCacheEvent = new GPUClearCacheEvent();
         EventManagement eventManagement = EventManagement.getInstance();
-        eventManagement.putEvent(cudaClearCacheEvent);
-        eventManagement.waitForEvent(cudaClearCacheEvent, 60_000);
+        eventManagement.putEvent(gpuClearCacheEvent);
+        eventManagement.waitForEvent(gpuClearCacheEvent, 60_000);
         tableCache.values().forEach(each -> {
             each.isCached.set(false);
             each.data = null;
@@ -337,8 +337,8 @@ public class DatabaseService {
             try {
                 AllConfigs allConfigs = AllConfigs.getInstance();
                 final int createMemoryThreshold = 70;
-                final int createCudaCacheThreshold = 50;
-                final int freeCudaCacheThreshold = 70;
+                final int createGPUCacheThreshold = 50;
+                final int freeGPUCacheThreshold = 70;
                 while (eventManagement.notMainExit()) {
                     if (isStartSaveCache.get()) {
                         if (isDatabaseUpdated.get()) {
@@ -347,9 +347,9 @@ public class DatabaseService {
                         if (casSetStatus(Constants.Enums.DatabaseStatus.NORMAL, Constants.Enums.DatabaseStatus._CREATING_CACHE)) {
                             startCheckInfo.startCheckTimeMills = System.currentTimeMillis();
                             if (allConfigs.isGPUAcceleratorEnabled()) {
-                                final int cudaMemUsage = GPUAccelerator.INSTANCE.getGPUMemUsage();
-                                if (cudaMemUsage < createCudaCacheThreshold) {
-                                    createCudaCache(isStopCreateCache, createCudaCacheThreshold);
+                                final int gpuMemUsage = GPUAccelerator.INSTANCE.getGPUMemUsage();
+                                if (gpuMemUsage < createGPUCacheThreshold) {
+                                    createGpuCache(isStopCreateCache, createGPUCacheThreshold);
                                 }
                             } else {
                                 final double memoryUsage = SystemInfoUtil.getMemoryUsage();
@@ -364,14 +364,14 @@ public class DatabaseService {
                             startCheckInfo.isCreatedOnDatabaseUpdate = false;
                         }
                         if (allConfigs.isGPUAcceleratorEnabled()) {
-                            final int cudaMemUsage = GPUAccelerator.INSTANCE.getGPUMemUsage();
-                            if (cudaMemUsage >= freeCudaCacheThreshold) {
+                            final int gpuMemUsage = GPUAccelerator.INSTANCE.getGPUMemUsage();
+                            if (gpuMemUsage >= freeGPUCacheThreshold) {
                                 // 防止显存占用超过70%后仍然扫描数据库
                                 startCheckInfo.startCheckTimeMills = System.currentTimeMillis();
                                 if (GPUAccelerator.INSTANCE.hasCache()) {
-                                    GPUClearCacheEvent cudaClearCacheEvent = new GPUClearCacheEvent();
-                                    eventManagement.putEvent(cudaClearCacheEvent);
-                                    eventManagement.waitForEvent(cudaClearCacheEvent);
+                                    GPUClearCacheEvent gpuClearCacheEvent = new GPUClearCacheEvent();
+                                    eventManagement.putEvent(gpuClearCacheEvent);
+                                    eventManagement.waitForEvent(gpuClearCacheEvent);
                                 }
                             }
                         }
@@ -399,8 +399,8 @@ public class DatabaseService {
     }
 
     @SuppressWarnings("SameParameterValue")
-    private void createCudaCache(Supplier<Boolean> isStopCreateCache, int createCudaCacheThreshold) {
-        System.out.println("添加cuda缓存");
+    private void createGpuCache(Supplier<Boolean> isStopCreateCache, int createGpuCacheThreshold) {
+        System.out.println("添加gpu缓存");
         String availableDisks = AllConfigs.getInstance().getAvailableDisks();
         ConcurrentLinkedQueue<String> tableQueueByPriority = initTableQueueByPriority();
         String[] disks = RegexUtil.comma.split(availableDisks);
@@ -410,7 +410,7 @@ public class DatabaseService {
                 1,
                 // 单个缓存最大允许占用128M内存，每个记录在GPU内存中占512字节
                 (128 * 1024 * 1024) / 512);
-        saveTableCacheForCuda(isStopCreateCache, tableNeedCache, createCudaCacheThreshold);
+        saveTableCacheForGPU(isStopCreateCache, tableNeedCache, createGpuCacheThreshold);
     }
 
     /**
@@ -419,7 +419,7 @@ public class DatabaseService {
      * @param isStopCreateCache 是否停止
      * @param tableNeedCache    需要缓存的表
      */
-    private void saveTableCacheForCuda(Supplier<Boolean> isStopCreateCache, LinkedHashMap<String, Integer> tableNeedCache, int createCudaCacheThreshold) {
+    private void saveTableCacheForGPU(Supplier<Boolean> isStopCreateCache, LinkedHashMap<String, Integer> tableNeedCache, int createGpuCacheThreshold) {
         for (Map.Entry<String, Cache> entry : tableCache.entrySet()) {
             String key = entry.getKey();
             if (tableNeedCache.containsKey(key)) {
@@ -443,7 +443,7 @@ public class DatabaseService {
                         break;
                     }
                     var usage = GPUAccelerator.INSTANCE.getGPUMemUsage();
-                    if (usage > createCudaCacheThreshold) {
+                    if (usage > createGpuCacheThreshold) {
                         break;
                     }
                 } catch (SQLException e) {
@@ -734,10 +734,10 @@ public class DatabaseService {
      * PrepareSearchInfo.taskMap         任务
      *
      * @param nonFormattedSql 未格式化搜索字段的SQL
-     * @return cuda搜索容器
+     * @return gpu搜索容器
      */
     private ConcurrentHashMap<String, Set<String>> addSearchTasks(LinkedList<LinkedHashMap<String, String>> nonFormattedSql) {
-        ConcurrentHashMap<String, Set<String>> cudaSearchContainer = new ConcurrentHashMap<>();
+        ConcurrentHashMap<String, Set<String>> gpuSearchContainer = new ConcurrentHashMap<>();
         Bit number = new Bit(new byte[]{1});
         AllConfigs allConfigs = AllConfigs.getInstance();
         String availableDisks = allConfigs.getAvailableDisks();
@@ -765,17 +765,17 @@ public class DatabaseService {
                 } else {
                     addTaskForDatabase0(eachDisk, tasks, container, commandsMap, currentTaskNum);
                 }
-                //为cuda搜索生成的container
+                //为gpu搜索生成的container
                 for (var sqlAndTableName : commandsMap.entrySet()) {
                     String eachSql = sqlAndTableName.getKey();
                     String tableName = sqlAndTableName.getValue();
                     String priority = getPriorityFromSql(eachSql);
                     String key = eachDisk.charAt(0) + "," + tableName + "," + priority;
-                    cudaSearchContainer.put(key, container);
+                    gpuSearchContainer.put(key, container);
                 }
             }
         }
-        return cudaSearchContainer;
+        return gpuSearchContainer;
     }
 
     private void addTaskForDatabase0(String diskChar,
@@ -796,7 +796,7 @@ public class DatabaseService {
                     String key = diskStr + "," + tableName + "," + priority;
                     final long matchedNum;
                     if (AllConfigs.getInstance().isGPUAcceleratorEnabled() && GPUAccelerator.INSTANCE.isMatchDone(key)) {
-                        //cuda搜索已经放入container，只需要获取matchedNum修改权重即可
+                        //gpu搜索已经放入container，只需要获取matchedNum修改权重即可
                         matchedNum = GPUAccelerator.INSTANCE.matchedNumber(key);
                     } else {
                         matchedNum = searchFromDatabaseOrCache(resultContainer, diskStr, eachSql, key);
@@ -1765,7 +1765,7 @@ public class DatabaseService {
     }
 
     private static class PrepareSearchInfo {
-        static AtomicBoolean isCudaThreadRunning = new AtomicBoolean(false);
+        static AtomicBoolean isGpuThreadRunning = new AtomicBoolean(false);
         static AtomicBoolean isSearchPrepared = new AtomicBoolean(false);
         //taskMap任务队列，key为磁盘盘符，value为任务
         static ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskMap = new ConcurrentHashMap<>();
@@ -1794,7 +1794,7 @@ public class DatabaseService {
     }
 
     @EventRegister(registerClass = PrepareSearchEvent.class)
-    private static void prepareCudaSearch(Event event) {
+    private static void prepareSearchEventHandle(Event event) {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             DatabaseService databaseService = DatabaseService.getInstance();
             final long startWaiting = System.currentTimeMillis();
@@ -1840,7 +1840,7 @@ public class DatabaseService {
      */
     private static synchronized void prepareSearch(StartSearchEvent startSearchEvent) {
         prepareSearchKeywords(startSearchEvent.searchText, startSearchEvent.searchCase, startSearchEvent.keywords);
-        var cudaSearchContainer = PrepareSearchInfo.prepareSearchTasks();
+        var gpuSearchContainer = PrepareSearchInfo.prepareSearchTasks();
         DatabaseService databaseService = getInstance();
         databaseService.tempResults.clear();
         databaseService.tempResultsForEvent.clear();
@@ -1850,12 +1850,12 @@ public class DatabaseService {
         if (AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
             // 退出上一次搜索
             GPUAccelerator.INSTANCE.stopCollectResults();
-            while (PrepareSearchInfo.isCudaThreadRunning.get())
+            while (PrepareSearchInfo.isGpuThreadRunning.get())
                 Thread.onSpinWait();
             CachedThreadPoolUtil.getInstance().executeTask(() -> {
                 // 开始进行搜索
                 GPUAccelerator.INSTANCE.resetAllResultStatus();
-                PrepareSearchInfo.isCudaThreadRunning.set(true);
+                PrepareSearchInfo.isGpuThreadRunning.set(true);
                 EventManagement eventManagement = EventManagement.getInstance();
                 GPUAccelerator.INSTANCE.match(searchCase,
                         isIgnoreCase,
@@ -1865,16 +1865,16 @@ public class DatabaseService {
                         isKeywordPath,
                         MAX_RESULTS,
                         (key, path) -> {
-                            if (cudaSearchContainer.containsKey(key) && !eventManagement.notMainExit()) {
-                                Set<String> cudaContainer = cudaSearchContainer.get(key);
-                                if (!databaseService.tempResultsForEvent.contains(path) && cudaContainer.add(path)) {
+                            if (gpuSearchContainer.containsKey(key) && !eventManagement.notMainExit()) {
+                                Set<String> gpuContainer = gpuSearchContainer.get(key);
+                                if (!databaseService.tempResultsForEvent.contains(path) && gpuContainer.add(path)) {
                                     if (databaseService.allResultsRecordCounter.incrementAndGet() >= MAX_RESULTS) {
                                         databaseService.stopSearch();
                                     }
                                 }
                             }
                         });
-                PrepareSearchInfo.isCudaThreadRunning.set(false);
+                PrepareSearchInfo.isGpuThreadRunning.set(false);
             }, false);
         }
     }
@@ -2048,7 +2048,7 @@ public class DatabaseService {
     }
 
     @SuppressWarnings("unused")
-    private static class CudaCacheService {
+    private static class GPUCacheService {
         private static final ConcurrentLinkedQueue<String> invalidCacheKeys = new ConcurrentLinkedQueue<>();
         private static final ConcurrentHashMap<String, Set<String>> recordsToAdd = new ConcurrentHashMap<>();
         private static final ConcurrentHashMap<String, Set<String>> recordsToRemove = new ConcurrentHashMap<>();
@@ -2148,7 +2148,7 @@ public class DatabaseService {
                 return;
             }
             clearInvalidCacheThread();
-            //向cuda缓存添加或删除记录线程
+            //向gpu缓存添加或删除记录线程
             execWorkQueueThread();
         }
 
@@ -2166,12 +2166,12 @@ public class DatabaseService {
             if (!AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
                 return;
             }
-            GPURemoveRecordEvent cudaRemoveRecordEvent = (GPURemoveRecordEvent) event;
-            removeRecord(cudaRemoveRecordEvent.key, cudaRemoveRecordEvent.record);
+            GPURemoveRecordEvent gpuRemoveRecordEvent = (GPURemoveRecordEvent) event;
+            removeRecord(gpuRemoveRecordEvent.key, gpuRemoveRecordEvent.record);
         }
 
         @EventRegister(registerClass = GPUClearCacheEvent.class)
-        private static void clearCacheCuda(Event event) {
+        private static void clearCacheGPU(Event event) {
             if (!AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
                 return;
             }
