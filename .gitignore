@@ -516,3 +516,4 @@ FodyWeavers.xsd
 File-Engine.zip
 cudart64_*.dll
 /C++/openclAccelerator/temp/
+/C++/openclMatchUtil/temp/
