@@ -448,6 +448,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_clear
 JNIEXPORT jint JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_getGPUMemUsage
 (JNIEnv*, jobject)
 {
+	// TODO 目前无法获取全局占用信息，仅能获取当前程序占用
 	const auto mem_used = current_device.info.memory_used;
 	const auto total_mem = current_device.info.memory;
 	return static_cast<jint>(mem_used * 100 / total_mem);

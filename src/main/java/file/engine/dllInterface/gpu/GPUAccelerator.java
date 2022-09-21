@@ -169,12 +169,11 @@ public enum GPUAccelerator {
             // 切换GPU设备重启生效，运行中不允许切换
             return true;
         }
-        // FIXME: 测试OpenCL注释代码
         if (deviceCategoryAndId.isEmpty()) {
-//            if (cudaAccelerator.isGPUAvailableOnSystem() && cudaAccelerator.setDevice(0)) {
-//                gpuAccelerator = cudaAccelerator;
-//                return true;
-//            }
+            if (cudaAccelerator.isGPUAvailableOnSystem() && cudaAccelerator.setDevice(0)) {
+                gpuAccelerator = cudaAccelerator;
+                return true;
+            }
             if (openclAccelerator.isGPUAvailableOnSystem() && openclAccelerator.setDevice(0)) {
                 gpuAccelerator = openclAccelerator;
                 return true;
@@ -187,11 +186,11 @@ public enum GPUAccelerator {
         var category = Category.categoryFromString(deviceCategory);
         if (category != null) {
             switch (category) {
-//                case CUDA:
-//                    if (cudaAccelerator.isGPUAvailableOnSystem() && cudaAccelerator.setDevice(id)) {
-//                        gpuAccelerator = cudaAccelerator;
-//                        return true;
-//                    }
+                case CUDA:
+                    if (cudaAccelerator.isGPUAvailableOnSystem() && cudaAccelerator.setDevice(id)) {
+                        gpuAccelerator = cudaAccelerator;
+                        return true;
+                    }
                 case OPENCL:
                     if (openclAccelerator.isGPUAvailableOnSystem() && openclAccelerator.setDevice(id)) {
                         gpuAccelerator = openclAccelerator;

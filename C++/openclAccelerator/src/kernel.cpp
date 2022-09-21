@@ -1,14 +1,18 @@
 ﻿#include "kernel.hpp" 
 
+// TODO 修改constant.h中的宏同时需要修改核函数中的宏定义
 string opencl_c_container() {
 	// ########################## begin of OpenCL C code ####################################################################
-	return string() + R"(
-#define MAX_PATH_LENGTH 512
+	return string(R"(
+#define MAX_PATH_LENGTH 384
 #define MAX_KEYWORDS_NUMBER 150
+
 #define COMPBYTE(x, y) ((unsigned char)(x) << 8 | (unsigned char)(y))
 #ifndef NULL
 #define NULL ((void*) 0)
 #endif
+
+)") + R"(
 
 constant const int spell_value[] = {
 		-20319, -20317, -20304, -20295, -20292, -20283, -20265, -20257, -20242, -20230, -20051, -20036, -20032, -20026,
