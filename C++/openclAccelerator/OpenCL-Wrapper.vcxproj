@@ -152,6 +152,7 @@
     <ClCompile Include="src\file_utils.cpp" />
     <ClCompile Include="src\kernel.cpp" />
     <ClCompile Include="src\dllmain.cpp" />
+    <ClCompile Include="src\utf162gbk_val.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\cache.h" />
@@ -162,6 +163,7 @@
     <ClInclude Include="src\jni_md.h" />
     <ClInclude Include="src\kernel.hpp" />
     <ClInclude Include="src\opencl.hpp" />
+    <ClInclude Include="src\utf162gbk_val.h" />
     <ClInclude Include="src\utilities.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

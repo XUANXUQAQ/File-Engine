@@ -11,7 +11,7 @@
  * record_num：当前有多少个record，每个record长度为MAX_PATH_LENGTH
  * record_hash：每个record的hash，用于判断重复
  */
-typedef struct cache_data
+using cache_data = struct cache_data
 {
 	cl::Buffer dev_cache_str;
 	std::atomic_uint64_t remain_blank_num;
@@ -19,7 +19,7 @@ typedef struct cache_data
 	cl::Buffer dev_total_number;
 	std::mutex lock;
 	concurrency::concurrent_unordered_set<size_t> record_hash;
-} cache_data;
+};
 
 
 /**
@@ -30,13 +30,13 @@ typedef struct cache_data
  * is_match_done：是否匹配全部完成
  * is_output_done：是否已经存入容器 0 代表没有开始  1 代表正在收集  2代表完成
  */
-typedef struct cache_struct
+using list_cache = struct cache_struct
 {
 	cache_data str_data;
 	Memory<char> dev_output;
 	bool is_cache_valid = false;
 	std::atomic_bool is_match_done;
 	std::atomic_int is_output_done;
-} list_cache;
+};
 
 std::string get_cache_info(const std::string& key, const list_cache* cache);
