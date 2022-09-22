@@ -1,6 +1,5 @@
 package file.engine.dllInterface;
 
-import java.nio.file.Path;
 import java.util.function.Consumer;
 
 public class OpenCLMatchUtil {
@@ -8,18 +7,19 @@ public class OpenCLMatchUtil {
     private static final boolean isAvailable;
 
     static {
-        boolean isLoaded;
-        try {
-            System.load(Path.of("user/openclMatchUtil.dll").toAbsolutePath().toString());
-            isLoaded = true;
-        } catch (UnsatisfiedLinkError e) {
-            isLoaded = false;
-        }
-        if (isLoaded) {
-            isAvailable = isOpenCLAvailable();
-        } else {
-            isAvailable = false;
-        }
+//        boolean isLoaded;
+//        try {
+//            System.load(Path.of("user/openclMatchUtil.dll").toAbsolutePath().toString());
+//            isLoaded = true;
+//        } catch (UnsatisfiedLinkError e) {
+//            isLoaded = false;
+//        }
+//        if (isLoaded) {
+//            isAvailable = isOpenCLAvailable();
+//        } else {
+//            isAvailable = false;
+//        }
+        isAvailable = false;
     }
 
     public static boolean isOpenCLAvailableOnSystem() {

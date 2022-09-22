@@ -55,6 +55,7 @@ public class MainClass {
             updatePlugins();
 
             initFoldersAndFiles();
+            releaseAllDependence();
             Class.forName("org.sqlite.JDBC");
             initializeDllInterface();
             initEventManagement();
@@ -95,7 +96,6 @@ public class MainClass {
         Class.forName("file.engine.dllInterface.ResultPipe");
         Class.forName("file.engine.dllInterface.EmptyRecycleBin");
         Class.forName("file.engine.dllInterface.gpu.GPUAccelerator");
-        Class.forName("file.engine.dllInterface.OpenCLMatchUtil");
     }
 
     /**
@@ -403,7 +403,6 @@ public class MainClass {
         copyOrIgnoreFile("user/emptyRecycleBin.dll", "/win32-native/emptyRecycleBin.dll");
         copyOrIgnoreFile("user/cudaAccelerator.dll", "/win32-native/cudaAccelerator.dll");
         copyOrIgnoreFile("cudart64_110.dll", "/win32-native/cudart64_110.dll");
-        copyOrIgnoreFile("user/openclMatchUtil.dll", "/win32-native/openclMatchUtil.dll");
     }
 
     private static void copyOrIgnoreFile(String path, String rootPath) throws IOException {
@@ -423,9 +422,8 @@ public class MainClass {
     /**
      * 释放所有文件
      *
-     * @throws IOException 释放失败
      */
-    private static void initFoldersAndFiles() throws IOException {
+    private static void initFoldersAndFiles() {
         boolean isSucceeded;
         //user
         isSucceeded = createFileOrFolder("user", false, false);
@@ -436,7 +434,6 @@ public class MainClass {
         isSucceeded &= createFileOrFolder(tmp, false, false);
         //cmd.txt
         isSucceeded &= createFileOrFolder("user/cmds.txt", true, false);
-        releaseAllDependence();
         if (!isSucceeded) {
             throw new RuntimeException("初始化依赖项失败");
         }
