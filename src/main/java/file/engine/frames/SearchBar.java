@@ -3219,7 +3219,12 @@ public class SearchBar {
             ArrayList<String> listResultsTemp = listResults;
             var allPlugins = pluginService.getAllPlugins();
             try {
+                long time = System.currentTimeMillis();
                 while (isVisible()) {
+                    if (startTime > time) {
+                        listResultsTemp = listResults;
+                        time = System.currentTimeMillis();
+                    }
                     String each;
                     for (var eachPlugin : allPlugins) {
                         while ((each = eachPlugin.plugin.pollFromResultQueue()) != null) {
