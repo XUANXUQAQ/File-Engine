@@ -296,9 +296,7 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 	const char* search_text,
 	const std::vector<std::string>& keywords,
 	const std::vector<std::string>& keywords_lower_case,
-	const bool* is_keyword_path,
-	cudaStream_t* streams,
-	const size_t stream_count)
+	const bool* is_keyword_path)
 {
 	const auto keywords_num = keywords.size();
 
@@ -338,10 +336,9 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 	gpuErrchk(cudaMemcpy(dev_is_ignore_case, &is_ignore_case, sizeof(bool), cudaMemcpyHostToDevice), true, nullptr);
 	unsigned count = 0;
 	std::vector<size_t*> dev_ptrs;
-	for (auto& each : cache_map)
+
+	for (auto&& each : cache_map)
 	{
-		if (count >= stream_count)
-			break;
 		const auto& cache = each.second;
 		if (!cache->is_cache_valid)
 		{
@@ -360,15 +357,13 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 			thread_num = static_cast<int>(cache->str_data.record_num.load());
 			block_num = 1;
 		}
-		//注册回调
-		cudaStreamAddCallback(streams[count], set_match_done_flag_callback, cache, 0);
 
 		size_t* dev_total_number = nullptr;
 		gpuErrchk(cudaMalloc(&dev_total_number, sizeof(size_t)), true, nullptr);
 		dev_ptrs.emplace_back(dev_total_number);
 		const auto total_number = cache->str_data.record_num + cache->str_data.remain_blank_num;
 		gpuErrchk(cudaMemcpy(dev_total_number, &total_number, sizeof(size_t), cudaMemcpyHostToDevice), true, nullptr);
-		check << <block_num, thread_num, 0, streams[count] >> >
+		check << <block_num, thread_num >> >
 			(cache->str_data.dev_str_addr,
 				dev_total_number,
 				dev_search_case,
@@ -393,6 +388,11 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 	cudaStatus = cudaDeviceSynchronize();
 	if (cudaStatus != cudaSuccess)
 		fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launch!\n", cudaStatus);
+
+	for (auto&& each : cache_map)
+	{
+		each.second->is_match_done = true;
+	}
 
 	for (size_t* each_ptr : dev_ptrs)
 	{
@@ -420,10 +420,4 @@ size_t find_table_sizeof2(const size_t target)
 	temp |= temp >> 8;
 	temp |= temp >> 16;
 	return temp + 1;
-}
-
-void CUDART_CB set_match_done_flag_callback(cudaStream_t, cudaError_t, void* data)
-{
-	const auto cache = static_cast<list_cache*>(data);
-	cache->is_match_done = true;
 }

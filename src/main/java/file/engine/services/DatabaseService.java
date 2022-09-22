@@ -79,7 +79,7 @@ public class DatabaseService {
     private final LinkedHashSet<String> databaseCacheSet = new LinkedHashSet<>();
     private final AtomicInteger searchThreadCount = new AtomicInteger(0);
     private final AtomicLong startSearchTimeMills = new AtomicLong(0);
-    private static final int MAX_TEMP_QUERY_RESULT_CACHE = 8192;
+    private static final int MAX_TEMP_QUERY_RESULT_CACHE = 16384;
     private static final int MAX_CACHED_RECORD_NUM = 10240 * 5;
     private static final int MAX_SQL_NUM = 5000;
     private static final int MAX_RESULTS = 200;
@@ -278,7 +278,7 @@ public class DatabaseService {
      * @param isStopCreateCache    是否停止
      * @param minRecordNum         最小数据量
      * @param maxRecordNum         最大数据量
-     * @return key为[盘符, 表名, 优先级]，例如 [C,list10,9]，value为实际数据量
+     * @return key为[盘符, 表名, 优先级]，例如 [C,list10,9]，value为实际数据量所占的字节数
      */
     private LinkedHashMap<String, Integer> scanDatabaseAndSelectCacheTable(String[] disks,
                                                                            ConcurrentLinkedQueue<String> tableQueueByPriority,
@@ -295,15 +295,24 @@ public class DatabaseService {
             try (Statement stmt = SQLiteUtil.getStatement(disk)) {
                 for (String tableName : tableQueueByPriority) {
                     for (Pair pair : priorityMap) {
-                        try (ResultSet resultSet = stmt.executeQuery("SELECT COUNT(*) as num FROM " + tableName + " WHERE PRIORITY=" + pair.priority)) {
-                            if (resultSet.next()) {
-                                final int num = resultSet.getInt("num");
-                                if (num > minRecordNum && num < maxRecordNum) {
-                                    tableNeedCache.put(disk + "," + tableName + "," + pair.priority, num);
-                                }
+                        if (isStopCreateCache.get()) {
+                            return tableNeedCache;
+                        }
+                        boolean canBeCached;
+                        try (ResultSet resultCount = stmt.executeQuery("SELECT COUNT(*) as total_num FROM " + tableName + " WHERE PRIORITY=" + pair.priority)) {
+                            if (resultCount.next()) {
+                                final int num = resultCount.getInt("total_num");
+                                canBeCached = num >= minRecordNum && num <= maxRecordNum;
+                            } else {
+                                canBeCached = false;
                             }
-                            if (isStopCreateCache.get()) {
-                                return tableNeedCache;
+                        }
+                        if (!canBeCached)
+                            continue;
+                        try (ResultSet resultsLength = stmt.executeQuery("SELECT SUM(LENGTH(PATH)) as total_bytes FROM " + tableName + " WHERE PRIORITY=" + pair.priority)) {
+                            if (resultsLength.next()) {
+                                final int resultsBytes = resultsLength.getInt("total_bytes");
+                                tableNeedCache.put(disk + "," + tableName + "," + pair.priority, resultsBytes);
                             }
                         }
                     }
@@ -408,8 +417,7 @@ public class DatabaseService {
                 tableQueueByPriority,
                 isStopCreateCache,
                 1,
-                // 单个缓存最大允许占用128M内存，每个记录在GPU内存中占512字节
-                (128 * 1024 * 1024) / 512);
+                Integer.MAX_VALUE);
         saveTableCacheForGPU(isStopCreateCache, tableNeedCache, createGpuCacheThreshold);
     }
 
@@ -424,6 +432,10 @@ public class DatabaseService {
             String key = entry.getKey();
             if (tableNeedCache.containsKey(key)) {
                 if (GPUAccelerator.INSTANCE.isCacheExist(key)) {
+                    continue;
+                }
+                //超过128M字节
+                if (tableNeedCache.get(key) > 128 * 1024 * 1024) {
                     continue;
                 }
                 String[] info = RegexUtil.comma.split(key);
@@ -610,16 +622,15 @@ public class DatabaseService {
         if (shouldStopSearch.get()) {
             return matchedResultCount;
         }
-        ArrayList<String> tmpQueryResultsCache = new ArrayList<>(MAX_TEMP_QUERY_RESULT_CACHE);
+        String[] tmpQueryResultsCache = new String[MAX_TEMP_QUERY_RESULT_CACHE];
         EventManagement eventManagement = EventManagement.getInstance();
         try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement(sql, diskStr);
              ResultSet resultSet = pStmt.executeQuery()) {
             while (resultSet.next() && eventManagement.notMainExit()) {
                 int i = 0;
                 // 先将结果查询出来，再进行字符串匹配，提高吞吐量
-                tmpQueryResultsCache.clear();
                 do {
-                    tmpQueryResultsCache.add(resultSet.getString("PATH"));
+                    tmpQueryResultsCache[i] = resultSet.getString("PATH");
                     ++i;
                 } while (resultSet.next() && eventManagement.notMainExit() && i < MAX_TEMP_QUERY_RESULT_CACHE);
                 //结果太多则不再进行搜索
@@ -627,9 +638,11 @@ public class DatabaseService {
                 if (shouldStopSearch.get()) {
                     return matchedResultCount;
                 }
-                matchedResultCount += tmpQueryResultsCache.stream()
-                        .filter(each -> checkIsMatchedAndAddToList(each, container))
-                        .count();
+                for (int j = 0; j < i; ++j) {
+                    if (checkIsMatchedAndAddToList(tmpQueryResultsCache[j], container)) {
+                        ++matchedResultCount;
+                    }
+                }
             }
         } catch (SQLException e) {
             System.err.println("error sql : " + sql);

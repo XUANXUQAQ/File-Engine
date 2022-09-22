@@ -7,6 +7,7 @@
 #include "constans.h"
 #include "cuda_copy_vector_util.h"
 #include "str_convert.cuh"
+#include <thread>
 #ifdef DEBUG_OUTPUT
 #include <iostream>
 #endif
@@ -44,6 +45,7 @@ std::mutex modify_cache_lock;
 std::hash<std::string> hasher;
 std::atomic_bool exit_flag = false;
 static int current_using_device = 0;
+JavaVM* jvm;
 
 /*
  * Class:     file_engine_dllInterface_gpu_CudaAccelerator
@@ -110,13 +112,17 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_release
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_initialize
-(JNIEnv*, jobject)
+(JNIEnv* env, jobject)
 {
 	init_stop_signal();
 	init_cuda_search_memory();
 	init_str_convert();
 	//默认使用第一个设备,current_using_device=0
 	set_using_device(current_using_device);
+	if (env->GetJavaVM(&jvm) != JNI_OK)
+	{
+		env->ThrowNew(env->FindClass("java/lang/Exception"), "get JavaVM ptr failed.");
+	}
 }
 
 /*
@@ -207,24 +213,32 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_match
 	env->ReleaseBooleanArrayElements(is_keyword_path, is_keyword_path_ptr_bool_array, JNI_ABORT);
 	//复制全字匹配字符串 search_text
 	const auto search_text_chars = env->GetStringUTFChars(search_text, nullptr);
-	const auto stream_count = cache_map.size();
-	const auto streams = new cudaStream_t[stream_count];
-	//初始化流
-	for (size_t i = 0; i < stream_count; ++i)
-	{
-		gpuErrchk(cudaStreamCreate(&streams[i]), true, nullptr);
-	}
 	std::atomic_uint result_counter = 0;
-	collect_results(env, result_collector, result_counter, max_results, search_case_vec);
-	//GPU并行计算
-	start_kernel(cache_map, search_case_vec, is_ignore_case, search_text_chars, keywords_vec, keywords_lower_vec,
-		is_keyword_path_ptr, streams, stream_count);
-	env->ReleaseStringUTFChars(search_text, search_text_chars);
-	for (size_t i = 0; i < stream_count; ++i)
+	std::vector<std::thread> collect_threads_vec;
+	collect_threads_vec.reserve(COLLECT_RESULTS_THREADS);
+	for (int i = 0; i < COLLECT_RESULTS_THREADS; ++i)
 	{
-		gpuErrchk(cudaStreamDestroy(streams[i]), true, nullptr);
+		collect_threads_vec.emplace_back(std::thread([&]
+			{
+				JNIEnv* thread_env = nullptr;
+				JavaVMAttachArgs args{ JNI_VERSION_10, nullptr, nullptr };
+				if (jvm->AttachCurrentThread(reinterpret_cast<void**>(&thread_env), &args) != JNI_OK)
+				{
+					fprintf(stderr, "get thread JNIEnv ptr failed");
+					return;
+				}
+				collect_results(thread_env, result_collector, result_counter, max_results, search_case_vec);
+			}));
 	}
-	delete[] streams;
+	//GPU并行计算
+	start_kernel(cache_map, search_case_vec, is_ignore_case, search_text_chars,
+		keywords_vec, keywords_lower_vec, is_keyword_path_ptr);
+	for (auto&& each_thread : collect_threads_vec)
+	{
+		if (each_thread.joinable())
+			each_thread.join();
+	}
+	env->ReleaseStringUTFChars(search_text, search_text_chars);
 }
 
 /*
@@ -332,7 +346,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_initCac
 	cache->str_data.remain_blank_num = MAX_RECORD_ADD_COUNT;
 
 	const size_t total_results_size = static_cast<size_t>(record_count) + MAX_RECORD_ADD_COUNT;
-	
+
 	const auto alloc_bytes = total_bytes + MAX_RECORD_ADD_COUNT * MAX_PATH_LENGTH;
 	gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&cache->str_data.dev_strs), alloc_bytes), true, get_cache_info(key, cache).c_str());
 	gpuErrchk(cudaMemset(cache->str_data.dev_strs, 0, alloc_bytes), true, nullptr);
@@ -834,7 +848,7 @@ void remove_records_from_cache(const std::string& key, std::vector<std::string>&
 					if (const auto last_index = cache->str_data.record_num - 1; last_index != i)
 					{
 						const char* last_str_address;
-						gpuErrchk(cudaMemcpy(&last_str_address, cache->str_data.dev_str_addr + last_index, 
+						gpuErrchk(cudaMemcpy(&last_str_address, cache->str_data.dev_str_addr + last_index,
 							sizeof(size_t), cudaMemcpyDeviceToHost), true, nullptr);
 						//判断字符串长度是否合适
 						if (const auto str_to_copy_len = cache->str_data.str_length[last_index];
@@ -859,7 +873,7 @@ void remove_records_from_cache(const std::string& key, std::vector<std::string>&
 							std::cout << "str length not enough, copy address " << std::hex <<
 								"0x" << reinterpret_cast<size_t>(str_address) << "  address removed: "
 								"0x" << reinterpret_cast<size_t>(last_str_address)
-							<< std::endl;
+								<< std::endl;
 #endif
 							has_memory_fragments = true;
 							gpuErrchk(cudaMemcpyAsync(str_address, last_str_address,
@@ -913,7 +927,7 @@ void handle_memory_fragmentation(const list_cache* cache)
 		char tmp[MAX_PATH_LENGTH]{ 0 };
 		gpuErrchk(cudaMemcpy(tmp, str_address_in_device, cache->str_data.str_length[i], cudaMemcpyDeviceToHost), true, nullptr);
 		records.emplace_back(tmp);
-	}
+		}
 	auto target_addr = cache->str_data.dev_strs;
 	auto save_str_addr_ptr = cache->str_data.dev_str_addr;
 	cudaStream_t stream;
