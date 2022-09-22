@@ -638,9 +638,19 @@ public class DatabaseService {
                 if (shouldStopSearch.get()) {
                     return matchedResultCount;
                 }
-                for (int j = 0; j < i; ++j) {
-                    if (checkIsMatchedAndAddToList(tmpQueryResultsCache[j], container)) {
-                        ++matchedResultCount;
+                if (OpenCLMatchUtil.isOpenCLAvailableOnSystem()) {
+                    OpenCLMatchUtil.check(tmpQueryResultsCache, i, searchCase, isIgnoreCase, searchText, keywords, keywordsLowerCase, isKeywordPath, path -> {
+                        if (!tempResultsForEvent.contains(path) && !container.contains(path) && container.add(path)) {
+                            if (allResultsRecordCounter.incrementAndGet() >= MAX_RESULTS) {
+                                stopSearch();
+                            }
+                        }
+                    });
+                } else {
+                    for (int j = 0; j < i; ++j) {
+                        if (checkIsMatchedAndAddToList(tmpQueryResultsCache[j], container)) {
+                            ++matchedResultCount;
+                        }
                     }
                 }
             }
@@ -900,9 +910,19 @@ public class DatabaseService {
             if (IsDebug.isDebug()) {
                 System.out.println("从缓存中读取 " + key);
             }
-            matchedNum = cache.data.stream()
-                    .filter(record -> checkIsMatchedAndAddToList(record, container))
-                    .count();
+            if (OpenCLMatchUtil.isOpenCLAvailableOnSystem()) {
+                matchedNum = OpenCLMatchUtil.check(cache.data.toArray(), cache.data.size(), searchCase, isIgnoreCase, searchText, keywords, keywordsLowerCase, isKeywordPath, path -> {
+                    if (!tempResultsForEvent.contains(path) && !container.contains(path) && container.add(path)) {
+                        if (allResultsRecordCounter.incrementAndGet() >= MAX_RESULTS) {
+                            stopSearch();
+                        }
+                    }
+                });
+            } else {
+                matchedNum = cache.data.stream()
+                        .filter(record -> checkIsMatchedAndAddToList(record, container))
+                        .count();
+            }
         } else {
             //格式化是为了以后的拓展性
             String formattedSql = String.format(sql, "PATH");

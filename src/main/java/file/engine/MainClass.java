@@ -95,6 +95,7 @@ public class MainClass {
         Class.forName("file.engine.dllInterface.ResultPipe");
         Class.forName("file.engine.dllInterface.EmptyRecycleBin");
         Class.forName("file.engine.dllInterface.gpu.GPUAccelerator");
+        Class.forName("file.engine.dllInterface.OpenCLMatchUtil");
     }
 
     /**
@@ -402,6 +403,7 @@ public class MainClass {
         copyOrIgnoreFile("user/emptyRecycleBin.dll", "/win32-native/emptyRecycleBin.dll");
         copyOrIgnoreFile("user/cudaAccelerator.dll", "/win32-native/cudaAccelerator.dll");
         copyOrIgnoreFile("cudart64_110.dll", "/win32-native/cudart64_110.dll");
+        copyOrIgnoreFile("user/openclMatchUtil.dll", "/win32-native/openclMatchUtil.dll");
     }
 
     private static void copyOrIgnoreFile(String path, String rootPath) throws IOException {

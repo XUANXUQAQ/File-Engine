@@ -517,3 +517,5 @@ File-Engine.zip
 cudart64_*.dll
 /C++/openclAccelerator/temp/
 /C++/openclMatchUtil/temp/
+/experiments/openclAccelerator/temp/
+/experiments/openclMatchUtil/temp/

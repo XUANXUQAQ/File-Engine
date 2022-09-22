@@ -10,6 +10,7 @@
 
 uint start_kernel(JNIEnv* env,
 	jobjectArray records_to_check,
+	jint size,
 	const std::vector<std::string>& search_case,
 	bool is_ignore_case,
 	const char* search_text,
@@ -19,7 +20,6 @@ uint start_kernel(JNIEnv* env,
 	jobject result_collector);
 uint collect_results(JNIEnv* thread_env, jobject result_collector, const std::vector<std::string>& search_case_vec,
 	Memory<char>& output, Memory<char>& records, unsigned int records_num);
-
 
 Device current_device;
 Memory<unsigned short> p_utf162gbk;
@@ -72,10 +72,10 @@ void generate_search_case(JNIEnv* env, std::vector<std::string>& search_case_vec
 /*
  * Class:     file_engine_dllInterface_OpenCLMatchUtil
  * Method:    check
- * Signature: ([Ljava/lang/Object;[Ljava/lang/String;ZLjava/lang/String;[Ljava/lang/String;[Ljava/lang/String;[ZLjava/util/function/Consumer;)I
+ * Signature: ([Ljava/lang/Object;I[Ljava/lang/String;ZLjava/lang/String;[Ljava/lang/String;[Ljava/lang/String;[ZLjava/util/function/Consumer;)I
  */
 JNIEXPORT jint JNICALL Java_file_engine_dllInterface_OpenCLMatchUtil_check
-(JNIEnv* env, jclass, jobjectArray records_to_check, jobjectArray search_case, jboolean is_ignore_case,
+(JNIEnv* env, jclass, jobjectArray records_to_check, jint size, jobjectArray search_case, jboolean is_ignore_case,
 	jstring search_text, jobjectArray keywords, jobjectArray keywords_lower, jbooleanArray is_keyword_path, jobject result_collector)
 {
 	//生成搜索条件 search_case_vec
@@ -121,7 +121,7 @@ JNIEXPORT jint JNICALL Java_file_engine_dllInterface_OpenCLMatchUtil_check
 	//复制全字匹配字符串 search_text
 	const auto search_text_chars = env->GetStringUTFChars(search_text, nullptr);
 	//GPU并行计算
-	const auto matched_num = start_kernel(env, records_to_check, search_case_vec, is_ignore_case, search_text_chars,
+	const auto matched_num = start_kernel(env, records_to_check, size, search_case_vec, is_ignore_case, search_text_chars,
 		keywords_vec, keywords_lower_vec, is_keyword_path_ptr, result_collector);
 	env->ReleaseStringUTFChars(search_text, search_text_chars);
 	delete[] is_keyword_path_ptr;
@@ -130,6 +130,7 @@ JNIEXPORT jint JNICALL Java_file_engine_dllInterface_OpenCLMatchUtil_check
 
 uint start_kernel(JNIEnv* env,
 	jobjectArray records_to_check,
+	jint size,
 	const std::vector<std::string>& search_case,
 	bool is_ignore_case,
 	const char* search_text,
@@ -206,7 +207,6 @@ uint start_kernel(JNIEnv* env,
 	dev_is_ignore_case[0] = is_ignore_case;
 	dev_is_ignore_case.write_to_device();
 
-	const auto size = env->GetArrayLength(records_to_check);
 	Memory<char> all_records_dev(current_device, size * MAX_PATH_LENGTH);
 	all_records_dev.reset();
 	for (jsize i = 0; i < size; ++i)

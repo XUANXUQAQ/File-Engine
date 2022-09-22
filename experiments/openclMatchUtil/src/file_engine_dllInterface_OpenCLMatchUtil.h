@@ -18,10 +18,10 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_OpenCLMatchUtil_isOpenC
 /*
  * Class:     file_engine_dllInterface_OpenCLMatchUtil
  * Method:    check
- * Signature: ([Ljava/lang/Object;[Ljava/lang/String;ZLjava/lang/String;[Ljava/lang/String;[Ljava/lang/String;[ZLjava/util/function/Consumer;)I
+ * Signature: ([Ljava/lang/Object;I[Ljava/lang/String;ZLjava/lang/String;[Ljava/lang/String;[Ljava/lang/String;[ZLjava/util/function/Consumer;)I
  */
 JNIEXPORT jint JNICALL Java_file_engine_dllInterface_OpenCLMatchUtil_check
-  (JNIEnv *, jclass, jobjectArray, jobjectArray, jboolean, jstring, jobjectArray, jobjectArray, jbooleanArray, jobject);
+  (JNIEnv *, jclass, jobjectArray, jint, jobjectArray, jboolean, jstring, jobjectArray, jobjectArray, jbooleanArray, jobject);
 
 #ifdef __cplusplus
 }
