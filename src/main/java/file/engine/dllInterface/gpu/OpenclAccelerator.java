@@ -9,6 +9,13 @@ enum OpenclAccelerator implements IGPUAccelerator {
     private static final boolean isOpenclLoaded;
 
     static {
+//        try {
+//            System.load(Path.of("user/cudaAccelerator.dll").toAbsolutePath().toString());
+//            isOpenclLoaded = true;
+//        } catch (UnsatisfiedLinkError | Exception e) {
+//            e.printStackTrace();
+//            isOpenclLoaded = false;
+//        }
         isOpenclLoaded = false;
     }
 

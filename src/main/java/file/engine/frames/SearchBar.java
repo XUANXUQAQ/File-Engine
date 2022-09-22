@@ -54,7 +54,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -3212,17 +3211,15 @@ public class SearchBar {
      * 将tempResults以及插件返回的结果转移到listResults中来显示
      */
     private void addMergeThread(AtomicBoolean isMergeThreadNotExist, ConcurrentLinkedQueue<String> tempResults) {
-        while (!isMergeThreadNotExist.get())
-            Thread.onSpinWait();
+        if (!isMergeThreadNotExist.get())
+            return;
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             isMergeThreadNotExist.set(false);
-            final long time = System.currentTimeMillis();
-            Supplier<Boolean> isStopSearch = () -> startTime > time || !isVisible();
             PluginService pluginService = PluginService.getInstance();
             ArrayList<String> listResultsTemp = listResults;
             var allPlugins = pluginService.getAllPlugins();
             try {
-                while (!isStopSearch.get()) {
+                while (isVisible()) {
                     String each;
                     for (var eachPlugin : allPlugins) {
                         while ((each = eachPlugin.plugin.pollFromResultQueue()) != null) {
