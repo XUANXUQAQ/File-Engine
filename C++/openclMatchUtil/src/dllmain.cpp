@@ -22,7 +22,7 @@ uint collect_results(JNIEnv* thread_env, jobject result_collector, const std::ve
 
 
 Device current_device;
-
+Memory<unsigned short> p_utf162gbk;
 
 /*
  * Class:     file_engine_dllInterface_OpenCLMatchUtil
@@ -35,6 +35,14 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_OpenCLMatchUtil_isOpenC
 	if (auto&& devices = get_devices(); devices.empty())
 		return JNI_FALSE;
 	current_device = Device(select_device_with_most_flops());
+	p_utf162gbk = Memory<unsigned short>(current_device, 0x10000);
+	const auto utf162gbk = get_p_utf162gbk();
+	for (int i = 0; i < 0x10000; ++i)
+	{
+		p_utf162gbk[i] = utf162gbk[i];
+	}
+	p_utf162gbk.write_to_device();
+	p_utf162gbk.delete_host_buffer();
 	return JNI_TRUE;
 }
 
@@ -226,14 +234,6 @@ uint start_kernel(JNIEnv* env,
 	Memory<char> output(current_device, size);
 	output.reset();
 	output.write_to_device();
-
-	Memory<unsigned short> p_utf162gbk(current_device, 0x10000);
-	const auto utf162gbk = get_p_utf162gbk();
-	for (int i = 0; i < 0x10000; ++i)
-	{
-		p_utf162gbk[i] = utf162gbk[i];
-	}
-	p_utf162gbk.write_to_device();
 
 	cl_int ret = 0;
 	Kernel search_kernel(current_device, size, "check", &ret,
