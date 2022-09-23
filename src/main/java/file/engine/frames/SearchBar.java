@@ -3878,7 +3878,7 @@ public class SearchBar {
             return;
         }
         String searchBarText = getSearchBarText();
-        if (searchBarText.charAt(0) == '>') {
+        if (!searchBarText.isEmpty() && searchBarText.charAt(0) == '>') {
             GetPluginByIdentifierEvent getPluginByIdentifierEvent = new GetPluginByIdentifierEvent(path);
             EventManagement eventManagement = EventManagement.getInstance();
             eventManagement.putEvent(getPluginByIdentifierEvent);
