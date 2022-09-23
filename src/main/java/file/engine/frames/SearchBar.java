@@ -2663,13 +2663,6 @@ public class SearchBar {
         ShowSearchBarEvent showSearchBarTask = (ShowSearchBarEvent) event;
         SearchBar searchBarInstance = getInstance();
         searchBarInstance.showSearchbar(showSearchBarTask.isGrabFocus, showSearchBarTask.isSwitchToNormal);
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            long start = System.currentTimeMillis();
-            while (!searchBarInstance.isVisible() && System.currentTimeMillis() - start < 5000) {
-                Thread.onSpinWait();
-            }
-            searchBarInstance.mergeResults();
-        });
     }
 
     @EventRegister(registerClass = SearchDoneEvent.class)
@@ -3677,6 +3670,10 @@ public class SearchBar {
         RobotUtil.INSTANCE.mouseClicked(x, y, 1, InputEvent.BUTTON1_DOWN_MASK);
     }
 
+    static class IsMergeThreadExist {
+        static AtomicBoolean isMergeThreadExist = new AtomicBoolean(false);
+    }
+
     /**
      * 显示窗口
      *
@@ -3726,6 +3723,18 @@ public class SearchBar {
                 isLockMouseMotionThreadNotExist.set(false);
                 lockMouseMotionThread();
             }
+        });
+        if (IsMergeThreadExist.isMergeThreadExist.get()){
+            return;
+        }
+        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            IsMergeThreadExist.isMergeThreadExist.set(true);
+            long start = System.currentTimeMillis();
+            while (!isVisible() && System.currentTimeMillis() - start < 5000) {
+                Thread.onSpinWait();
+            }
+            mergeResults();
+            IsMergeThreadExist.isMergeThreadExist.set(false);
         });
     }
 
