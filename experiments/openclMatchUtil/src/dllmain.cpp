@@ -252,12 +252,13 @@ uint start_kernel(JNIEnv* env,
 	{
 		fprintf(stderr, "OpenCL: init kernel failed. Error code: %d\n", ret);
 	}
-	search_kernel(&ret);
+	search_kernel.run(&ret);
 	if (ret != CL_SUCCESS)
 	{
 		fprintf(stderr, "OpenCL: start kernel function failed. Error code: %d\n", ret);
 	}
 	output.read_from_device();
+	current_device.get_cl_queue().flush();
 	return collect_results(env, result_collector, search_case, output, all_records_dev, size);
 }
 

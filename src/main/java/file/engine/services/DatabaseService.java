@@ -79,7 +79,7 @@ public class DatabaseService {
     private final LinkedHashSet<String> databaseCacheSet = new LinkedHashSet<>();
     private final AtomicInteger searchThreadCount = new AtomicInteger(0);
     private final AtomicLong startSearchTimeMills = new AtomicLong(0);
-    private static final int MAX_TEMP_QUERY_RESULT_CACHE = 16384;
+    private static final int MAX_TEMP_QUERY_RESULT_CACHE = 128;
     private static final int MAX_CACHED_RECORD_NUM = 10240 * 5;
     private static final int MAX_SQL_NUM = 5000;
     private static final int MAX_RESULTS = 200;
@@ -638,19 +638,9 @@ public class DatabaseService {
                 if (shouldStopSearch.get()) {
                     return matchedResultCount;
                 }
-                if (OpenCLMatchUtil.isOpenCLAvailableOnSystem()) {
-                    OpenCLMatchUtil.check(tmpQueryResultsCache, i, searchCase, isIgnoreCase, searchText, keywords, keywordsLowerCase, isKeywordPath, path -> {
-                        if (!tempResultsForEvent.contains(path) && !container.contains(path) && container.add(path)) {
-                            if (allResultsRecordCounter.incrementAndGet() >= MAX_RESULTS) {
-                                stopSearch();
-                            }
-                        }
-                    });
-                } else {
-                    for (int j = 0; j < i; ++j) {
-                        if (checkIsMatchedAndAddToList(tmpQueryResultsCache[j], container)) {
-                            ++matchedResultCount;
-                        }
+                for (int j = 0; j < i; ++j) {
+                    if (checkIsMatchedAndAddToList(tmpQueryResultsCache[j], container)) {
+                        ++matchedResultCount;
                     }
                 }
             }
@@ -910,19 +900,9 @@ public class DatabaseService {
             if (IsDebug.isDebug()) {
                 System.out.println("从缓存中读取 " + key);
             }
-            if (OpenCLMatchUtil.isOpenCLAvailableOnSystem()) {
-                matchedNum = OpenCLMatchUtil.check(cache.data.toArray(), cache.data.size(), searchCase, isIgnoreCase, searchText, keywords, keywordsLowerCase, isKeywordPath, path -> {
-                    if (!tempResultsForEvent.contains(path) && !container.contains(path) && container.add(path)) {
-                        if (allResultsRecordCounter.incrementAndGet() >= MAX_RESULTS) {
-                            stopSearch();
-                        }
-                    }
-                });
-            } else {
-                matchedNum = cache.data.stream()
-                        .filter(record -> checkIsMatchedAndAddToList(record, container))
-                        .count();
-            }
+            matchedNum = cache.data.stream()
+                    .filter(record -> checkIsMatchedAndAddToList(record, container))
+                    .count();
         } else {
             //格式化是为了以后的拓展性
             String formattedSql = String.format(sql, "PATH");

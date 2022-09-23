@@ -3237,7 +3237,7 @@ public class SearchBar {
                     }
                     TimeUnit.MILLISECONDS.sleep(1);
                 }
-            } catch (InterruptedException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             } finally {
                 isMergeThreadNotExist.set(true);
