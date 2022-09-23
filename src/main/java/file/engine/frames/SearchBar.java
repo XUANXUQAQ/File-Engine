@@ -111,6 +111,7 @@ public class SearchBar {
     private volatile long visibleStartTime = 0;  //记录窗口开始可见的事件，窗口默认最短可见时间0.5秒，防止窗口快速闪烁
     private volatile long firstResultStartShowingTime = 0;  //记录开始显示结果的时间，用于防止刚开始移动到鼠标导致误触
     private ArrayList<String> listResults;  //保存从数据库中找出符合条件的记录（文件路径）
+    private ConcurrentLinkedQueue<String> tempResultsFromDatabase = new ConcurrentLinkedQueue<>();
     private volatile String[] searchCase;
     private volatile String searchText = "";
     private volatile String[] keywords;
@@ -126,6 +127,9 @@ public class SearchBar {
     private volatile int lastMousePositionX = 0;
     private volatile int lastMousePositionY = 0;
     private final String pluginResultSplitStr = "-@-@-";
+    private static final int SEND_PREPARE_SEARCH_TIMEOUT = 50;  //毫秒(ms)
+    private static final int SEND_START_SEARCH_TIMEOUT = 250;  //ms
+    private static final int SHOW_RESULTS_TIMEOUT = 300; //ms
 
     private static volatile SearchBar instance = null;
 
@@ -2542,6 +2546,7 @@ public class SearchBar {
 
             @Override
             public void changedUpdate(DocumentEvent e) {
+                clearAllAndResetAll();
                 startTime = System.currentTimeMillis();
                 startSearchSignal.set(false);
                 isSearchNotStarted.set(false);
@@ -2658,6 +2663,13 @@ public class SearchBar {
         ShowSearchBarEvent showSearchBarTask = (ShowSearchBarEvent) event;
         SearchBar searchBarInstance = getInstance();
         searchBarInstance.showSearchbar(showSearchBarTask.isGrabFocus, showSearchBarTask.isSwitchToNormal);
+        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            long start = System.currentTimeMillis();
+            while (!searchBarInstance.isVisible() && System.currentTimeMillis() - start < 5000) {
+                Thread.onSpinWait();
+            }
+            searchBarInstance.mergeResults();
+        });
     }
 
     @EventRegister(registerClass = SearchDoneEvent.class)
@@ -3210,21 +3222,18 @@ public class SearchBar {
     /**
      * 将tempResults以及插件返回的结果转移到listResults中来显示
      */
-    private void addMergeThread(AtomicBoolean isMergeThreadNotExist, ConcurrentLinkedQueue<String> tempResults) {
-        if (!isMergeThreadNotExist.get())
-            return;
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            isMergeThreadNotExist.set(false);
-            PluginService pluginService = PluginService.getInstance();
-            ArrayList<String> listResultsTemp = listResults;
-            var allPlugins = pluginService.getAllPlugins();
-            try {
-                long time = System.currentTimeMillis();
-                while (isVisible()) {
-                    if (startTime > time) {
-                        listResultsTemp = listResults;
-                        time = System.currentTimeMillis();
-                    }
+    private void mergeResults() {
+        PluginService pluginService = PluginService.getInstance();
+        ArrayList<String> listResultsTemp = listResults;
+        var allPlugins = pluginService.getAllPlugins();
+        try {
+            long time = System.currentTimeMillis();
+            while (isVisible()) {
+                if (startTime > time) {
+                    listResultsTemp = listResults;
+                    time = System.currentTimeMillis();
+                }
+                if (System.currentTimeMillis() - startTime > SEND_START_SEARCH_TIMEOUT) {
                     String each;
                     for (var eachPlugin : allPlugins) {
                         while ((each = eachPlugin.plugin.pollFromResultQueue()) != null) {
@@ -3232,17 +3241,15 @@ public class SearchBar {
                             listResultsTemp.add(each);
                         }
                     }
-                    while ((each = tempResults.poll()) != null) {
+                    while ((each = tempResultsFromDatabase.poll()) != null) {
                         listResultsTemp.add(each);
                     }
-                    TimeUnit.MILLISECONDS.sleep(1);
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                isMergeThreadNotExist.set(true);
+                TimeUnit.MILLISECONDS.sleep(1);
             }
-        });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void clearAllLabelBorder() {
@@ -3527,27 +3534,22 @@ public class SearchBar {
             if (AllConfigs.isFirstRun()) {
                 runInternalCommand("help");
             }
-            final AtomicBoolean isMergeThreadNotExist = new AtomicBoolean(true);
             final AtomicBoolean isShowSearchStatusThreadNotExist = new AtomicBoolean(true);
             final AtomicBoolean isWaiting = new AtomicBoolean(false);
-            var resultsWrap = new Object() {
-                ConcurrentLinkedQueue<String> results;
-            };
             while (eventManagement.notMainExit()) {
                 try {
                     final long endTime = System.currentTimeMillis();
-                    if ((endTime - startTime > 50) && isCudaSearchNotStarted.get() && startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
+                    if ((endTime - startTime > SEND_PREPARE_SEARCH_TIMEOUT) && isCudaSearchNotStarted.get() && startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
                         setSearchKeywordsAndSearchCase();
                         sendPrepareSearchEvent();
                     }
-                    if ((endTime - startTime > 250) && isSearchNotStarted.get() && startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
+                    if ((endTime - startTime > SEND_START_SEARCH_TIMEOUT) && isSearchNotStarted.get() && startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
                         setSearchKeywordsAndSearchCase();
                         var resultsOptional = sendSearchEvent();
-                        resultsOptional.ifPresentOrElse(res -> resultsWrap.results = res, () -> resultsWrap.results = new ConcurrentLinkedQueue<>());
+                        resultsOptional.ifPresent(res -> tempResultsFromDatabase = res);
                     }
 
-                    if ((endTime - startTime > 300) && startSearchSignal.get()) {
-                        addMergeThread(isMergeThreadNotExist, resultsWrap.results);
+                    if ((endTime - startTime > SHOW_RESULTS_TIMEOUT) && startSearchSignal.get()) {
                         startSearchSignal.set(false); //开始搜索 计时停止
                         currentResultCount.set(0);
                         currentLabelSelectedPosition.set(0);
