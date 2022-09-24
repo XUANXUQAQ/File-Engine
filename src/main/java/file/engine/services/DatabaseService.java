@@ -61,8 +61,8 @@ public class DatabaseService {
     private final AtomicInteger databaseCacheNum = new AtomicInteger(0);
     private final Set<TableNameWeightInfo> tableSet = ConcurrentHashMap.newKeySet();    //保存从0-40数据库的表，使用频率和名字对应，使经常使用的表最快被搜索到
     private final AtomicBoolean isDatabaseUpdated = new AtomicBoolean(false);
-    private final ConcurrentLinkedQueue<String> tempResults = new ConcurrentLinkedQueue<>();  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
-    private final Set<String> tempResultsForEvent = new ConcurrentSkipListSet<>(); //在SearchDoneEvent中保存的容器
+    private ConcurrentLinkedQueue<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
+    private Set<String> tempResultsForEvent; //在SearchDoneEvent中保存的容器
     private final AtomicInteger allResultsRecordCounter = new AtomicInteger();
     private final AtomicBoolean shouldStopSearch = new AtomicBoolean(false);
     private final ConcurrentLinkedQueue<Pair> priorityMap = new ConcurrentLinkedQueue<>();
@@ -715,7 +715,8 @@ public class DatabaseService {
     private void searchDone() {
         EventManagement eventManagement = EventManagement.getInstance();
         eventManagement.putEvent(new SearchDoneEvent(new ConcurrentLinkedQueue<>(tempResultsForEvent)));
-        tempResultsForEvent.clear();
+        tempResults = null;
+        tempResultsForEvent = null;
         PrepareSearchInfo.isSearchPrepared.set(false);
         if (AllConfigs.getInstance().isGPUAcceleratorEnabled() && eventManagement.notMainExit()) {
             GPUAccelerator.INSTANCE.stopCollectResults();
@@ -1855,8 +1856,8 @@ public class DatabaseService {
         prepareSearchKeywords(startSearchEvent.searchText, startSearchEvent.searchCase, startSearchEvent.keywords);
         var gpuSearchContainer = PrepareSearchInfo.prepareSearchTasks();
         DatabaseService databaseService = getInstance();
-        databaseService.tempResults.clear();
-        databaseService.tempResultsForEvent.clear();
+        databaseService.tempResults = new ConcurrentLinkedQueue<>();
+        databaseService.tempResultsForEvent = new ConcurrentSkipListSet<>();
         databaseService.searchCache();
         databaseService.searchPriorityFolder();
         databaseService.searchStartMenu();
