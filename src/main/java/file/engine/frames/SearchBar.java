@@ -3679,9 +3679,10 @@ public class SearchBar {
      *
      * @param isGrabFocus 是否强制抓取焦点
      */
+    @SneakyThrows
     private void showSearchbar(boolean isGrabFocus, boolean isSwitchToNormal) {
-        SwingUtilities.invokeLater(() -> {
-            EventManagement eventManagement = EventManagement.getInstance();
+        EventManagement eventManagement = EventManagement.getInstance();
+        SwingUtilities.invokeAndWait(() -> {
             if (!isVisible()) {
                 searchBar.setAutoRequestFocus(isGrabFocus);
                 setVisible(true);
@@ -3702,14 +3703,15 @@ public class SearchBar {
                         grabFocus();
                     });
                 }
-                eventManagement.putEvent(new SearchBarReadyEvent(showingMode.toString()));
-            } else {
-                if (isSwitchToNormal) {
-                    grabFocus();
-                    switchToNormalMode(false);
-                    eventManagement.putEvent(new SearchBarReadyEvent(showingMode.toString()));
-                    isFocusGrabbed.set(true);
+            } else if (isSwitchToNormal) {
+                grabFocus();
+                try {
+                    TimeUnit.MILLISECONDS.sleep(50);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
+                switchToNormalMode(false);
+                isFocusGrabbed.set(true);
             }
             if (isBorderThreadNotExist.get()) {
                 isBorderThreadNotExist.set(false);
@@ -3724,18 +3726,18 @@ public class SearchBar {
                 lockMouseMotionThread();
             }
         });
-        if (IsMergeThreadExist.isMergeThreadExist.get()){
-            return;
+        eventManagement.putEvent(new SearchBarReadyEvent(showingMode.toString()));
+        if (!IsMergeThreadExist.isMergeThreadExist.get()) {
+            CachedThreadPoolUtil.getInstance().executeTask(() -> {
+                IsMergeThreadExist.isMergeThreadExist.set(true);
+                long start = System.currentTimeMillis();
+                while (!isVisible() && System.currentTimeMillis() - start < 5000) {
+                    Thread.onSpinWait();
+                }
+                mergeResults();
+                IsMergeThreadExist.isMergeThreadExist.set(false);
+            });
         }
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            IsMergeThreadExist.isMergeThreadExist.set(true);
-            long start = System.currentTimeMillis();
-            while (!isVisible() && System.currentTimeMillis() - start < 5000) {
-                Thread.onSpinWait();
-            }
-            mergeResults();
-            IsMergeThreadExist.isMergeThreadExist.set(false);
-        });
     }
 
     /**
