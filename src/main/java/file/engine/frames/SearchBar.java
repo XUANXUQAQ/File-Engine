@@ -3703,6 +3703,7 @@ public class SearchBar {
                         grabFocus();
                     });
                 }
+                eventManagement.putEvent(new SearchBarReadyEvent(showingMode.toString()));
             } else if (isSwitchToNormal) {
                 grabFocus();
                 try {
@@ -3726,7 +3727,6 @@ public class SearchBar {
                 lockMouseMotionThread();
             }
         });
-        eventManagement.putEvent(new SearchBarReadyEvent(showingMode.toString()));
         if (IsMergeThreadExist.isMergeThreadExist.compareAndSet(false, true)) {
             CachedThreadPoolUtil.getInstance().executeTask(() -> {
                 long start = System.currentTimeMillis();
