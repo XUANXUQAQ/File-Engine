@@ -3727,11 +3727,12 @@ public class SearchBar {
             }
         });
         eventManagement.putEvent(new SearchBarReadyEvent(showingMode.toString()));
-        if (!IsMergeThreadExist.isMergeThreadExist.get()) {
+        if (IsMergeThreadExist.isMergeThreadExist.compareAndSet(false, true)) {
             CachedThreadPoolUtil.getInstance().executeTask(() -> {
-                IsMergeThreadExist.isMergeThreadExist.set(true);
                 long start = System.currentTimeMillis();
-                while (!isVisible() && System.currentTimeMillis() - start < 5000) {
+                while (!isVisible()) {
+                    if (System.currentTimeMillis() - start > 5000)
+                        break;
                     Thread.onSpinWait();
                 }
                 mergeResults();
