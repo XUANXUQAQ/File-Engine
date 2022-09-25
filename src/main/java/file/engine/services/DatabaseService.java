@@ -1864,8 +1864,14 @@ public class DatabaseService {
         if (AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
             // 退出上一次搜索
             GPUAccelerator.INSTANCE.stopCollectResults();
-            while (PrepareSearchInfo.isGpuThreadRunning.get())
+            long start = System.currentTimeMillis();
+            while (PrepareSearchInfo.isGpuThreadRunning.get()) {
+                if (System.currentTimeMillis() - start > 3000) {
+                    System.out.println("等待上一次gpu加速完成超时");
+                    break;
+                }
                 Thread.onSpinWait();
+            }
             CachedThreadPoolUtil.getInstance().executeTask(() -> {
                 // 开始进行搜索
                 GPUAccelerator.INSTANCE.resetAllResultStatus();
