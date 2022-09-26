@@ -1,2 +1,0 @@
-src/OpenCL/** linguist-vendored
-src/kernel.cpp linguist-language=OpenCL
