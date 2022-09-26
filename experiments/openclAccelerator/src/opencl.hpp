@@ -303,11 +303,12 @@ public:
 		this->host_buffer = host_buffer;
 		return swap;
 	}
-	inline void add_host_buffer() { // makes only sense if there is no host buffer yet but an existing device buffer
+	inline void add_host_buffer(const bool is_read_from_device) { // makes only sense if there is no host buffer yet but an existing device buffer
 		if(!host_buffer_exists&&device_buffer_exists) {
 			host_buffer = new T[N*(ulong)d];
 			initialize_auxiliary_pointers();
-			read_from_device();
+			if (is_read_from_device)
+				read_from_device();
 			host_buffer_exists = true;
 		} else if(!device_buffer_exists) {
 			print_error("There is no existing device buffer, so can't add host buffer.");

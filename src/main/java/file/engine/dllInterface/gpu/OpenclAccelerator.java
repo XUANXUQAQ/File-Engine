@@ -1,22 +1,22 @@
 package file.engine.dllInterface.gpu;
 
+import java.nio.file.Path;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 enum OpenclAccelerator implements IGPUAccelerator {
     INSTANCE;
 
-    private static final boolean isOpenclLoaded;
+    private static boolean isOpenclLoaded;
 
     static {
-//        try {
-//            System.load(Path.of("user/cudaAccelerator.dll").toAbsolutePath().toString());
-//            isOpenclLoaded = true;
-//        } catch (UnsatisfiedLinkError | Exception e) {
-//            e.printStackTrace();
-//            isOpenclLoaded = false;
-//        }
-        isOpenclLoaded = false;
+        try {
+            System.load(Path.of("user/openclAccelerator.dll").toAbsolutePath().toString());
+            isOpenclLoaded = true;
+        } catch (UnsatisfiedLinkError | Exception e) {
+            e.printStackTrace();
+            isOpenclLoaded = false;
+        }
     }
 
     public native void resetAllResultStatus();

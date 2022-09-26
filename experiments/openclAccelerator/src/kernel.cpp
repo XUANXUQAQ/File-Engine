@@ -279,7 +279,7 @@ char not_matched(global const char* path,
 			convert_to_pinyin(gbk_buffer, converted_pinyin);
 			if (strstr(converted_pinyin, each_keyword_local) == NULL)
 			{
-				return 0;
+				return 1;
 			}
 		}
 	}

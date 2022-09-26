@@ -9,6 +9,7 @@
 #include <iostream>
 #endif
 #include "utf162gbk_val.h"
+#include <thread>
 
 void clear_cache(const std::string& key);
 void clear_all_cache();
@@ -45,7 +46,8 @@ std::mutex modify_cache_lock;
 std::hash<std::string> hasher;
 std::atomic_bool exit_flag = false;
 Device current_device;
-Memory<char>* p_stop_signal = nullptr;
+Memory<char> p_stop_signal;
+JavaVM* jvm;
 
 /*
  * Class:     file_engine_dllInterface_gpu_OpenclAccelerator
@@ -62,8 +64,10 @@ JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_ge
 	for (size_t i = 0; i < device_count; ++i)
 	{
 		// 内存大于2G，并且是GPU
-		if (devices[i].memory > 2147483648 && devices[i].is_gpu)
+		if (constexpr auto bytes2G = 2147483648; devices[i].memory > bytes2G && devices[i].is_gpu)
+		{
 			device_string.append(devices[i].name).append(",").append(std::to_string(i)).append(";");
+		}
 	}
 	if (device_count)
 	{
@@ -95,8 +99,8 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_relea
 (JNIEnv*, jobject)
 {
 	exit_flag = true;
-	(*p_stop_signal)[0] = 1;
-	p_stop_signal->write_to_device();
+	p_stop_signal[0] = 1;
+	p_stop_signal.write_to_device();
 	release_all();
 }
 
@@ -106,12 +110,16 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_relea
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_initialize
-(JNIEnv*, jobject)
+(JNIEnv* env, jobject)
 {
+	if (env->GetJavaVM(&jvm) != JNI_OK)
+	{
+		env->ThrowNew(env->FindClass("java/lang/Exception"), "get JavaVM ptr failed.");
+	}
 	current_device = Device(select_device_with_id(0));
-	p_stop_signal = new Memory<char>(current_device, 1);
-	(*p_stop_signal)[0] = 0;
-	p_stop_signal->write_to_device();
+	p_stop_signal = Memory<char>(current_device, 1);
+	p_stop_signal[0] = 0;
+	p_stop_signal.write_to_device();
 }
 
 /*
@@ -122,14 +130,14 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_initi
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_resetAllResultStatus
 (JNIEnv*, jobject)
 {
-	(*p_stop_signal)[0] = 0;
-	p_stop_signal->write_to_device();
+	p_stop_signal[0] = 0;
+	p_stop_signal.write_to_device();
 	// 初始化is_match_done is_output_done为false
 	for (const auto& [key, val] : cache_map)
 	{
 		val->is_match_done = false;
 		val->is_output_done = 0;
-		val->dev_output->reset();
+		val->dev_output.reset();
 	}
 	matched_result_number_map.clear();
 }
@@ -142,7 +150,8 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_reset
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_stopCollectResults
 (JNIEnv*, jobject)
 {
-	(*p_stop_signal)[0] = 1;
+	p_stop_signal[0] = 1;
+	p_stop_signal.write_to_device();
 }
 
 /*
@@ -203,9 +212,29 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_match
 	//复制全字匹配字符串 search_text
 	const auto search_text_chars = env->GetStringUTFChars(search_text, nullptr);
 	std::atomic_uint result_counter = 0;
+	std::vector<std::thread> collect_threads_vec;
+	collect_threads_vec.reserve(COLLECT_RESULTS_THREADS);
+	for (int i = 0; i < COLLECT_RESULTS_THREADS; ++i)
+	{
+		collect_threads_vec.emplace_back(std::thread([&]
+			{
+				JNIEnv* thread_env = nullptr;
+				JavaVMAttachArgs args{ JNI_VERSION_10, nullptr, nullptr };
+				if (jvm->AttachCurrentThread(reinterpret_cast<void**>(&thread_env), &args) != JNI_OK)
+				{
+					fprintf(stderr, "get thread JNIEnv ptr failed");
+					return;
+				}
+				collect_results(thread_env, result_collector, result_counter, max_results, search_case_vec);
+			}));
+	}
 	//GPU并行计算
 	start_kernel(search_case_vec, is_ignore_case, search_text_chars, keywords_vec, keywords_lower_vec, is_keyword_path_ptr);
-	collect_results(env, result_collector, result_counter, max_results, search_case_vec);
+	for (auto&& each : collect_threads_vec)
+	{
+		if (each.joinable())
+			each.join();
+	}
 	env->ReleaseStringUTFChars(search_text, search_text_chars);
 }
 
@@ -314,20 +343,14 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_initC
 	cache->str_data.remain_blank_num = MAX_RECORD_ADD_COUNT;
 	const size_t total_results_size = static_cast<size_t>(record_count) + MAX_RECORD_ADD_COUNT;
 
-	const auto cl_context = current_device.get_cl_context();
-	const auto cl_queue = current_device.get_cl_queue();
-	int error = 0;
-	cache->str_data.dev_total_number = new cl::Buffer(cl_context, CL_MEM_READ_WRITE, sizeof(size_t), nullptr, &error);
-	if (error) print_error("OpenCL Buffer allocation failed with error code " + to_string(error) + ".");
-	cl_queue.enqueueWriteBuffer(*cache->str_data.dev_total_number, true, 0u, sizeof(size_t), &total_results_size);
-	current_device.info.memory_used += sizeof(size_t);
+	cache->str_data.dev_total_number = Memory<size_t>(current_device, 1);
+	cache->str_data.dev_total_number[0] = total_results_size;
+	cache->str_data.dev_total_number.write_to_device();
 
 	const auto alloc_bytes = total_results_size * MAX_PATH_LENGTH;
-	cache->str_data.dev_cache_str = new cl::Buffer(cl_context, CL_MEM_READ_WRITE, alloc_bytes, nullptr, &error);
-	if (error) print_error("OpenCL Buffer allocation failed with error code " + to_string(error) + ".");
-	current_device.info.memory_used += alloc_bytes;
+	cache->str_data.dev_cache_str = Memory<char>(current_device, alloc_bytes);
 
-	cache->dev_output = new Memory<char>(current_device, total_results_size);
+	cache->dev_output = Memory<char>(current_device, total_results_size);
 	cache->is_cache_valid = true;
 	cache->is_match_done = false;
 	cache->is_output_done = 0;
@@ -335,12 +358,12 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_initC
 	size_t address_offset = 0;
 	for (const std::string& record : records_vec)
 	{
-		cl_queue.enqueueWriteBuffer(*cache->str_data.dev_cache_str, false,
-			address_offset * MAX_PATH_LENGTH, record.length(), record.c_str());
+		strcpy_s(&cache->str_data.dev_cache_str[address_offset * MAX_PATH_LENGTH], MAX_PATH_LENGTH, record.c_str());
 		cache->str_data.record_hash.insert(hasher(record));
 		++address_offset;
 	}
-	cl_queue.finish();
+	cache->str_data.dev_cache_str.write_to_device();
+	cache->str_data.dev_cache_str.delete_host_buffer();
 	cache_map.insert(std::make_pair(key, cache));
 	env->ReleaseStringUTFChars(key_jstring, _key);
 	env->DeleteLocalRef(supplier_class);
@@ -477,7 +500,7 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 	bool all_complete;
 	const auto stop_func = [&]
 	{
-		return (*p_stop_signal)[0] || result_counter.load() >= max_results;
+		return p_stop_signal[0] || result_counter.load() >= max_results;
 	};
 	auto _collect_func = [&](const std::string& _key, char _matched_record_str[MAX_PATH_LENGTH], unsigned* matched_number)
 	{
@@ -500,6 +523,10 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 			{
 				break;
 			}
+			if (!val->is_cache_valid)
+			{
+				continue;
+			}
 			if (!val->is_match_done.load())
 			{
 				//发现仍然有结果未计算完，设置退出标志为false，跳到下一个计算结果
@@ -511,7 +538,7 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 				continue;
 			}
 			unsigned matched_number = 0;
-			val->dev_output->read_from_device();
+			val->dev_output.read_from_device();
 			for (size_t i = 0; i < val->str_data.record_num.load(); ++i)
 			{
 				if (stop_func())
@@ -519,10 +546,11 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 					break;
 				}
 				//dev_cache[i]字符串匹配成功
-				if ((*val->dev_output)[i])
+				if (val->dev_output[i])
 				{
 					char matched_record_str[MAX_PATH_LENGTH]{ 0 };
-					cl_queue.enqueueReadBuffer(*val->str_data.dev_cache_str, true,
+					auto&& cl_buffer = val->str_data.dev_cache_str.get_cl_buffer();
+					cl_queue.enqueueReadBuffer(cl_buffer, true,
 						i * MAX_PATH_LENGTH, MAX_PATH_LENGTH, matched_record_str);
 					cl_queue.finish();
 					// 判断文件和文件夹
@@ -556,7 +584,7 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 			matched_result_number_map.insert(std::make_pair(key, matched_number));
 			val->is_output_done = 2;
 		}
-	} while (!all_complete && !(*p_stop_signal)[0] && result_counter.load() < max_results);
+	} while (!all_complete && !p_stop_signal[0] && result_counter.load() < max_results);
 	thread_env->DeleteLocalRef(biconsumer_class);
 }
 
@@ -649,7 +677,7 @@ void add_records_to_cache(const std::string& key, const std::vector<std::string>
 			{
 				break;
 			}
-			if (const auto record_len = strlen(record.c_str()); record_len >= MAX_PATH_LENGTH)
+			if (const auto record_len = record.length(); record_len >= MAX_PATH_LENGTH)
 			{
 				continue;
 			}
@@ -660,8 +688,8 @@ void add_records_to_cache(const std::string& key, const std::vector<std::string>
 					if (cache->str_data.remain_blank_num.load() > 0)
 					{
 						const auto index = cache->str_data.record_num.load();
-						cl_queue.enqueueWriteBuffer(*cache->str_data.dev_cache_str,
-							false, index * MAX_PATH_LENGTH, MAX_PATH_LENGTH, record.c_str());
+						cl_queue.enqueueWriteBuffer(cache->str_data.dev_cache_str.get_cl_buffer(),
+							true, index * MAX_PATH_LENGTH, MAX_PATH_LENGTH, record.c_str());
 #ifdef DEBUG_OUTPUT
 						std::cout << "successfully add record: " << record << "    key: " << key << std::endl;
 #endif
@@ -706,7 +734,7 @@ void remove_records_from_cache(const std::string& key, std::vector<std::string>&
 				{
 					break;
 				}
-				cl_queue.enqueueReadBuffer(*cache->str_data.dev_cache_str,
+				cl_queue.enqueueReadBuffer(cache->str_data.dev_cache_str.get_cl_buffer(),
 					true, i * MAX_PATH_LENGTH, MAX_PATH_LENGTH, tmp);
 				current_device.finish_queue();
 				if (auto&& record = std::find(records.begin(), records.end(), tmp);
@@ -722,7 +750,8 @@ void remove_records_from_cache(const std::string& key, std::vector<std::string>&
 						continue;
 					}
 					//复制最后一个结果到当前空位
-					cl_queue.enqueueCopyBuffer(*cache->str_data.dev_cache_str, *cache->str_data.dev_cache_str,
+					auto&& cl_buffer = cache->str_data.dev_cache_str.get_cl_buffer();
+					cl_queue.enqueueCopyBuffer(cl_buffer, cl_buffer,
 						i * MAX_PATH_LENGTH, last_index * MAX_PATH_LENGTH, MAX_PATH_LENGTH);
 					--cache->str_data.record_num;
 					++cache->str_data.remain_blank_num;
@@ -771,16 +800,7 @@ void clear_cache(const std::string& key)
 		std::lock_guard clear_cache_lock_guard(clear_cache_lock);
 		const auto cache = cache_map.at(key);
 		cache->is_cache_valid = false;
-		{
-			//对当前cache加锁
-			std::lock_guard lock_guard(cache->str_data.lock);
-			// dev_cache_str
-			current_device.info.memory_used -= (cache->str_data.record_num + cache->str_data.remain_blank_num) * MAX_PATH_LENGTH;
-			current_device.info.memory_used -= sizeof(size_t); // dev_total_number
-			delete cache->dev_output;
-			delete cache->str_data.dev_cache_str;
-			delete cache->str_data.dev_total_number;
-		}
+		cache->str_data.dev_cache_str.add_host_buffer(false);
 		delete cache;
 		cache_map.unsafe_erase(key);
 	}
@@ -817,10 +837,9 @@ bool set_using_device(const unsigned device_num)
 	if (auto&& devices = get_devices(); device_num < devices.size())
 	{
 		current_device = Device(select_device_with_id(device_num));
-		delete p_stop_signal;
-		p_stop_signal = new Memory<char>(current_device, 1);
-		(*p_stop_signal)[0] = 0;
-		p_stop_signal->write_to_device();
+		p_stop_signal = Memory<char>(current_device, 1);
+		p_stop_signal[0] = 0;
+		p_stop_signal.write_to_device();
 		return true;
 	}
 	return false;
@@ -833,16 +852,16 @@ void start_kernel(const std::vector<std::string>& search_case,
 	const std::vector<std::string>& keywords_lower_case,
 	const bool* is_keyword_path)
 {
-	auto utf162gbk = get_p_utf162gbk();
+	const auto utf162gbk = get_p_utf162gbk();
 	cl_int error = 0;
-	auto p_utf162gbk = cl::Buffer(current_device.get_cl_context(), CL_MEM_READ_WRITE, sizeof(unsigned short) * 0x10000, nullptr, &error);
-
-	auto task_queue = current_device.get_cl_queue();
-	for (unsigned i = 0; i < 0x10000; ++i)
+	auto p_utf162gbk = cl::Buffer(current_device.get_cl_context(), CL_MEM_READ_ONLY, sizeof(unsigned short) * 0x10000, nullptr, &error);
+	if (error)
 	{
-		auto val = utf162gbk[i];
-		task_queue.enqueueWriteBuffer(p_utf162gbk, false, i * sizeof(unsigned short), sizeof(unsigned short), &val);
+		fprintf(stderr, "init utf82gbk failed. Error code: %d", error);
+		return;
 	}
+	auto task_queue = current_device.get_cl_queue();
+	task_queue.enqueueWriteBuffer(p_utf162gbk, true, 0, 0x10000 * sizeof(unsigned short), utf162gbk);
 	task_queue.finish();
 
 	const auto keywords_num = keywords.size();
@@ -908,8 +927,8 @@ void start_kernel(const std::vector<std::string>& search_case,
 		const auto total = cache->str_data.record_num.load() + cache->str_data.remain_blank_num.load();
 		cl_int ret = 0;
 		Kernel search_kernel(current_device, total, "check", &ret,
-			*cache->str_data.dev_cache_str,
-			*cache->str_data.dev_total_number,
+			cache->str_data.dev_cache_str,
+			cache->str_data.dev_total_number,
 			dev_search_case,
 			dev_is_ignore_case,
 			dev_search_text,
@@ -917,8 +936,8 @@ void start_kernel(const std::vector<std::string>& search_case,
 			dev_keywords_lower_case,
 			dev_keywords_length,
 			dev_is_keyword_path,
-			*cache->dev_output,
-			*p_stop_signal,
+			cache->dev_output,
+			p_stop_signal,
 			p_utf162gbk);
 		if (ret != CL_SUCCESS)
 		{
