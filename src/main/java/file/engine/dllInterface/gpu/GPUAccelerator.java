@@ -174,15 +174,26 @@ public enum GPUAccelerator {
     private void getDeviceToMap(IGPUAccelerator igpuAccelerator, HashMap<String, String> deviceMap, Category category) {
         if (igpuAccelerator.isGPUAvailableOnSystem()) {
             String devices = igpuAccelerator.getDevices();
+            if (devices.isBlank())
+                return;
             String[] deviceInfo = RegexUtil.semicolon.split(devices);
-            if (deviceInfo != null && deviceInfo.length != 0) {
-                for (var eachDeviceInfo : deviceInfo) {
-                    String[] nameAndId = RegexUtil.comma.split(eachDeviceInfo);
+            if (deviceInfo == null || deviceInfo.length == 0) {
+                return;
+            }
+            for (var eachDeviceInfo : deviceInfo) {
+                if (eachDeviceInfo.isBlank())
+                    continue;
+                String[] nameAndId = RegexUtil.comma.split(eachDeviceInfo);
+                if (null == nameAndId || nameAndId.length != 2)
+                    continue;
+                try {
                     String deviceName = nameAndId[0];
                     int deviceId = Integer.parseInt(nameAndId[1]);
                     if (!deviceMap.containsKey(deviceName)) {
                         deviceMap.put(deviceName, category + ";" + deviceId);
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
         }

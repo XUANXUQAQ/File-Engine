@@ -49,6 +49,8 @@ Device current_device;
 Memory<char> p_stop_signal;
 JavaVM* jvm;
 
+constexpr auto bytes2G = 2147483648;
+
 /*
  * Class:     file_engine_dllInterface_gpu_OpenclAccelerator
  * Method:    getDevices
@@ -64,7 +66,7 @@ JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_ge
 	for (size_t i = 0; i < device_count; ++i)
 	{
 		// 内存大于2G，并且是GPU
-		if (constexpr auto bytes2G = 2147483648; devices[i].memory > bytes2G && devices[i].is_gpu)
+		if (devices[i].memory > bytes2G && devices[i].is_gpu)
 		{
 			device_string.append(devices[i].name).append(",").append(std::to_string(i)).append(";");
 		}
@@ -440,9 +442,19 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_i
 {
 	auto&& devices = get_devices();
 	if (devices.empty())
+	{
 		return JNI_FALSE;
-
-	return JNI_TRUE;
+	}
+	jboolean ret = JNI_FALSE;
+	for (auto&& each : devices)
+	{
+		if (each.memory > bytes2G && each.is_gpu)
+		{
+			ret = JNI_TRUE;
+			break;
+		}
+	}
+	return ret;
 }
 
 /*
