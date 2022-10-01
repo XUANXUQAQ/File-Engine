@@ -139,7 +139,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_reset
 	{
 		val->is_match_done = false;
 		val->is_output_done = 0;
-		val->dev_output.reset();
+		val->dev_output->reset();
 	}
 	matched_result_number_map.clear();
 }
@@ -345,14 +345,14 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_initC
 	cache->str_data.remain_blank_num = MAX_RECORD_ADD_COUNT;
 	const size_t total_results_size = static_cast<size_t>(record_count) + MAX_RECORD_ADD_COUNT;
 
-	cache->str_data.dev_total_number = Memory<size_t>(current_device, 1);
-	cache->str_data.dev_total_number[0] = total_results_size;
-	cache->str_data.dev_total_number.write_to_device();
+	cache->str_data.dev_total_number = new Memory<size_t>(current_device, 1);
+	(*cache->str_data.dev_total_number)[0] = total_results_size;
+	cache->str_data.dev_total_number->write_to_device();
 
 	const auto alloc_bytes = total_results_size * MAX_PATH_LENGTH;
-	cache->str_data.dev_cache_str = Memory<char>(current_device, alloc_bytes);
+	cache->str_data.dev_cache_str = new Memory<char>(current_device, alloc_bytes);
 
-	cache->dev_output = Memory<char>(current_device, total_results_size);
+	cache->dev_output = new Memory<char>(current_device, total_results_size);
 	cache->is_cache_valid = true;
 	cache->is_match_done = false;
 	cache->is_output_done = 0;
@@ -360,12 +360,12 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_initC
 	size_t address_offset = 0;
 	for (const std::string& record : records_vec)
 	{
-		strcpy_s(&cache->str_data.dev_cache_str[address_offset * MAX_PATH_LENGTH], MAX_PATH_LENGTH, record.c_str());
+		strcpy_s(&(*cache->str_data.dev_cache_str)[address_offset * MAX_PATH_LENGTH], MAX_PATH_LENGTH, record.c_str());
 		cache->str_data.record_hash.insert(hasher(record));
 		++address_offset;
 	}
-	cache->str_data.dev_cache_str.write_to_device();
-	cache->str_data.dev_cache_str.delete_host_buffer();
+	cache->str_data.dev_cache_str->write_to_device();
+	cache->str_data.dev_cache_str->delete_host_buffer();
 	cache_map.insert(std::make_pair(key, cache));
 	env->ReleaseStringUTFChars(key_jstring, _key);
 	env->DeleteLocalRef(supplier_class);
@@ -550,7 +550,7 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 				continue;
 			}
 			unsigned matched_number = 0;
-			val->dev_output.read_from_device();
+			val->dev_output->read_from_device();
 			for (size_t i = 0; i < val->str_data.record_num.load(); ++i)
 			{
 				if (stop_func())
@@ -558,10 +558,10 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 					break;
 				}
 				//dev_cache[i]字符串匹配成功
-				if (val->dev_output[i])
+				if ((*val->dev_output)[i])
 				{
 					char matched_record_str[MAX_PATH_LENGTH]{ 0 };
-					auto&& cl_buffer = val->str_data.dev_cache_str.get_cl_buffer();
+					auto&& cl_buffer = val->str_data.dev_cache_str->get_cl_buffer();
 					cl_queue.enqueueReadBuffer(cl_buffer, true,
 						i * MAX_PATH_LENGTH, MAX_PATH_LENGTH, matched_record_str);
 					cl_queue.finish();
@@ -700,7 +700,7 @@ void add_records_to_cache(const std::string& key, const std::vector<std::string>
 					if (cache->str_data.remain_blank_num.load() > 0)
 					{
 						const auto index = cache->str_data.record_num.load();
-						cl_queue.enqueueWriteBuffer(cache->str_data.dev_cache_str.get_cl_buffer(),
+						cl_queue.enqueueWriteBuffer(cache->str_data.dev_cache_str->get_cl_buffer(),
 							true, index * MAX_PATH_LENGTH, MAX_PATH_LENGTH, record.c_str());
 #ifdef DEBUG_OUTPUT
 						std::cout << "successfully add record: " << record << "    key: " << key << std::endl;
@@ -746,7 +746,7 @@ void remove_records_from_cache(const std::string& key, std::vector<std::string>&
 				{
 					break;
 				}
-				cl_queue.enqueueReadBuffer(cache->str_data.dev_cache_str.get_cl_buffer(),
+				cl_queue.enqueueReadBuffer(cache->str_data.dev_cache_str->get_cl_buffer(),
 					true, i * MAX_PATH_LENGTH, MAX_PATH_LENGTH, tmp);
 				current_device.finish_queue();
 				if (auto&& record = std::find(records.begin(), records.end(), tmp);
@@ -762,7 +762,7 @@ void remove_records_from_cache(const std::string& key, std::vector<std::string>&
 						continue;
 					}
 					//复制最后一个结果到当前空位
-					auto&& cl_buffer = cache->str_data.dev_cache_str.get_cl_buffer();
+					auto&& cl_buffer = cache->str_data.dev_cache_str->get_cl_buffer();
 					cl_queue.enqueueCopyBuffer(cl_buffer, cl_buffer,
 						i * MAX_PATH_LENGTH, last_index * MAX_PATH_LENGTH, MAX_PATH_LENGTH);
 					--cache->str_data.record_num;
@@ -805,14 +805,16 @@ void clear_cache(const std::string& key)
 {
 	//对add_one_record_to_cache和remove_one_record_from_cache方法加锁
 	lock_add_or_remove_result();
+	//对自身加锁，防止多个线程同时清除cache
+	static std::mutex clear_cache_lock;
+	std::lock_guard clear_cache_lock_guard(clear_cache_lock);
 	try
 	{
-		//对自身加锁，防止多个线程同时清除cache
-		static std::mutex clear_cache_lock;
-		std::lock_guard clear_cache_lock_guard(clear_cache_lock);
 		const auto cache = cache_map.at(key);
-		cache->is_cache_valid = false;
-		cache->str_data.dev_cache_str.add_host_buffer(false);
+		cache->str_data.dev_cache_str->add_host_buffer(false);
+		delete cache->str_data.dev_cache_str;
+		delete cache->str_data.dev_total_number;
+		delete cache->dev_output;
 		delete cache;
 		cache_map.unsafe_erase(key);
 	}
