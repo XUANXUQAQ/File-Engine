@@ -3230,7 +3230,7 @@ public class SearchBar {
                 if (System.currentTimeMillis() - visibleStartTime > 10_000 && !isVisible()) {
                     break;
                 }
-                if (System.currentTimeMillis() - startTime > SEND_START_SEARCH_TIMEOUT) {
+                if (System.currentTimeMillis() - startTime > SEND_START_SEARCH_TIMEOUT + SEND_PREPARE_SEARCH_TIMEOUT) {
                     String each;
                     for (var eachPlugin : allPlugins) {
                         while ((each = eachPlugin.plugin.pollFromResultQueue()) != null) {

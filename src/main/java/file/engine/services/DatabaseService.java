@@ -715,9 +715,6 @@ public class DatabaseService {
     private void searchDone() {
         EventManagement eventManagement = EventManagement.getInstance();
         eventManagement.putEvent(new SearchDoneEvent(new ConcurrentLinkedQueue<>(tempResultsForEvent)));
-        tempResults = null;
-        tempResultsForEvent = null;
-        PrepareSearchInfo.isSearchPrepared.set(false);
         if (AllConfigs.getInstance().isGPUAcceleratorEnabled() && eventManagement.notMainExit()) {
             GPUAccelerator.INSTANCE.stopCollectResults();
         }
@@ -797,6 +794,8 @@ public class DatabaseService {
                                      Collection<String> resultContainer,
                                      LinkedHashMap<String, String> sqlToExecute,
                                      Bit currentTaskNum) {
+        var tempResults_ = tempResults;
+        var tempResultsForEvent_ = tempResultsForEvent;
         tasks.add(() -> {
             try {
                 for (var sqlAndTableName : sqlToExecute.entrySet()) {
@@ -825,10 +824,10 @@ public class DatabaseService {
                 ex.printStackTrace();
             } finally {
                 for (String s : resultContainer) {
-                    if (tempResultsForEvent.size() >= MAX_RESULTS)
+                    if (tempResultsForEvent_.size() >= MAX_RESULTS)
                         break;
-                    if (tempResultsForEvent.add(s)) {
-                        tempResults.add(s);
+                    if (tempResultsForEvent_.add(s)) {
+                        tempResults_.add(s);
                     }
                 }
                 //执行完后将对应的线程flag设为1
@@ -848,6 +847,8 @@ public class DatabaseService {
                                          Collection<String> resultContainer,
                                          LinkedHashMap<String, String> sqlToExecute,
                                          Bit currentTaskNum) {
+        var tempResults_ = tempResults;
+        var tempResultsForEvent_ = tempResultsForEvent;
         tasks.add(() -> {
             try {
                 for (var sqlAndTableName : sqlToExecute.entrySet()) {
@@ -868,10 +869,10 @@ public class DatabaseService {
                 ex.printStackTrace();
             } finally {
                 for (String s : resultContainer) {
-                    if (tempResults.size() >= MAX_RESULTS)
+                    if (tempResults_.size() >= MAX_RESULTS)
                         break;
-                    if (tempResultsForEvent.add(s)) {
-                        tempResults.add(s);
+                    if (tempResultsForEvent_.add(s)) {
+                        tempResults_.add(s);
                     }
                 }
                 byte[] originalBytes;
@@ -976,9 +977,10 @@ public class DatabaseService {
      * 添加sql语句，并开始搜索
      */
     private void startSearch() {
+        var taskMap = PrepareSearchInfo.taskMap;
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         EventManagement eventManagement = EventManagement.getInstance();
-        final int threadNumberPerDisk = Math.max(1, AllConfigs.getInstance().getSearchThreadNumber() / PrepareSearchInfo.taskMap.size());
+        final int threadNumberPerDisk = Math.max(1, AllConfigs.getInstance().getSearchThreadNumber() / taskMap.size());
         Consumer<ConcurrentLinkedQueue<Runnable>> taskHandler = (taskQueue) -> {
             while (!taskQueue.isEmpty() && eventManagement.notMainExit()) {
                 var runnable = taskQueue.poll();
@@ -987,17 +989,18 @@ public class DatabaseService {
                 runnable.run();
             }
         };
-        for (var entry : PrepareSearchInfo.taskMap.entrySet()) {
+        for (var entry : taskMap.entrySet()) {
             for (int i = 0; i < threadNumberPerDisk; i++) {
                 cachedThreadPoolUtil.executeTask(() -> {
                     searchThreadCount.incrementAndGet();
                     var taskQueue = entry.getValue();
                     taskHandler.accept(taskQueue);
+                    taskMap.remove(entry.getKey());
                     //自身任务已经完成，开始扫描其他线程的任务
                     boolean hasTask;
                     do {
                         hasTask = false;
-                        for (var e : PrepareSearchInfo.taskMap.entrySet()) {
+                        for (var e : taskMap.entrySet()) {
                             var otherTaskQueue = e.getValue();
                             // 如果hasTask为false，则检查otherTaskQueue是否为空
                             if (!hasTask) {
@@ -1005,6 +1008,7 @@ public class DatabaseService {
                                 hasTask = !otherTaskQueue.isEmpty();
                             }
                             taskHandler.accept(otherTaskQueue);
+                            taskMap.remove(e.getKey());
                         }
                     } while (hasTask && eventManagement.notMainExit());
                     searchThreadCount.decrementAndGet();
@@ -1780,15 +1784,13 @@ public class DatabaseService {
 
     private static class PrepareSearchInfo {
         static AtomicBoolean isGpuThreadRunning = new AtomicBoolean(false);
-        static AtomicBoolean isSearchPrepared = new AtomicBoolean(false);
         //taskMap任务队列，key为磁盘盘符，value为任务
-        static ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskMap = new ConcurrentHashMap<>();
+        static ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskMap;
         static Bit taskStatus = new Bit(new byte[]{0});
         static Bit allTaskStatus = new Bit(new byte[]{0});
 
         private static ConcurrentHashMap<String, Set<String>> prepareSearchTasks() {
             DatabaseService databaseService = DatabaseService.getInstance();
-            PrepareSearchInfo.taskMap.clear();
             //每个priority用一个线程，每一个后缀名对应一个优先级
             //按照优先级排列，key是sql和表名的对应，value是容器
             var nonFormattedSql = databaseService.getNonFormattedSqlFromTableQueue();
@@ -1816,10 +1818,7 @@ public class DatabaseService {
             while (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL && System.currentTimeMillis() - startWaiting < timeout) {
                 Thread.onSpinWait();
             }
-            PrepareSearchInfo.isSearchPrepared.set(false);
-            PrepareSearchEvent prepareSearchEvent = (PrepareSearchEvent) event;
-            prepareSearch(prepareSearchEvent);
-            PrepareSearchInfo.isSearchPrepared.set(true);
+            prepareSearch((PrepareSearchEvent) event);
         });
     }
 
@@ -1829,13 +1828,13 @@ public class DatabaseService {
             DatabaseService databaseService = getInstance();
             final long startWaiting = System.currentTimeMillis();
             final long timeout = 3000;
-            while (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL &&
+            while (databaseService.searchThreadCount.get() != 0 &&
+                    databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL &&
                     System.currentTimeMillis() - startWaiting < timeout) {
                 Thread.onSpinWait();
             }
-            StartSearchEvent startSearchEvent = (StartSearchEvent) event;
-            if (!PrepareSearchInfo.isSearchPrepared.get()) {
-                prepareSearch(startSearchEvent);
+            if (PrepareSearchInfo.taskMap == null || PrepareSearchInfo.taskMap.isEmpty()) {
+                prepareSearch((StartSearchEvent) event);
             }
             databaseService.shouldStopSearch.set(false);
             //tempResultsForEvent和PrepareSearchInfo.containerMap在searchDone()中发送SearchDoneEvent后就已经清除，所以不需要清除，只清理tempResults
@@ -1853,11 +1852,12 @@ public class DatabaseService {
      * @param startSearchEvent startSearchEvent
      */
     private static synchronized void prepareSearch(StartSearchEvent startSearchEvent) {
+        PrepareSearchInfo.taskMap = new ConcurrentHashMap<>();
         prepareSearchKeywords(startSearchEvent.searchText, startSearchEvent.searchCase, startSearchEvent.keywords);
-        var gpuSearchContainer = PrepareSearchInfo.prepareSearchTasks();
         DatabaseService databaseService = getInstance();
         databaseService.tempResults = new ConcurrentLinkedQueue<>();
         databaseService.tempResultsForEvent = new ConcurrentSkipListSet<>();
+        var gpuSearchContainer = PrepareSearchInfo.prepareSearchTasks();
         databaseService.searchCache();
         databaseService.searchPriorityFolder();
         databaseService.searchStartMenu();
