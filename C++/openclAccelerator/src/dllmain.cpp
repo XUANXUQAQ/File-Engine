@@ -66,7 +66,8 @@ JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_ge
 	for (size_t i = 0; i < device_count; ++i)
 	{
 		// 内存大于2G，并且是GPU
-		if (devices[i].memory > bytes2G && devices[i].is_gpu)
+		if (auto&& is_unified = devices[i].cl_device.getInfo<CL_DEVICE_HOST_UNIFIED_MEMORY>();
+			devices[i].memory > bytes2G && devices[i].is_gpu && !is_unified)
 		{
 			device_string.append(devices[i].name).append(",").append(std::to_string(i)).append(";");
 		}
@@ -448,7 +449,8 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_i
 	jboolean ret = JNI_FALSE;
 	for (auto&& each : devices)
 	{
-		if (each.memory > bytes2G && each.is_gpu)
+		if (auto&& is_unified = each.cl_device.getInfo<CL_DEVICE_HOST_UNIFIED_MEMORY>();
+			each.memory > bytes2G && each.is_gpu && !is_unified)
 		{
 			ret = JNI_TRUE;
 			break;
