@@ -10,6 +10,11 @@
 #endif
 #include "utf162gbk_val.h"
 #include <thread>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <array>
+#include <fstream>
 
 void clear_cache(const std::string& key);
 void clear_all_cache();
@@ -28,6 +33,7 @@ void start_kernel(const std::vector<std::string>& search_case,
 	const std::vector<std::string>& keywords,
 	const std::vector<std::string>& keywords_lower_case,
 	const bool* is_keyword_path);
+size_t get_gpu_mem_use();
 
 //lock
 inline void wait_for_clear_cache();
@@ -497,8 +503,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_clear
 JNIEXPORT jint JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_getGPUMemUsage
 (JNIEnv*, jobject)
 {
-	// TODO 目前无法获取全局占用信息，仅能获取当前程序占用
-	const auto mem_used = current_device.info.memory_used;
+	const auto mem_used = get_gpu_mem_use();
 	const auto total_mem = current_device.info.memory;
 	return static_cast<jint>(mem_used * 100 / total_mem);
 }
@@ -975,4 +980,38 @@ void start_kernel(const std::vector<std::string>& search_case,
 	{
 		cache->is_match_done = true;
 	}
+}
+
+std::string exec(const char* cmd)
+{
+	std::array<char, 128> buffer{ 0 };
+	std::string result;
+	std::unique_ptr<FILE, decltype(&_pclose)> pipe(_popen(cmd, "r"), _pclose);
+	if (!pipe) {
+		throw std::runtime_error("popen() failed!");
+	}
+	while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+		result += buffer.data();
+	}
+	return result;
+}
+
+size_t get_gpu_mem_use()
+{
+	static auto command = R"(
+$GpuMemTotal = (((Get-Counter "\GPU Local Adapter Memory(*)\Local Usage").CounterSamples | where CookedValue).CookedValue | measure -sum).sum
+Write-Output $GpuMemTotal
+)";
+	char temp_path[512]{ 0 };
+	GetTempPathA(512, temp_path);
+	std::string gpu_info_path(temp_path);
+	gpu_info_path.append("\\gpu_info.ps1");
+
+	std::ofstream gpu_info;
+	gpu_info.open(gpu_info_path);
+	gpu_info << command;
+	gpu_info.close();
+
+	auto&& ret = exec(("powershell " + gpu_info_path).c_str());
+	return std::stoull(ret);
 }
