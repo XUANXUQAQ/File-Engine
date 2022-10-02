@@ -3220,11 +3220,15 @@ public class SearchBar {
         ArrayList<String> listResultsTemp = listResults;
         var allPlugins = pluginService.getAllPlugins();
         try {
-            long time = System.currentTimeMillis();
-            while (isVisible()) {
-                if (startTime > time) {
+            long mergeResultsTime = System.currentTimeMillis();
+            while (true) {
+                //用户重新输入关键字
+                if (startTime > mergeResultsTime) {
                     listResultsTemp = listResults;
-                    time = System.currentTimeMillis();
+                    mergeResultsTime = System.currentTimeMillis();
+                }
+                if (System.currentTimeMillis() - visibleStartTime > 10_000 && !isVisible()) {
+                    break;
                 }
                 if (System.currentTimeMillis() - startTime > SEND_START_SEARCH_TIMEOUT) {
                     String each;
@@ -3729,12 +3733,6 @@ public class SearchBar {
         });
         if (IsMergeThreadExist.isMergeThreadExist.compareAndSet(false, true)) {
             CachedThreadPoolUtil.getInstance().executeTask(() -> {
-                long start = System.currentTimeMillis();
-                while (!isVisible()) {
-                    if (System.currentTimeMillis() - start > 5000)
-                        break;
-                    Thread.onSpinWait();
-                }
                 mergeResults();
                 IsMergeThreadExist.isMergeThreadExist.set(false);
             });
