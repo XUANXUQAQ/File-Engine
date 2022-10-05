@@ -63,7 +63,6 @@ public class DatabaseService {
     private final AtomicBoolean isDatabaseUpdated = new AtomicBoolean(false);
     private ConcurrentLinkedQueue<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
     private Set<String> tempResultsForEvent; //在SearchDoneEvent中保存的容器
-    private final AtomicInteger allResultsRecordCounter = new AtomicInteger();
     private final AtomicBoolean shouldStopSearch = new AtomicBoolean(false);
     private final ConcurrentLinkedQueue<Pair> priorityMap = new ConcurrentLinkedQueue<>();
     //tableCache 数据表缓存，在初始化时将会放入所有的key和一个空的cache，后续需要缓存直接放入空的cache中，不再创建新的cache实例
@@ -596,13 +595,13 @@ public class DatabaseService {
             if (container == null) {
                 if (tempResultsForEvent.add(path)) {
                     tempResults.add(path);
-                    if (allResultsRecordCounter.incrementAndGet() >= MAX_RESULTS) {
+                    if (tempResultsForEvent.size() >= MAX_RESULTS) {
                         stopSearch();
                     }
                 }
             } else {
                 if (!tempResultsForEvent.contains(path) && !container.contains(path) && container.add(path)) {
-                    if (allResultsRecordCounter.incrementAndGet() >= MAX_RESULTS) {
+                    if (tempResultsForEvent.size() + container.size() >= MAX_RESULTS) {
                         stopSearch();
                     }
                 }
@@ -626,13 +625,13 @@ public class DatabaseService {
         EventManagement eventManagement = EventManagement.getInstance();
         try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement(sql, diskStr);
              ResultSet resultSet = pStmt.executeQuery()) {
-            while (resultSet.next() && eventManagement.notMainExit()) {
+            while (eventManagement.notMainExit() && resultSet.next()) {
                 int i = 0;
                 // 先将结果查询出来，再进行字符串匹配，提高吞吐量
                 do {
                     tmpQueryResultsCache[i] = resultSet.getString("PATH");
                     ++i;
-                } while (resultSet.next() && eventManagement.notMainExit() && i < MAX_TEMP_QUERY_RESULT_CACHE);
+                } while (eventManagement.notMainExit() && resultSet.next() && i < MAX_TEMP_QUERY_RESULT_CACHE);
                 //结果太多则不再进行搜索
                 //用户重新输入了信息
                 if (shouldStopSearch.get()) {
@@ -869,7 +868,7 @@ public class DatabaseService {
                 ex.printStackTrace();
             } finally {
                 for (String s : resultContainer) {
-                    if (tempResults_.size() >= MAX_RESULTS)
+                    if (tempResultsForEvent_.size() >= MAX_RESULTS)
                         break;
                     if (tempResultsForEvent_.add(s)) {
                         tempResults_.add(s);
@@ -1838,7 +1837,6 @@ public class DatabaseService {
             }
             databaseService.shouldStopSearch.set(false);
             //tempResultsForEvent和PrepareSearchInfo.containerMap在searchDone()中发送SearchDoneEvent后就已经清除，所以不需要清除，只清理tempResults
-            databaseService.allResultsRecordCounter.set(0);
             //启动搜索线程
             CachedThreadPoolUtil.getInstance().executeTask(databaseService::startSearch);
             databaseService.startSearchTimeMills.set(System.currentTimeMillis());
@@ -1865,7 +1863,7 @@ public class DatabaseService {
             // 退出上一次搜索
             GPUAccelerator.INSTANCE.stopCollectResults();
             long start = System.currentTimeMillis();
-            while (PrepareSearchInfo.isGpuThreadRunning.get()) {
+            while (!PrepareSearchInfo.isGpuThreadRunning.compareAndSet(false, true)) {
                 if (System.currentTimeMillis() - start > 3000) {
                     System.out.println("等待上一次gpu加速完成超时");
                     break;
@@ -1887,10 +1885,8 @@ public class DatabaseService {
                         (key, path) -> {
                             if (gpuSearchContainer.containsKey(key) && eventManagement.notMainExit()) {
                                 Set<String> gpuContainer = gpuSearchContainer.get(key);
-                                if (!databaseService.tempResultsForEvent.contains(path) && gpuContainer.add(path)) {
-                                    if (databaseService.allResultsRecordCounter.incrementAndGet() >= MAX_RESULTS) {
-                                        databaseService.stopSearch();
-                                    }
+                                if (!databaseService.tempResultsForEvent.contains(path)) {
+                                    gpuContainer.add(path);
                                 }
                             }
                         });
