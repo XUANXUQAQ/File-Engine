@@ -3220,17 +3220,15 @@ public class SearchBar {
         ArrayList<String> listResultsTemp = listResults;
         var allPlugins = pluginService.getAllPlugins();
         try {
-            long mergeResultsTime = System.currentTimeMillis();
             while (true) {
                 //用户重新输入关键字
-                if (startTime > mergeResultsTime) {
+                if (listResultsTemp != listResults) {
                     listResultsTemp = listResults;
-                    mergeResultsTime = System.currentTimeMillis();
                 }
                 if (System.currentTimeMillis() - visibleStartTime > 10_000 && !isVisible()) {
                     break;
                 }
-                if (System.currentTimeMillis() - startTime > SEND_START_SEARCH_TIMEOUT + SEND_PREPARE_SEARCH_TIMEOUT) {
+                if (System.currentTimeMillis() - startTime > SEND_START_SEARCH_TIMEOUT) {
                     String each;
                     for (var eachPlugin : allPlugins) {
                         while ((each = eachPlugin.plugin.pollFromResultQueue()) != null) {
@@ -3496,7 +3494,11 @@ public class SearchBar {
             isCudaSearchNotStarted.set(false);
             if (DatabaseService.getInstance().getStatus() == Constants.Enums.DatabaseStatus.NORMAL && runningMode == RunningMode.NORMAL_MODE) {
                 searchCaseToLowerAndRemoveConflict();
-                eventManagement.putEvent(new PrepareSearchEvent(() -> searchText, () -> searchCase, () -> keywords));
+                PrepareSearchEvent prepareSearchEvent = new PrepareSearchEvent(() -> searchText, () -> searchCase, () -> keywords);
+                eventManagement.putEvent(prepareSearchEvent);
+                if (eventManagement.waitForEvent(prepareSearchEvent)) {
+                    throw new RuntimeException("prepare search failed.");
+                }
             }
         }
     }
