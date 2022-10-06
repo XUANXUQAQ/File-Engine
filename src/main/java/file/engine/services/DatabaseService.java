@@ -1787,6 +1787,7 @@ public class DatabaseService {
         static ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskMap;
         static Bit taskStatus = new Bit(new byte[]{0});
         static Bit allTaskStatus = new Bit(new byte[]{0});
+        static AtomicBoolean isPreparing = new AtomicBoolean(false);
 
         private static ConcurrentHashMap<String, Set<String>> prepareSearchTasks() {
             DatabaseService databaseService = DatabaseService.getInstance();
@@ -1810,7 +1811,10 @@ public class DatabaseService {
 
     @EventRegister(registerClass = PrepareSearchEvent.class)
     private static void prepareSearchEventHandle(Event event) {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        if (PrepareSearchInfo.isPreparing.compareAndSet(false, true)) {
+            if (IsDebug.isDebug()) {
+                System.out.println("进行预搜索并添加搜索任务");
+            }
             DatabaseService databaseService = DatabaseService.getInstance();
             final long startWaiting = System.currentTimeMillis();
             final long timeout = 3000;
@@ -1818,30 +1822,34 @@ public class DatabaseService {
                 Thread.onSpinWait();
             }
             prepareSearch((PrepareSearchEvent) event);
-        });
+            PrepareSearchInfo.isPreparing.set(false);
+            event.setReturnValue(databaseService.tempResults);
+        }
     }
 
     @EventRegister(registerClass = StartSearchEvent.class)
     private static void startSearchEvent(Event event) {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            DatabaseService databaseService = getInstance();
-            final long startWaiting = System.currentTimeMillis();
-            final long timeout = 3000;
-            while (databaseService.searchThreadCount.get() != 0 &&
-                    databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL &&
-                    System.currentTimeMillis() - startWaiting < timeout) {
-                Thread.onSpinWait();
+        DatabaseService databaseService = getInstance();
+        final long startWaiting = System.currentTimeMillis();
+        final long timeout = 3000;
+        while (databaseService.searchThreadCount.get() != 0 ||
+                databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL ||
+                PrepareSearchInfo.isPreparing.get()) {
+            if (System.currentTimeMillis() - startWaiting > timeout) {
+                System.out.println("等待上次搜索结束超时");
+                break;
             }
-            if (PrepareSearchInfo.taskMap == null || PrepareSearchInfo.taskMap.isEmpty()) {
-                prepareSearch((StartSearchEvent) event);
-            }
-            databaseService.shouldStopSearch.set(false);
-            //tempResultsForEvent和PrepareSearchInfo.containerMap在searchDone()中发送SearchDoneEvent后就已经清除，所以不需要清除，只清理tempResults
-            //启动搜索线程
-            CachedThreadPoolUtil.getInstance().executeTask(databaseService::startSearch);
-            databaseService.startSearchTimeMills.set(System.currentTimeMillis());
-            event.setReturnValue(databaseService.tempResults);
-        });
+            Thread.onSpinWait();
+        }
+        if (PrepareSearchInfo.taskMap == null || PrepareSearchInfo.taskMap.isEmpty()) {
+            prepareSearch((StartSearchEvent) event);
+        }
+        databaseService.shouldStopSearch.set(false);
+        //tempResultsForEvent和PrepareSearchInfo.containerMap在searchDone()中发送SearchDoneEvent后就已经清除，所以不需要清除，只清理tempResults
+        //启动搜索线程
+        CachedThreadPoolUtil.getInstance().executeTask(databaseService::startSearch);
+        databaseService.startSearchTimeMills.set(System.currentTimeMillis());
+        event.setReturnValue(databaseService.tempResults);
     }
 
     /**

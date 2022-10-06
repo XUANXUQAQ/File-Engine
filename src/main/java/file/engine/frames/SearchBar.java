@@ -3488,7 +3488,7 @@ public class SearchBar {
         }
     }
 
-    private void sendPrepareSearchEvent() {
+    private Optional<ConcurrentLinkedQueue<String>> sendPrepareSearchEvent() {
         EventManagement eventManagement = EventManagement.getInstance();
         if (!getSearchBarText().isEmpty()) {
             isCudaSearchNotStarted.set(false);
@@ -3499,8 +3499,10 @@ public class SearchBar {
                 if (eventManagement.waitForEvent(prepareSearchEvent)) {
                     throw new RuntimeException("prepare search failed.");
                 }
+                return prepareSearchEvent.getReturnValue();
             }
         }
+        return Optional.empty();
     }
 
     /**
@@ -3540,7 +3542,8 @@ public class SearchBar {
                     final long endTime = System.currentTimeMillis();
                     if ((endTime - startTime > SEND_PREPARE_SEARCH_TIMEOUT) && isCudaSearchNotStarted.get() && startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
                         setSearchKeywordsAndSearchCase();
-                        sendPrepareSearchEvent();
+                        var resultsOptional = sendPrepareSearchEvent();
+                        resultsOptional.ifPresent(res -> tempResultsFromDatabase = res);
                     }
                     if ((endTime - startTime > SEND_START_SEARCH_TIMEOUT) && isSearchNotStarted.get() && startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
                         setSearchKeywordsAndSearchCase();
