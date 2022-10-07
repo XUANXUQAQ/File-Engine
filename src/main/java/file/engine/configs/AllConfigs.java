@@ -897,6 +897,14 @@ public class AllConfigs {
                 case Spacegray:
                     FlatSpacegrayIJTheme.setup();
                     break;
+                case SystemDefault:
+                    try {
+                        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException |
+                             UnsupportedLookAndFeelException e) {
+                        e.printStackTrace();
+                    }
+                    break;
                 default:
                     FlatDarculaLaf.setup();
                     break;

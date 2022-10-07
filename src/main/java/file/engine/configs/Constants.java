@@ -74,7 +74,7 @@ public class Constants {
             CyanLight, DarkFlat, DarkPurple, Dracula,
             Gray, LightFlat, MaterialDesignDark, Monocai,
             Nord, OneDark, MaterialDarker, MaterialLighter, SolarizedDark, SolarizedLight,
-            Spacegray, Vuesion, XcodeDark
+            Spacegray, Vuesion, XcodeDark, SystemDefault
         }
 
         public enum BorderType {
