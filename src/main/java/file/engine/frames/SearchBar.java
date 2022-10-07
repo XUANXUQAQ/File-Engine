@@ -644,9 +644,8 @@ public class SearchBar {
 
                 if (e.getButton() == MouseEvent.BUTTON3 && runningMode != RunningMode.PLUGIN_MODE) {
                     //右键被点击
-                    final double dpi = DpiUtil.getDpi();
                     Point mouseLocation = MouseInfo.getPointerInfo().getLocation();
-                    menu.show(null, (int) (mouseLocation.getX() / dpi), (int) (mouseLocation.getY() / dpi));
+                    menu.show(null, (int) (mouseLocation.getX()), (int) (mouseLocation.getY()));
                 } else if (e.getButton() == MouseEvent.BUTTON1) {
                     menu.setVisible(false);
                 }
