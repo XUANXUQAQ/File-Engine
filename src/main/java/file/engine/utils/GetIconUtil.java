@@ -109,8 +109,7 @@ public class GetIconUtil {
                 final long timeout = 200; // 最长等待200ms
                 while (!task.isDone) {
                     if (System.currentTimeMillis() - start > timeout) {
-                        System.out.println("等待获取图标超时，path: " + pathOrKey);
-                        break;
+                        return changeIcon(iconMap.get("blankIcon"), width, height);
                     }
                     Thread.onSpinWait();
                 }
