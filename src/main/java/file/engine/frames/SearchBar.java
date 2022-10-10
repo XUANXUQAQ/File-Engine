@@ -3156,7 +3156,8 @@ public class SearchBar {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
                 long time = System.currentTimeMillis();
-                SwingUtilities.invokeLater(() -> searchInfoLabel.setIcon(GetIconUtil.getInstance().getBigIcon("loadingIcon", iconSideLength, iconSideLength)));
+                SwingUtilities.invokeLater(() -> searchInfoLabel.setIcon(
+                        GetIconUtil.getInstance().getBigIcon("loadingIcon", iconSideLength, iconSideLength, (icon) -> searchInfoLabel.setIcon(icon))));
                 while (!"done".equals(searchInfoLabel.getName()) && isVisible() && startTime < time) {
                     SwingUtilities.invokeLater(() -> searchInfoLabel.setText(TranslateService.INSTANCE.getTranslation("Searching") + "    " +
                             TranslateService.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
@@ -3169,7 +3170,9 @@ public class SearchBar {
                         searchInfoLabel.setText(TranslateService.INSTANCE.getTranslation("Search Done") + "    " +
                                 TranslateService.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
                                 TranslateService.INSTANCE.getTranslation("Number of current results") + ": " + listResults.size());
-                        searchInfoLabel.setIcon(GetIconUtil.getInstance().getBigIcon("completeIcon", iconSideLength, iconSideLength));
+                        searchInfoLabel.setIcon(
+                                GetIconUtil.getInstance().getBigIcon("completeIcon", iconSideLength, iconSideLength,
+                                        (icon) -> searchInfoLabel.setIcon(icon)));
                         CachedThreadPoolUtil.getInstance().executeTask(() -> {
                             long _time = System.currentTimeMillis();
                             int count = 0;
@@ -3925,7 +3928,8 @@ public class SearchBar {
                 label.setName(RESULT_LABEL_NAME_HOLDER);
             }
             label.setText(allHtml);
-            ImageIcon icon = GetIconUtil.getInstance().getBigIcon(path, iconSideLength, iconSideLength);
+            ImageIcon icon = GetIconUtil.getInstance().getBigIcon(path, iconSideLength, iconSideLength, (icon2) ->
+                    SwingUtilities.invokeLater(() -> label.setIcon(icon2)));
             label.setIcon(icon);
         }
         if (isChosen) {
@@ -3979,7 +3983,8 @@ public class SearchBar {
         label.setText(showStr);
         label.setName(RESULT_LABEL_NAME_HOLDER);
         ImageIcon imageIcon = getIconUtil.getCommandIcon(RegexUtil.colon.split(name)[1], iconSideLength, iconSideLength);
-        imageIcon = imageIcon == null ? getIconUtil.getBigIcon(path, iconSideLength, iconSideLength) : imageIcon;
+        imageIcon = imageIcon == null ? getIconUtil.getBigIcon(path, iconSideLength, iconSideLength, (icon2) ->
+                SwingUtilities.invokeLater(() -> label.setIcon(icon2))) : imageIcon;
         label.setIcon(imageIcon);
         if (isChosen) {
             setLabelChosen(label);

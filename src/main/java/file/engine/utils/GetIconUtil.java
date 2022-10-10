@@ -10,6 +10,7 @@ import java.awt.*;
 import java.io.File;
 import java.util.Objects;
 import java.util.concurrent.*;
+import java.util.function.Consumer;
 
 /**
  * @author XUANXU
@@ -82,7 +83,7 @@ public class GetIconUtil {
         }
     }
 
-    public ImageIcon getBigIcon(String pathOrKey, int width, int height) {
+    public ImageIcon getBigIcon(String pathOrKey, int width, int height, Consumer<ImageIcon> timeoutCallback) {
         if (pathOrKey == null || pathOrKey.isEmpty()) {
             return changeIcon(iconMap.get("blankIcon"), width, height);
         }
@@ -106,12 +107,24 @@ public class GetIconUtil {
             Task task = new Task(f, width, height);
             if (workingQueue.size() < MAX_WORKING_QUEUE_SIZE && workingQueue.add(task)) {
                 final long start = System.currentTimeMillis();
-                final long timeout = 200; // 最长等待200ms
+                final long timeout = 50; // 最长等待时间
+                boolean isTimeout = false;
                 while (!task.isDone) {
                     if (System.currentTimeMillis() - start > timeout) {
-                        return changeIcon(iconMap.get("blankIcon"), width, height);
+                        isTimeout = true;
+                        break;
                     }
                     Thread.onSpinWait();
+                }
+                if (isTimeout) {
+                    if (IsDebug.isDebug()) {
+                        System.out.println("获取图标超时");
+                    }
+                    task.timeoutCallBack = timeoutCallback;
+                    if (workingQueue.size() < MAX_WORKING_QUEUE_SIZE) {
+                        workingQueue.add(task);
+                    }
+                    return changeIcon(iconMap.get("blankIcon"), width, height);
                 }
                 return task.icon;
             }
@@ -127,8 +140,15 @@ public class GetIconUtil {
                     while (eventManagement.notMainExit()) {
                         var take = workingQueue.poll();
                         if (take != null) {
-                            take.icon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(take.path), take.width, take.height);
-                            take.isDone = true;
+                            if (take.timeoutCallBack != null) {
+                                if (!take.isDone) {
+                                    take.icon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(take.path), take.width, take.height);
+                                }
+                                take.timeoutCallBack.accept(take.icon);
+                            } else {
+                                take.icon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(take.path), take.width, take.height);
+                                take.isDone = true;
+                            }
                         }
                         TimeUnit.MILLISECONDS.sleep(5);
                     }
@@ -145,5 +165,6 @@ public class GetIconUtil {
         volatile ImageIcon icon;
         final int width;
         final int height;
+        volatile Consumer<ImageIcon> timeoutCallBack;
     }
 }
