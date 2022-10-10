@@ -872,7 +872,7 @@ void remove_records_from_cache(const std::string& key, std::vector<std::string>&
 								<< std::endl;
 #endif
 							has_memory_fragments = true;
-							gpuErrchk(cudaMemcpyAsync(str_address, last_str_address,
+							gpuErrchk(cudaMemcpyAsync(cache->str_data.dev_str_addr + i, cache->str_data.dev_str_addr + last_index,
 								sizeof(size_t), cudaMemcpyDeviceToDevice, stream), true, nullptr);
 							//记录字符串长度
 							cache->str_data.str_length[i] = cache->str_data.str_length[last_index];

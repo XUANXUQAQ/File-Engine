@@ -59,14 +59,14 @@ void volume::init_volume()
 			if (const auto full_path = to_utf8(wstring(record)); !is_ignore(full_path))
 			{
 				collect_result_to_result_map(ascii, full_path);
-				std::string tmp_path(full_path);
-				size_t pos = tmp_path.find_last_of('\\');
-				while (pos != string::npos)
+				const string tmp_path(full_path);
+				const size_t pos = tmp_path.find_last_of('\\');
+				if (pos != string::npos)
 				{
-					auto&& parent_path = tmp_path.substr(0, pos);
-					collect_result_to_result_map(get_asc_ii_sum(get_file_name(parent_path)), parent_path);
-					tmp_path = parent_path;
-					pos = tmp_path.find_last_of('\\');
+					if (auto&& parent_path = tmp_path.substr(0, pos); parent_path.length() > 2)
+					{
+						collect_result_to_result_map(get_asc_ii_sum(get_file_name(parent_path)), parent_path);
+					}
 				}
 			}
 		};
@@ -119,7 +119,7 @@ void volume::copy_results_to_shared_memory()
 			static auto list_name_prefix = "list";
 			static auto prefix = "sharedMemory:";
 			std::string each_list_name = std::string(list_name_prefix) + std::to_string(i);
-			const auto& shared_memory_name = 
+			const auto& shared_memory_name =
 				// 共享内存名为 sharedMemory:[path]:list[num]:[priority]
 				std::string(prefix) + getDiskPath() + ":" + each_list_name + ":" + std::to_string(snd);
 			create_shared_memory_and_copy(each_list_name, snd, shared_memory_name);
