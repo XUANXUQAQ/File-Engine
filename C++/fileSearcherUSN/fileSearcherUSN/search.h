@@ -5,10 +5,10 @@
 #include "sqlite3.h"
 #include <winioctl.h>
 #include <concurrent_unordered_map.h>
-#include <concurrent_queue.h>
+#include <concurrent_unordered_set.h>
 
 #define CONCURRENT_MAP concurrency::concurrent_unordered_map
-#define CONCURRENT_QUEUE concurrency::concurrent_queue
+#define CONCURRENT_SET concurrency::concurrent_unordered_set
 
 typedef struct pfrn_name
 {
@@ -93,7 +93,7 @@ private:
 
 	std::vector<std::string>* ignore_path_vector_ = nullptr;
 	PriorityMap* priority_map_ = nullptr;
-	CONCURRENT_MAP<std::string, CONCURRENT_MAP<int, CONCURRENT_QUEUE<std::string>&>*> all_results_map;
+	CONCURRENT_MAP<std::string, CONCURRENT_MAP<int, CONCURRENT_SET<std::string>&>*> all_results_map;
 
 	bool get_handle();
 	bool create_usn();

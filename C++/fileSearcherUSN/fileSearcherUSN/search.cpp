@@ -7,7 +7,7 @@
 #include <vector>
 #include <algorithm>
 #include "sqlite3.h"
-#include <concurrent_queue.h>
+#include <concurrent_unordered_set.h>
 #include <concurrent_unordered_map.h>
 #include <atomic>
 #include <mutex>
@@ -59,6 +59,15 @@ void volume::init_volume()
 			if (const auto full_path = to_utf8(wstring(record)); !is_ignore(full_path))
 			{
 				collect_result_to_result_map(ascii, full_path);
+				std::string tmp_path(full_path);
+				size_t pos = tmp_path.find_last_of('\\');
+				while (pos != string::npos)
+				{
+					auto&& parent_path = tmp_path.substr(0, pos);
+					collect_result_to_result_map(get_asc_ii_sum(get_file_name(parent_path)), parent_path);
+					tmp_path = parent_path;
+					pos = tmp_path.find_last_of('\\');
+				}
 			}
 		};
 		auto search_internal = [this, &collect_internal]
@@ -128,8 +137,8 @@ void volume::collect_result_to_result_map(const int ascii, const std::string& fu
 	}
 	std::string list_name("list");
 	list_name += std::to_string(ascii_group);
-	CONCURRENT_MAP<int, CONCURRENT_QUEUE<std::string>&>* tmp_results;
-	CONCURRENT_QUEUE<std::string>* priority_str_list = nullptr;
+	CONCURRENT_MAP<int, CONCURRENT_SET<std::string>&>* tmp_results;
+	CONCURRENT_SET<std::string>* priority_str_list = nullptr;
 	const int priority = get_priority_by_path(full_path);
 	try
 	{
@@ -144,8 +153,8 @@ void volume::collect_result_to_result_map(const int ascii, const std::string& fu
 			auto&& iter = tmp_results->find(priority);
 			if (iter == tmp_results->end())
 			{
-				priority_str_list = new CONCURRENT_QUEUE<std::string>();
-				tmp_results->insert(std::pair<int, CONCURRENT_QUEUE<std::string>&>(priority, *priority_str_list));
+				priority_str_list = new CONCURRENT_SET<std::string>();
+				tmp_results->insert(std::pair<int, CONCURRENT_SET<std::string>&>(priority, *priority_str_list));
 			}
 			else
 			{
@@ -160,9 +169,9 @@ void volume::collect_result_to_result_map(const int ascii, const std::string& fu
 		auto&& iter = all_results_map.find(list_name);
 		if (iter == all_results_map.end())
 		{
-			priority_str_list = new CONCURRENT_QUEUE<std::string>();
-			tmp_results = new CONCURRENT_MAP<int, CONCURRENT_QUEUE<std::string>&>();
-			tmp_results->insert(std::pair<int, CONCURRENT_QUEUE<std::string>&>(priority, *priority_str_list));
+			priority_str_list = new CONCURRENT_SET<std::string>();
+			tmp_results = new CONCURRENT_MAP<int, CONCURRENT_SET<std::string>&>();
+			tmp_results->insert(std::pair<int, CONCURRENT_SET<std::string>&>(priority, *priority_str_list));
 			all_results_map.insert(
 				std::pair(list_name, tmp_results));
 		}
@@ -173,8 +182,8 @@ void volume::collect_result_to_result_map(const int ascii, const std::string& fu
 			auto&& iter2 = tmp_results->find(priority);
 			if (iter2 == tmp_results->end())
 			{
-				priority_str_list = new CONCURRENT_QUEUE<std::string>();
-				tmp_results->insert(std::pair<int, CONCURRENT_QUEUE<std::string>&>(priority, *priority_str_list));
+				priority_str_list = new CONCURRENT_SET<std::string>();
+				tmp_results->insert(std::pair<int, CONCURRENT_SET<std::string>&>(priority, *priority_str_list));
 			}
 			else
 			{
@@ -188,7 +197,7 @@ void volume::collect_result_to_result_map(const int ascii, const std::string& fu
 	}
 	if (priority_str_list != nullptr)
 	{
-		priority_str_list->push(full_path);
+		priority_str_list->insert(full_path);
 	}
 }
 
@@ -210,8 +219,8 @@ void volume::create_shared_memory_and_copy(const std::string& list_name, const i
 	{
 		return;
 	}
-	CONCURRENT_QUEUE<std::string>& result = table->at(priority);
-	size_t result_size = result.unsafe_size();
+	CONCURRENT_SET<std::string>& result = table->at(priority);
+	size_t result_size = result.size();
 	result_size = result_size > MAX_RECORD_COUNT ? MAX_RECORD_COUNT : result_size;
 	const size_t memory_size = result_size * RECORD_MAX_PATH;
 
@@ -224,8 +233,8 @@ void volume::create_shared_memory_and_copy(const std::string& list_name, const i
 		return;
 	}
 	size_t count = 0;
-	for (auto iterator = result.unsafe_begin();
-		iterator != result.unsafe_end() && count < MAX_RECORD_COUNT;
+	for (auto iterator = result.begin();
+		iterator != result.end() && count < MAX_RECORD_COUNT;
 		++iterator)
 	{
 		if (iterator->length() >= RECORD_MAX_PATH)
@@ -250,7 +259,7 @@ void volume::save_all_results_to_db()
 		const int ascii_group = stoi(fst.substr(4));
 		for (auto& [priority, result_container] : *snd)
 		{
-			for (auto&& iter = result_container.unsafe_begin(); iter != result_container.unsafe_end(); ++iter)
+			for (auto&& iter = result_container.begin(); iter != result_container.end(); ++iter)
 			{
 				save_result(*iter, get_asc_ii_sum(get_file_name(*iter)), ascii_group, priority);
 			}
