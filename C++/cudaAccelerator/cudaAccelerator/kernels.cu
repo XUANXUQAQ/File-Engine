@@ -216,6 +216,10 @@ __device__ bool not_matched(const char* path,
 	return false;
 }
 
+/**
+ * TODO 核函数并未对参数做检查，所以如果数据库中包含不是文件路径的记录将会导致崩溃。
+ * 如   D:    C:    这样的记录将会导致核函数失败
+ */
 __global__ void check(const size_t* str_address_records,
 	const size_t* total_num,
 	const int* search_case,
