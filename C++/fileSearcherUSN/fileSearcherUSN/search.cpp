@@ -45,10 +45,6 @@ void volume::init_volume()
 		)
 	{
 		using namespace std;
-#ifdef TEST
-		cout << "starting " << thread_num << " threads to collect results" << endl;
-		cout << "fileMap size: " << map_size << endl;
-#endif
 		auto collect_internal = [this](const Frn_Pfrn_Name_Map::iterator& map_iterator)
 		{
 			const auto& name = map_iterator->second.filename;
@@ -59,14 +55,21 @@ void volume::init_volume()
 			if (const auto full_path = to_utf8(wstring(record)); !is_ignore(full_path))
 			{
 				collect_result_to_result_map(ascii, full_path);
-				const string tmp_path(full_path);
-				const size_t pos = tmp_path.find_last_of('\\');
-				if (pos != string::npos)
+				string tmp_path(full_path);
+				size_t pos = tmp_path.find_last_of('\\');
+				while (pos != string::npos)
 				{
-					if (auto&& parent_path = tmp_path.substr(0, pos); parent_path.length() > 2)
+					auto&& parent_path = tmp_path.substr(0, pos);
+					if (parent_path.length() > 2)
 					{
 						collect_result_to_result_map(get_asc_ii_sum(get_file_name(parent_path)), parent_path);
 					}
+					else
+					{
+						break;
+					}
+					tmp_path = parent_path;
+					pos = tmp_path.find_last_of('\\');
 				}
 			}
 		};
