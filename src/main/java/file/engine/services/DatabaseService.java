@@ -600,7 +600,7 @@ public class DatabaseService {
                     }
                 }
             } else {
-                if (!tempResultsForEvent.contains(path) && !container.contains(path) && container.add(path)) {
+                if (!tempResultsForEvent.contains(path) && !container.contains(path) && Files.exists(Path.of(path)) && container.add(path)) {
                     if (tempResultsForEvent.size() + container.size() >= MAX_RESULTS) {
                         stopSearch();
                     }
@@ -976,6 +976,9 @@ public class DatabaseService {
      * 添加sql语句，并开始搜索
      */
     private void startSearch() {
+        searchCache();
+        searchPriorityFolder();
+        searchStartMenu();
         var taskMap = PrepareSearchInfo.taskMap;
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         EventManagement eventManagement = EventManagement.getInstance();
@@ -1864,9 +1867,6 @@ public class DatabaseService {
         databaseService.tempResults = new ConcurrentLinkedQueue<>();
         databaseService.tempResultsForEvent = new ConcurrentSkipListSet<>();
         var gpuSearchContainer = PrepareSearchInfo.prepareSearchTasks();
-        databaseService.searchCache();
-        databaseService.searchPriorityFolder();
-        databaseService.searchStartMenu();
         if (AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
             // 退出上一次搜索
             GPUAccelerator.INSTANCE.stopCollectResults();
@@ -1894,7 +1894,9 @@ public class DatabaseService {
                             if (gpuSearchContainer.containsKey(key) && eventManagement.notMainExit()) {
                                 Set<String> gpuContainer = gpuSearchContainer.get(key);
                                 if (!databaseService.tempResultsForEvent.contains(path)) {
-                                    gpuContainer.add(path);
+                                    if (Files.exists(Path.of(path))) {
+                                        gpuContainer.add(path);
+                                    }
                                 }
                             }
                         });
