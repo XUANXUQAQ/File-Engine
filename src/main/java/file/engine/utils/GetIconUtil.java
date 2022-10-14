@@ -107,24 +107,17 @@ public class GetIconUtil {
             Task task = new Task(f, width, height);
             if (workingQueue.size() < MAX_WORKING_QUEUE_SIZE && workingQueue.add(task)) {
                 final long start = System.currentTimeMillis();
-                final long timeout = 50; // 最长等待时间
-                boolean isTimeout = false;
+                final long timeout = 25; // 最长等待时间
                 while (!task.isDone) {
                     if (System.currentTimeMillis() - start > timeout) {
-                        isTimeout = true;
-                        break;
+                        Task task2 = new Task(f, width, height);
+                        task2.timeoutCallBack = timeoutCallback;
+                        if (workingQueue.size() < MAX_WORKING_QUEUE_SIZE) {
+                            workingQueue.add(task2);
+                        }
+                        return changeIcon(iconMap.get("blankIcon"), width, height);
                     }
                     Thread.onSpinWait();
-                }
-                if (isTimeout) {
-                    if (IsDebug.isDebug()) {
-                        System.out.println("获取图标超时");
-                    }
-                    task.timeoutCallBack = timeoutCallback;
-                    if (workingQueue.size() < MAX_WORKING_QUEUE_SIZE) {
-                        workingQueue.add(task);
-                    }
-                    return changeIcon(iconMap.get("blankIcon"), width, height);
                 }
                 return task.icon;
             }
@@ -150,7 +143,7 @@ public class GetIconUtil {
                                 take.isDone = true;
                             }
                         }
-                        TimeUnit.MILLISECONDS.sleep(5);
+                        TimeUnit.MILLISECONDS.sleep(1);
                     }
                 } catch (InterruptedException ignored) {
                 }
