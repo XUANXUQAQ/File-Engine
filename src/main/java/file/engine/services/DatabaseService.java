@@ -796,23 +796,25 @@ public class DatabaseService {
                                      Bit currentTaskNum) {
         var tempResults_ = tempResults;
         var tempResultsForEvent_ = tempResultsForEvent;
+        AllConfigs allConfigs = AllConfigs.getInstance();
         tasks.add(() -> {
             try {
                 for (var sqlAndTableName : sqlToExecute.entrySet()) {
-                    if (shouldStopSearch.get()) {
-                        return;
-                    }
                     String diskStr = String.valueOf(diskChar.charAt(0));
                     String eachSql = sqlAndTableName.getKey();
                     String tableName = sqlAndTableName.getValue();
                     String priority = getPriorityFromSql(eachSql);
                     String key = diskStr + "," + tableName + "," + priority;
                     final long matchedNum;
-                    if (AllConfigs.getInstance().isGPUAcceleratorEnabled() && GPUAccelerator.INSTANCE.isMatchDone(key)) {
+                    if (allConfigs.isGPUAcceleratorEnabled() && GPUAccelerator.INSTANCE.isMatchDone(key)) {
                         //gpu搜索已经放入container，只需要获取matchedNum修改权重即可
                         matchedNum = GPUAccelerator.INSTANCE.matchedNumber(key);
                     } else {
-                        matchedNum = searchFromDatabaseOrCache(resultContainer, diskStr, eachSql, key);
+                        if (!shouldStopSearch.get()) {
+                            matchedNum = searchFromDatabaseOrCache(resultContainer, diskStr, eachSql, key);
+                        } else {
+                            matchedNum = 0;
+                        }
                     }
                     final long weight = Math.min(matchedNum, 5);
                     if (weight != 0L) {
@@ -1884,6 +1886,7 @@ public class DatabaseService {
             }
             CachedThreadPoolUtil.getInstance().executeTask(() -> {
                 // 开始进行搜索
+                AtomicInteger resultCount = new AtomicInteger();
                 GPUAccelerator.INSTANCE.resetAllResultStatus();
                 PrepareSearchInfo.isGpuThreadRunning.set(true);
                 EventManagement eventManagement = EventManagement.getInstance();
@@ -1897,8 +1900,10 @@ public class DatabaseService {
                         (key, path) -> {
                             if (gpuSearchContainer.containsKey(key) && eventManagement.notMainExit()) {
                                 Set<String> gpuContainer = gpuSearchContainer.get(key);
-                                if (!databaseService.tempResultsForEvent.contains(path)) {
-                                    gpuContainer.add(path);
+                                if (!databaseService.tempResultsForEvent.contains(path) && gpuContainer.add(path)) {
+                                    if (resultCount.incrementAndGet() >= MAX_RESULTS) {
+                                        databaseService.stopSearch();
+                                    }
                                 }
                             }
                         });

@@ -244,6 +244,10 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_match
 		if (each.joinable())
 			each.join();
 	}
+	for (auto& [_, cache_val] : cache_map)
+	{
+		cache_val->is_output_done = 2;
+	}
 	env->ReleaseStringUTFChars(search_text, search_text_chars);
 }
 
