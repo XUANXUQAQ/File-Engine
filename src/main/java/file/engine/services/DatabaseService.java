@@ -446,7 +446,8 @@ public class DatabaseService {
                             if (resultSet.next() && eventManagement.notMainExit()) {
                                 return resultSet.getString("PATH");
                             }
-                        } catch (Exception ignored) {
+                        } catch (Exception e) {
+                            e.printStackTrace();
                         }
                         return null;
                     });
@@ -600,7 +601,7 @@ public class DatabaseService {
                     }
                 }
             } else {
-                if (!tempResultsForEvent.contains(path) && !container.contains(path) && Files.exists(Path.of(path)) && container.add(path)) {
+                if (!tempResultsForEvent.contains(path) && !container.contains(path) && container.add(path)) {
                     if (tempResultsForEvent.size() + container.size() >= MAX_RESULTS) {
                         stopSearch();
                     }
@@ -895,6 +896,9 @@ public class DatabaseService {
      * @return 查询的结果数量
      */
     private long searchFromDatabaseOrCache(Collection<String> container, String diskStr, String sql, String key) {
+        if (shouldStopSearch.get()) {
+            return 0;
+        }
         long matchedNum;
         Cache cache = tableCache.get(key);
         if (cache != null && cache.isCacheValid()) {
@@ -1894,9 +1898,7 @@ public class DatabaseService {
                             if (gpuSearchContainer.containsKey(key) && eventManagement.notMainExit()) {
                                 Set<String> gpuContainer = gpuSearchContainer.get(key);
                                 if (!databaseService.tempResultsForEvent.contains(path)) {
-                                    if (Files.exists(Path.of(path))) {
-                                        gpuContainer.add(path);
-                                    }
+                                    gpuContainer.add(path);
                                 }
                             }
                         });
