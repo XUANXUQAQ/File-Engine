@@ -16,7 +16,7 @@ public class DpiUtil {
         getDpiTime = System.currentTimeMillis();
         String proc = "user/getDpi.exe";
         try {
-            Process exec = Runtime.getRuntime().exec(proc);
+            Process exec = Runtime.getRuntime().exec(new String[]{proc});
             ProcessUtil.waitForProcess("getDpi.exe", 10);
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(exec.getInputStream()))) {
                 String dpiStr = reader.readLine();

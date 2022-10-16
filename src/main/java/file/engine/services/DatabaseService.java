@@ -596,13 +596,13 @@ public class DatabaseService {
             if (container == null) {
                 if (tempResultsForEvent.add(path)) {
                     tempResults.add(path);
-                    if (tempResultsForEvent.size() >= MAX_RESULTS) {
+                    if (!shouldStopSearch.get() && tempResultsForEvent.size() >= MAX_RESULTS) {
                         stopSearch();
                     }
                 }
             } else {
                 if (!tempResultsForEvent.contains(path) && !container.contains(path) && container.add(path)) {
-                    if (tempResultsForEvent.size() + container.size() >= MAX_RESULTS) {
+                    if (!shouldStopSearch.get() && tempResultsForEvent.size() + container.size() >= MAX_RESULTS) {
                         stopSearch();
                     }
                 }
@@ -1386,7 +1386,7 @@ public class DatabaseService {
             buffW.write(ignorePath);
         }
         String command = "cmd.exe /c " + start + end;
-        return Runtime.getRuntime().exec(command, null, new File("user"));
+        return Runtime.getRuntime().exec(new String[]{command}, null, new File("user"));
     }
 
     /**

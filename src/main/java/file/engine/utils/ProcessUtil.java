@@ -22,7 +22,7 @@ public class ProcessUtil {
     public static boolean isProcessExist(String procName) throws IOException, InterruptedException {
         StringBuilder strBuilder = new StringBuilder();
         if (!procName.isEmpty()) {
-            Process p = Runtime.getRuntime().exec("tasklist /FI \"IMAGENAME eq " + procName + "\"");
+            Process p = Runtime.getRuntime().exec(new String[]{"tasklist /FI \"IMAGENAME eq " + procName + "\""});
             p.waitFor();
             String eachLine;
             try (BufferedReader buffr = new BufferedReader(new InputStreamReader(p.getInputStream(), Charset.defaultCharset()))) {
@@ -53,7 +53,7 @@ public class ProcessUtil {
             if (System.currentTimeMillis() - start > timeLimit) {
                 System.err.printf("等待进程%s超时%n", procName);
                 String command = String.format("taskkill /im %s /f", procName);
-                Process exec = Runtime.getRuntime().exec(command);
+                Process exec = Runtime.getRuntime().exec(new String[]{command});
                 exec.waitFor();
                 break;
             }

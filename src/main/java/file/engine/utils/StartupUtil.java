@@ -29,7 +29,7 @@ public class StartupUtil {
         String command = "cmd.exe /c chcp 65001 & schtasks /query /V /tn \"File-Engine\"";
         Process p = null;
         try {
-            p = Runtime.getRuntime().exec(command);
+            p = Runtime.getRuntime().exec(new String[]{command});
             p.waitFor();
             String keys = "";
             String results = "";
@@ -117,7 +117,7 @@ public class StartupUtil {
         Path xmlPath = Path.of(tmpDir, "schtasks-File-Engine.xml");
         Files.writeString(xmlPath, xmlContent, StandardCharsets.UTF_16LE);
         String command = String.format("cmd.exe /c schtasks /create /xml %s /tn \"File-Engine\"", xmlPath.getFileName());
-        Process exec = Runtime.getRuntime().exec(command, null, new File(tmpDir));
+        Process exec = Runtime.getRuntime().exec(new String[]{command}, null, new File(tmpDir));
         exec.waitFor();
         return exec;
     }
@@ -132,7 +132,7 @@ public class StartupUtil {
     public static Process deleteStartup() throws InterruptedException, IOException {
         String command = "cmd.exe /c schtasks /delete /tn \"File-Engine\" /f";
         Process p;
-        p = Runtime.getRuntime().exec(command);
+        p = Runtime.getRuntime().exec(new String[]{command});
         p.waitFor();
         return p;
     }

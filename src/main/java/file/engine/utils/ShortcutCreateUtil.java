@@ -31,7 +31,7 @@ public class ShortcutCreateUtil {
             String end = "\"" + shortcutGenPath.substring(2) + "\"";
             String commandToGenLnk = start + end + " /target:" + "\"" + fileOrFolderPath + "\"" + " " + "/shortcut:" + "\"" + writeShortCutPath + "\"" + " /workingdir:" + "\"" + fileOrFolderPath.substring(0, fileOrFolderPath.lastIndexOf(File.separator)) + "\"";
 //            String encoding = System.getProperty("sun.jnu.encoding");
-            Runtime.getRuntime().exec(commandToGenLnk);
+            Runtime.getRuntime().exec(new String[]{commandToGenLnk});
         }
         if (isNotifyUser) {
             eventManagement.putEvent(new ShowTaskBarMessageEvent(
