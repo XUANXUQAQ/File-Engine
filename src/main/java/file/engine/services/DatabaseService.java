@@ -1385,8 +1385,7 @@ public class DatabaseService {
             buffW.newLine();
             buffW.write(ignorePath);
         }
-        String command = "cmd.exe /c " + start + end;
-        return Runtime.getRuntime().exec(new String[]{command}, null, new File("user"));
+        return Runtime.getRuntime().exec(new String[]{"cmd.exe", "/c", start + end}, null, new File("user"));
     }
 
     /**
