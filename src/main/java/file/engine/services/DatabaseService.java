@@ -1475,12 +1475,12 @@ public class DatabaseService {
     }
 
     private void executeAllSQLAndWait(@SuppressWarnings("SameParameterValue") int timeoutMills) {// 等待剩余的sql全部执行完成
-        sendExecuteSQLSignal();
         try {
             final long time = System.currentTimeMillis();
             // 将在队列中的sql全部执行并等待搜索线程全部完成
             System.out.println("等待所有sql执行完成，并且退出搜索");
             while (searchThreadCount.get() != 0 || !commandQueue.isEmpty()) {
+                sendExecuteSQLSignal();
                 TimeUnit.MILLISECONDS.sleep(10);
                 if (System.currentTimeMillis() - time > timeoutMills) {
                     System.out.println("等待超时");
