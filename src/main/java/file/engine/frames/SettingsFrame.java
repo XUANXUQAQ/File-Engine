@@ -3094,6 +3094,16 @@ public class SettingsFrame {
         } else {
             settingsFrame.showWindow(showSettingsFrameEvent.showTabName);
         }
+        cachedThreadPoolUtil.executeTask(() -> {
+            try {
+                final long startVisible = System.currentTimeMillis();
+                while (SettingsFrame.frame.isVisible() || System.currentTimeMillis() - startVisible < 3000) {
+                    settingsFrame.saveChanges();
+                    TimeUnit.SECONDS.sleep(1);
+                }
+            } catch (InterruptedException ignored) {
+            }
+        });
     }
 
     @EventRegister(registerClass = IsCacheExistEvent.class)
@@ -3405,7 +3415,6 @@ public class SettingsFrame {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        hideFrame();
         return "";
     }
 
