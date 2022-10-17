@@ -251,7 +251,7 @@ public class DatabaseService {
                     listRemainDir.addAll(List.of(subFiles));
                 }
             }
-        } while (!listRemainDir.isEmpty());
+        } while (!listRemainDir.isEmpty() && !shouldStopSearch.get());
     }
 
     /**
