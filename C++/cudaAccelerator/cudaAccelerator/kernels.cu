@@ -339,7 +339,7 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 	// 复制is_ignore_case
 	gpuErrchk(cudaMemcpy(dev_is_ignore_case, &is_ignore_case, sizeof(bool), cudaMemcpyHostToDevice), true, nullptr);
 	unsigned count = 0;
-	std::vector<size_t*> dev_ptrs;
+	const auto dev_ptr_arr = new size_t[cache_map.size()];
 
 	for (auto&& each : cache_map)
 	{
@@ -364,7 +364,7 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 
 		size_t* dev_total_number = nullptr;
 		gpuErrchk(cudaMalloc(&dev_total_number, sizeof(size_t)), true, nullptr);
-		dev_ptrs.emplace_back(dev_total_number);
+		dev_ptr_arr[count] = reinterpret_cast<size_t>(dev_total_number);
 		const auto total_number = cache->str_data.record_num + cache->str_data.remain_blank_num;
 		gpuErrchk(cudaMemcpy(dev_total_number, &total_number, sizeof(size_t), cudaMemcpyHostToDevice), true, nullptr);
 		check << <block_num, thread_num >> >
@@ -398,10 +398,11 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 		each.second->is_match_done = true;
 	}
 
-	for (size_t* each_ptr : dev_ptrs)
+	for (unsigned i = 0; i < count; ++i)
 	{
-		gpuErrchk(cudaFree(each_ptr), false, nullptr);
+		gpuErrchk(cudaFree(reinterpret_cast<void*>(dev_ptr_arr[i])), false, nullptr);
 	}
+	delete[] dev_ptr_arr;
 }
 
 void free_cuda_search_memory()
