@@ -251,7 +251,7 @@ public class DatabaseService {
                     listRemainDir.addAll(List.of(subFiles));
                 }
             }
-        } while (!listRemainDir.isEmpty() && !shouldStopSearch.get());
+        } while (!listRemainDir.isEmpty());
     }
 
     /**
@@ -260,6 +260,14 @@ public class DatabaseService {
     private void searchStartMenu() {
         searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{A4115719-D62E-491D-AA7C-E74B8BE3B067}"));
         searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{625B53C3-AB48-4EC1-BA1F-A1EF4146FC19}"));
+    }
+
+    /**
+     * 搜索桌面
+     */
+    private void searchDesktop() {
+        searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}"));
+        searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{C4AA340D-F20F-4863-AFEF-F87EF2E6BA25}"));
     }
 
     /**
@@ -983,10 +991,23 @@ public class DatabaseService {
      */
     private void startSearch() {
         searchCache();
-        searchPriorityFolder();
-        searchStartMenu();
-        var taskMap = PrepareSearchInfo.taskMap;
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+        AtomicBoolean isSearchFolderDone = new AtomicBoolean();
+        cachedThreadPoolUtil.executeTask(() -> {
+            searchPriorityFolder();
+            searchStartMenu();
+            searchDesktop();
+            isSearchFolderDone.set(true);
+        });
+        final long start = System.currentTimeMillis();
+        final long timeout = 500;
+        while (!isSearchFolderDone.get()) {
+            if (System.currentTimeMillis() - start > timeout) {
+                break;
+            }
+            Thread.onSpinWait();
+        }
+        var taskMap = PrepareSearchInfo.taskMap;
         EventManagement eventManagement = EventManagement.getInstance();
         final int threadNumberPerDisk = Math.max(1, AllConfigs.getInstance().getSearchThreadNumber() / taskMap.size());
         Consumer<ConcurrentLinkedQueue<Runnable>> taskHandler = (taskQueue) -> {
