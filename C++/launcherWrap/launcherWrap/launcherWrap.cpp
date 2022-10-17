@@ -14,6 +14,7 @@
 #pragma comment(lib, "Ole32.lib")
 #pragma comment(lib, "User32.lib")
 #define MAX_LOG_PRESERVE_DAYS 5
+#define CHECK_TIME_THRESHOLD 1
 // #define TEST
 
 #ifndef TEST
@@ -32,11 +33,6 @@ char g_update_signal_file[1000];
 char g_new_file_engine_jar_path[1000];
 char g_log_file_path[1000];
 char g_jvm_parameter_file_path[1000];
-#ifdef TEST
-int g_check_time_threshold = 1;
-#else
-int g_check_time_threshold = 5;
-#endif
 
 short g_restart_count = 0;
 std::time_t g_restart_time = std::time(nullptr);
@@ -117,7 +113,7 @@ int main()
 	while (!is_close_exist())
 	{
 		const std::time_t tmp = std::time(nullptr) - start_time;
-		if (tmp > g_check_time_threshold)
+		if (tmp > CHECK_TIME_THRESHOLD)
 		{
 			start_time = std::time(nullptr);
 			if (!find_process())
