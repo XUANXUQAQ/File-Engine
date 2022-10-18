@@ -1,6 +1,5 @@
 package file.engine.services.plugin.system;
 
-import lombok.SneakyThrows;
 
 import javax.swing.*;
 import java.awt.event.KeyEvent;
@@ -62,11 +61,14 @@ public class Plugin {
         }
     }
 
-    @SneakyThrows
     @SuppressWarnings("unchecked")
     private <T> T invokeByKey(String key, Object... args) {
         if (methodHashMap.containsKey(key)) {
-            return (T) methodHashMap.get(key).invoke(instance, args);
+            try {
+                return (T) methodHashMap.get(key).invoke(instance, args);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
         return null;
     }

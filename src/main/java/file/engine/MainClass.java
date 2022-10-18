@@ -4,8 +4,8 @@ import com.github.promeg.pinyinhelper.Pinyin;
 import com.github.promeg.tinypinyin.lexicons.java.cncity.CnCityDict;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.Constants;
-import file.engine.dllInterface.gpu.GPUAccelerator;
 import file.engine.dllInterface.GetHandle;
+import file.engine.dllInterface.gpu.GPUAccelerator;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.BootSystemEvent;
@@ -27,7 +27,6 @@ import file.engine.utils.clazz.scan.ClassScannerUtil;
 import file.engine.utils.file.FileUtil;
 import file.engine.utils.system.properties.IsDebug;
 import file.engine.utils.system.properties.IsPreview;
-import lombok.SneakyThrows;
 
 import javax.swing.*;
 import java.io.*;
@@ -255,8 +254,7 @@ public class MainClass {
      * 主循环
      * 检查启动时间并更新索引
      */
-    @SneakyThrows
-    private static void mainLoop() {
+    private static void mainLoop() throws InterruptedException {
         EventManagement eventManagement = EventManagement.getInstance();
         TranslateService translateService = TranslateService.getInstance();
         AllConfigs allConfigs = AllConfigs.getInstance();

@@ -30,7 +30,6 @@ import file.engine.services.plugin.system.PluginService;
 import file.engine.utils.*;
 import file.engine.utils.file.FileUtil;
 import file.engine.utils.system.properties.IsDebug;
-import lombok.SneakyThrows;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -44,6 +43,7 @@ import java.awt.event.*;
 import java.awt.geom.RoundRectangle2D;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -2973,7 +2973,6 @@ public class SearchBar {
         return (int) (((searchBarHeight * 0.2) / 96 * 72) / 4.5);
     }
 
-    @SneakyThrows
     private void switchToNormalMode(boolean isCloseWindow) {
         if (isCloseWindow) {
             closeSearchBar();
@@ -2999,7 +2998,11 @@ public class SearchBar {
         label8.setFont(labelFont);
         showingMode = Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING;
         searchBar.setOpacity(AllConfigs.getInstance().getOpacity());
-        TimeUnit.MILLISECONDS.sleep(150);
+        try {
+            TimeUnit.MILLISECONDS.sleep(150);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -3664,12 +3667,14 @@ public class SearchBar {
         showSearchbar(false, false);
     }
 
-    @SneakyThrows
     private void grabFocus() {
         int x = 0, y = 0;
         long start = System.currentTimeMillis();
-        while (!(searchBar.isVisible() || searchBar.isValid()) && System.currentTimeMillis() - start < 3000) {
-            TimeUnit.MILLISECONDS.sleep(5);
+        try {
+            while (!(searchBar.isVisible() || searchBar.isValid()) && System.currentTimeMillis() - start < 3000) {
+                TimeUnit.MILLISECONDS.sleep(5);
+            }
+        } catch (InterruptedException ignored) {
         }
         if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
             x = searchBar.getX() + textField.getWidth() / 2;
@@ -3690,54 +3695,57 @@ public class SearchBar {
      *
      * @param isGrabFocus 是否强制抓取焦点
      */
-    @SneakyThrows
     private void showSearchbar(boolean isGrabFocus, boolean isSwitchToNormal) {
         EventManagement eventManagement = EventManagement.getInstance();
-        SwingUtilities.invokeAndWait(() -> {
-            if (!isVisible()) {
-                searchBar.setAutoRequestFocus(isGrabFocus);
-                setVisible(true);
-                textField.requestFocusInWindow();
-                textField.setCaretPosition(0);
-                searchInfoLabel.setText("");
-                searchInfoLabel.setName("");
-                searchInfoLabel.setIcon(null);
-                startTime = System.currentTimeMillis();
-                visibleStartTime = startTime;
-                if (isGrabFocus) {
-                    CachedThreadPoolUtil.getInstance().executeTask(() -> {
-                        try {
-                            TimeUnit.MILLISECONDS.sleep(50);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        grabFocus();
-                    });
+        try {
+            SwingUtilities.invokeAndWait(() -> {
+                if (!isVisible()) {
+                    searchBar.setAutoRequestFocus(isGrabFocus);
+                    setVisible(true);
+                    textField.requestFocusInWindow();
+                    textField.setCaretPosition(0);
+                    searchInfoLabel.setText("");
+                    searchInfoLabel.setName("");
+                    searchInfoLabel.setIcon(null);
+                    startTime = System.currentTimeMillis();
+                    visibleStartTime = startTime;
+                    if (isGrabFocus) {
+                        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+                            try {
+                                TimeUnit.MILLISECONDS.sleep(50);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            grabFocus();
+                        });
+                    }
+                    eventManagement.putEvent(new SearchBarReadyEvent(showingMode.toString()));
+                } else if (isSwitchToNormal) {
+                    grabFocus();
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(50);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    switchToNormalMode(false);
+                    isFocusGrabbed.set(true);
                 }
-                eventManagement.putEvent(new SearchBarReadyEvent(showingMode.toString()));
-            } else if (isSwitchToNormal) {
-                grabFocus();
-                try {
-                    TimeUnit.MILLISECONDS.sleep(50);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                if (isBorderThreadNotExist.get()) {
+                    isBorderThreadNotExist.set(false);
+                    CachedThreadPoolUtil.getInstance().executeTask(this::setBorderOnVisible);
                 }
-                switchToNormalMode(false);
-                isFocusGrabbed.set(true);
-            }
-            if (isBorderThreadNotExist.get()) {
-                isBorderThreadNotExist.set(false);
-                CachedThreadPoolUtil.getInstance().executeTask(this::setBorderOnVisible);
-            }
-            if (isTryToShowResultThreadNotExist.get()) {
-                isTryToShowResultThreadNotExist.set(false);
-                tryToShowRecordsThread();
-            }
-            if (isLockMouseMotionThreadNotExist.get()) {
-                isLockMouseMotionThreadNotExist.set(false);
-                lockMouseMotionThread();
-            }
-        });
+                if (isTryToShowResultThreadNotExist.get()) {
+                    isTryToShowResultThreadNotExist.set(false);
+                    tryToShowRecordsThread();
+                }
+                if (isLockMouseMotionThreadNotExist.get()) {
+                    isLockMouseMotionThreadNotExist.set(false);
+                    lockMouseMotionThread();
+                }
+            });
+        } catch (InterruptedException | InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
         if (IsMergeThreadExist.isMergeThreadExist.compareAndSet(false, true)) {
             CachedThreadPoolUtil.getInstance().executeTask(() -> {
                 mergeResults();

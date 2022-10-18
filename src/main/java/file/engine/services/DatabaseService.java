@@ -31,7 +31,6 @@ import file.engine.utils.gson.GsonUtil;
 import file.engine.utils.system.properties.IsDebug;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.SneakyThrows;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -1584,8 +1583,7 @@ public class DatabaseService {
      * @param ignorePath     忽略文件夹
      * @param isDropPrevious 是否删除之前的记录
      */
-    @SneakyThrows
-    private boolean updateLists(String ignorePath, boolean isDropPrevious) {
+    private boolean updateLists(String ignorePath, boolean isDropPrevious) throws IOException, InterruptedException {
         if (getStatus() == Constants.Enums.DatabaseStatus.MANUAL_UPDATE || ProcessUtil.isProcessExist("fileSearcherUSN.exe")) {
             throw new RuntimeException("already searching");
         }
@@ -1990,8 +1988,12 @@ public class DatabaseService {
         }
         UpdateDatabaseEvent updateDatabaseEvent = (UpdateDatabaseEvent) event;
         // 在这里设置数据库状态为manual update
-        if (!databaseService.updateLists(AllConfigs.getInstance().getIgnorePath(), updateDatabaseEvent.isDropPrevious)) {
-            throw new RuntimeException("search failed");
+        try {
+            if (!databaseService.updateLists(AllConfigs.getInstance().getIgnorePath(), updateDatabaseEvent.isDropPrevious)) {
+                throw new RuntimeException("search failed");
+            }
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
