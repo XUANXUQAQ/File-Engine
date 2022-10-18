@@ -7,6 +7,7 @@ public enum CachedThreadPoolUtil {
     INSTANCE;
     private static final int THREAD_POOL_AWAIT_TIMEOUT = 10;
     private final ExecutorService platformThreadPool;
+    private final ExecutorService virtualThreadPool;
     private final AtomicBoolean isShutdown = new AtomicBoolean(false);
 
     CachedThreadPoolUtil() {
@@ -17,6 +18,7 @@ public enum CachedThreadPoolUtil {
                 TimeUnit.SECONDS,
                 new SynchronousQueue<>()
         );
+        virtualThreadPool = Executors.newVirtualThreadPerTaskExecutor();
     }
 
     public static CachedThreadPoolUtil getInstance() {
@@ -25,6 +27,23 @@ public enum CachedThreadPoolUtil {
 
     public boolean isShutdown() {
         return isShutdown.get();
+    }
+
+    /**
+     * 使用虚拟线程提交任务
+     *
+     * @param task 任务
+     * @return Future
+     */
+    private <T> Future<T> executeTaskVirtual(Callable<T> task) {
+        return virtualThreadPool.submit(task);
+    }
+
+    /**
+     * 使用虚拟线程提交任务
+     */
+    private void executeTaskVirtual(Runnable task) {
+        virtualThreadPool.submit(task);
     }
 
     private <T> Future<T> executeTaskPlatform(Callable<T> task) {
@@ -47,7 +66,11 @@ public enum CachedThreadPoolUtil {
         if (isShutdown.get()) {
             return null;
         }
-        return executeTaskPlatform(task);
+        if (isVirtualThread) {
+            return executeTaskVirtual(task);
+        } else {
+            return executeTaskPlatform(task);
+        }
     }
 
     /**
@@ -61,7 +84,11 @@ public enum CachedThreadPoolUtil {
         if (isShutdown.get()) {
             return;
         }
-        executeTaskPlatform(task);
+        if (isVirtualThread) {
+            executeTaskVirtual(task);
+        } else {
+            executeTaskPlatform(task);
+        }
     }
 
     /**
@@ -73,7 +100,7 @@ public enum CachedThreadPoolUtil {
         if (isShutdown.get()) {
             return;
         }
-        executeTaskPlatform(task);
+        executeTaskVirtual(task);
     }
 
     /**
@@ -82,6 +109,7 @@ public enum CachedThreadPoolUtil {
     public void shutdown() {
         isShutdown.set(true);
         platformThreadPool.shutdown();
+        virtualThreadPool.shutdown();
         printInfo((ThreadPoolExecutor) platformThreadPool);
     }
 
