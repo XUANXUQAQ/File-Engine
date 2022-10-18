@@ -203,9 +203,8 @@ __device__ bool not_matched(const char* path,
 			}
 			char gbk_buffer[MAX_PATH_LENGTH * 2]{ 0 };
 			char* gbk_buffer_ptr = gbk_buffer;
-			unsigned gbk_buffer_size = MAX_PATH_LENGTH * 2;
 			// utf-8编码转换gbk
-			utf8_to_gbk(match_str, static_cast<unsigned>(strlen_cuda(match_str)), &gbk_buffer_ptr, &gbk_buffer_size);
+			utf8_to_gbk(match_str, static_cast<unsigned>(strlen_cuda(match_str)), &gbk_buffer_ptr, nullptr);
 			char converted_pinyin[MAX_PATH_LENGTH * 6]{ 0 };
 			convert_to_pinyin(gbk_buffer, converted_pinyin);
 			if (strstr_cuda(converted_pinyin, each_keyword) == nullptr)
@@ -217,7 +216,11 @@ __device__ bool not_matched(const char* path,
 	return false;
 }
 
-__global__ void check(const char(*str_address_ptr_array)[MAX_PATH_LENGTH],
+/**
+ * TODO 核函数并未对参数做检查，所以如果数据库中包含不是文件路径的记录将会导致崩溃。
+ * 如   D:    C:    这样的记录将会导致核函数失败
+ */
+__global__ void check(const size_t* str_address_records,
 	const size_t* total_num,
 	const int* search_case,
 	const bool* is_ignore_case,
@@ -234,11 +237,11 @@ __global__ void check(const char(*str_address_ptr_array)[MAX_PATH_LENGTH],
 	{
 		return;
 	}
-	const auto path = reinterpret_cast<const char*>(str_address_ptr_array + thread_id);
 	if (*is_stop_collect_var)
 	{
 		return;
 	}
+	const auto path = reinterpret_cast<const char*>(str_address_records[thread_id]);
 	if (path == nullptr || !path[0])
 	{
 		return;
@@ -257,7 +260,7 @@ __global__ void check(const char(*str_address_ptr_array)[MAX_PATH_LENGTH],
 	{
 		// 全字匹配
 		strlwr_cuda(search_text);
-		char file_name[MAX_PATH_LENGTH];
+		char file_name[MAX_PATH_LENGTH]{ 0 };
 		get_file_name(path, file_name);
 		strlwr_cuda(file_name);
 		if (strcmp_cuda(search_text, file_name) != 0)
@@ -297,9 +300,7 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 	const char* search_text,
 	const std::vector<std::string>& keywords,
 	const std::vector<std::string>& keywords_lower_case,
-	const bool* is_keyword_path,
-	cudaStream_t* streams,
-	const size_t stream_count)
+	const bool* is_keyword_path)
 {
 	const auto keywords_num = keywords.size();
 
@@ -338,10 +339,10 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 	// 复制is_ignore_case
 	gpuErrchk(cudaMemcpy(dev_is_ignore_case, &is_ignore_case, sizeof(bool), cudaMemcpyHostToDevice), true, nullptr);
 	unsigned count = 0;
-	for (auto& each : cache_map)
+	const auto dev_ptr_arr = new size_t[cache_map.size()];
+
+	for (auto&& each : cache_map)
 	{
-		if (count >= stream_count)
-			break;
 		const auto& cache = each.second;
 		if (!cache->is_cache_valid)
 		{
@@ -360,12 +361,15 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 			thread_num = static_cast<int>(cache->str_data.record_num.load());
 			block_num = 1;
 		}
-		//注册回调
-		cudaStreamAddCallback(streams[count], set_match_done_flag_callback, cache, 0);
 
-		check << <block_num, thread_num, 0, streams[count] >> >
-			(cache->str_data.dev_cache_str,
-				cache->str_data.dev_total_number,
+		size_t* dev_total_number = nullptr;
+		gpuErrchk(cudaMalloc(&dev_total_number, sizeof(size_t)), true, nullptr);
+		dev_ptr_arr[count] = reinterpret_cast<size_t>(dev_total_number);
+		const auto total_number = cache->str_data.record_num + cache->str_data.remain_blank_num;
+		gpuErrchk(cudaMemcpy(dev_total_number, &total_number, sizeof(size_t), cudaMemcpyHostToDevice), true, nullptr);
+		check << <block_num, thread_num >> >
+			(cache->str_data.dev_str_addr,
+				dev_total_number,
 				dev_search_case,
 				dev_is_ignore_case,
 				dev_search_text,
@@ -384,6 +388,21 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 	{
 		fprintf(stderr, "check launch failed: %s\n", cudaGetErrorString(cudaStatus));
 	}
+	// 等待执行完成
+	cudaStatus = cudaDeviceSynchronize();
+	if (cudaStatus != cudaSuccess)
+		fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launch!\n", cudaStatus);
+
+	for (auto&& each : cache_map)
+	{
+		each.second->is_match_done = true;
+	}
+
+	for (unsigned i = 0; i < count; ++i)
+	{
+		gpuErrchk(cudaFree(reinterpret_cast<void*>(dev_ptr_arr[i])), false, nullptr);
+	}
+	delete[] dev_ptr_arr;
 }
 
 void free_cuda_search_memory()
@@ -406,10 +425,4 @@ size_t find_table_sizeof2(const size_t target)
 	temp |= temp >> 8;
 	temp |= temp >> 16;
 	return temp + 1;
-}
-
-void CUDART_CB set_match_done_flag_callback(cudaStream_t, cudaError_t, void* data)
-{
-	const auto cache = static_cast<list_cache*>(data);
-	cache->is_match_done = true;
 }

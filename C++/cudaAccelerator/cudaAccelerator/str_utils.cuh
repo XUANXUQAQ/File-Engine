@@ -1,9 +1,8 @@
-#pragma once
-#include "cuda_runtime.h"
+﻿#pragma once
 
 __device__ int strcmp_cuda(const char* str1, const char* str2);
 __device__ char* strlwr_cuda(char* src);
-__device__ char* strstr_cuda(char* s1, char* s2);
+__device__ const char* strstr_cuda(const char* str1, const char* str2);
 __device__ char* strrchr_cuda(const char* s, int c);
 __device__ char* strcpy_cuda(char* dst, const char* src);
 __device__ void get_file_name(const char* path, char* output);

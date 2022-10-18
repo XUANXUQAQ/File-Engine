@@ -51,6 +51,8 @@ mvn clean compile package
 
 使用Visual Studio打开**C++/launcherWrap**，进入launcherWrap文件夹源码根目录。创建**File-Engine.zip**文件。
 
+![](https://s1.328888.xyz/2022/09/17/o5XQy.png)
+
 File-Engine.zip压缩包中需要放入**jre运行环境**和刚才maven生成的**File-Engine.jar**
 
 ![](https://p1.meituan.net/dpplatform/6b3c8049ab49dac3a18560ebefd9275546273.png)

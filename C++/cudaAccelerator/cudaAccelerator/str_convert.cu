@@ -1,13 +1,13 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include "str_convert.cuh"
-#include <stdlib.h>
+#include <cstdlib>
 #include "cuda_runtime.h"
 #include "kernels.cuh"
 
 #define COMPBYTE(x, y) ((unsigned char)(x) << 8 | (unsigned char)(y))
 
 __device__ unsigned short utf162gbk[0x10000] = { 0 };
-__device__ unsigned short gbk2utf16[0x8000] = { 0 };
+// __device__ unsigned short gbk2utf16[0x8000] = { 0 };
 constexpr unsigned short gbk2_utf16_2_host[] =
 {
 	0x8140, 0x4E02,
@@ -10370,7 +10370,8 @@ constexpr unsigned short gbk2_utf16_3_host[] =
 	0xFE4D, 0xFE4F, 0xFA27,
 	0xFE50, 0xFEA0, 0xE815
 };
-void init_gbk2_utf16();
+
+// void init_gbk2_utf16();
 void init_utf162_gbk();
 void init_gbk2_utf16_2();
 void init_gbk2_utf16_3();
@@ -10382,7 +10383,7 @@ void init_str_convert()
 {
 	init_gbk2_utf16_2();
 	init_gbk2_utf16_3();
-	init_gbk2_utf16();
+	// init_gbk2_utf16();
 	init_utf162_gbk();
 }
 
@@ -10396,19 +10397,19 @@ void init_gbk2_utf16_3()
 	gbk2_utf16_3_size = sizeof gbk2_utf16_3_host / sizeof(short);
 }
 
-void init_gbk2_utf16()
-{
-	unsigned short c;
-	static unsigned short gbk2utf16_host[0x8000] = { 0 };
-	for (c = 0; c < gbk2_utf16_2_size; c += 2)
-		gbk2utf16_host[gbk2_utf16_2_host[c] - 0x8000] = gbk2_utf16_2_host[c + 1];
-
-	for (c = 0; c < gbk2_utf16_3_size; c += 3)
-		for (unsigned short d = gbk2_utf16_3_host[c]; d <= gbk2_utf16_3_host[c + 1]; d++)
-			gbk2utf16_host[d - 0x8000] = gbk2_utf16_3_host[c + 2] + d - gbk2_utf16_3_host[c];
-
-	gpuErrchk(cudaMemcpyToSymbol(gbk2utf16, gbk2utf16_host, sizeof(unsigned short) * 0x8000), true, nullptr);
-}
+// void init_gbk2_utf16()
+// {
+// 	unsigned short c;
+// 	static unsigned short gbk2utf16_host[0x8000] = { 0 };
+// 	for (c = 0; c < gbk2_utf16_2_size; c += 2)
+// 		gbk2utf16_host[gbk2_utf16_2_host[c] - 0x8000] = gbk2_utf16_2_host[c + 1];
+//
+// 	for (c = 0; c < gbk2_utf16_3_size; c += 3)
+// 		for (unsigned short d = gbk2_utf16_3_host[c]; d <= gbk2_utf16_3_host[c + 1]; d++)
+// 			gbk2utf16_host[d - 0x8000] = gbk2_utf16_3_host[c + 2] + d - gbk2_utf16_3_host[c];
+//
+// 	gpuErrchk(cudaMemcpyToSymbol(gbk2utf16, gbk2utf16_host, sizeof(unsigned short) * 0x8000), true, nullptr);
+// }
 
 void init_utf162_gbk()
 {
@@ -10424,53 +10425,53 @@ void init_utf162_gbk()
 	gpuErrchk(cudaMemcpyToSymbol(utf162gbk, utf162gbk_host, sizeof(unsigned short) * 0x10000), true, nullptr);
 }
 
-__device__ int gbk_to_utf8(const char* from, unsigned int from_len, char** to, unsigned int* to_len)
-{
-	char* result = *to;
-	unsigned i_to = 0;
-	unsigned flag = 0;
-
-	if (from_len == 0 || from == nullptr || to == nullptr || result == nullptr)
-	{
-		return -1;
-	}
-
-	for (unsigned i_from = 0; i_from < from_len; i_from++)
-	{
-		if (flag)
-		{
-			flag = 0;
-			const unsigned short tmp =
-				gbk2utf16[COMPBYTE(from[i_from - 1], from[i_from]) & ~0x8000];
-
-			if (tmp == 0)
-				continue;
-			if (tmp >= 0x800)
-			{
-				result[i_to++] = 0xE0 | tmp >> 12;
-				result[i_to++] = 0x80 | tmp >> 6 & 0x3F;
-				result[i_to++] = 0x80 | tmp & 0x3F;
-			}
-			else if (tmp >= 0x80)
-			{
-				result[i_to++] = 0xC0 | tmp >> 6;
-				result[i_to++] = 0x80 | tmp & 0x3F;
-			}
-			else
-			{
-				result[i_to++] = tmp;
-			}
-		}
-		else if (from[i_from] < 0)
-			flag = 1;
-		else
-			result[i_to++] = from[i_from];
-	}
-
-	result[i_to] = 0;
-	*to_len = i_to;
-	return 0;
-}
+// __device__ int gbk_to_utf8(const char* from, unsigned int from_len, char** to, unsigned int* to_len)
+// {
+// 	char* result = *to;
+// 	unsigned i_to = 0;
+// 	unsigned flag = 0;
+//
+// 	if (from_len == 0 || from == nullptr || to == nullptr || result == nullptr)
+// 	{
+// 		return -1;
+// 	}
+//
+// 	for (unsigned i_from = 0; i_from < from_len; i_from++)
+// 	{
+// 		if (flag)
+// 		{
+// 			flag = 0;
+// 			const unsigned short tmp =
+// 				gbk2utf16[COMPBYTE(from[i_from - 1], from[i_from]) & ~0x8000];
+//
+// 			if (tmp == 0)
+// 				continue;
+// 			if (tmp >= 0x800)
+// 			{
+// 				result[i_to++] = 0xE0 | tmp >> 12;
+// 				result[i_to++] = 0x80 | tmp >> 6 & 0x3F;
+// 				result[i_to++] = 0x80 | tmp & 0x3F;
+// 			}
+// 			else if (tmp >= 0x80)
+// 			{
+// 				result[i_to++] = 0xC0 | tmp >> 6;
+// 				result[i_to++] = 0x80 | tmp & 0x3F;
+// 			}
+// 			else
+// 			{
+// 				result[i_to++] = tmp;
+// 			}
+// 		}
+// 		else if (from[i_from] < 0)
+// 			flag = 1;
+// 		else
+// 			result[i_to++] = from[i_from];
+// 	}
+//
+// 	result[i_to] = 0;
+// 	*to_len = i_to;
+// 	return 0;
+// }
 
 
 __device__ int utf8_to_gbk(const char* from, unsigned int from_len, char** to, unsigned int* to_len)
@@ -10529,6 +10530,9 @@ __device__ int utf8_to_gbk(const char* from, unsigned int from_len, char** to, u
 	}
 
 	result[i_to] = 0;
-	*to_len = i_to;
+	if (to_len != nullptr)
+	{
+		*to_len = i_to;
+	}
 	return 0;
 }

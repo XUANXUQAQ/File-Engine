@@ -107,9 +107,12 @@ public class ConfigEntity {
     @SerializedName("isAttachExplorer")
     private boolean isAttachExplorer;
 
-    @SerializedName("isEnableCuda")
-    private boolean isEnableCuda;
+    @SerializedName("isEnableGpuAccelerate")
+    private boolean isEnableGpuAccelerate;
 
-    @SerializedName("cudaDeviceNum")
-    private int cudaDeviceNum;
+    @SerializedName("gpuDevice")
+    private String gpuDevice;
+
+    @SerializedName("searchThreadNumber")
+    private int searchThreadNumber;
 }

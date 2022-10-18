@@ -6,14 +6,15 @@ import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.Constants;
 import file.engine.dllInterface.*;
+import file.engine.dllInterface.gpu.GPUAccelerator;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.BootSystemEvent;
+import file.engine.event.handler.impl.configs.SetConfigsEvent;
 import file.engine.event.handler.impl.database.*;
-import file.engine.event.handler.impl.database.cuda.CudaAddRecordEvent;
-import file.engine.event.handler.impl.database.cuda.CudaClearCacheEvent;
-import file.engine.event.handler.impl.database.cuda.CudaRemoveRecordEvent;
-import file.engine.event.handler.impl.database.cuda.CudaSetDeviceEvent;
+import file.engine.event.handler.impl.database.gpu.GPUAddRecordEvent;
+import file.engine.event.handler.impl.database.gpu.GPUClearCacheEvent;
+import file.engine.event.handler.impl.database.gpu.GPURemoveRecordEvent;
 import file.engine.event.handler.impl.frame.searchBar.SearchBarReadyEvent;
 import file.engine.event.handler.impl.monitor.disk.StartMonitorDiskEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
@@ -30,13 +31,13 @@ import file.engine.utils.gson.GsonUtil;
 import file.engine.utils.system.properties.IsDebug;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 import lombok.SneakyThrows;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -47,25 +48,22 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 public class DatabaseService {
     private final ConcurrentLinkedQueue<SQLWithTaskId> commandQueue = new ConcurrentLinkedQueue<>();
-    private volatile Constants.Enums.DatabaseStatus status = Constants.Enums.DatabaseStatus.NORMAL;
+    private final AtomicReference<Constants.Enums.DatabaseStatus> status = new AtomicReference<>(Constants.Enums.DatabaseStatus.NORMAL);
     private final AtomicBoolean isExecuteImmediately = new AtomicBoolean(false);
     private final AtomicInteger databaseCacheNum = new AtomicInteger(0);
-    private final Set<TableNameWeightInfo> tableSet;    //保存从0-40数据库的表，使用频率和名字对应，使经常使用的表最快被搜索到
+    private final Set<TableNameWeightInfo> tableSet = ConcurrentHashMap.newKeySet();    //保存从0-40数据库的表，使用频率和名字对应，使经常使用的表最快被搜索到
     private final AtomicBoolean isDatabaseUpdated = new AtomicBoolean(false);
-    private final AtomicBoolean isReadFromSharedMemory = new AtomicBoolean(false);
-    private final @Getter
-    ConcurrentLinkedQueue<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
-    private final Set<String> tempResultsForEvent; //在SearchDoneEvent中保存的容器
-    private final AtomicInteger allResultsRecordCounter = new AtomicInteger();
-    private final AtomicBoolean shouldStopSearch = new AtomicBoolean(true);
-    private final AtomicBoolean isSearchStopped = new AtomicBoolean(true);
-    private final AtomicBoolean isCreatingCache = new AtomicBoolean(false);
+    private ConcurrentLinkedQueue<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
+    private Set<String> tempResultsForEvent; //在SearchDoneEvent中保存的容器
+    private final AtomicBoolean shouldStopSearch = new AtomicBoolean(false);
     private final ConcurrentLinkedQueue<Pair> priorityMap = new ConcurrentLinkedQueue<>();
     //tableCache 数据表缓存，在初始化时将会放入所有的key和一个空的cache，后续需要缓存直接放入空的cache中，不再创建新的cache实例
     private final ConcurrentHashMap<String, Cache> tableCache = new ConcurrentHashMap<>();
@@ -77,13 +75,13 @@ public class DatabaseService {
     private static volatile String[] keywordsLowerCase;
     private static volatile boolean[] isKeywordPath;
     private final AtomicBoolean isSharedMemoryCreated = new AtomicBoolean(false);
-    private final ConcurrentSkipListSet<String> databaseCacheSet = new ConcurrentSkipListSet<>();
+    private final LinkedHashSet<String> databaseCacheSet = new LinkedHashSet<>();
     private final AtomicInteger searchThreadCount = new AtomicInteger(0);
     private final AtomicLong startSearchTimeMills = new AtomicLong(0);
-    private static final int MAX_TEMP_QUERY_RESULT_CACHE = 8192;
+    private static final int MAX_TEMP_QUERY_RESULT_CACHE = 128;
     private static final int MAX_CACHED_RECORD_NUM = 10240 * 5;
     private static final int MAX_SQL_NUM = 5000;
-    private static final int MAX_RESULTS = 500;
+    private static final int MAX_RESULTS = 200;
 
     private static volatile DatabaseService INSTANCE = null;
 
@@ -114,16 +112,13 @@ public class DatabaseService {
     }
 
     private DatabaseService() {
-        tableSet = ConcurrentHashMap.newKeySet();
-        tempResults = new ConcurrentLinkedQueue<>();
-        tempResultsForEvent = ConcurrentHashMap.newKeySet();
     }
 
     private void invalidateAllCache() {
-        CudaClearCacheEvent cudaClearCacheEvent = new CudaClearCacheEvent();
+        GPUClearCacheEvent gpuClearCacheEvent = new GPUClearCacheEvent();
         EventManagement eventManagement = EventManagement.getInstance();
-        eventManagement.putEvent(cudaClearCacheEvent);
-        eventManagement.waitForEvent(cudaClearCacheEvent, 60_000);
+        eventManagement.putEvent(gpuClearCacheEvent);
+        eventManagement.waitForEvent(gpuClearCacheEvent, 60_000);
         tableCache.values().forEach(each -> {
             each.isCached.set(false);
             each.data = null;
@@ -188,7 +183,7 @@ public class DatabaseService {
                     if (isExecuteImmediately.get()) {
                         try {
                             isExecuteImmediately.set(false);
-                            if (!isReadFromSharedMemory.get()) {
+                            if (getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
                                 executeAllCommands();
                             }
                         } catch (Exception e) {
@@ -243,50 +238,36 @@ public class DatabaseService {
         if (null == files || files.length == 0) {
             return;
         }
-        LinkedList<String> listRemainDir = new LinkedList<>();
-        for (File each : files) {
-            if (shouldStopSearch.get()) {
-                return;
-            }
-            checkIsMatchedAndAddToList(each.getAbsolutePath(), null);
-            if (each.isDirectory()) {
-                listRemainDir.add(each.getAbsolutePath());
-            }
-        }
-        out:
-        while (!listRemainDir.isEmpty()) {
-            String remain = listRemainDir.poll();
-            if (remain == null || remain.isEmpty()) {
+        LinkedList<File> listRemainDir = new LinkedList<>(List.of(files));
+        do {
+            File remain = listRemainDir.poll();
+            if (remain == null) {
                 continue;
             }
-            File[] allFiles = new File(remain).listFiles();
-            if (allFiles == null || allFiles.length == 0) {
-                continue;
-            }
-            for (File each : allFiles) {
-                checkIsMatchedAndAddToList(each.getAbsolutePath(), null);
-                if (shouldStopSearch.get()) {
-                    break out;
-                }
-                if (each.isDirectory()) {
-                    listRemainDir.add(each.getAbsolutePath());
+            checkIsMatchedAndAddToList(remain.getAbsolutePath(), null);
+            if (remain.isDirectory()) {
+                File[] subFiles = remain.listFiles();
+                if (subFiles != null) {
+                    listRemainDir.addAll(List.of(subFiles));
                 }
             }
-        }
+        } while (!listRemainDir.isEmpty() && !shouldStopSearch.get());
     }
 
     /**
      * 搜索文件夹
      */
     private void searchStartMenu() {
-        String startMenu = GetStartMenu.INSTANCE.getStartMenu();
-        String[] split = RegexUtil.semicolon.split(startMenu);
-        if (split == null || split.length == 0) {
-            return;
-        }
-        for (String s : split) {
-            searchFolder(s);
-        }
+        searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{A4115719-D62E-491D-AA7C-E74B8BE3B067}"));
+        searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{625B53C3-AB48-4EC1-BA1F-A1EF4146FC19}"));
+    }
+
+    /**
+     * 搜索桌面
+     */
+    private void searchDesktop() {
+        searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}"));
+        searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{C4AA340D-F20F-4863-AFEF-F87EF2E6BA25}"));
     }
 
     /**
@@ -304,7 +285,7 @@ public class DatabaseService {
      * @param isStopCreateCache    是否停止
      * @param minRecordNum         最小数据量
      * @param maxRecordNum         最大数据量
-     * @return key为[盘符, 表名, 优先级]，例如 [C,list10,9]，value为实际数据量
+     * @return key为[盘符, 表名, 优先级]，例如 [C,list10,9]，value为实际数据量所占的字节数
      */
     private LinkedHashMap<String, Integer> scanDatabaseAndSelectCacheTable(String[] disks,
                                                                            ConcurrentLinkedQueue<String> tableQueueByPriority,
@@ -321,15 +302,24 @@ public class DatabaseService {
             try (Statement stmt = SQLiteUtil.getStatement(disk)) {
                 for (String tableName : tableQueueByPriority) {
                     for (Pair pair : priorityMap) {
-                        try (ResultSet resultSet = stmt.executeQuery("SELECT COUNT(*) as num FROM " + tableName + " WHERE PRIORITY=" + pair.priority)) {
-                            if (resultSet.next()) {
-                                final int num = resultSet.getInt("num");
-                                if (num > minRecordNum && num < maxRecordNum) {
-                                    tableNeedCache.put(disk + "," + tableName + "," + pair.priority, num);
-                                }
+                        if (isStopCreateCache.get()) {
+                            return tableNeedCache;
+                        }
+                        boolean canBeCached;
+                        try (ResultSet resultCount = stmt.executeQuery("SELECT COUNT(*) as total_num FROM " + tableName + " WHERE PRIORITY=" + pair.priority)) {
+                            if (resultCount.next()) {
+                                final int num = resultCount.getInt("total_num");
+                                canBeCached = num >= minRecordNum && num <= maxRecordNum;
+                            } else {
+                                canBeCached = false;
                             }
-                            if (isStopCreateCache.get()) {
-                                return tableNeedCache;
+                        }
+                        if (!canBeCached)
+                            continue;
+                        try (ResultSet resultsLength = stmt.executeQuery("SELECT SUM(LENGTH(PATH)) as total_bytes FROM " + tableName + " WHERE PRIORITY=" + pair.priority)) {
+                            if (resultsLength.next()) {
+                                final int resultsBytes = resultsLength.getInt("total_bytes");
+                                tableNeedCache.put(disk + "," + tableName + "," + pair.priority, resultsBytes);
                             }
                         }
                     }
@@ -354,54 +344,57 @@ public class DatabaseService {
                 boolean isCreatedOnDatabaseUpdate = false;
             };
             final Supplier<Boolean> isStopCreateCache =
-                    () -> !isSearchStopped.get() || !eventManagement.notMainExit() || status != Constants.Enums.DatabaseStatus.NORMAL;
+                    () -> !eventManagement.notMainExit() || searchThreadCount.get() != 0 ||
+                            (status.get() != Constants.Enums.DatabaseStatus.NORMAL && status.get() != Constants.Enums.DatabaseStatus._CREATING_CACHE);
             final Supplier<Boolean> isStartSaveCache =
-                    () -> (isSearchStopped.get() &&
-                            System.currentTimeMillis() - startCheckInfo.startCheckTimeMills > checkTimeInterval &&
+                    () -> (System.currentTimeMillis() - startCheckInfo.startCheckTimeMills > checkTimeInterval &&
                             !GetHandle.INSTANCE.isForegroundFullscreen()) ||
                             (isDatabaseUpdated.get() && !startCheckInfo.isCreatedOnDatabaseUpdate);
             try {
                 AllConfigs allConfigs = AllConfigs.getInstance();
                 final int createMemoryThreshold = 70;
-                final int createCudaCacheThreshold = 50;
-                final int freeCudaCacheThreshold = 70;
+                final int createGPUCacheThreshold = 50;
+                final int freeGPUCacheThreshold = 70;
                 while (eventManagement.notMainExit()) {
                     if (isStartSaveCache.get()) {
                         if (isDatabaseUpdated.get()) {
                             startCheckInfo.isCreatedOnDatabaseUpdate = true;
                         }
-                        startCheckInfo.startCheckTimeMills = System.currentTimeMillis();
-                        if (allConfigs.isEnableCuda()) {
-                            final int cudaMemUsage = CudaAccelerator.INSTANCE.getCudaMemUsage();
-                            if (cudaMemUsage < createCudaCacheThreshold) {
-                                createCudaCache(isStopCreateCache, createCudaCacheThreshold);
-                            }
-                        } else {
-                            final double memoryUsage = SystemInfoUtil.getMemoryUsage();
-                            if (memoryUsage * 100 < createMemoryThreshold) {
-                                createMemoryCache(isStopCreateCache);
+                        if (casSetStatus(Constants.Enums.DatabaseStatus.NORMAL, Constants.Enums.DatabaseStatus._CREATING_CACHE)) {
+                            startCheckInfo.startCheckTimeMills = System.currentTimeMillis();
+                            if (allConfigs.isGPUAcceleratorEnabled()) {
+                                final int gpuMemUsage = GPUAccelerator.INSTANCE.getGPUMemUsage();
+                                if (gpuMemUsage < createGPUCacheThreshold) {
+                                    createGpuCache(isStopCreateCache, createGPUCacheThreshold);
+                                }
+                            } else {
+                                final double memoryUsage = SystemInfoUtil.getMemoryUsage();
+                                if (memoryUsage * 100 < createMemoryThreshold) {
+                                    createMemoryCache(isStopCreateCache);
+                                }
                             }
                         }
+                        casSetStatus(Constants.Enums.DatabaseStatus._CREATING_CACHE, Constants.Enums.DatabaseStatus.NORMAL);
                     } else {
                         if (!isDatabaseUpdated.get()) {
                             startCheckInfo.isCreatedOnDatabaseUpdate = false;
                         }
-                        if (allConfigs.isEnableCuda()) {
-                            final int cudaMemUsage = CudaAccelerator.INSTANCE.getCudaMemUsage();
-                            if (cudaMemUsage >= freeCudaCacheThreshold) {
+                        if (allConfigs.isGPUAcceleratorEnabled()) {
+                            final int gpuMemUsage = GPUAccelerator.INSTANCE.getGPUMemUsage();
+                            if (gpuMemUsage >= freeGPUCacheThreshold) {
                                 // 防止显存占用超过70%后仍然扫描数据库
                                 startCheckInfo.startCheckTimeMills = System.currentTimeMillis();
-                                if (CudaAccelerator.INSTANCE.hasCache()) {
-                                    CudaClearCacheEvent cudaClearCacheEvent = new CudaClearCacheEvent();
-                                    eventManagement.putEvent(cudaClearCacheEvent);
-                                    eventManagement.waitForEvent(cudaClearCacheEvent);
+                                if (GPUAccelerator.INSTANCE.hasCache()) {
+                                    GPUClearCacheEvent gpuClearCacheEvent = new GPUClearCacheEvent();
+                                    eventManagement.putEvent(gpuClearCacheEvent);
+                                    eventManagement.waitForEvent(gpuClearCacheEvent);
                                 }
                             }
                         }
                     }
                     TimeUnit.SECONDS.sleep(1);
                 }
-            } catch (InterruptedException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         });
@@ -411,7 +404,6 @@ public class DatabaseService {
         System.out.println("添加缓存");
         String availableDisks = AllConfigs.getInstance().getAvailableDisks();
         ConcurrentLinkedQueue<String> tableQueueByPriority = initTableQueueByPriority();
-        isCreatingCache.set(true);
         // 系统内存使用少于70%
         String[] disks = RegexUtil.comma.split(availableDisks);
         LinkedHashMap<String, Integer> tableNeedCache = scanDatabaseAndSelectCacheTable(disks,
@@ -420,23 +412,20 @@ public class DatabaseService {
                 100,
                 2000);
         saveTableCache(isStopCreateCache, tableNeedCache);
-        isCreatingCache.set(false);
     }
 
     @SuppressWarnings("SameParameterValue")
-    private void createCudaCache(Supplier<Boolean> isStopCreateCache, int createCudaCacheThreshold) {
-        System.out.println("添加cuda缓存");
+    private void createGpuCache(Supplier<Boolean> isStopCreateCache, int createGpuCacheThreshold) {
+        System.out.println("添加gpu缓存");
         String availableDisks = AllConfigs.getInstance().getAvailableDisks();
         ConcurrentLinkedQueue<String> tableQueueByPriority = initTableQueueByPriority();
-        isCreatingCache.set(true);
         String[] disks = RegexUtil.comma.split(availableDisks);
         LinkedHashMap<String, Integer> tableNeedCache = scanDatabaseAndSelectCacheTable(disks,
                 tableQueueByPriority,
                 isStopCreateCache,
                 1,
-                100000);
-        saveTableCacheForCuda(isStopCreateCache, tableNeedCache, createCudaCacheThreshold);
-        isCreatingCache.set(false);
+                Integer.MAX_VALUE);
+        saveTableCacheForGPU(isStopCreateCache, tableNeedCache, createGpuCacheThreshold);
     }
 
     /**
@@ -445,29 +434,36 @@ public class DatabaseService {
      * @param isStopCreateCache 是否停止
      * @param tableNeedCache    需要缓存的表
      */
-    private void saveTableCacheForCuda(Supplier<Boolean> isStopCreateCache, LinkedHashMap<String, Integer> tableNeedCache, int createCudaCacheThreshold) {
-        out:
+    private void saveTableCacheForGPU(Supplier<Boolean> isStopCreateCache, LinkedHashMap<String, Integer> tableNeedCache, int createGpuCacheThreshold) {
         for (Map.Entry<String, Cache> entry : tableCache.entrySet()) {
             String key = entry.getKey();
             if (tableNeedCache.containsKey(key)) {
-                if (CudaAccelerator.INSTANCE.isCacheExist(key)) {
+                if (GPUAccelerator.INSTANCE.isCacheExist(key)) {
+                    continue;
+                }
+                //超过128M字节
+                if (tableNeedCache.get(key) > 128 * 1024 * 1024) {
                     continue;
                 }
                 String[] info = RegexUtil.comma.split(key);
                 try (Statement stmt = SQLiteUtil.getStatement(info[0]);
                      ResultSet resultSet = stmt.executeQuery("SELECT PATH FROM " + info[1] + " " + "WHERE PRIORITY=" + info[2])) {
-                    LinkedList<String> strings = new LinkedList<>();
-                    while (resultSet.next()) {
-                        if (isStopCreateCache.get()) {
-                            break out;
+                    EventManagement eventManagement = EventManagement.getInstance();
+                    GPUAccelerator.INSTANCE.initCache(key, () -> {
+                        try {
+                            if (resultSet.next() && eventManagement.notMainExit()) {
+                                return resultSet.getString("PATH");
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
                         }
-                        strings.add(resultSet.getString("PATH"));
-                    }
-                    CudaAccelerator.INSTANCE.initCache(key, strings.toArray());
+                        return null;
+                    });
                     if (isStopCreateCache.get()) {
                         break;
                     }
-                    if (CudaAccelerator.INSTANCE.getCudaMemUsage() > createCudaCacheThreshold) {
+                    var usage = GPUAccelerator.INSTANCE.getGPUMemUsage();
+                    if (usage > createGpuCacheThreshold) {
                         break;
                     }
                 } catch (SQLException e) {
@@ -594,7 +590,7 @@ public class DatabaseService {
      * @param path 文件路径
      * @return true如果匹配成功
      */
-    private boolean checkIsMatchedAndAddToList(String path, ConcurrentSkipListSet<String> container) {
+    private boolean checkIsMatchedAndAddToList(String path, Collection<String> container) {
         boolean ret = false;
         if (PathMatchUtil.check(path,
                 searchCase,
@@ -607,16 +603,17 @@ public class DatabaseService {
             ret = true;
             if (container == null) {
                 if (tempResultsForEvent.add(path)) {
-                    allResultsRecordCounter.incrementAndGet();
                     tempResults.add(path);
+                    if (!shouldStopSearch.get() && tempResultsForEvent.size() >= MAX_RESULTS) {
+                        stopSearch();
+                    }
                 }
             } else {
-                if (container.add(path)) {
-                    allResultsRecordCounter.incrementAndGet();
+                if (!tempResultsForEvent.contains(path) && !container.contains(path) && container.add(path)) {
+                    if (!shouldStopSearch.get() && tempResultsForEvent.size() + container.size() >= MAX_RESULTS) {
+                        stopSearch();
+                    }
                 }
-            }
-            if (allResultsRecordCounter.get() > MAX_RESULTS) {
-                stopSearch();
             }
         }
         return ret;
@@ -627,31 +624,33 @@ public class DatabaseService {
      *
      * @param sql sql
      */
-    private int searchAndAddToTempResults(String sql, ConcurrentSkipListSet<String> container, Statement stmt) {
+    private int searchAndAddToTempResults(String sql, Collection<String> container, String diskStr) {
         int matchedResultCount = 0;
         //结果太多则不再进行搜索
         if (shouldStopSearch.get()) {
             return matchedResultCount;
         }
-        ArrayList<String> tmpQueryResultsCache = new ArrayList<>(MAX_TEMP_QUERY_RESULT_CACHE);
+        String[] tmpQueryResultsCache = new String[MAX_TEMP_QUERY_RESULT_CACHE];
         EventManagement eventManagement = EventManagement.getInstance();
-        try (ResultSet resultSet = stmt.executeQuery(sql)) {
-            while (resultSet.next() && eventManagement.notMainExit()) {
+        try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement(sql, diskStr);
+             ResultSet resultSet = pStmt.executeQuery()) {
+            while (eventManagement.notMainExit() && resultSet.next()) {
                 int i = 0;
                 // 先将结果查询出来，再进行字符串匹配，提高吞吐量
-                tmpQueryResultsCache.clear();
                 do {
-                    tmpQueryResultsCache.add(resultSet.getString("PATH"));
+                    tmpQueryResultsCache[i] = resultSet.getString("PATH");
                     ++i;
-                } while (resultSet.next() && eventManagement.notMainExit() && i < MAX_TEMP_QUERY_RESULT_CACHE);
+                } while (eventManagement.notMainExit() && resultSet.next() && i < MAX_TEMP_QUERY_RESULT_CACHE);
                 //结果太多则不再进行搜索
                 //用户重新输入了信息
                 if (shouldStopSearch.get()) {
                     return matchedResultCount;
                 }
-                matchedResultCount += tmpQueryResultsCache.stream()
-                        .filter(each -> checkIsMatchedAndAddToList(each, container))
-                        .count();
+                for (int j = 0; j < i; ++j) {
+                    if (checkIsMatchedAndAddToList(tmpQueryResultsCache[j], container)) {
+                        ++matchedResultCount;
+                    }
+                }
             }
         } catch (SQLException e) {
             System.err.println("error sql : " + sql);
@@ -708,57 +707,11 @@ public class DatabaseService {
     /**
      * 根据上面分配的位信息，从第二位开始，与taskStatus做与运算，并向右偏移，若结果为1，则表示该任务完成
      */
-    private void waitForTaskAndMergeResults() {
-        final Bit zero = new Bit(new byte[]{0});
-        final int taskTimeoutThreshold = 100;
-        final int maxRetryTimes = 2;
-        int failedRetryTimes = 0;
+    private void waitForTasks() {
         try {
             EventManagement eventManagement = EventManagement.getInstance();
             while (!PrepareSearchInfo.taskStatus.equals(PrepareSearchInfo.allTaskStatus) && eventManagement.notMainExit()) {
-                //线程状态的记录从第二个位开始，所以初始值为1 0
-                Bit eachTaskStatus = new Bit(new byte[]{1, 0});
-                //循环次数，也是下方与运算结束后需要向右偏移的位数
-                //由于任务的耗时不同，如果阻塞时间过长，则跳过该任务，在下次循环中重新拿取结果
-                long waitTime = 0;
-                while (eachTaskStatus.length() <= PrepareSearchInfo.allTaskStatus.length() ||
-                        Bit.or(PrepareSearchInfo.taskStatus.getBytes(), zero.getBytes()).equals(zero) &&
-                                eventManagement.notMainExit()) {
-                    final boolean isTimeout = System.currentTimeMillis() - waitTime > taskTimeoutThreshold && waitTime != 0;
-                    //当线程完成，taskStatus中的位会被设置为1
-                    //这时，将taskStatus和eachTaskStatus做与运算，然后移到第一位，如果为1，则线程已完成搜索
-                    Bit isTaskFinished = Bit.and(PrepareSearchInfo.taskStatus.getBytes(), eachTaskStatus.getBytes());
-                    //任务已完成或等待超时
-                    if (!isTaskFinished.equals(zero) || isTimeout) {
-                        // 阻塞时间过长则跳过
-                        waitTime = 0;
-                        var results = PrepareSearchInfo.containerMap.get(eachTaskStatus.toString());
-                        if (results != null) {
-                            for (String result : results) {
-                                if (tempResultsForEvent.add(result)) {
-                                    tempResults.add(result);
-                                    if (tempResults.size() > MAX_RESULTS) {
-                                        stopSearch();
-                                        break;
-                                    }
-                                }
-                            }
-                            if (!isTimeout || failedRetryTimes > maxRetryTimes) {
-                                failedRetryTimes = 0;
-                                //将start左移，代表当前任务结束，继续拿下一个任务的结果
-                                eachTaskStatus.shiftLeft(1);
-                            } else {
-                                ++failedRetryTimes;
-                            }
-                        }
-                    } else {
-                        if (waitTime == 0) {
-                            waitTime = System.currentTimeMillis();
-                        }
-                    }
-                    TimeUnit.NANOSECONDS.sleep(100);
-                }
-                TimeUnit.NANOSECONDS.sleep(100);
+                TimeUnit.MILLISECONDS.sleep(10);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -770,78 +723,8 @@ public class DatabaseService {
     private void searchDone() {
         EventManagement eventManagement = EventManagement.getInstance();
         eventManagement.putEvent(new SearchDoneEvent(new ConcurrentLinkedQueue<>(tempResultsForEvent)));
-        tempResultsForEvent.clear();
-        isSearchStopped.set(true);
-        stopSearch();
-        PrepareSearchInfo.containerMap.clear();
-        PrepareSearchInfo.isSearchPrepared.set(false);
-        if (AllConfigs.getInstance().isEnableCuda() && eventManagement.notMainExit()) {
-            CudaAccelerator.INSTANCE.stopCollectResults();
-        }
-    }
-
-    /**
-     * 当使用共享内存时，添加搜索任务到队列
-     *
-     * @param nonFormattedSql sql未被格式化的所有任务
-     * @param taskStatus      用于保存任务信息，这是一个通用变量，从第二个位开始，每一个位代表一个任务，当任务完成，该位将被置为1，否则为0，
-     *                        例如第一个和第三个任务完成，第二个未完成，则为1010
-     * @param allTaskStatus   所有的任务信息，从第二位开始，只要有任务被创建，该为就为1，例如三个任务被创建，则为1110
-     * @param containerMap    每个任务搜索出来的结果都会被放到一个属于它自己的一个容器中，该容器保存任务与容器的映射关系
-     * @param taskMap         任务
-     */
-    private void addSearchTasksForSharedMemory(LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> nonFormattedSql,
-                                               Bit taskStatus,
-                                               Bit allTaskStatus,
-                                               LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap,
-                                               ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskMap) {
-        Bit number = new Bit(new byte[]{1});
-        for (String eachDisk : RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks())) {
-            ConcurrentLinkedQueue<Runnable> tasks = new ConcurrentLinkedQueue<>();
-            taskMap.put(eachDisk, tasks);
-            for (var entry : nonFormattedSql.entrySet()) {
-                LinkedHashMap<String, String> commandsMap = entry.getKey();
-                ConcurrentSkipListSet<String> container = entry.getValue();
-                //为每个任务分配的位，不断左移以不断进行分配
-                number.shiftLeft(1);
-                Bit currentTaskNum = new Bit(number);
-                byte[] originBytes;
-                while ((originBytes = allTaskStatus.getBytes()) != null) {
-                    Bit or = Bit.or(originBytes, currentTaskNum.getBytes());
-                    if (allTaskStatus.set(originBytes, or)) {
-                        break;
-                    }
-                }
-                containerMap.put(currentTaskNum.toString(), container);
-                tasks.add(() -> {
-                    try {
-                        for (var e : commandsMap.entrySet()) {
-                            if (shouldStopSearch.get()) {
-                                return;
-                            }
-                            String eachSql = e.getKey();
-                            String listName = e.getValue();
-                            int priority = Integer.parseInt(getPriorityFromSql(eachSql));
-                            String result;
-                            for (int count = 0;
-                                 !shouldStopSearch.get() && ((result = ResultPipe.INSTANCE.getResult(eachDisk.charAt(0), listName, priority, count)) != null);
-                                 ++count) {
-                                checkIsMatchedAndAddToList(result, container);
-                            }
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    } finally {
-                        byte[] originalBytes;
-                        while ((originalBytes = taskStatus.getBytes()) != null) {
-                            Bit or = Bit.or(originalBytes, currentTaskNum.getBytes());
-                            if (taskStatus.set(originalBytes, or)) {
-                                break;
-                            }
-                        }
-                    }
-                });
-            }
+        if (AllConfigs.getInstance().isGPUAcceleratorEnabled() && eventManagement.notMainExit()) {
+            GPUAccelerator.INSTANCE.stopCollectResults();
         }
     }
 
@@ -860,105 +743,157 @@ public class DatabaseService {
 
     /**
      * 创建搜索任务
-     * nonFormattedSql将会生成从list0-40，根据priority从高到低排序的SQL语句，第一个map中key保存未格式化的sql，value保存表名称，第二个set为搜索结果的暂时存储容器
+     * nonFormattedSql将会生成从list0-40，根据priority从高到低排序的SQL语句，第一个map中key保存未格式化的sql，value保存表名称
      * containerMap中key为每个任务分配到的位，value为nonFormattedSql中的临时存储容器
-     * 生成任务顺序会根据list的权重和priority来生成，所以使用SkipList保证顺序。
+     * 生成任务顺序会根据list的权重和priority来生成
+     * <p>
+     * PrepareSearchInfo.taskStatus      用于保存任务信息，这是一个通用变量，从第二个位开始，每一个位代表一个任务，当任务完成，该位将被置为1，否则为0，例如第一个和第三个任务完成，第二个未完成，则为1010
+     * PrepareSearchInfo.allTaskStatus   所有的任务信息，从第二位开始，只要有任务被创建，该位就为1，例如三个任务被创建，则为1110
+     * PrepareSearchInfo.containerMap    每个任务搜索出来的结果都会被放到一个属于它自己的一个容器中，该容器保存任务与容器的映射关系
+     * PrepareSearchInfo.taskMap         任务
      *
-     * @param nonFormattedSql        未格式化搜索字段的SQL
-     * @param taskStatus             任务执行完成的标志，每个任务会分配到一个位，默认为0，当任务完成，将taskStatus的对应位设为1
-     * @param allTaskStatus          任务全部执行完成之后的位图，当taskStatus全部完成将会等于allTaskStatus
-     * @param containerMap           每个任务被分配到的临时存储结果的容器
-     * @param taskMap                存储任务的Map，第一个参数是disk，即硬盘盘符，第二个参数为Queue，即生成的任务
-     * @param isReadFromSharedMemory 是否通过共享内存读取，而不是数据库搜索
+     * @param nonFormattedSql 未格式化搜索字段的SQL
+     * @return gpu搜索容器
      */
-    private void addSearchTasks(LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> nonFormattedSql,
-                                Bit taskStatus,
-                                Bit allTaskStatus,
-                                LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap,
-                                ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskMap,
-                                boolean isReadFromSharedMemory) {
-        if (isReadFromSharedMemory) {
-            addSearchTasksForSharedMemory(nonFormattedSql, taskStatus, allTaskStatus, containerMap, taskMap);
-        } else {
-            addSearchTasksForDatabase(nonFormattedSql, taskStatus, allTaskStatus, containerMap, taskMap);
-        }
-    }
-
-    /**
-     * 添加搜索任务到队列
-     *
-     * @param nonFormattedSql sql未被格式化的所有任务
-     * @param taskStatus      用于保存任务信息，这是一个通用变量，从第二个位开始，每一个位代表一个任务，当任务完成，该位将被置为1，否则为0，
-     *                        例如第一个和第三个任务完成，第二个未完成，则为1010
-     * @param allTaskStatus   所有的任务信息，从第二位开始，只要有任务被创建，该位就为1，例如三个任务被创建，则为1110
-     * @param containerMap    每个任务搜索出来的结果都会被放到一个属于它自己的一个容器中，该容器保存任务与容器的映射关系
-     * @param taskMap         任务
-     */
-    private void addSearchTasksForDatabase(LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> nonFormattedSql,
-                                           Bit taskStatus,
-                                           Bit allTaskStatus,
-                                           LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap,
-                                           ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskMap) {
+    private ConcurrentHashMap<String, Set<String>> addSearchTasks(LinkedList<LinkedHashMap<String, String>> nonFormattedSql) {
+        ConcurrentHashMap<String, Set<String>> gpuSearchContainer = new ConcurrentHashMap<>();
         Bit number = new Bit(new byte[]{1});
         AllConfigs allConfigs = AllConfigs.getInstance();
         String availableDisks = allConfigs.getAvailableDisks();
         for (String eachDisk : RegexUtil.comma.split(availableDisks)) {
             ConcurrentLinkedQueue<Runnable> tasks = new ConcurrentLinkedQueue<>();
-            taskMap.put(eachDisk, tasks);
+            PrepareSearchInfo.taskMap.put(eachDisk, tasks);
             //向任务队列tasks添加任务
-            for (var entry : nonFormattedSql.entrySet()) {
-                LinkedHashMap<String, String> commandsMap = entry.getKey();
-                ConcurrentSkipListSet<String> container = entry.getValue();
+            for (var commandsMap : nonFormattedSql) {
                 //为每个任务分配的位，不断左移以不断进行分配
                 number.shiftLeft(1);
                 Bit currentTaskNum = new Bit(number);
-                byte[] origin;
-                while ((origin = allTaskStatus.getBytes()) != null) {
-                    Bit or = Bit.or(origin, currentTaskNum.getBytes());
-                    if (allTaskStatus.set(origin, or)) {
+                {//记录当前任务信息到allTaskStatus
+                    byte[] origin;
+                    while ((origin = PrepareSearchInfo.allTaskStatus.getBytes()) != null) {
+                        Bit or = Bit.or(origin, currentTaskNum.getBytes());
+                        if (PrepareSearchInfo.allTaskStatus.set(origin, or)) {
+                            break;
+                        }
+                    }
+                }
+                Set<String> container = ConcurrentHashMap.newKeySet();
+                //每一个任务负责查询一个priority和list0-list40生成的41个SQL
+                if (status.get() == Constants.Enums.DatabaseStatus._SHARED_MEMORY) {
+                    addTaskForSharedMemory0(eachDisk, tasks, container, commandsMap, currentTaskNum);
+                } else {
+                    addTaskForDatabase0(eachDisk, tasks, container, commandsMap, currentTaskNum);
+                }
+                //为gpu搜索生成的container
+                for (var sqlAndTableName : commandsMap.entrySet()) {
+                    String eachSql = sqlAndTableName.getKey();
+                    String tableName = sqlAndTableName.getValue();
+                    String priority = getPriorityFromSql(eachSql);
+                    String key = eachDisk.charAt(0) + "," + tableName + "," + priority;
+                    gpuSearchContainer.put(key, container);
+                }
+            }
+        }
+        return gpuSearchContainer;
+    }
+
+    private void addTaskForDatabase0(String diskChar,
+                                     ConcurrentLinkedQueue<Runnable> tasks,
+                                     Collection<String> resultContainer,
+                                     LinkedHashMap<String, String> sqlToExecute,
+                                     Bit currentTaskNum) {
+        var tempResults_ = tempResults;
+        var tempResultsForEvent_ = tempResultsForEvent;
+        AllConfigs allConfigs = AllConfigs.getInstance();
+        tasks.add(() -> {
+            try {
+                for (var sqlAndTableName : sqlToExecute.entrySet()) {
+                    String diskStr = String.valueOf(diskChar.charAt(0));
+                    String eachSql = sqlAndTableName.getKey();
+                    String tableName = sqlAndTableName.getValue();
+                    String priority = getPriorityFromSql(eachSql);
+                    String key = diskStr + "," + tableName + "," + priority;
+                    final long matchedNum;
+                    if (allConfigs.isGPUAcceleratorEnabled() && GPUAccelerator.INSTANCE.isMatchDone(key)) {
+                        //gpu搜索已经放入container，只需要获取matchedNum修改权重即可
+                        matchedNum = GPUAccelerator.INSTANCE.matchedNumber(key);
+                    } else {
+                        if (!shouldStopSearch.get()) {
+                            matchedNum = searchFromDatabaseOrCache(resultContainer, diskStr, eachSql, key);
+                        } else {
+                            matchedNum = 0;
+                        }
+                    }
+                    final long weight = Math.min(matchedNum, 5);
+                    if (weight != 0L) {
+                        //更新表的权重，每次搜索将会按照各个表的权重排序
+                        updateTableWeight(tableName, weight);
+                    }
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            } finally {
+                for (String s : resultContainer) {
+                    if (tempResultsForEvent_.size() >= MAX_RESULTS)
+                        break;
+                    if (tempResultsForEvent_.add(s)) {
+                        tempResults_.add(s);
+                    }
+                }
+                //执行完后将对应的线程flag设为1
+                byte[] originalBytes;
+                while ((originalBytes = PrepareSearchInfo.taskStatus.getBytes()) != null) {
+                    Bit or = Bit.or(originalBytes, currentTaskNum.getBytes());
+                    if (PrepareSearchInfo.taskStatus.set(originalBytes, or)) {
                         break;
                     }
                 }
-                containerMap.put(currentTaskNum.toString(), container);
-                //每一个任务负责查询一个priority和list0-list40生成的41个SQL
-                tasks.add(() -> {
-                    try {
-                        String diskStr = String.valueOf(eachDisk.charAt(0));
-                        for (var e : commandsMap.entrySet()) {
-                            if (shouldStopSearch.get()) {
-                                return;
-                            }
-                            String eachSql = e.getKey();
-                            String tableName = e.getValue();
-                            String priority = getPriorityFromSql(eachSql);
-                            String key = diskStr + "," + tableName + "," + priority;
-                            long matchedNum;
-                            if (allConfigs.isEnableCuda() && CudaAccelerator.INSTANCE.isMatchDone(key)) {
-                                matchedNum = searchFromCudaCache(container, key);
-                            } else {
-                                matchedNum = searchFromDatabaseOrCache(container, diskStr, eachSql, key);
-                            }
-                            final long weight = Math.min(matchedNum, 5);
-                            if (weight != 0L) {
-                                //更新表的权重，每次搜索将会按照各个表的权重排序
-                                updateTableWeight(tableName, weight);
-                            }
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    } finally {
-                        //执行完后将对应的线程flag设为1
-                        byte[] originalBytes;
-                        while ((originalBytes = taskStatus.getBytes()) != null) {
-                            Bit or = Bit.or(originalBytes, currentTaskNum.getBytes());
-                            if (taskStatus.set(originalBytes, or)) {
-                                break;
-                            }
-                        }
-                    }
-                });
             }
-        }
+        });
+    }
+
+    private void addTaskForSharedMemory0(String diskChar,
+                                         ConcurrentLinkedQueue<Runnable> tasks,
+                                         Collection<String> resultContainer,
+                                         LinkedHashMap<String, String> sqlToExecute,
+                                         Bit currentTaskNum) {
+        var tempResults_ = tempResults;
+        var tempResultsForEvent_ = tempResultsForEvent;
+        tasks.add(() -> {
+            try {
+                for (var sqlAndTableName : sqlToExecute.entrySet()) {
+                    if (shouldStopSearch.get()) {
+                        return;
+                    }
+                    String eachSql = sqlAndTableName.getKey();
+                    String listName = sqlAndTableName.getValue();
+                    int priority = Integer.parseInt(getPriorityFromSql(eachSql));
+                    String result;
+                    for (int count = 0;
+                         !shouldStopSearch.get() && ((result = ResultPipe.INSTANCE.getResult(diskChar.charAt(0), listName, priority, count)) != null);
+                         ++count) {
+                        checkIsMatchedAndAddToList(result, resultContainer);
+                    }
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            } finally {
+                for (String s : resultContainer) {
+                    if (tempResultsForEvent_.size() >= MAX_RESULTS)
+                        break;
+                    if (tempResultsForEvent_.add(s)) {
+                        tempResults_.add(s);
+                    }
+                }
+                byte[] originalBytes;
+                while ((originalBytes = PrepareSearchInfo.taskStatus.getBytes()) != null) {
+                    Bit or = Bit.or(originalBytes, currentTaskNum.getBytes());
+                    if (PrepareSearchInfo.taskStatus.set(originalBytes, or)) {
+                        break;
+                    }
+                }
+            }
+        });
     }
 
     /**
@@ -970,7 +905,10 @@ public class DatabaseService {
      * @param key       查询key，例如 [C,list10,-1]
      * @return 查询的结果数量
      */
-    private long searchFromDatabaseOrCache(ConcurrentSkipListSet<String> container, String diskStr, String sql, String key) {
+    private long searchFromDatabaseOrCache(Collection<String> container, String diskStr, String sql, String key) {
+        if (shouldStopSearch.get()) {
+            return 0;
+        }
         long matchedNum;
         Cache cache = tableCache.get(key);
         if (cache != null && cache.isCacheValid()) {
@@ -981,36 +919,13 @@ public class DatabaseService {
                     .filter(record -> checkIsMatchedAndAddToList(record, container))
                     .count();
         } else {
-            try (Statement stmt = SQLiteUtil.getStatement(diskStr)) {
-                //格式化是为了以后的拓展性
-                String formattedSql = String.format(sql, "PATH");
-                //当前数据库表中有多少个结果匹配成功
-                matchedNum = searchAndAddToTempResults(
-                        formattedSql,
-                        container,
-                        stmt);
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        return matchedNum;
-    }
-
-    private long searchFromCudaCache(ConcurrentSkipListSet<String> container, String key) {
-        long matchedNum = 0;
-        if (IsDebug.isDebug()) {
-            System.out.println("CUDA缓存命中" + key);
-        }
-        String record;
-        while ((record = CudaAccelerator.INSTANCE.getOneResult(key)) != null && !shouldStopSearch.get()) {
-            Path recordPath = Path.of(record);
-            if (!Files.exists(recordPath)) {
-                continue;
-            }
-            if (container.add(record)) {
-                allResultsRecordCounter.incrementAndGet();
-                ++matchedNum;
-            }
+            //格式化是为了以后的拓展性
+            String formattedSql = String.format(sql, "PATH");
+            //当前数据库表中有多少个结果匹配成功
+            matchedNum = searchAndAddToTempResults(
+                    formattedSql,
+                    container,
+                    diskStr);
         }
         return matchedNum;
     }
@@ -1018,16 +933,15 @@ public class DatabaseService {
     /**
      * 生成未格式化的sql
      * 第一个map中每一个priority加上list0-list40会生成41条SQL作为key，value是搜索的表，即SELECT* FROM [list?]中的[list?];
-     * 第二个SkipListSet作为SQL执行搜索后存储结果的容器
      *
-     * @return map
+     * @return set
      */
-    private LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> getNonFormattedSqlFromTableQueue() {
+    private LinkedList<LinkedHashMap<String, String>> getNonFormattedSqlFromTableQueue() {
         if (isDatabaseUpdated.get()) {
             isDatabaseUpdated.set(false);
             initPriority();
         }
-        LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> sqlColumnMap = new LinkedHashMap<>();
+        LinkedList<LinkedHashMap<String, String>> sqlColumnMap = new LinkedList<>();
         if (priorityMap.isEmpty()) {
             return sqlColumnMap;
         }
@@ -1055,7 +969,7 @@ public class DatabaseService {
                 String sql = "SELECT %s FROM " + each + " WHERE PRIORITY=" + "-1";
                 _priorityMap.put(sql, each);
             });
-            sqlColumnMap.put(_priorityMap, new ConcurrentSkipListSet<>());
+            sqlColumnMap.add(_priorityMap);
         } else {
             for (Pair i : priorityMap) {
                 LinkedHashMap<String, String> eachPriorityMap = new LinkedHashMap<>();
@@ -1066,10 +980,9 @@ public class DatabaseService {
                     String sql = "SELECT %s FROM " + each + " WHERE PRIORITY=" + i.priority;
                     eachPriorityMap.put(sql, each);
                 });
-                sqlColumnMap.put(eachPriorityMap, new ConcurrentSkipListSet<>());
+                sqlColumnMap.add(eachPriorityMap);
             }
         }
-        tableQueue.clear();
         return sqlColumnMap;
     }
 
@@ -1077,51 +990,61 @@ public class DatabaseService {
      * 添加sql语句，并开始搜索
      */
     private void startSearch() {
-        allResultsRecordCounter.set(0);
-        isSearchStopped.set(false);
         searchCache();
-        searchPriorityFolder();
-        searchStartMenu();
-        if (shouldStopSearch.get()) {
-            searchDone();
-            return;
-        }
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+        AtomicBoolean isSearchFolderDone = new AtomicBoolean();
+        cachedThreadPoolUtil.executeTask(() -> {
+            searchPriorityFolder();
+            searchStartMenu();
+            searchDesktop();
+            isSearchFolderDone.set(true);
+        });
+        final long start = System.currentTimeMillis();
+        final long timeout = 500;
+        while (!isSearchFolderDone.get()) {
+            if (System.currentTimeMillis() - start > timeout) {
+                break;
+            }
+            Thread.onSpinWait();
+        }
+        var taskMap = PrepareSearchInfo.taskMap;
         EventManagement eventManagement = EventManagement.getInstance();
-        final int threadNumber = Math.max(1, Runtime.getRuntime().availableProcessors() / PrepareSearchInfo.taskMap.size());
-        for (var entry : PrepareSearchInfo.taskMap.entrySet()) {
-            for (int i = 0; i < threadNumber; i++) {
+        final int threadNumberPerDisk = Math.max(1, AllConfigs.getInstance().getSearchThreadNumber() / taskMap.size());
+        Consumer<ConcurrentLinkedQueue<Runnable>> taskHandler = (taskQueue) -> {
+            while (!taskQueue.isEmpty() && eventManagement.notMainExit()) {
+                var runnable = taskQueue.poll();
+                if (runnable == null)
+                    continue;
+                runnable.run();
+            }
+        };
+        for (var entry : taskMap.entrySet()) {
+            for (int i = 0; i < threadNumberPerDisk; i++) {
                 cachedThreadPoolUtil.executeTask(() -> {
-                    String currentDisk = entry.getKey();
-                    ConcurrentLinkedQueue<Runnable> taskQueue = entry.getValue();
-                    while (!taskQueue.isEmpty() && eventManagement.notMainExit()) {
-                        var runnable = taskQueue.poll();
-                        if (runnable == null) continue;
-                        searchThreadCount.incrementAndGet();
-                        runnable.run();
-                        searchThreadCount.decrementAndGet();
-                    }
+                    searchThreadCount.incrementAndGet();
+                    var taskQueue = entry.getValue();
+                    taskHandler.accept(taskQueue);
+                    taskMap.remove(entry.getKey());
                     //自身任务已经完成，开始扫描其他线程的任务
                     boolean hasTask;
                     do {
                         hasTask = false;
-                        for (var e : PrepareSearchInfo.taskMap.entrySet()) {
-                            String otherDisk = e.getKey();
-                            if (otherDisk.equals(currentDisk)) continue;
-                            ConcurrentLinkedQueue<Runnable> otherTaskQueue = e.getValue();
-                            Runnable otherRunnable;
-                            while ((otherRunnable = otherTaskQueue.poll()) != null) {
-                                hasTask = true;
-                                searchThreadCount.incrementAndGet();
-                                otherRunnable.run();
-                                searchThreadCount.decrementAndGet();
+                        for (var e : taskMap.entrySet()) {
+                            var otherTaskQueue = e.getValue();
+                            // 如果hasTask为false，则检查otherTaskQueue是否为空
+                            if (!hasTask) {
+                                // 不为空则设置hasTask为true
+                                hasTask = !otherTaskQueue.isEmpty();
                             }
+                            taskHandler.accept(otherTaskQueue);
+                            taskMap.remove(e.getKey());
                         }
                     } while (hasTask && eventManagement.notMainExit());
+                    searchThreadCount.decrementAndGet();
                 });
             }
         }
-        waitForTaskAndMergeResults();
+        waitForTasks();
     }
 
     /**
@@ -1213,8 +1136,8 @@ public class DatabaseService {
             asciiGroup = Math.min(asciiGroup, Constants.ALL_TABLE_NUM);
             String tableName = "list" + asciiGroup;
             String key = path.charAt(0) + "," + tableName + "," + priorityBySuffix;
-            if (AllConfigs.getInstance().isEnableCuda()) {
-                EventManagement.getInstance().putEvent(new CudaRemoveRecordEvent(key, path));
+            if (AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+                EventManagement.getInstance().putEvent(new GPURemoveRecordEvent(key, path));
             }
             Cache cache = tableCache.get(key);
             if (cache.isCached.get()) {
@@ -1295,8 +1218,8 @@ public class DatabaseService {
         asciiGroup = Math.min(asciiGroup, Constants.ALL_TABLE_NUM);
         String tableName = "list" + asciiGroup;
         String key = path.charAt(0) + "," + tableName + "," + priorityBySuffix;
-        if (AllConfigs.getInstance().isEnableCuda()) {
-            EventManagement.getInstance().putEvent(new CudaAddRecordEvent(key, path));
+        if (AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+            EventManagement.getInstance().putEvent(new GPUAddRecordEvent(key, path));
         }
         Cache cache = tableCache.get(key);
         if (cache.isCacheValid()) {
@@ -1394,8 +1317,7 @@ public class DatabaseService {
      */
     private void addToCommandQueue(SQLWithTaskId sql) {
         if (commandQueue.size() < MAX_SQL_NUM) {
-            if (status == Constants.Enums.DatabaseStatus.MANUAL_UPDATE) {
-                System.err.println("正在搜索中");
+            if (getStatus() == Constants.Enums.DatabaseStatus.MANUAL_UPDATE) {
                 return;
             }
             commandQueue.add(sql);
@@ -1403,8 +1325,6 @@ public class DatabaseService {
             if (IsDebug.isDebug()) {
                 System.err.println("添加sql语句" + sql + "失败，已达到最大上限");
             }
-            //立即处理sql语句
-//            executeImmediately();
         }
     }
 
@@ -1429,24 +1349,28 @@ public class DatabaseService {
      * @return 装填
      */
     public Constants.Enums.DatabaseStatus getStatus() {
-        switch (status) {
+        var currentStatus = status.get();
+        switch (currentStatus) {
             case NORMAL:
-            case TEMP:
+            case _TEMP:
+            case _SHARED_MEMORY:
+            case _CREATING_CACHE:
                 return Constants.Enums.DatabaseStatus.NORMAL;
-            case MANUAL_UPDATE:
-            case VACUUM:
             default:
-                return status;
+                return currentStatus;
         }
     }
 
-    /**
-     * 设置数据库状态
-     *
-     * @param status 状态
-     */
-    private void setStatus(Constants.Enums.DatabaseStatus status) {
-        this.status = status;
+    public boolean casSetStatus(Constants.Enums.DatabaseStatus expect, Constants.Enums.DatabaseStatus newVal) {
+        final long start = System.currentTimeMillis();
+        final long timeout = 1000;
+        try {
+            while (!status.compareAndSet(expect, newVal) && System.currentTimeMillis() - start < timeout) {
+                TimeUnit.MILLISECONDS.sleep(1);
+            }
+        } catch (InterruptedException ignored) {
+        }
+        return status.get() == newVal;
     }
 
     /**
@@ -1482,8 +1406,7 @@ public class DatabaseService {
             buffW.newLine();
             buffW.write(ignorePath);
         }
-        String command = "cmd.exe /c " + start + end;
-        return Runtime.getRuntime().exec(command, null, new File("user"));
+        return Runtime.getRuntime().exec(new String[]{"cmd.exe", "/c", start + end}, null, new File("user"));
     }
 
     /**
@@ -1553,7 +1476,7 @@ public class DatabaseService {
             try {
                 SearchBar searchBar = SearchBar.getInstance();
                 while (isSharedMemoryCreated.get()) {
-                    if (shouldStopSearch.get() && !searchBar.isVisible()) {
+                    if (getStatus() == Constants.Enums.DatabaseStatus.NORMAL && !searchBar.isVisible()) {
                         isSharedMemoryCreated.set(false);
                         ResultPipe.INSTANCE.closeAllSharedMemory();
                         if (IsDebug.isDebug()) {
@@ -1573,12 +1496,12 @@ public class DatabaseService {
     }
 
     private void executeAllSQLAndWait(@SuppressWarnings("SameParameterValue") int timeoutMills) {// 等待剩余的sql全部执行完成
-        sendExecuteSQLSignal();
         try {
             final long time = System.currentTimeMillis();
             // 将在队列中的sql全部执行并等待搜索线程全部完成
             System.out.println("等待所有sql执行完成，并且退出搜索");
-            while (!isSearchStopped.get() || isCreatingCache.get() || searchThreadCount.get() != 0 || !commandQueue.isEmpty()) {
+            while (searchThreadCount.get() != 0 || !commandQueue.isEmpty()) {
+                sendExecuteSQLSignal();
                 TimeUnit.MILLISECONDS.sleep(10);
                 if (System.currentTimeMillis() - time > timeoutMills) {
                     System.out.println("等待超时");
@@ -1591,55 +1514,49 @@ public class DatabaseService {
     }
 
     private void waitForSearchAndSwitchDatabase(Process searchByUsn) {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            final long start = System.currentTimeMillis();
-            final long timeLimit = 10 * 60 * 1000;
-            // 阻塞等待程序将共享内存配置完成
+        final long start = System.currentTimeMillis();
+        final long timeLimit = 10 * 60 * 1000;
+        // 阻塞等待程序将共享内存配置完成
+        try {
+            while (!ResultPipe.INSTANCE.isComplete() && ProcessUtil.isProcessExist("fileSearcherUSN.exe")) {
+                if (System.currentTimeMillis() - start > timeLimit) {
+                    break;
+                }
+                TimeUnit.SECONDS.sleep(1);
+            }
+        } catch (InterruptedException | IOException e) {
+            e.printStackTrace();
+        }
+        casSetStatus(Constants.Enums.DatabaseStatus._TEMP, Constants.Enums.DatabaseStatus._SHARED_MEMORY);
+        // 搜索完成并写入数据库后，重新建立数据库连接
+        try {
+            ProcessUtil.waitForProcess("fileSearcherUSN.exe", 1000);
+            readSearchUsnOutput(searchByUsn);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            stopSearch();
             try {
-                while (!ResultPipe.INSTANCE.isComplete() && ProcessUtil.isProcessExist("fileSearcherUSN.exe")) {
-                    if (System.currentTimeMillis() - start > timeLimit) {
-                        break;
-                    }
-                    TimeUnit.SECONDS.sleep(1);
+                final long startWaitingTime = System.currentTimeMillis();
+                //等待所有搜索线程结束，最多等待1分钟
+                while (searchThreadCount.get() != 0 && System.currentTimeMillis() - startWaitingTime < 60 * 1000) {
+                    TimeUnit.MILLISECONDS.sleep(20);
                 }
-            } catch (InterruptedException | IOException e) {
-                e.printStackTrace();
+            } catch (InterruptedException ignored) {
             }
-            isReadFromSharedMemory.set(true);
-            // 搜索完成并写入数据库后，重新建立数据库连接
+            casSetStatus(Constants.Enums.DatabaseStatus._SHARED_MEMORY, Constants.Enums.DatabaseStatus.MANUAL_UPDATE);
             {
-                try {
-                    ProcessUtil.waitForProcess("fileSearcherUSN.exe", 1000);
-                    readSearchUsnOutput(searchByUsn);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
-                    try {
-                        final long startWaitingTime = System.currentTimeMillis();
-                        //最多等待5分钟
-                        while (searchThreadCount.get() != 0 && System.currentTimeMillis() - startWaitingTime < 5 * 60 * 1000) {
-                            TimeUnit.MILLISECONDS.sleep(20);
-                        }
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    stopSearch();
-                    setStatus(Constants.Enums.DatabaseStatus.MANUAL_UPDATE);
-                    {
-                        SQLiteUtil.closeAll();
-                        invalidateAllCache();
-                        SQLiteUtil.initAllConnections();
-                        createAllIndex();
-                    }
-                    setStatus(Constants.Enums.DatabaseStatus.NORMAL);
-                    //关闭共享内存
-                    closeSharedMemoryOnIdle();
-                    // 搜索完成，更新isDatabaseUpdated标志，结束UpdateDatabaseEvent事件等待
-                    isDatabaseUpdated.set(true);
-                    isReadFromSharedMemory.set(false);
-                }
+                SQLiteUtil.closeAll();
+                invalidateAllCache();
+                SQLiteUtil.initAllConnections();
+                createAllIndex();
             }
-        });
+            casSetStatus(Constants.Enums.DatabaseStatus.MANUAL_UPDATE, Constants.Enums.DatabaseStatus.NORMAL);
+            //关闭共享内存
+            closeSharedMemoryOnIdle();
+            // 搜索完成，更新isDatabaseUpdated标志，结束UpdateDatabaseEvent事件等待
+            isDatabaseUpdated.set(true);
+        }
     }
 
     private static void readSearchUsnOutput(Process searchByUsn) {
@@ -1669,12 +1586,14 @@ public class DatabaseService {
      */
     @SneakyThrows
     private boolean updateLists(String ignorePath, boolean isDropPrevious) {
-        if (status == Constants.Enums.DatabaseStatus.MANUAL_UPDATE || ProcessUtil.isProcessExist("fileSearcherUSN.exe")) {
+        if (getStatus() == Constants.Enums.DatabaseStatus.MANUAL_UPDATE || ProcessUtil.isProcessExist("fileSearcherUSN.exe")) {
             throw new RuntimeException("already searching");
         }
         // 复制数据库到tmp
         SQLiteUtil.copyDatabases("data", "tmp");
-        setStatus(Constants.Enums.DatabaseStatus.MANUAL_UPDATE);
+        if (!casSetStatus(status.get(), Constants.Enums.DatabaseStatus.MANUAL_UPDATE)) {
+            throw new RuntimeException("databaseService status设置MANUAL UPDATE状态失败");
+        }
         // 停止搜索
         stopSearch();
         executeAllSQLAndWait(3000);
@@ -1684,7 +1603,13 @@ public class DatabaseService {
         if (IsDebug.isDebug()) {
             System.out.println("成功切换到临时数据库");
         }
-
+        if (!casSetStatus(status.get(), Constants.Enums.DatabaseStatus._TEMP)) {
+            //恢复data目录的数据库
+            SQLiteUtil.closeAll();
+            SQLiteUtil.initAllConnections();
+            casSetStatus(status.get(), Constants.Enums.DatabaseStatus.NORMAL);
+            throw new RuntimeException("databaseService status设置TEMP状态失败");
+        }
         // 检查数据库文件大小，过大则删除
         checkDbFileSize(isDropPrevious);
 
@@ -1784,11 +1709,9 @@ public class DatabaseService {
             try {
                 EventManagement eventManagement = EventManagement.getInstance();
                 while (eventManagement.notMainExit()) {
-                    if ((status == Constants.Enums.DatabaseStatus.NORMAL && System.currentTimeMillis() - startSearchTimeMills.get() < timeout) ||
-                            (status == Constants.Enums.DatabaseStatus.NORMAL && commandQueue.size() > 100)) {
-                        if (isSearchStopped.get()) {
-                            sendExecuteSQLSignal();
-                        }
+                    if ((getStatus() == Constants.Enums.DatabaseStatus.NORMAL && System.currentTimeMillis() - startSearchTimeMills.get() < timeout) ||
+                            (getStatus() == Constants.Enums.DatabaseStatus.NORMAL && commandQueue.size() > 100)) {
+                        sendExecuteSQLSignal();
                     }
                     TimeUnit.SECONDS.sleep(updateTimeLimit);
                 }
@@ -1888,127 +1811,138 @@ public class DatabaseService {
     }
 
     private static class PrepareSearchInfo {
-        static AtomicBoolean isCudaThreadRunning = new AtomicBoolean(false);
-        static AtomicBoolean isSearchPrepared = new AtomicBoolean(false);
-        static LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap = new LinkedHashMap<>();
-        //任务队列
-        static ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskMap = new ConcurrentHashMap<>();
+        static AtomicBoolean isGpuThreadRunning = new AtomicBoolean(false);
+        //taskMap任务队列，key为磁盘盘符，value为任务
+        static ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskMap;
         static Bit taskStatus = new Bit(new byte[]{0});
         static Bit allTaskStatus = new Bit(new byte[]{0});
+        static AtomicBoolean isPreparing = new AtomicBoolean(false);
 
-        private static void prepareSearchTasks() {
+        private static ConcurrentHashMap<String, Set<String>> prepareSearchTasks() {
             DatabaseService databaseService = DatabaseService.getInstance();
-            PrepareSearchInfo.containerMap.clear();
-            PrepareSearchInfo.taskMap.clear();
             //每个priority用一个线程，每一个后缀名对应一个优先级
             //按照优先级排列，key是sql和表名的对应，value是容器
-            LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>>
-                    nonFormattedSql = databaseService.getNonFormattedSqlFromTableQueue();
+            var nonFormattedSql = databaseService.getNonFormattedSqlFromTableQueue();
             taskStatus = new Bit(new byte[]{0});
             allTaskStatus = new Bit(new byte[]{0});
             //添加搜索任务到队列
-            databaseService.addSearchTasks(nonFormattedSql,
-                    taskStatus,
-                    allTaskStatus,
-                    PrepareSearchInfo.containerMap,
-                    PrepareSearchInfo.taskMap,
-                    databaseService.isReadFromSharedMemory.get());
+            return databaseService.addSearchTasks(nonFormattedSql);
         }
     }
 
-    @EventRegister(registerClass = CudaSetDeviceEvent.class)
-    private static void setCudaDevice(Event event) {
-        if (AllConfigs.getInstance().isEnableCuda()) {
-            CudaSetDeviceEvent cudaSetDeviceEvent = (CudaSetDeviceEvent) event;
-            if (!CudaAccelerator.INSTANCE.setDevice(cudaSetDeviceEvent.deviceNum)) {
-                System.err.println("cuda设备id" + cudaSetDeviceEvent.deviceNum + "无效");
-                CudaAccelerator.INSTANCE.setDevice(0);
-            }
+    @EventListener(listenClass = SetConfigsEvent.class)
+    private static void setGpuDevice(Event event) {
+        SetConfigsEvent setConfigsEvent = (SetConfigsEvent) event;
+        if (!GPUAccelerator.INSTANCE.setDevice(setConfigsEvent.getConfigs().getGpuDevice())) {
+            System.err.println("gpu设备" + setConfigsEvent.getConfigs().getGpuDevice() + "无效");
         }
     }
 
     @EventRegister(registerClass = PrepareSearchEvent.class)
-    private static void prepareCudaSearch(Event event) {
-        DatabaseService databaseService = DatabaseService.getInstance();
-        while (!databaseService.isSearchStopped.get()) {
-            Thread.onSpinWait();
-        }
-        databaseService.tempResults.clear();
-        PrepareSearchEvent prepareSearchEvent = (PrepareSearchEvent) event;
-        prepareSearchKeywords(prepareSearchEvent.searchText, prepareSearchEvent.searchCase, prepareSearchEvent.keywords);
-        PrepareSearchInfo.prepareSearchTasks();
-        if (AllConfigs.getInstance().isEnableCuda()) {
-            // 退出上一次搜索
-            CudaAccelerator.INSTANCE.stopCollectResults();
-            while (PrepareSearchInfo.isCudaThreadRunning.get())
+    private static void prepareSearchEventHandle(Event event) {
+        if (PrepareSearchInfo.isPreparing.compareAndSet(false, true)) {
+            if (IsDebug.isDebug()) {
+                System.out.println("进行预搜索并添加搜索任务");
+            }
+            DatabaseService databaseService = DatabaseService.getInstance();
+            final long startWaiting = System.currentTimeMillis();
+            final long timeout = 3000;
+            while (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL && System.currentTimeMillis() - startWaiting < timeout) {
                 Thread.onSpinWait();
-            CachedThreadPoolUtil.getInstance().executeTask(() -> {
-                // 开始进行搜索
-                CudaAccelerator.INSTANCE.resetAllResultStatus();
-                PrepareSearchInfo.isCudaThreadRunning.set(true);
-                CudaAccelerator.INSTANCE.match(searchCase,
-                        isIgnoreCase,
-                        searchText,
-                        keywords,
-                        keywordsLowerCase,
-                        isKeywordPath,
-                        MAX_RESULTS);
-                PrepareSearchInfo.isCudaThreadRunning.set(false);
-            }, false);
+            }
+            prepareSearch((PrepareSearchEvent) event);
+            PrepareSearchInfo.isPreparing.set(false);
+            event.setReturnValue(databaseService.tempResults);
         }
-        PrepareSearchInfo.isSearchPrepared.set(true);
     }
 
     @EventRegister(registerClass = StartSearchEvent.class)
     private static void startSearchEvent(Event event) {
         DatabaseService databaseService = getInstance();
-        while (!databaseService.isSearchStopped.get()) {
+        final long startWaiting = System.currentTimeMillis();
+        final long timeout = 3000;
+        while (databaseService.searchThreadCount.get() != 0 ||
+                databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL ||
+                PrepareSearchInfo.isPreparing.get()) {
+            if (System.currentTimeMillis() - startWaiting > timeout) {
+                System.out.println("等待上次搜索结束超时");
+                break;
+            }
             Thread.onSpinWait();
         }
-        StartSearchEvent startSearchEvent = (StartSearchEvent) event;
-        if (!PrepareSearchInfo.isSearchPrepared.get()) {
-            prepareSearchKeywords(startSearchEvent.searchText, startSearchEvent.searchCase, startSearchEvent.keywords);
-            PrepareSearchInfo.prepareSearchTasks();
-            if (AllConfigs.getInstance().isEnableCuda()) {
-                // 退出上一次搜索
-                CudaAccelerator.INSTANCE.stopCollectResults();
-                while (PrepareSearchInfo.isCudaThreadRunning.get())
-                    Thread.onSpinWait();
-                CachedThreadPoolUtil.getInstance().executeTask(() -> {
-                    // 开始进行搜索
-                    CudaAccelerator.INSTANCE.resetAllResultStatus();
-                    PrepareSearchInfo.isCudaThreadRunning.set(true);
-                    CudaAccelerator.INSTANCE.match(searchCase,
-                            isIgnoreCase,
-                            searchText,
-                            keywords,
-                            keywordsLowerCase,
-                            isKeywordPath,
-                            MAX_RESULTS);
-                    PrepareSearchInfo.isCudaThreadRunning.set(false);
-                }, false);
-            }
+        if (PrepareSearchInfo.taskMap == null || PrepareSearchInfo.taskMap.isEmpty()) {
+            prepareSearch((StartSearchEvent) event);
         }
         databaseService.shouldStopSearch.set(false);
+        //tempResultsForEvent和PrepareSearchInfo.containerMap在searchDone()中发送SearchDoneEvent后就已经清除，所以不需要清除，只清理tempResults
+        //启动搜索线程
         CachedThreadPoolUtil.getInstance().executeTask(databaseService::startSearch);
         databaseService.startSearchTimeMills.set(System.currentTimeMillis());
+        event.setReturnValue(databaseService.tempResults);
+    }
+
+    /**
+     * 防止PrepareSearchEvent未完成正在创建taskMap时，StartSearchEvent开始，导致两个线程同时添加任务（极端情况，一般不会出现）
+     *
+     * @param startSearchEvent startSearchEvent
+     */
+    private static synchronized void prepareSearch(StartSearchEvent startSearchEvent) {
+        PrepareSearchInfo.taskMap = new ConcurrentHashMap<>();
+        prepareSearchKeywords(startSearchEvent.searchText, startSearchEvent.searchCase, startSearchEvent.keywords);
+        DatabaseService databaseService = getInstance();
+        databaseService.tempResults = new ConcurrentLinkedQueue<>();
+        databaseService.tempResultsForEvent = new ConcurrentSkipListSet<>();
+        var gpuSearchContainer = PrepareSearchInfo.prepareSearchTasks();
+        if (AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+            // 退出上一次搜索
+            GPUAccelerator.INSTANCE.stopCollectResults();
+            long start = System.currentTimeMillis();
+            while (!PrepareSearchInfo.isGpuThreadRunning.compareAndSet(false, true)) {
+                if (System.currentTimeMillis() - start > 3000) {
+                    System.out.println("等待上一次gpu加速完成超时");
+                    break;
+                }
+                Thread.onSpinWait();
+            }
+            CachedThreadPoolUtil.getInstance().executeTask(() -> {
+                // 开始进行搜索
+                AtomicInteger resultCount = new AtomicInteger();
+                GPUAccelerator.INSTANCE.resetAllResultStatus();
+                PrepareSearchInfo.isGpuThreadRunning.set(true);
+                EventManagement eventManagement = EventManagement.getInstance();
+                GPUAccelerator.INSTANCE.match(searchCase,
+                        isIgnoreCase,
+                        searchText,
+                        keywords,
+                        keywordsLowerCase,
+                        isKeywordPath,
+                        MAX_RESULTS,
+                        (key, path) -> {
+                            if (gpuSearchContainer.containsKey(key) && eventManagement.notMainExit()) {
+                                Set<String> gpuContainer = gpuSearchContainer.get(key);
+                                if (!databaseService.tempResultsForEvent.contains(path) && gpuContainer.add(path)) {
+                                    if (resultCount.incrementAndGet() >= MAX_RESULTS) {
+                                        databaseService.stopSearch();
+                                    }
+                                }
+                            }
+                        });
+                PrepareSearchInfo.isGpuThreadRunning.set(false);
+            }, false);
+        }
     }
 
     @EventRegister(registerClass = StopSearchEvent.class)
-    @EventListener(listenClass = RestartEvent.class)
     private static void stopSearchEvent(Event event) {
         DatabaseService databaseService = getInstance();
         databaseService.stopSearch();
     }
 
     @EventListener(listenClass = BootSystemEvent.class)
-    private static void init(Event event) {
+    private static void databaseServiceInit(Event event) {
         DatabaseService databaseService = getInstance();
         databaseService.initDatabaseCacheNum();
         databaseService.initPriority();
-        databaseService.syncFileChangesThread();
-        databaseService.checkTimeAndSendExecuteSqlSignalThread();
-        databaseService.executeSqlCommandsThread();
         databaseService.initTableMap();
         databaseService.prepareDatabaseCache();
         for (String diskPath : RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks())) {
@@ -2018,6 +1952,9 @@ public class DatabaseService {
                 }
             }
         }
+        databaseService.syncFileChangesThread();
+        databaseService.checkTimeAndSendExecuteSqlSignalThread();
+        databaseService.executeSqlCommandsThread();
         databaseService.saveTableCacheThread();
     }
 
@@ -2026,7 +1963,7 @@ public class DatabaseService {
         DatabaseService databaseService = getInstance();
         String path = ((AddToCacheEvent) event).path;
         databaseService.databaseCacheSet.add(path);
-        if (databaseService.isReadFromSharedMemory.get()) {
+        if (databaseService.status.get() == Constants.Enums.DatabaseStatus._SHARED_MEMORY) {
             return;
         }
         databaseService.addFileToCache(path);
@@ -2038,7 +1975,7 @@ public class DatabaseService {
         DatabaseService databaseService = getInstance();
         String path = ((DeleteFromCacheEvent) event).path;
         databaseService.databaseCacheSet.remove(path);
-        if (databaseService.isReadFromSharedMemory.get()) {
+        if (databaseService.status.get() == Constants.Enums.DatabaseStatus._SHARED_MEMORY) {
             return;
         }
         databaseService.removeFileFromCache(path);
@@ -2048,38 +1985,25 @@ public class DatabaseService {
     @EventRegister(registerClass = UpdateDatabaseEvent.class)
     private static void updateDatabaseEvent(Event event) {
         DatabaseService databaseService = getInstance();
-        if (databaseService.isReadFromSharedMemory.get()) {
+        if (databaseService.status.get() == Constants.Enums.DatabaseStatus._SHARED_MEMORY) {
             return;
         }
         UpdateDatabaseEvent updateDatabaseEvent = (UpdateDatabaseEvent) event;
-        try {
-            // 在这里设置数据库状态为manual update
-            if (!databaseService.updateLists(AllConfigs.getInstance().getIgnorePath(), updateDatabaseEvent.isDropPrevious)) {
-                throw new RuntimeException("search failed");
-            }
-        } finally {
-            databaseService.setStatus(Constants.Enums.DatabaseStatus.TEMP);
-            if (IsDebug.isDebug()) {
-                System.out.println("搜索已经可用");
-            }
-            try {
-                // 等待搜索进程结束
-                while (!databaseService.isDatabaseUpdated.get()) {
-                    TimeUnit.MILLISECONDS.sleep(20);
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        // 在这里设置数据库状态为manual update
+        if (!databaseService.updateLists(AllConfigs.getInstance().getIgnorePath(), updateDatabaseEvent.isDropPrevious)) {
+            throw new RuntimeException("search failed");
         }
     }
 
     @EventRegister(registerClass = OptimiseDatabaseEvent.class)
     private static void optimiseDatabaseEvent(Event event) {
         DatabaseService databaseService = getInstance();
-        if (databaseService.isReadFromSharedMemory.get()) {
+        if (databaseService.status.get() == Constants.Enums.DatabaseStatus._SHARED_MEMORY) {
             return;
         }
-        databaseService.setStatus(Constants.Enums.DatabaseStatus.VACUUM);
+        if (databaseService.casSetStatus(Constants.Enums.DatabaseStatus.NORMAL, Constants.Enums.DatabaseStatus.VACUUM)) {
+            throw new RuntimeException("databaseService status设置VACUUM状态失败");
+        }
         //执行VACUUM命令
         for (String eachDisk : RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks())) {
             try (Statement stmt = SQLiteUtil.getStatement(String.valueOf(eachDisk.charAt(0)))) {
@@ -2092,13 +2016,15 @@ public class DatabaseService {
                 }
             }
         }
-        databaseService.setStatus(Constants.Enums.DatabaseStatus.NORMAL);
+        if (databaseService.casSetStatus(Constants.Enums.DatabaseStatus.VACUUM, Constants.Enums.DatabaseStatus.NORMAL)) {
+            throw new RuntimeException("databaseService status从VACUUM修改为NORMAL失败");
+        }
     }
 
     @EventRegister(registerClass = AddToSuffixPriorityMapEvent.class)
     private static void addToSuffixPriorityMapEvent(Event event) {
         DatabaseService databaseService = getInstance();
-        if (databaseService.isReadFromSharedMemory.get()) {
+        if (databaseService.status.get() == Constants.Enums.DatabaseStatus._SHARED_MEMORY) {
             return;
         }
         AddToSuffixPriorityMapEvent event1 = (AddToSuffixPriorityMapEvent) event;
@@ -2111,7 +2037,7 @@ public class DatabaseService {
     @EventRegister(registerClass = ClearSuffixPriorityMapEvent.class)
     private static void clearSuffixPriorityMapEvent(Event event) {
         DatabaseService databaseService = getInstance();
-        if (databaseService.isReadFromSharedMemory.get()) {
+        if (databaseService.status.get() == Constants.Enums.DatabaseStatus._SHARED_MEMORY) {
             return;
         }
         databaseService.addToCommandQueue(new SQLWithTaskId("DELETE FROM priority;", SqlTaskIds.UPDATE_SUFFIX, "cache"));
@@ -2125,7 +2051,7 @@ public class DatabaseService {
     private static void deleteFromSuffixPriorityMapEvent(Event event) {
         DeleteFromSuffixPriorityMapEvent delete = (DeleteFromSuffixPriorityMapEvent) event;
         DatabaseService databaseService = getInstance();
-        if (databaseService.isReadFromSharedMemory.get()) {
+        if (databaseService.status.get() == Constants.Enums.DatabaseStatus._SHARED_MEMORY) {
             return;
         }
         if ("dirPriority".equals(delete.suffix) || "defaultPriority".equals(delete.suffix)) {
@@ -2137,7 +2063,7 @@ public class DatabaseService {
     @EventRegister(registerClass = UpdateSuffixPriorityEvent.class)
     private static void updateSuffixPriorityEvent(Event event) {
         DatabaseService databaseService = DatabaseService.getInstance();
-        if (databaseService.isReadFromSharedMemory.get()) {
+        if (databaseService.status.get() == Constants.Enums.DatabaseStatus._SHARED_MEMORY) {
             return;
         }
         EventManagement eventManagement = EventManagement.getInstance();
@@ -2152,10 +2078,13 @@ public class DatabaseService {
     @EventListener(listenClass = RestartEvent.class)
     private static void restartEvent(Event event) {
         FileMonitor.INSTANCE.stop_monitor();
-        getInstance().executeAllCommands();
+        DatabaseService databaseService = getInstance();
+        databaseService.executeAllCommands();
+        databaseService.stopSearch();
         SQLiteUtil.closeAll();
-        if (AllConfigs.getInstance().isEnableCuda()) {
-            CudaAccelerator.INSTANCE.release();
+        if (AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+            GPUAccelerator.INSTANCE.stopCollectResults();
+            GPUAccelerator.INSTANCE.release();
         }
     }
 
@@ -2172,9 +2101,10 @@ public class DatabaseService {
     }
 
     @SuppressWarnings("unused")
-    private static class CudaCacheService {
+    private static class GPUCacheService {
         private static final ConcurrentLinkedQueue<String> invalidCacheKeys = new ConcurrentLinkedQueue<>();
-        private static final ConcurrentLinkedQueue<Runnable> workQueue = new ConcurrentLinkedQueue<>();
+        private static final ConcurrentHashMap<String, Set<String>> recordsToAdd = new ConcurrentHashMap<>();
+        private static final ConcurrentHashMap<String, Set<String>> recordsToRemove = new ConcurrentHashMap<>();
 
         private static void clearInvalidCacheThread() {
             //检测缓存是否有效并删除缓存
@@ -2188,8 +2118,8 @@ public class DatabaseService {
                         if (System.currentTimeMillis() - startCheckInvalidCacheTime > checkInterval && !GetHandle.INSTANCE.isForegroundFullscreen()) {
                             startCheckInvalidCacheTime = System.currentTimeMillis();
                             String eachKey;
-                            while ((eachKey = invalidCacheKeys.poll()) != null) {
-                                CudaAccelerator.INSTANCE.clearCache(eachKey);
+                            while (eventManagement.notMainExit() && (eachKey = invalidCacheKeys.poll()) != null) {
+                                GPUAccelerator.INSTANCE.clearCache(eachKey);
                             }
                         }
                         TimeUnit.MILLISECONDS.sleep(100);
@@ -2204,10 +2134,31 @@ public class DatabaseService {
                 EventManagement eventManagement = EventManagement.getInstance();
                 DatabaseService databaseService = DatabaseService.getInstance();
                 try {
+                    final int removeRecordsThreshold = 20;
                     while (eventManagement.notMainExit()) {
-                        Runnable run;
-                        while (databaseService.isSearchStopped.get() && !GetHandle.INSTANCE.isForegroundFullscreen() && (run = workQueue.poll()) != null) {
-                            run.run();
+                        if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL &&
+                                !GetHandle.INSTANCE.isForegroundFullscreen() &&
+                                (!recordsToAdd.isEmpty() || !recordsToRemove.isEmpty())) {
+                            for (var entry : recordsToAdd.entrySet()) {
+                                String k = entry.getKey();
+                                Set<String> container = entry.getValue();
+                                if (container.isEmpty()) continue;
+                                var records = container.toArray();
+                                GPUAccelerator.INSTANCE.addRecordsToCache(k, records);
+                                for (Object record : records) {
+                                    container.remove((String) record);
+                                }
+                            }
+                            for (var entry : recordsToRemove.entrySet()) {
+                                String key = entry.getKey();
+                                Set<String> container = entry.getValue();
+                                if (container.size() < removeRecordsThreshold) continue;
+                                var records = container.toArray();
+                                GPUAccelerator.INSTANCE.removeRecordsFromCache(key, records);
+                                for (Object record : records) {
+                                    container.remove((String) record);
+                                }
+                            }
                         }
                         TimeUnit.SECONDS.sleep(1);
                     }
@@ -2217,56 +2168,67 @@ public class DatabaseService {
         }
 
         private static void addRecord(String key, String record) {
-            if (CudaAccelerator.INSTANCE.isCacheExist(key) && !CudaAccelerator.INSTANCE.isCacheValid(key)) {
+            if (GPUAccelerator.INSTANCE.isCacheExist(key) && !GPUAccelerator.INSTANCE.isCacheValid(key)) {
                 invalidCacheKeys.add(key);
             } else {
-                workQueue.add(() -> CudaAccelerator.INSTANCE.addOneRecordToCache(key, record));
+                Set<String> container;
+                if (recordsToAdd.containsKey(key)) {
+                    container = recordsToAdd.get(key);
+                    container.add(record);
+                } else {
+                    container = ConcurrentHashMap.newKeySet();
+                    container.add(record);
+                    recordsToAdd.put(key, container);
+                }
             }
         }
 
         private static void removeRecord(String key, String record) {
-            workQueue.add(() -> CudaAccelerator.INSTANCE.removeOneRecordFromCache(key, record));
+            Set<String> container;
+            if (recordsToRemove.containsKey(key)) {
+                container = recordsToRemove.get(key);
+                container.add(record);
+            } else {
+                container = ConcurrentHashMap.newKeySet();
+                container.add(record);
+                recordsToRemove.put(key, container);
+            }
         }
 
         @EventListener(listenClass = BootSystemEvent.class)
         private static void startThread(Event event) {
-            if (!AllConfigs.getInstance().isEnableCuda()) {
+            if (!AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
                 return;
             }
             clearInvalidCacheThread();
-            //向cuda缓存添加或删除记录线程
-            for (int i = 0; i < 2; i++) {
-                execWorkQueueThread();
-            }
+            //向gpu缓存添加或删除记录线程
+            execWorkQueueThread();
         }
 
-        @EventRegister(registerClass = CudaAddRecordEvent.class)
+        @EventRegister(registerClass = GPUAddRecordEvent.class)
         private static void addToGPUMemory(Event event) {
-            if (!AllConfigs.getInstance().isEnableCuda()) {
+            if (!AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
                 return;
             }
-            CudaAddRecordEvent cudaAddRecordEvent = (CudaAddRecordEvent) event;
-            addRecord(cudaAddRecordEvent.key, cudaAddRecordEvent.record);
+            GPUAddRecordEvent GPUAddRecordEvent = (GPUAddRecordEvent) event;
+            addRecord(GPUAddRecordEvent.key, GPUAddRecordEvent.record);
         }
 
-        @EventRegister(registerClass = CudaRemoveRecordEvent.class)
+        @EventRegister(registerClass = GPURemoveRecordEvent.class)
         private static void removeFromGPUMemory(Event event) {
-            if (!AllConfigs.getInstance().isEnableCuda()) {
+            if (!AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
                 return;
             }
-            CudaRemoveRecordEvent cudaRemoveRecordEvent = (CudaRemoveRecordEvent) event;
-            removeRecord(cudaRemoveRecordEvent.key, cudaRemoveRecordEvent.record);
+            GPURemoveRecordEvent gpuRemoveRecordEvent = (GPURemoveRecordEvent) event;
+            removeRecord(gpuRemoveRecordEvent.key, gpuRemoveRecordEvent.record);
         }
 
-        @EventRegister(registerClass = CudaClearCacheEvent.class)
-        private static void clearCacheCuda(Event event) {
-            if (!AllConfigs.getInstance().isEnableCuda()) {
+        @EventRegister(registerClass = GPUClearCacheEvent.class)
+        private static void clearCacheGPU(Event event) {
+            if (!AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
                 return;
             }
-            DatabaseService databaseService = DatabaseService.getInstance();
-            if (databaseService.isSearchStopped.get()) {
-                CudaAccelerator.INSTANCE.clearAllCache();
-            }
+            GPUAccelerator.INSTANCE.clearAllCache();
         }
     }
 }

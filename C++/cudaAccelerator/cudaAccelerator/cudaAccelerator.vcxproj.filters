@@ -33,9 +33,6 @@
     <ClInclude Include="jni_md.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="file_engine_dllInterface_CudaAccelerator.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="kernels.cuh">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -48,7 +45,7 @@
     <ClInclude Include="str_utils.cuh">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="sync_queue.h">
+    <ClInclude Include="file_engine_dllInterface_gpu_CudaAccelerator.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

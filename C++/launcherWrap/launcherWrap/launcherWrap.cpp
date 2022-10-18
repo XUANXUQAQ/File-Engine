@@ -4,7 +4,6 @@
 #include <ShlObj.h>
 #include "resource.h"
 #include <TlHelp32.h>
-#include <iostream>
 #include <fstream>
 #include <string>
 #include <Psapi.h>
@@ -15,6 +14,7 @@
 #pragma comment(lib, "Ole32.lib")
 #pragma comment(lib, "User32.lib")
 #define MAX_LOG_PRESERVE_DAYS 5
+#define CHECK_TIME_THRESHOLD 1
 // #define TEST
 
 #ifndef TEST
@@ -23,7 +23,7 @@
 
 constexpr auto* g_file_engine_zip_name = "File-Engine.zip";
 std::string g_jvm_parameters =
-	"-Xms8M -Xmx64M -XX:+UseParallelGC -XX:MaxHeapFreeRatio=20 -XX:MinHeapFreeRatio=10 -XX:+CompactStrings -XX:MaxTenuringThreshold=16";
+	"-Xms8M -Xmx64M -XX:+UseG1GC -XX:+UseStringDeduplication -XX:MaxHeapFreeRatio=20 -XX:MinHeapFreeRatio=10 -XX:+CompactStrings";
 
 char g_close_signal_file[1000];
 char g_file_engine_jar_path[1000];
@@ -33,11 +33,6 @@ char g_update_signal_file[1000];
 char g_new_file_engine_jar_path[1000];
 char g_log_file_path[1000];
 char g_jvm_parameter_file_path[1000];
-#ifdef TEST
-int g_check_time_threshold = 1;
-#else
-int g_check_time_threshold = 5;
-#endif
 
 short g_restart_count = 0;
 std::time_t g_restart_time = std::time(nullptr);
@@ -118,7 +113,7 @@ int main()
 	while (!is_close_exist())
 	{
 		const std::time_t tmp = std::time(nullptr) - start_time;
-		if (tmp > g_check_time_threshold)
+		if (tmp > CHECK_TIME_THRESHOLD)
 		{
 			start_time = std::time(nullptr);
 			if (!find_process())
@@ -244,9 +239,9 @@ inline void delete_jre_dir()
 	remove_dir(g_jre_path);
 }
 
-inline time_t convert(int year, int month, int day)
+inline time_t convert(const int year, const int month, const int day)
 {
-	tm info = {0};
+	tm info;
 	info.tm_year = year - 1900;
 	info.tm_mon = month - 1;
 	info.tm_mday = day;
@@ -354,7 +349,7 @@ void restart_file_engine(bool isIgnoreCloseFile)
 	if (g_restart_count >= 4)
 	{
 		MessageBoxA(nullptr, "Launch failed", "Error", MB_OK);
-		exit(-1);
+		std::quick_exit(-1);
 	}
 	if (g_restart_count >= 3 || !is_file_exist(g_file_engine_jar_path))
 	{
@@ -366,7 +361,7 @@ void restart_file_engine(bool isIgnoreCloseFile)
 	g_restart_count++;
 
 	std::ofstream log_file(g_log_file_path + std::string(get_date()) + ".log", std::ios::app);
-	tm t = get_tm();
+	const tm t = get_tm();
 	log_file << "------------------------------------------------------------------------------------------------------"
 		<< std::endl;
 	log_file << t.tm_hour << ":" << t.tm_min << ":" << t.tm_sec << std::endl;
@@ -402,7 +397,7 @@ tm get_tm()
  */
 std::string get_date()
 {
-	tm tmpTime = get_tm();
+	const tm tmpTime = get_tm();
 	char tmp[64];
 	strftime(tmp, sizeof(tmp), "%Y-%m-%d", &tmpTime);
 	return tmp;
@@ -523,7 +518,6 @@ std::wstring get_self_name()
 bool is_launched()
 {
 	PROCESSENTRY32 pe;
-	DWORD id = 0;
 	auto* const hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 	pe.dwSize = sizeof(PROCESSENTRY32);
 	if (!Process32First(hSnapshot, &pe))
@@ -590,10 +584,9 @@ BOOL find_process()
 		CloseHandle(hSnapshot);
 		return ret;
 	}
-	catch (std::exception& e)
+	catch (std::exception&)
 	{
-		std::cout << e.what() << std::endl;
-		exit(-1);
+		std::quick_exit(-1);
 	}
 }
 

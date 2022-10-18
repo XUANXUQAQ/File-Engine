@@ -51,7 +51,7 @@ public class Constants {
         }
 
         public enum DatabaseStatus {
-            NORMAL, VACUUM, MANUAL_UPDATE, TEMP
+            NORMAL, _TEMP, _CREATING_CACHE, _SHARED_MEMORY, VACUUM, MANUAL_UPDATE
         }
 
         public enum DownloadStatus {
@@ -74,7 +74,7 @@ public class Constants {
             CyanLight, DarkFlat, DarkPurple, Dracula,
             Gray, LightFlat, MaterialDesignDark, Monocai,
             Nord, OneDark, MaterialDarker, MaterialLighter, SolarizedDark, SolarizedLight,
-            Spacegray, Vuesion, XcodeDark
+            Spacegray, Vuesion, XcodeDark, SystemDefault
         }
 
         public enum BorderType {

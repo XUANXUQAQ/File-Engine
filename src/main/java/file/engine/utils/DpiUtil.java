@@ -3,6 +3,7 @@ package file.engine.utils;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Path;
 
 public class DpiUtil {
 
@@ -16,7 +17,7 @@ public class DpiUtil {
         getDpiTime = System.currentTimeMillis();
         String proc = "user/getDpi.exe";
         try {
-            Process exec = Runtime.getRuntime().exec(proc);
+            Process exec = Runtime.getRuntime().exec(new String[]{Path.of(proc).toAbsolutePath().toString()});
             ProcessUtil.waitForProcess("getDpi.exe", 10);
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(exec.getInputStream()))) {
                 String dpiStr = reader.readLine();

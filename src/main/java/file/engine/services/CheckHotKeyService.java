@@ -6,12 +6,11 @@ import file.engine.configs.Constants;
 import file.engine.dllInterface.HotkeyListener;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
+import file.engine.event.handler.impl.configs.SetConfigsEvent;
 import file.engine.event.handler.impl.frame.searchBar.GetShowingModeEvent;
 import file.engine.event.handler.impl.frame.searchBar.HideSearchBarEvent;
 import file.engine.event.handler.impl.frame.searchBar.ShowSearchBarEvent;
 import file.engine.event.handler.impl.hotkey.CheckHotKeyAvailableEvent;
-import file.engine.event.handler.impl.hotkey.RegisterHotKeyEvent;
-import file.engine.event.handler.impl.hotkey.ResponseCtrlEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.frames.SearchBar;
 import file.engine.utils.CachedThreadPoolUtil;
@@ -148,15 +147,11 @@ public class CheckHotKeyService {
         event1.setReturnValue(getInstance().isHotkeyAvailable(event1.hotkey));
     }
 
-    @EventRegister(registerClass = RegisterHotKeyEvent.class)
+    @EventListener(listenClass = SetConfigsEvent.class)
     private static void registerHotKeyEvent(Event event) {
-        getInstance().registerHotkey(((RegisterHotKeyEvent) event).hotkey);
-    }
-
-    @EventRegister(registerClass = ResponseCtrlEvent.class)
-    private static void responseCtrlEvent(Event event) {
-        ResponseCtrlEvent responseCtrlEvent = (ResponseCtrlEvent) event;
-        HotkeyListener.INSTANCE.setCtrlDoubleClick(responseCtrlEvent.isResponse);
+        SetConfigsEvent setConfigsEvent = (SetConfigsEvent) event;
+        getInstance().registerHotkey(setConfigsEvent.getConfigs().getHotkey());
+        HotkeyListener.INSTANCE.setCtrlDoubleClick(setConfigsEvent.getConfigs().isDoubleClickCtrlOpen());
     }
 
     @EventListener(listenClass = RestartEvent.class)

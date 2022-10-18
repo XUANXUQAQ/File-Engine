@@ -53,6 +53,7 @@ public enum CachedThreadPoolUtil {
      * @param isVirtualThread 是否使用虚拟线程
      * @return Future
      */
+    @SuppressWarnings("unused")
     public <T> Future<T> executeTask(Callable<T> task, boolean isVirtualThread) {
         if (isShutdown.get()) {
             return null;
@@ -70,6 +71,7 @@ public enum CachedThreadPoolUtil {
      * @param task            任务
      * @param isVirtualThread 是否使用虚拟线程
      */
+    @SuppressWarnings("unused")
     public void executeTask(Runnable task, boolean isVirtualThread) {
         if (isShutdown.get()) {
             return;

@@ -1,9 +1,8 @@
 package file.engine.utils;
 
 import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.InputStream;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 public class Md5Util {
 
@@ -14,11 +13,19 @@ public class Md5Util {
      * @return MD5字符串
      */
     public static String getMD5(String filePath) {
+        try (var stream = new FileInputStream(filePath)) {
+            return getMD5(stream);
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    public static String getMD5(InputStream fileStream) {
         byte[] buffer = new byte[8192];
         int len;
-        try (FileInputStream fis = new FileInputStream(filePath)) {
+        try {
             MessageDigest md = MessageDigest.getInstance("MD5");
-            while ((len = fis.read(buffer)) != -1) {
+            while ((len = fileStream.read(buffer)) != -1) {
                 md.update(buffer, 0, len);
             }
             byte[] b = md.digest();
@@ -32,7 +39,7 @@ public class Md5Util {
                 hexValue.append(Integer.toHexString(val));
             }
             return hexValue.toString();
-        } catch (NoSuchAlgorithmException | IOException e) {
+        } catch (Exception e) {
             return "";
         }
     }

@@ -8,14 +8,13 @@ import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.ConfigEntity;
 import file.engine.configs.Constants;
-import file.engine.dllInterface.CudaAccelerator;
 import file.engine.dllInterface.IsLocalDisk;
+import file.engine.dllInterface.gpu.GPUAccelerator;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.SetSwingLaf;
 import file.engine.event.handler.impl.configs.AddCmdEvent;
 import file.engine.event.handler.impl.configs.DeleteCmdEvent;
-import file.engine.event.handler.impl.configs.SaveConfigsEvent;
 import file.engine.event.handler.impl.configs.SetConfigsEvent;
 import file.engine.event.handler.impl.database.*;
 import file.engine.event.handler.impl.download.StartDownloadEvent;
@@ -25,9 +24,11 @@ import file.engine.event.handler.impl.frame.searchBar.HideSearchBarEvent;
 import file.engine.event.handler.impl.frame.searchBar.PreviewSearchBarEvent;
 import file.engine.event.handler.impl.frame.searchBar.StartPreviewEvent;
 import file.engine.event.handler.impl.frame.searchBar.StopPreviewEvent;
-import file.engine.event.handler.impl.frame.settingsFrame.*;
+import file.engine.event.handler.impl.frame.settingsFrame.AddCacheEvent;
+import file.engine.event.handler.impl.frame.settingsFrame.GetExcludeComponentEvent;
+import file.engine.event.handler.impl.frame.settingsFrame.IsCacheExistEvent;
+import file.engine.event.handler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import file.engine.event.handler.impl.hotkey.CheckHotKeyAvailableEvent;
-import file.engine.event.handler.impl.hotkey.ResponseCtrlEvent;
 import file.engine.event.handler.impl.plugin.AddPluginsCanUpdateEvent;
 import file.engine.event.handler.impl.plugin.GetPluginByNameEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
@@ -92,7 +93,7 @@ public class SettingsFrame {
     private static final AllConfigs allConfigs = AllConfigs.getInstance();
     private static final CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
     private final HashMap<TabNameAndTitle, Component> tabComponentNameMap = new HashMap<>();
-    private final HashMap<String, Integer> cudaDeviceMap = new HashMap<>();
+    private Map<String, String> cudaDeviceMap = new HashMap<>();
     private HashMap<String, Integer> suffixMap;
     private final Set<Component> excludeComponent = ConcurrentHashMap.newKeySet();
     private final LinkedHashSet<String> diskSet = new LinkedHashSet<>();
@@ -306,6 +307,8 @@ public class SettingsFrame {
     private JLabel labelHolder6;
     private JCheckBox checkBoxEnableCuda;
     private JComboBox<Object> comboBoxCudaDevice;
+    private JLabel labelSearchThread;
+    private JComboBox<Object> comboBoxSearchThread;
 
 
     private static volatile SettingsFrame instance = null;
@@ -1218,7 +1221,7 @@ public class SettingsFrame {
         checkBoxCheckUpdate.setText("Check for update at startup");
         tabGeneral.add(checkBoxCheckUpdate, new GridConstraints(1, 0, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         tabSearchSettings = new JPanel();
-        tabSearchSettings.setLayout(new GridLayoutManager(12, 6, new Insets(0, 0, 0, 0), -1, -1));
+        tabSearchSettings.setLayout(new GridLayoutManager(13, 6, new Insets(0, 0, 0, 0), -1, -1));
         tabSearchSettings.setBackground(new Color(-1));
         tabSearchSettings.setMaximumSize(new Dimension(1000, 600));
         tabSearchSettings.setMinimumSize(new Dimension(850, 500));
@@ -1227,21 +1230,21 @@ public class SettingsFrame {
         tabSearchSettings.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(), null, TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
         labelSetIgnorePathTip = new JLabel();
         labelSetIgnorePathTip.setText("Set ignore folder:");
-        tabSearchSettings.add(labelSetIgnorePathTip, new GridConstraints(6, 0, 1, 6, GridConstraints.ANCHOR_NORTHWEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        tabSearchSettings.add(labelSetIgnorePathTip, new GridConstraints(7, 0, 1, 6, GridConstraints.ANCHOR_NORTHWEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         placeholdersearch0 = new JLabel();
         placeholdersearch0.setText("     ");
-        tabSearchSettings.add(placeholdersearch0, new GridConstraints(2, 0, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        tabSearchSettings.add(placeholdersearch0, new GridConstraints(3, 0, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         labeltipPriorityFolder = new JLabel();
         labeltipPriorityFolder.setText("Priority search folder location (double-click to clear):");
         tabSearchSettings.add(labeltipPriorityFolder, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         labelPlaceHolder = new JLabel();
         labelPlaceHolder.setText("     ");
-        tabSearchSettings.add(labelPlaceHolder, new GridConstraints(5, 0, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        tabSearchSettings.add(labelPlaceHolder, new GridConstraints(6, 0, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         labelConstIgnorePathTip = new JLabel();
         labelConstIgnorePathTip.setText("Separate different paths with commas, and ignore C:\\Windows by default");
-        tabSearchSettings.add(labelConstIgnorePathTip, new GridConstraints(7, 0, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        tabSearchSettings.add(labelConstIgnorePathTip, new GridConstraints(8, 0, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         scrollpaneIgnorePath = new JScrollPane();
-        tabSearchSettings.add(scrollpaneIgnorePath, new GridConstraints(8, 0, 1, 4, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        tabSearchSettings.add(scrollpaneIgnorePath, new GridConstraints(9, 0, 1, 4, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         textAreaIgnorePath = new JTextArea();
         textAreaIgnorePath.setForeground(new Color(-4473925));
         textAreaIgnorePath.setLineWrap(true);
@@ -1257,31 +1260,31 @@ public class SettingsFrame {
         tabSearchSettings.add(ButtonPriorityFolder, new GridConstraints(1, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         labelVacuumTip2 = new JLabel();
         labelVacuumTip2.setText("but it will consume a lot of time.");
-        tabSearchSettings.add(labelVacuumTip2, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        tabSearchSettings.add(labelVacuumTip2, new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         labelVacuumStatus = new JLabel();
         labelVacuumStatus.setText("      ");
-        tabSearchSettings.add(labelVacuumStatus, new GridConstraints(3, 3, 2, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        tabSearchSettings.add(labelVacuumStatus, new GridConstraints(4, 3, 2, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         buttonVacuum = new JButton();
         buttonVacuum.setText("SQLite Vacuum");
-        tabSearchSettings.add(buttonVacuum, new GridConstraints(3, 2, 2, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        tabSearchSettings.add(buttonVacuum, new GridConstraints(4, 2, 2, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         labelVacuumTip = new JLabel();
         labelVacuumTip.setText("Click to organize the database and reduce the size of the database");
-        tabSearchSettings.add(labelVacuumTip, new GridConstraints(3, 0, 1, 2, GridConstraints.ANCHOR_SOUTHWEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        tabSearchSettings.add(labelVacuumTip, new GridConstraints(4, 0, 1, 2, GridConstraints.ANCHOR_SOUTHWEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         buttonChooseFile = new JButton();
         buttonChooseFile.setText("Choose");
-        tabSearchSettings.add(buttonChooseFile, new GridConstraints(8, 4, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        tabSearchSettings.add(buttonChooseFile, new GridConstraints(9, 4, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         placeholderSearch = new JLabel();
         placeholderSearch.setText("   ");
-        tabSearchSettings.add(placeholderSearch, new GridConstraints(7, 5, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        tabSearchSettings.add(placeholderSearch, new GridConstraints(8, 5, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         labelSearchSettingsPlaceholder = new JLabel();
         labelSearchSettingsPlaceholder.setText("");
-        tabSearchSettings.add(labelSearchSettingsPlaceholder, new GridConstraints(11, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        tabSearchSettings.add(labelSearchSettingsPlaceholder, new GridConstraints(12, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         labelSearchSettingsPlaceholder2 = new JLabel();
         labelSearchSettingsPlaceholder2.setText("  ");
-        tabSearchSettings.add(labelSearchSettingsPlaceholder2, new GridConstraints(10, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        tabSearchSettings.add(labelSearchSettingsPlaceholder2, new GridConstraints(11, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         labelHolder6 = new JLabel();
         labelHolder6.setText("  ");
-        tabSearchSettings.add(labelHolder6, new GridConstraints(9, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        tabSearchSettings.add(labelHolder6, new GridConstraints(10, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         checkBoxEnableCuda = new JCheckBox();
         checkBoxEnableCuda.setOpaque(false);
         checkBoxEnableCuda.setText("Enable GPU acceleration");
@@ -1289,6 +1292,12 @@ public class SettingsFrame {
         comboBoxCudaDevice = new JComboBox();
         comboBoxCudaDevice.setOpaque(false);
         tabSearchSettings.add(comboBoxCudaDevice, new GridConstraints(0, 1, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        labelSearchThread = new JLabel();
+        labelSearchThread.setText("Number of search threads");
+        tabSearchSettings.add(labelSearchThread, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        comboBoxSearchThread = new JComboBox();
+        comboBoxSearchThread.setOpaque(false);
+        tabSearchSettings.add(comboBoxSearchThread, new GridConstraints(2, 1, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         tabSearchBarSettings = new JPanel();
         tabSearchBarSettings.setLayout(new GridLayoutManager(18, 9, new Insets(0, 0, 0, 0), -1, -1));
         tabSearchBarSettings.setBackground(new Color(-1));
@@ -2593,26 +2602,25 @@ public class SettingsFrame {
     }
 
     private void setComboBoxGui() {
-        boolean cudaAvailableOnSystem = CudaAccelerator.INSTANCE.isCudaAvailableOnSystem();
+        int availableProcessors = Runtime.getRuntime().availableProcessors();
+        ArrayList<Integer> threads = new ArrayList<>();
+        for (int i = 1; i <= availableProcessors; i++) {
+            threads.add(i);
+        }
+        comboBoxSearchThread.setModel(new DefaultComboBoxModel<>(new Vector<>(threads)));
+        comboBoxSearchThread.setSelectedItem(allConfigs.getSearchThreadNumber());
+        boolean cudaAvailableOnSystem = GPUAccelerator.INSTANCE.isGPUAvailableOnSystem();
         comboBoxCudaDevice.setEnabled(cudaAvailableOnSystem);
         if (cudaAvailableOnSystem) {
-            var deviceMap = new HashMap<Integer, String>();
-            String devices = CudaAccelerator.INSTANCE.getDevices();
-            String[] split = RegexUtil.semicolon.split(devices);
-            for (String each : split) {
-                String[] cudaInfo = RegexUtil.comma.split(each);
-                Integer deviceNum = Integer.valueOf(cudaInfo[1]);
-                String deviceName = cudaInfo[0];
-                cudaDeviceMap.put(deviceName, deviceNum);
-                deviceMap.put(deviceNum, deviceName);
-            }
+            cudaDeviceMap = GPUAccelerator.INSTANCE.getDevices();
             comboBoxCudaDevice.setModel(new DefaultComboBoxModel<>(new Vector<>(cudaDeviceMap.keySet())));
-            int cudaDeviceNum = allConfigs.getCudaDeviceNum();
-            String item = deviceMap.get(cudaDeviceNum);
-            if (item == null) {
+            String gpuDevice = allConfigs.getGpuDevice();
+            if (gpuDevice == null || gpuDevice.isEmpty()) {
                 comboBoxCudaDevice.setSelectedIndex(0);
             } else {
-                comboBoxCudaDevice.setSelectedItem(item);
+                HashMap<String, String> map = new HashMap<>();
+                cudaDeviceMap.forEach((k, v) -> map.put(v, k));
+                comboBoxCudaDevice.setSelectedItem(map.get(gpuDevice));
             }
         }
     }
@@ -2632,8 +2640,8 @@ public class SettingsFrame {
         checkBoxResponseCtrl.setSelected(allConfigs.isResponseCtrl());
         checkBoxCheckUpdate.setSelected(allConfigs.isCheckUpdateStartup());
         checkBoxIsAttachExplorer.setSelected(allConfigs.isAttachExplorer());
-        checkBoxEnableCuda.setSelected(allConfigs.isEnableCuda());
-        checkBoxEnableCuda.setEnabled(CudaAccelerator.INSTANCE.isCudaAvailableOnSystem());
+        checkBoxEnableCuda.setSelected(allConfigs.isEnableGpuAccelerate());
+        checkBoxEnableCuda.setEnabled(GPUAccelerator.INSTANCE.isGPUAvailableOnSystem());
     }
 
     /**
@@ -3005,6 +3013,7 @@ public class SettingsFrame {
         labelBorderThickness.setText(TRANSLATE_SERVICE.getTranslation("Border Thickness"));
         labelBorderType.setText(TRANSLATE_SERVICE.getTranslation("Border Type"));
         labelRoundRadius.setText(TRANSLATE_SERVICE.getTranslation("Round rectangle radius"));
+        labelSearchThread.setText(TRANSLATE_SERVICE.getTranslation("Number of search threads"));
     }
 
     private void translateCheckbox() {
@@ -3085,6 +3094,16 @@ public class SettingsFrame {
         } else {
             settingsFrame.showWindow(showSettingsFrameEvent.showTabName);
         }
+        cachedThreadPoolUtil.executeTask(() -> {
+            try {
+                final long startVisible = System.currentTimeMillis();
+                while (SettingsFrame.frame.isVisible() || System.currentTimeMillis() - startVisible < 3000) {
+                    settingsFrame.saveChanges();
+                    TimeUnit.SECONDS.sleep(1);
+                }
+            } catch (InterruptedException ignored) {
+            }
+        });
     }
 
     @EventRegister(registerClass = IsCacheExistEvent.class)
@@ -3318,9 +3337,11 @@ public class SettingsFrame {
         configEntity.setCheckUpdateStartup(checkBoxCheckUpdate.isSelected());
         configEntity.setDisks(parseDisk());
         configEntity.setAttachExplorer(checkBoxIsAttachExplorer.isSelected());
-        configEntity.setEnableCuda(checkBoxEnableCuda.isSelected());
+        configEntity.setEnableGpuAccelerate(checkBoxEnableCuda.isSelected());
         String selectedCudaDevice = (String) comboBoxCudaDevice.getSelectedItem();
-        configEntity.setCudaDeviceNum(cudaDeviceMap.getOrDefault(selectedCudaDevice, 0));
+        configEntity.setGpuDevice(cudaDeviceMap.getOrDefault(selectedCudaDevice, ""));
+        var threadNum = (Integer) comboBoxSearchThread.getSelectedItem();
+        configEntity.setSearchThreadNumber(threadNum == null ? Runtime.getRuntime().availableProcessors() : threadNum);
         return configEntity;
     }
 
@@ -3362,12 +3383,7 @@ public class SettingsFrame {
         //使所有配置生效
         ConfigEntity configEntity = getConfigEntity();
 
-        eventManagement.putEvent(new ResponseCtrlEvent(checkBoxResponseCtrl.isSelected()));
-
-        SaveConfigsEvent event = new SaveConfigsEvent(configEntity);
-        eventManagement.putEvent(event);
-        eventManagement.waitForEvent(event);
-        eventManagement.putEvent(new SetConfigsEvent());
+        eventManagement.putEvent(new SetConfigsEvent(configEntity));
 
         Color tmp_color = new Color(allConfigs.getLabelColor());
         labelColorChooser.setBackground(tmp_color);
@@ -3399,7 +3415,6 @@ public class SettingsFrame {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        hideFrame();
         return "";
     }
 

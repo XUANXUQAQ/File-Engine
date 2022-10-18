@@ -157,14 +157,13 @@
     <ClInclude Include="cache.h" />
     <ClInclude Include="constans.h" />
     <ClInclude Include="cuda_copy_vector_util.h" />
-    <ClInclude Include="file_engine_dllInterface_CudaAccelerator.h" />
+    <ClInclude Include="file_engine_dllInterface_gpu_CudaAccelerator.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="jni.h" />
     <ClInclude Include="jni_md.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="str_convert.cuh" />
     <ClInclude Include="str_utils.cuh" />
-    <ClInclude Include="sync_queue.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cache.cpp" />

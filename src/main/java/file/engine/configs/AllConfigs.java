@@ -10,22 +10,18 @@ import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMaterialLighte
 import com.google.gson.Gson;
 import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
-import file.engine.dllInterface.CudaAccelerator;
+import file.engine.dllInterface.GetWindowsKnownFolder;
 import file.engine.dllInterface.IsLocalDisk;
+import file.engine.dllInterface.gpu.GPUAccelerator;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.BootSystemEvent;
 import file.engine.event.handler.impl.ReadConfigsEvent;
 import file.engine.event.handler.impl.SetSwingLaf;
 import file.engine.event.handler.impl.configs.*;
-import file.engine.event.handler.impl.database.cuda.CudaSetDeviceEvent;
 import file.engine.event.handler.impl.download.StartDownloadEvent;
-import file.engine.event.handler.impl.frame.searchBar.*;
 import file.engine.event.handler.impl.frame.settingsFrame.GetExcludeComponentEvent;
-import file.engine.event.handler.impl.hotkey.RegisterHotKeyEvent;
-import file.engine.event.handler.impl.hotkey.ResponseCtrlEvent;
 import file.engine.event.handler.impl.monitor.disk.StartMonitorDiskEvent;
-import file.engine.event.handler.impl.plugin.ConfigsChangedEvent;
 import file.engine.event.handler.impl.plugin.LoadAllPluginsEvent;
 import file.engine.event.handler.impl.stop.CloseEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
@@ -45,6 +41,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.Consumer;
 
 import static file.engine.configs.Constants.DEFAULT_SWING_THEME;
 import static file.engine.configs.Constants.Enums;
@@ -58,6 +55,7 @@ public class AllConfigs {
     private final LinkedHashMap<String, AddressUrl> updateAddressMap = new LinkedHashMap<>();
     private final LinkedHashSet<String> cmdSet = new LinkedHashSet<>();
     private static boolean isFirstRunApp = false;
+    private volatile boolean isEnableGPUAccelerator = false;
 
     private static volatile AllConfigs instance = null;
 
@@ -93,8 +91,8 @@ public class AllConfigs {
         return Constants.Enums.SwingThemes.MaterialLighter;
     }
 
-    public int getCudaDeviceNum() {
-        return configEntity.getCudaDeviceNum();
+    public String getGpuDevice() {
+        return configEntity.getGpuDevice();
     }
 
     /**
@@ -424,6 +422,10 @@ public class AllConfigs {
         return configEntity.getDisks();
     }
 
+    public int getSearchThreadNumber() {
+        return configEntity.getSearchThreadNumber();
+    }
+
     /**
      * 是否响应双击Ctrl键
      *
@@ -434,12 +436,18 @@ public class AllConfigs {
     }
 
     /**
-     * 是否启动GPU加速
+     * 是否启动GPU加速，仅在初始化时，显示设置界面时使用
+     * 当前启动GPU加速状态由isGPUAcceleratorEnabled()判断
+     * @see #isGPUAcceleratorEnabled()
      *
      * @return boolean
      */
-    public boolean isEnableCuda() {
-        return configEntity.isEnableCuda();
+    public boolean isEnableGpuAccelerate() {
+        return configEntity.isEnableGpuAccelerate();
+    }
+
+    public boolean isGPUAcceleratorEnabled() {
+        return isEnableGPUAccelerator;
     }
 
     /**
@@ -536,18 +544,23 @@ public class AllConfigs {
         configEntity.setDisks(stringBuilder.toString());
     }
 
-    private void readIsEnableCuda(Map<String, Object> settingsInJson) {
-        boolean isEnableCuda = getFromJson(settingsInJson, "isEnableCuda", true);
-        if (isEnableCuda) {
-            configEntity.setEnableCuda(CudaAccelerator.INSTANCE.isCudaAvailableOnSystem());
+    private void readIsEnableGpuAccelerate(Map<String, Object> settingsInJson) {
+        boolean isEnableGpuAccelerate = getFromJson(settingsInJson, "isEnableGpuAccelerate", true);
+        if (isEnableGpuAccelerate) {
+            configEntity.setEnableGpuAccelerate(GPUAccelerator.INSTANCE.isGPUAvailableOnSystem());
         } else {
-            configEntity.setEnableCuda(false);
+            configEntity.setEnableGpuAccelerate(false);
         }
     }
 
-    private void readCudaDeviceNum(Map<String, Object> settingsInJson) {
-        int deviceNumber = getFromJson(settingsInJson, "cudaDeviceNum", 0);
-        configEntity.setCudaDeviceNum(deviceNumber);
+    private void readGpuDevice(Map<String, Object> settingsInJson) {
+        String deviceNumber = getFromJson(settingsInJson, "gpuDevice", "");
+        Map<String, String> devices = GPUAccelerator.INSTANCE.getDevices();
+        if (!deviceNumber.isEmpty() && devices.containsValue(deviceNumber)) {
+            configEntity.setGpuDevice(deviceNumber);
+        } else {
+            configEntity.setGpuDevice("");
+        }
     }
 
     private void readIsAttachExplorer(Map<String, Object> settingsInJson) {
@@ -579,7 +592,8 @@ public class AllConfigs {
     }
 
     private void readIgnorePath(Map<String, Object> settingsInJson) {
-        configEntity.setIgnorePath(getFromJson(settingsInJson, "ignorePath", "C:\\Windows,"));
+        String defaultIgnore = "C:\\Windows," + GetWindowsKnownFolder.INSTANCE.getKnownFolder("{AE50C081-EBD2-438A-8655-8A092E34987A}") + ",";
+        configEntity.setIgnorePath(getFromJson(settingsInJson, "ignorePath", defaultIgnore));
     }
 
     private void readUpdateTimeLimit(Map<String, Object> settingsInJson) {
@@ -651,6 +665,15 @@ public class AllConfigs {
         String language = getFromJson(settingsInJson, "language", TranslateService.getDefaultLang());
         configEntity.setLanguage(language);
         translateService.setLanguage(language);
+    }
+
+    private void readSearchThreadNumber(Map<String, Object> settingsInJson) {
+        int availableProcessors = Runtime.getRuntime().availableProcessors();
+        int searchThreadNumber = getFromJson(settingsInJson, "searchThreadNumber", availableProcessors);
+        if (searchThreadNumber > availableProcessors || searchThreadNumber < 1) {
+            searchThreadNumber = availableProcessors;
+        }
+        configEntity.setSearchThreadNumber(searchThreadNumber);
     }
 
     private void readProxy(Map<String, Object> settingsInJson) {
@@ -787,33 +810,11 @@ public class AllConfigs {
         readDisks(settingsInJson);
         readCheckUpdateStartup(settingsInJson);
         readBorderThickness(settingsInJson);
-        readIsEnableCuda(settingsInJson);
-        readCudaDeviceNum(settingsInJson);
+        readIsEnableGpuAccelerate(settingsInJson);
+        readGpuDevice(settingsInJson);
+        readSearchThreadNumber(settingsInJson);
         initUpdateAddress();
         initCmdSetSettings();
-    }
-
-    /**
-     * 使所有配置生效
-     */
-    private void setAllSettings() {
-        EventManagement eventManagement = EventManagement.getInstance();
-        AllConfigs allConfigs = AllConfigs.getInstance();
-        eventManagement.putEvent(new ConfigsChangedEvent(
-                allConfigs.getDefaultBackgroundColor(),
-                allConfigs.getLabelColor(),
-                allConfigs.getBorderColor()));
-        eventManagement.putEvent(new RegisterHotKeyEvent(configEntity.getHotkey()));
-        eventManagement.putEvent(new ResponseCtrlEvent(configEntity.isDoubleClickCtrlOpen()));
-        eventManagement.putEvent(new SetSearchBarTransparencyEvent(configEntity.getTransparency()));
-        eventManagement.putEvent(new SetSearchBarDefaultBackgroundEvent(configEntity.getDefaultBackgroundColor()));
-        eventManagement.putEvent(new SetSearchBarLabelColorEvent(configEntity.getLabelColor()));
-        eventManagement.putEvent(new SetSearchBarFontColorWithCoverageEvent(configEntity.getFontColorWithCoverage()));
-        eventManagement.putEvent(new SetSearchBarLabelFontColorEvent(configEntity.getFontColor()));
-        eventManagement.putEvent(new SetSearchBarColorEvent(configEntity.getSearchBarColor()));
-        eventManagement.putEvent(new SetSearchBarFontColorEvent(configEntity.getSearchBarFontColor()));
-        eventManagement.putEvent(new SetBorderEvent(allConfigs.getBorderType(), configEntity.getBorderColor(), configEntity.getBorderThickness()));
-        eventManagement.putEvent(new CudaSetDeviceEvent(configEntity.getCudaDeviceNum()));
     }
 
     /**
@@ -896,6 +897,14 @@ public class AllConfigs {
                 case Spacegray:
                     FlatSpacegrayIJTheme.setup();
                     break;
+                case SystemDefault:
+                    try {
+                        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException |
+                             UnsupportedLookAndFeelException e) {
+                        e.printStackTrace();
+                    }
+                    break;
                 default:
                     FlatDarculaLaf.setup();
                     break;
@@ -949,14 +958,8 @@ public class AllConfigs {
         return true;
     }
 
-    /**
-     * 检查系统是否支持cuda加速，不支持则将isEnableCuda设置为false
-     * @param configEntity configEntity
-     */
-    private void checkCudaSetting(ConfigEntity configEntity) {
-        if (configEntity.isEnableCuda()) {
-            configEntity.setEnableCuda(CudaAccelerator.INSTANCE.isCudaAvailableOnSystem());
-        }
+    private void setInvalidConfigs(ConfigEntity configEntity, Consumer<ConfigEntity> check) {
+        check.accept(configEntity);
     }
 
     /**
@@ -1064,11 +1067,37 @@ public class AllConfigs {
         if (isFirstRunApp) {
             checkRunningDirAtDiskC();
         }
+        AllConfigs allConfigs = getInstance();
+        allConfigs.isEnableGPUAccelerator = allConfigs.isEnableGpuAccelerate();
     }
 
     @EventRegister(registerClass = SetConfigsEvent.class)
     private static void setAllConfigsEvent(Event event) {
-        getInstance().setAllSettings();
+        SetConfigsEvent setConfigsEvent = (SetConfigsEvent) event;
+        AllConfigs allConfigs = getInstance();
+        if (setConfigsEvent.getConfigs() == null) {
+            // MainClass初始化
+            setConfigsEvent.setConfigs(allConfigs.configEntity);
+        } else {
+            // 更新设置
+            ConfigEntity tempConfigEntity = ((SetConfigsEvent) event).getConfigs();
+            if (allConfigs.noNullValue(tempConfigEntity)) {
+                allConfigs.setInvalidConfigs(tempConfigEntity, (config) -> {
+                    if (config.isEnableGpuAccelerate()) {
+                        config.setEnableGpuAccelerate(GPUAccelerator.INSTANCE.isGPUAvailableOnSystem());
+                    }
+                    int availableProcessors = Runtime.getRuntime().availableProcessors();
+                    int searchThreadNumber = config.getSearchThreadNumber();
+                    if (searchThreadNumber > availableProcessors || searchThreadNumber < 1) {
+                        config.setSearchThreadNumber(availableProcessors);
+                    }
+                });
+                allConfigs.configEntity = tempConfigEntity;
+                allConfigs.saveAllSettings();
+            } else {
+                throw new NullPointerException("configEntity中有Null值");
+            }
+        }
     }
 
     @EventRegister(registerClass = SetSwingLaf.class)
@@ -1076,19 +1105,6 @@ public class AllConfigs {
         AllConfigs instance = getInstance();
         String theme = ((SetSwingLaf) event).theme;
         setSwingLaf(instance.swingThemesMapper(theme));
-    }
-
-    @EventRegister(registerClass = SaveConfigsEvent.class)
-    private static void saveConfigsEvent(Event event) {
-        AllConfigs allConfigs = getInstance();
-        ConfigEntity tempConfigEntity = ((SaveConfigsEvent) event).configEntity;
-        if (allConfigs.noNullValue(tempConfigEntity)) {
-            allConfigs.checkCudaSetting(tempConfigEntity);
-            allConfigs.configEntity = tempConfigEntity;
-            allConfigs.saveAllSettings();
-        } else {
-            throw new NullPointerException("configEntity中有Null值");
-        }
     }
 
     @EventListener(listenClass = BootSystemEvent.class)

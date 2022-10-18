@@ -4,7 +4,7 @@ import com.github.promeg.pinyinhelper.Pinyin;
 import com.github.promeg.tinypinyin.lexicons.java.cncity.CnCityDict;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.Constants;
-import file.engine.dllInterface.CudaAccelerator;
+import file.engine.dllInterface.gpu.GPUAccelerator;
 import file.engine.dllInterface.GetHandle;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
@@ -36,27 +36,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Date;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 
 public class MainClass {
     private static final int UPDATE_DATABASE_THRESHOLD = 3;
-    private static final String FILE_MONITOR_MD5 = "f9637b1af0496d393fe02f67e0310541";
-    private static final String GET_ASC_II_MD5 = "c63eec19bde81456693feb715c4e0313";
-    private static final String HOTKEY_LISTENER_MD5 = "6d71f646529b69cff9d50fcce8d4b6e4";
-    private static final String IS_LOCAL_DISK_MD5 = "4d612bd2728d720e1ce724d26d48bdb9";
-    private static final String FILE_SEARCHER_USN_MD5 = "a3dec14d9f0376796a10527a5a700349";
-    private static final String SQLITE3_MD5 = "dade4d608e258014e311867c764acf77";
-    private static final String GET_HANDLE_MD5 = "c3b769814eeb5d469c19cec04e0c3ff4";
-    private static final String SHORTCUT_GEN_MD5 = "fa4e26f99f3dcd58d827828c411ea5d7";
-    private static final String RESULT_PIPE_MD5 = "e91b7783a6add81d8123e2698c52efb6";
-    private static final String GET_DPI_MD5 = "2d835577b3505af292966411b50e93b4";
-    private static final String GET_START_MENU_MD5 = "b446b307fae7646f9d7cd0064f55d1af";
-    private static final String SQLITE_JDBC_MD5 = "607931b6a0655945daf1db51312b4473";
-    private static final String EMPTY_RECYCLE_BIN_MD5 = "431225a47e74fe343b42e4bba741b80b";
-    private static final String CUDA_ACCELERATOR_MD5 = "ea75f1b7749d525310662d9e854a9c68";
-    private static final String CUDA_RUNTIME_MD5 = "d7cfc69c62e8eb977d827f46bab408da";
 
     public static void main(String[] args) {
         try {
@@ -69,27 +55,24 @@ public class MainClass {
             updatePlugins();
 
             initFoldersAndFiles();
+            releaseAllDependence();
             Class.forName("org.sqlite.JDBC");
             initializeDllInterface();
-            if (CudaAccelerator.INSTANCE.isCudaAvailableOnSystem()) {
-                CudaAccelerator.INSTANCE.initialize();
-            }
             initEventManagement();
             updateLauncher();
             //清空tmp
             FileUtil.deleteDir(new File("tmp"));
             readAllConfigs();
+            GPUAccelerator.INSTANCE.initialize();
             initDatabase();
             initPinyin();
-
+            checkConfigs();
+            setAllConfigs();
             // 初始化全部完成，发出启动系统事件
             if (sendBootSystemSignal()) {
                 JOptionPane.showMessageDialog(null, "Boot system failed", "ERROR", JOptionPane.ERROR_MESSAGE);
                 throw new RuntimeException("Boot System Failed");
             }
-
-            checkConfigs();
-            setAllConfigs();
             checkVersion();
 
             mainLoop();
@@ -112,7 +95,7 @@ public class MainClass {
         Class.forName("file.engine.dllInterface.GetHandle");
         Class.forName("file.engine.dllInterface.ResultPipe");
         Class.forName("file.engine.dllInterface.EmptyRecycleBin");
-        Class.forName("file.engine.dllInterface.CudaAccelerator");
+        Class.forName("file.engine.dllInterface.gpu.GPUAccelerator");
     }
 
     /**
@@ -229,7 +212,7 @@ public class MainClass {
 
     private static void setAllConfigs() {
         EventManagement eventManagement = EventManagement.getInstance();
-        SetConfigsEvent setConfigsEvent = new SetConfigsEvent();
+        SetConfigsEvent setConfigsEvent = new SetConfigsEvent(null);
         eventManagement.putEvent(setConfigsEvent);
         if (eventManagement.waitForEvent(setConfigsEvent)) {
             JOptionPane.showMessageDialog(null, "Set configs failed", "ERROR", JOptionPane.ERROR_MESSAGE);
@@ -405,32 +388,34 @@ public class MainClass {
     }
 
     private static void releaseAllDependence() throws IOException {
-        copyOrIgnoreFile("user/fileMonitor.dll", "/win32-native/fileMonitor.dll", FILE_MONITOR_MD5);
-        copyOrIgnoreFile("user/getAscII.dll", "/win32-native/getAscII.dll", GET_ASC_II_MD5);
-        copyOrIgnoreFile("user/hotkeyListener.dll", "/win32-native/hotkeyListener.dll", HOTKEY_LISTENER_MD5);
-        copyOrIgnoreFile("user/isLocalDisk.dll", "/win32-native/isLocalDisk.dll", IS_LOCAL_DISK_MD5);
-        copyOrIgnoreFile("user/fileSearcherUSN.exe", "/win32-native/fileSearcherUSN.exe", FILE_SEARCHER_USN_MD5);
-        copyOrIgnoreFile("user/sqlite3.dll", "/win32-native/sqlite3.dll", SQLITE3_MD5);
-        copyOrIgnoreFile("user/getHandle.dll", "/win32-native/getHandle.dll", GET_HANDLE_MD5);
-        copyOrIgnoreFile("user/shortcutGenerator.vbs", "/shortcutGenerator.vbs", SHORTCUT_GEN_MD5);
-        copyOrIgnoreFile("user/resultPipe.dll", "/win32-native/resultPipe.dll", RESULT_PIPE_MD5);
-        copyOrIgnoreFile("user/getDpi.exe", "/win32-native/getDpi.exe", GET_DPI_MD5);
-        copyOrIgnoreFile("user/getStartMenu.dll", "/win32-native/getStartMenu.dll", GET_START_MENU_MD5);
-        copyOrIgnoreFile("user/sqliteJDBC.dll", "/win32-native/sqliteJDBC.dll", SQLITE_JDBC_MD5);
-        copyOrIgnoreFile("user/emptyRecycleBin.dll", "/win32-native/emptyRecycleBin.dll", EMPTY_RECYCLE_BIN_MD5);
-        copyOrIgnoreFile("user/cudaAccelerator.dll", "/win32-native/cudaAccelerator.dll", CUDA_ACCELERATOR_MD5);
-        copyOrIgnoreFile("cudart64_110.dll", "/win32-native/cudart64_110.dll", CUDA_RUNTIME_MD5);
+        copyOrIgnoreFile("user/fileMonitor.dll", "/win32-native/fileMonitor.dll");
+        copyOrIgnoreFile("user/getAscII.dll", "/win32-native/getAscII.dll");
+        copyOrIgnoreFile("user/hotkeyListener.dll", "/win32-native/hotkeyListener.dll");
+        copyOrIgnoreFile("user/isLocalDisk.dll", "/win32-native/isLocalDisk.dll");
+        copyOrIgnoreFile("user/fileSearcherUSN.exe", "/win32-native/fileSearcherUSN.exe");
+        copyOrIgnoreFile("user/sqlite3.dll", "/win32-native/sqlite3.dll");
+        copyOrIgnoreFile("user/getHandle.dll", "/win32-native/getHandle.dll");
+        copyOrIgnoreFile("user/shortcutGenerator.vbs", "/shortcutGenerator.vbs");
+        copyOrIgnoreFile("user/resultPipe.dll", "/win32-native/resultPipe.dll");
+        copyOrIgnoreFile("user/getDpi.exe", "/win32-native/getDpi.exe");
+        copyOrIgnoreFile("user/getWindowsKnownFolder.dll", "/win32-native/getWindowsKnownFolder.dll");
+        copyOrIgnoreFile("user/sqliteJDBC.dll", "/win32-native/sqliteJDBC.dll");
+        copyOrIgnoreFile("user/emptyRecycleBin.dll", "/win32-native/emptyRecycleBin.dll");
+        copyOrIgnoreFile("user/cudaAccelerator.dll", "/win32-native/cudaAccelerator.dll");
+        copyOrIgnoreFile("cudart64_110.dll", "/win32-native/cudart64_110.dll");
+        copyOrIgnoreFile("user/openclAccelerator.dll", "/win32-native/openclAccelerator.dll");
     }
 
-    private static void copyOrIgnoreFile(String path, String rootPath, String md5) throws IOException {
-        File target = new File(path);
-        String fileMd5 = Md5Util.getMD5(target.getAbsolutePath());
-        if (!target.exists() || !md5.equals(fileMd5)) {
-            if (IsDebug.isDebug()) {
-                System.out.println("正在重新释放文件：" + path);
-            }
-            try (InputStream resource = MainClass.class.getResourceAsStream(rootPath)) {
-                FileUtil.copyFile(resource, target);
+    private static void copyOrIgnoreFile(String path, String rootPath) throws IOException {
+        try (InputStream insideJar = Objects.requireNonNull(MainClass.class.getResourceAsStream(rootPath))) {
+            File target = new File(path);
+            String fileMd5 = Md5Util.getMD5(target.getAbsolutePath());
+            String md5InsideJar = Md5Util.getMD5(insideJar);
+            if (!target.exists() || !md5InsideJar.equals(fileMd5)) {
+                if (IsDebug.isDebug()) {
+                    System.out.println("正在重新释放文件：" + path);
+                }
+                FileUtil.copyFile(MainClass.class.getResourceAsStream(rootPath), target);
             }
         }
     }
@@ -438,9 +423,8 @@ public class MainClass {
     /**
      * 释放所有文件
      *
-     * @throws IOException 释放失败
      */
-    private static void initFoldersAndFiles() throws IOException {
+    private static void initFoldersAndFiles() {
         boolean isSucceeded;
         //user
         isSucceeded = createFileOrFolder("user", false, false);
@@ -451,7 +435,6 @@ public class MainClass {
         isSucceeded &= createFileOrFolder(tmp, false, false);
         //cmd.txt
         isSucceeded &= createFileOrFolder("user/cmds.txt", true, false);
-        releaseAllDependence();
         if (!isSucceeded) {
             throw new RuntimeException("初始化依赖项失败");
         }

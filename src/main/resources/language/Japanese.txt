@@ -240,3 +240,4 @@ Searching=検索中
 Number of current results=現在の結果の数
 Currently selected=現在選択中
 Enable GPU acceleration=GPU アクセラレーションを有効にする
+Number of search threads=検索スレッド数

@@ -1,25 +1,34 @@
 package file.engine.utils;
 
+import file.engine.event.handler.EventManagement;
 import file.engine.utils.system.properties.IsDebug;
+import lombok.RequiredArgsConstructor;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.io.File;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
+import java.util.function.Consumer;
 
 /**
  * @author XUANXU
  */
 public class GetIconUtil {
+    private static final int MAX_WORKING_QUEUE_SIZE = 200;
+    private static final int WORKING_THREAD_NUMBER = 2;
     private static final FileSystemView FILE_SYSTEM_VIEW = FileSystemView.getFileSystemView();
     private final ConcurrentHashMap<String, ImageIcon> iconMap = new ConcurrentHashMap<>();
+    private final LinkedBlockingQueue<Task> workingQueue = new LinkedBlockingQueue<>(MAX_WORKING_QUEUE_SIZE);
+    private final ExecutorService fixedThreadPool = Executors.newFixedThreadPool(WORKING_THREAD_NUMBER);
 
     private static volatile GetIconUtil INSTANCE = null;
 
     private GetIconUtil() {
         initIconCache();
+        startWorkingThread();
+        sendShutdownThread();
     }
 
     public static GetIconUtil getInstance() {
@@ -75,15 +84,15 @@ public class GetIconUtil {
         }
     }
 
-    public ImageIcon getBigIcon(String pathOrKey, int width, int height) {
+    public ImageIcon getBigIcon(String pathOrKey, int width, int height, Consumer<ImageIcon> timeoutCallback) {
         if (pathOrKey == null || pathOrKey.isEmpty()) {
             return changeIcon(iconMap.get("blankIcon"), width, height);
         }
         if (iconMap.containsKey(pathOrKey)) {
             return changeIcon(iconMap.get(pathOrKey), width, height);
         }
-        File f = new File(pathOrKey);
         pathOrKey = pathOrKey.toLowerCase();
+        File f = new File(pathOrKey);
         if (f.exists()) {
             //已保存的常量图标
             if (pathOrKey.endsWith(".dll") || pathOrKey.endsWith(".sys")) {
@@ -95,11 +104,69 @@ public class GetIconUtil {
             //检测是否为文件夹
             if (f.isDirectory()) {
                 return changeIcon(iconMap.get("folderImageIcon"), width, height);
-            } else {
-                return changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(f), width, height);
             }
-        } else {
-            return changeIcon(iconMap.get("blankIcon"), width, height);
+            Task task = new Task(f, width, height);
+            if (workingQueue.offer(task)) {
+                final long start = System.currentTimeMillis();
+                final long timeout = 25; // 最长等待时间
+                while (!task.isDone) {
+                    if (System.currentTimeMillis() - start > timeout) {
+                        task.timeoutCallBack = timeoutCallback;
+                        workingQueue.offer(task);
+                        return changeIcon(iconMap.get("blankIcon"), width, height);
+                    }
+                    Thread.onSpinWait();
+                }
+                //图标获取完成
+                return task.icon;
+            }
         }
+        return changeIcon(iconMap.get("blankIcon"), width, height);
+    }
+
+    private void sendShutdownThread() {
+        new Thread(() -> {
+            EventManagement eventManagement = EventManagement.getInstance();
+            try {
+                while (eventManagement.notMainExit()) {
+                    TimeUnit.SECONDS.sleep(1);
+                }
+            } catch (InterruptedException ignored) {
+            }
+            fixedThreadPool.shutdownNow();
+        }).start();
+    }
+
+    private void startWorkingThread() {
+        for (int i = 0; i < WORKING_THREAD_NUMBER; i++) {
+            fixedThreadPool.submit(() -> {
+                EventManagement eventManagement = EventManagement.getInstance();
+                try {
+                    while (eventManagement.notMainExit()) {
+                        var take = workingQueue.take();
+                        if (take.timeoutCallBack != null) {
+                            if (!take.isDone) {
+                                take.icon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(take.path), take.width, take.height);
+                            }
+                            take.timeoutCallBack.accept(take.icon);
+                        } else {
+                            take.icon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(take.path), take.width, take.height);
+                            take.isDone = true;
+                        }
+                    }
+                } catch (InterruptedException ignored) {
+                }
+            });
+        }
+    }
+
+    @RequiredArgsConstructor
+    private static class Task {
+        final File path;
+        volatile boolean isDone;
+        volatile ImageIcon icon;
+        final int width;
+        final int height;
+        volatile Consumer<ImageIcon> timeoutCallBack;
     }
 }

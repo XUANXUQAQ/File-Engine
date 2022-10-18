@@ -1,6 +1,8 @@
 ﻿// dllmain.cpp : 定义 DLL 应用程序的入口点。
 #include "pch.h"
+#ifdef TEST
 #include <iostream>
+#endif
 #include <Windows.h>
 #include <tchar.h>
 #include <iomanip>
@@ -164,7 +166,6 @@ void monitor(const char* path)
 {
 	is_running = true;
 	std::string _path(path);
-	std::cout << "Monitoring " << _path << std::endl;
 	std::thread t(monitor_path, _path);
 	t.join();
 }
@@ -239,11 +240,16 @@ void monitor_path(const std::string& path)
 				case FILE_ACTION_MODIFIED:
 					break;
 				default:
+#ifdef TEST
 					std::cout << "Unknown command!  " << action << std::endl;
+#endif
+					break;
 				}
 			}
 		}
 		Sleep(100);
 	}
+#ifdef TEST
 	std::cout << "stop monitoring " << path << std::endl;
+#endif
 }

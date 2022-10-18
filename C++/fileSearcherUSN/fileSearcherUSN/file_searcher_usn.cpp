@@ -1,6 +1,8 @@
 ﻿#include "file_search_usn.h"
 #include "string_to_utf8.h"
+#ifdef TEST
 #include <iostream>
+#endif
 #include <thread>
 #include "search.h"
 #include <fstream>
@@ -29,8 +31,8 @@ void init_usn(parameter p)
 {
 	init_tables(p.db);
 	sqlite3_exec(p.db, "BEGIN;", nullptr, nullptr, nullptr);
-	volume volumeInstance(p.disk, p.db, &p.ignorePath, &suffix_priority_map);
-	volumeInstance.init_volume();
+	volume volume_instance(p.disk, p.db, &p.ignorePath, &suffix_priority_map);
+	volume_instance.init_volume();
 	sqlite3_exec(p.db, "COMMIT;", nullptr, nullptr, nullptr);
 	sqlite3_close(p.db);
 #ifdef TEST
@@ -46,15 +48,14 @@ inline bool init_priority_map(PriorityMap& priority_map, const char* priorityDbP
 {
 	using namespace std;
 	char* error;
-	char** pResult;
+	char** p_result;
 	int row, column;
-	sqlite3* cacheDb;
+	sqlite3* cache_db;
 	const string sql = "select * from priority;";
-	sqlite3_open(priorityDbPath, &cacheDb);
-	const size_t ret = sqlite3_get_table(cacheDb, sql.c_str(), &pResult, &row, &column, &error);
-	if (ret != SQLITE_OK)
+	sqlite3_open(priorityDbPath, &cache_db);
+	if (const size_t ret = sqlite3_get_table(cache_db, sql.c_str(), &p_result, &row, &column, &error); ret != SQLITE_OK)
 	{
-		cerr << "error init priority map" << error << endl;
+		fprintf(stderr, "fileSearcherUSN: error init priority map\n");
 		sqlite3_free(error);
 		return false;
 	}
@@ -62,14 +63,14 @@ inline bool init_priority_map(PriorityMap& priority_map, const char* priorityDbP
 	auto i = 2;
 	for (const auto total = column * row + 2; i < total; i += 2)
 	{
-		const string suffix(pResult[i]);
-		const string priorityVal(pResult[i + 1]);
-		auto pairPriority = pair<string, int>{suffix, stoi(priorityVal)};
-		priority_map.insert(pairPriority);
+		const string suffix(p_result[i]);
+		const string priority_val(p_result[i + 1]);
+		auto pair_priority = pair{suffix, stoi(priority_val)};
+		priority_map.insert(pair_priority);
 	}
 	priority_map.insert(pair<string, int>("dirPriority", -1));
-	sqlite3_free_table(pResult);
-	sqlite3_close(cacheDb);
+	sqlite3_free_table(p_result);
+	sqlite3_close(cache_db);
 	return true;
 }
 
@@ -110,7 +111,7 @@ int main()
 	ifstream input("MFTSearchInfo.dat", ios::in);
 	if (!input)
 	{
-		cerr << "open MFTSearchInfo.dat failed";
+		fprintf(stderr, "fileSearcherUSN: open MFTSearchInfo.dat failed\n");
 		return 1;
 	}
 	input.getline(disk_path, 500);
@@ -141,8 +142,7 @@ int main()
 	// 创建线程
 	for (auto& iter : disk_vector)
 	{
-		const auto disk = iter[0];
-		if ('A' <= disk && disk <= 'Z')
+		if (const auto disk = iter[0]; 'A' <= disk && disk <= 'Z')
 		{
 			parameter p;
 			p.disk = disk;
@@ -160,7 +160,7 @@ int main()
 #endif
 			if (SQLITE_OK != ret)
 			{
-				cout << "error opening database" << endl;
+				fprintf(stderr, "fileSearcherUSN: error opening database");
 				return 1;
 			}
 			tmp_db_path[strlen(tmp_db_path) - 4] = '\0';

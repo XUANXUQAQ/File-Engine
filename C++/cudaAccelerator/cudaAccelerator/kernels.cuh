@@ -8,8 +8,6 @@
 #define GET_TID() ((gridDim.x * gridDim.y * blockIdx.z + gridDim.x * blockIdx.y + blockIdx.x) * (blockDim.x * blockDim.y * blockDim.z) + blockDim.x * blockDim.y * threadIdx. z + blockDim.x * threadIdx.y + threadIdx.x)
 #define gpuErrchk(ans, is_exit, info) gpuAssert((ans), __FILE__, __LINE__, __FUNCTION__, (is_exit), (info))
 
-void CUDART_CB set_match_done_flag_callback(cudaStream_t, cudaError_t, void* data);
-
 inline void gpuAssert(cudaError_t code, const char* file, int line, const char* function, bool is_exit,
 	const char* info)
 {
@@ -36,9 +34,7 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 	const char* search_text,
 	const std::vector<std::string>& keywords,
 	const std::vector<std::string>& keywords_lower_case,
-	const bool* is_keyword_path,
-	cudaStream_t* streams,
-	size_t stream_count);
+	const bool* is_keyword_path);
 
 __device__ bool not_matched(const char* path,
 	bool is_ignore_case,
@@ -48,7 +44,7 @@ __device__ bool not_matched(const char* path,
 	const bool* is_keyword_path);
 
 
-__global__ void check(const char(*str_address_ptr_array)[MAX_PATH_LENGTH],
+__global__ void check(const size_t* str_address_records,
 	const size_t* total_num,
 	const int* search_case,
 	const bool* is_ignore_case,

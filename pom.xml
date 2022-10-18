@@ -6,7 +6,7 @@
 
     <groupId>github.fileengine</groupId>
     <artifactId>File-Engine</artifactId>
-    <version>3.6</version>
+    <version>3.7</version>
     <repositories>
         <repository>
             <id>mulesoft</id>
@@ -88,7 +88,7 @@
         <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
-            <version>3.39.2.1</version>
+            <version>3.39.3.0</version>
         </dependency>
         <dependency>
             <groupId>com.formdev</groupId>
