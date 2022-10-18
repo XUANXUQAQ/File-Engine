@@ -1440,14 +1440,13 @@ public class DatabaseService {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
+        final long maxDatabaseSize = 8L * 1024 * 1024 * 100;
         for (String eachDisk : disks) {
             String name = eachDisk.charAt(0) + ".db";
             try {
                 Path diskDatabaseFile = Path.of("data/" + name);
                 long length = Files.size(diskDatabaseFile);
-                if (length > 5L * 1024 * 1024 * 100 || Period.between(LocalDate.parse(databaseCreateTimeMap.get(eachDisk)), now).getDays() > 5 || isDropPrevious) {
-                    // 大小超过500M
+                if (length > maxDatabaseSize || Period.between(LocalDate.parse(databaseCreateTimeMap.get(eachDisk)), now).getDays() > 5 || isDropPrevious) {
                     if (IsDebug.isDebug()) {
                         System.out.println("当前文件" + name + "已删除");
                     }
@@ -1595,6 +1594,15 @@ public class DatabaseService {
         // 停止搜索
         stopSearch();
         executeAllSQLAndWait(3000);
+
+        //执行VACUUM命令
+        for (String eachDisk : RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks())) {
+            try (Statement stmt = SQLiteUtil.getStatement(String.valueOf(eachDisk.charAt(0)))) {
+                stmt.execute("VACUUM;");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
 
         SQLiteUtil.closeAll();
         SQLiteUtil.initAllConnections("tmp");
