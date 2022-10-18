@@ -46,6 +46,14 @@ public enum CachedThreadPoolUtil {
         virtualThreadPool.submit(task);
     }
 
+    private <T> Future<T> executeTaskPlatform(Callable<T> task) {
+        return platformThreadPool.submit(task);
+    }
+
+    private void executeTaskPlatform(Runnable task) {
+        platformThreadPool.submit(task);
+    }
+
     /**
      * 提交任务
      *
@@ -61,7 +69,7 @@ public enum CachedThreadPoolUtil {
         if (isVirtualThread) {
             return executeTaskVirtual(task);
         } else {
-            return platformThreadPool.submit(task);
+            return executeTaskPlatform(task);
         }
     }
 
@@ -79,7 +87,7 @@ public enum CachedThreadPoolUtil {
         if (isVirtualThread) {
             executeTaskVirtual(task);
         } else {
-            platformThreadPool.submit(task);
+            executeTaskPlatform(task);
         }
     }
 
@@ -89,6 +97,9 @@ public enum CachedThreadPoolUtil {
      * @param task 任务
      */
     public void executeTask(Runnable task) {
+        if (isShutdown.get()) {
+            return;
+        }
         executeTaskVirtual(task);
     }
 
@@ -100,7 +111,6 @@ public enum CachedThreadPoolUtil {
         platformThreadPool.shutdown();
         virtualThreadPool.shutdown();
         printInfo((ThreadPoolExecutor) platformThreadPool);
-        printInfo((ThreadPoolExecutor) virtualThreadPool);
     }
 
     /**
