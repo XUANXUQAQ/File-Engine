@@ -1595,12 +1595,14 @@ public class DatabaseService {
         stopSearch();
         executeAllSQLAndWait(3000);
 
-        //执行VACUUM命令
-        for (String eachDisk : RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks())) {
-            try (Statement stmt = SQLiteUtil.getStatement(String.valueOf(eachDisk.charAt(0)))) {
-                stmt.execute("VACUUM;");
-            } catch (Exception ex) {
-                ex.printStackTrace();
+        if (!isDropPrevious) {
+            //执行VACUUM命令
+            for (String eachDisk : RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks())) {
+                try (Statement stmt = SQLiteUtil.getStatement(String.valueOf(eachDisk.charAt(0)))) {
+                    stmt.execute("VACUUM;");
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
             }
         }
 

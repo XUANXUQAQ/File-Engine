@@ -256,7 +256,9 @@ void volume::create_shared_memory_and_copy(const std::string& list_name, const i
 
 void volume::save_all_results_to_db()
 {
+	sqlite3_exec(db, "begin;", nullptr, nullptr, nullptr);
 	init_all_prepare_statement();
+	unsigned count = 0;
 	for (auto& [fst, snd] : all_results_map)
 	{
 		const int ascii_group = stoi(fst.substr(4));
@@ -265,10 +267,18 @@ void volume::save_all_results_to_db()
 			for (auto&& iter = result_container.begin(); iter != result_container.end(); ++iter)
 			{
 				save_result(*iter, get_asc_ii_sum(get_file_name(*iter)), ascii_group, priority);
+				++count;
+				if (count > 200000)
+				{
+					count = 0;
+					finalize_all_statement();
+					init_all_prepare_statement();
+				}
 			}
 		}
 	}
 	finalize_all_statement();
+	sqlite3_exec(db, "commit;", nullptr, nullptr, nullptr);
 }
 
 int volume::get_priority_by_suffix(const std::string& suffix) const
