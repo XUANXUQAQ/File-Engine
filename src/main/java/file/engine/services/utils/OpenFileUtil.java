@@ -80,7 +80,7 @@ public class OpenFileUtil {
                 String command = file.getAbsolutePath();
                 String start = command.substring(0, 2);
                 String end = "\"" + command.substring(2) + "\"";
-                Runtime.getRuntime().exec(new String[]{"cmd.exe", "/c", "start", start + end}, null, file.getParentFile());
+                Runtime.getRuntime().exec("cmd.exe /c start " + start + end, null, file.getParentFile());
             } catch (IOException e) {
                 //打开上级文件夹
                 try {
