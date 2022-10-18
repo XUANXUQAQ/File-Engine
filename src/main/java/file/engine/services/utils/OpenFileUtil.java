@@ -27,7 +27,7 @@ public class OpenFileUtil {
                         desktop.open(new File(path));
                     }
                 } else if (pathLower.endsWith(".lnk")) {
-                    Runtime.getRuntime().exec("explorer.exe \"" + path + "\"");
+                    Runtime.getRuntime().exec(new String[]{"explorer.exe", "\"" + path + "\""});
                 } else {
                     String command;
                     if (file.isFile()) {
@@ -35,9 +35,9 @@ public class OpenFileUtil {
                         String tmpDir = new File("").getAbsolutePath().indexOf(" ") != -1 ?
                                 System.getProperty("java.io.tmpdir") : new File("tmp").getAbsolutePath();
                         String vbsFilePath = generateBatAndVbsFile(command, tmpDir, FileUtil.getParentPath(path));
-                        Runtime.getRuntime().exec("explorer.exe " + vbsFilePath.substring(0, 2) + "\"" + vbsFilePath.substring(2) + "\"");
+                        Runtime.getRuntime().exec(new String[]{"explorer.exe", vbsFilePath});
                     } else {
-                        Runtime.getRuntime().exec("explorer.exe \"" + path + "\"");
+                        Runtime.getRuntime().exec(new String[]{"explorer.exe", "\"" + path + "\""});
                     }
                 }
             } catch (Exception e) {
@@ -55,7 +55,7 @@ public class OpenFileUtil {
     }
 
     public static void openFolderByExplorer(String dir) throws IOException {
-        Runtime.getRuntime().exec("explorer.exe /select, \"" + dir + "\"");
+        Runtime.getRuntime().exec(new String[]{"explorer.exe", "/select,", "\"" + dir + "\""});
     }
 
     /**
@@ -78,9 +78,9 @@ public class OpenFileUtil {
         if (file.exists()) {
             try {
                 String command = file.getAbsolutePath();
-                String start = "cmd.exe /c start " + command.substring(0, 2);
+                String start = command.substring(0, 2);
                 String end = "\"" + command.substring(2) + "\"";
-                Runtime.getRuntime().exec(start + end, null, file.getParentFile());
+                Runtime.getRuntime().exec(new String[]{"cmd.exe", "/c", "start", start + end}, null, file.getParentFile());
             } catch (IOException e) {
                 //打开上级文件夹
                 try {

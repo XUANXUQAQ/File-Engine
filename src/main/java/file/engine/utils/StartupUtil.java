@@ -115,8 +115,9 @@ public class StartupUtil {
         String tmpDir = new File("").getAbsolutePath().contains(" ") ? System.getProperty("java.io.tmpdir") : new File("tmp").getAbsolutePath();
         Path xmlPath = Path.of(tmpDir, "schtasks-File-Engine.xml");
         Files.writeString(xmlPath, xmlContent, StandardCharsets.UTF_16LE);
-        String command = String.format("cmd.exe /c schtasks /create /xml %s /tn \"File-Engine\"", xmlPath.getFileName());
-        Process exec = Runtime.getRuntime().exec(new String[]{command}, null, new File(tmpDir));
+        Process exec = Runtime.getRuntime().exec(new String[]{"cmd.exe", "/c", "schtasks", "/create", "/xml", xmlPath.getFileName().toString(), "/tn", "\"File-Engine\""},
+                null,
+                new File(tmpDir));
         exec.waitFor();
         return exec;
     }
@@ -129,9 +130,8 @@ public class StartupUtil {
      * @throws IOException          exception
      */
     public static Process deleteStartup() throws InterruptedException, IOException {
-        String command = "cmd.exe /c schtasks /delete /tn \"File-Engine\" /f";
         Process p;
-        p = Runtime.getRuntime().exec(new String[]{command});
+        p = Runtime.getRuntime().exec(new String[]{"cmd.exe", "/c", "schtasks", "/delete", "/tn", "\"File-Engine\"", "/f"});
         p.waitFor();
         return p;
     }
