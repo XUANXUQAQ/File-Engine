@@ -228,6 +228,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_match
 					return;
 				}
 				collect_results(thread_env, result_collector, result_counter, max_results, search_case_vec);
+				jvm->DetachCurrentThread();
 			}));
 	}
 	//GPU并行计算
