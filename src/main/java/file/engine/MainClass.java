@@ -22,7 +22,6 @@ import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.services.DatabaseService;
 import file.engine.services.TranslateService;
 import file.engine.utils.Md5Util;
-import file.engine.utils.RegexUtil;
 import file.engine.utils.clazz.scan.ClassScannerUtil;
 import file.engine.utils.file.FileUtil;
 import file.engine.utils.system.properties.IsDebug;
@@ -31,9 +30,9 @@ import file.engine.utils.system.properties.IsPreview;
 import javax.swing.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -257,7 +256,6 @@ public class MainClass {
     private static void mainLoop() throws InterruptedException {
         EventManagement eventManagement = EventManagement.getInstance();
         TranslateService translateService = TranslateService.getInstance();
-        AllConfigs allConfigs = AllConfigs.getInstance();
 
         boolean isNeedUpdate = false;
         boolean isDatabaseOutDated = false;
@@ -275,16 +273,13 @@ public class MainClass {
         if (returnValue.isPresent()) {
             isNeedUpdate |= (boolean) returnValue.get();
         }
-        Date startTime = new Date();
-        Date endTime;
-        final long div = 24 * 60 * 60 * 1000;
+        var startTime = LocalDate.now();
         while (eventManagement.notMainExit()) {
             // 主循环开始
             //检查已工作时间
-            endTime = new Date();
-            final long timeDiff = endTime.getTime() - startTime.getTime();
-            final long diffDays = timeDiff / div;
-            if (diffDays > 2) {
+            var endTime = LocalDate.now();
+            var diffDays = Period.between(startTime, endTime);
+            if (diffDays.getDays() > 2) {
                 startTime = endTime;
                 //启动时间已经超过2天,更新索引
                 isDatabaseOutDated = true;
@@ -294,25 +289,10 @@ public class MainClass {
             if ((isDatabaseOutDated && !GetHandle.INSTANCE.isForegroundFullscreen()) || isNeedUpdate) {
                 isDatabaseOutDated = false;
                 isNeedUpdate = false;
-                String availableDisks = allConfigs.getAvailableDisks();
-                String[] disks = RegexUtil.comma.split(availableDisks);
-                //检查文件大小
-                long totalSize = 0;
-                for (String eachDisk : disks) {
-                    String name = eachDisk.charAt(0) + ".db";
-                    try {
-                        Path diskDatabaseFile = Path.of("data/" + name);
-                        long length = Files.size(diskDatabaseFile);
-                        totalSize += length;
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
                 eventManagement.putEvent(new ShowTaskBarMessageEvent(
                         translateService.getTranslation("Info"),
                         translateService.getTranslation("Updating file index")));
-                // 文件大小超过600M则删除之前的索引，否则只进行添加
-                eventManagement.putEvent(new UpdateDatabaseEvent(totalSize > 6L * 1024 * 1024 * 100),
+                eventManagement.putEvent(new UpdateDatabaseEvent(false),
                         event -> eventManagement.putEvent(new ShowTaskBarMessageEvent(
                                 translateService.getTranslation("Info"),
                                 translateService.getTranslation("Search Done"))),
