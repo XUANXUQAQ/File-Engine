@@ -1,4 +1,5 @@
-﻿#include <corecrt_io.h>
+﻿// #define TEST
+#include <corecrt_io.h>
 #include <direct.h>
 #include <Windows.h>
 #include <ShlObj.h>
@@ -10,12 +11,15 @@
 #include <tchar.h>
 #include <codecvt>
 #include "zip/zip.h"
+#ifdef TEST
+#include <iostream>
+#endif
+
 #pragma comment(lib, "shell32.lib")
 #pragma comment(lib, "Ole32.lib")
 #pragma comment(lib, "User32.lib")
 #define MAX_LOG_PRESERVE_DAYS 5
 #define CHECK_TIME_THRESHOLD 1
-// #define TEST
 
 #ifndef TEST
 #pragma comment( linker, "/subsystem:windows /entry:mainCRTStartup" )
@@ -23,7 +27,7 @@
 
 constexpr auto* g_file_engine_zip_name = "File-Engine.zip";
 std::string g_jvm_parameters =
-	"-Xms8M -Xmx64M -XX:+UseG1GC -XX:+UseStringDeduplication -XX:MaxHeapFreeRatio=20 -XX:MinHeapFreeRatio=10 -XX:+CompactStrings";
+"-Xms8M -Xmx64M -XX:+UseG1GC -XX:+UseStringDeduplication -XX:MaxHeapFreeRatio=20 -XX:MinHeapFreeRatio=10 -XX:+CompactStrings";
 
 char g_close_signal_file[1000];
 char g_file_engine_jar_path[1000];
@@ -38,7 +42,7 @@ short g_restart_count = 0;
 std::time_t g_restart_time = std::time(nullptr);
 
 bool is_close_exist();
-BOOL find_process();
+DWORD find_process();
 void restart_file_engine(bool);
 bool release_resources();
 void extract_zip();
@@ -96,16 +100,16 @@ int main()
 			return 0;
 		}
 	}
-#ifdef TEST
-	std::cout << "finding process..." << std::endl;
-#endif
-	if (!find_process())
+	const DWORD pid = find_process();
+	if (pid)
 	{
-#ifdef TEST
-		std::cout << "starting file-engine" << std::endl;
-#endif
-		restart_file_engine(true);
+		system(("TASKKILL /PID " + std::to_string(pid) + " /F").c_str());
 	}
+#ifdef TEST
+	std::cout << "starting file-engine" << std::endl;
+#endif
+	restart_file_engine(true);
+
 #ifdef TEST
 	std::cout << "start loop" << std::endl;
 #endif
@@ -133,10 +137,10 @@ void init_jvm_parameters()
 {
 	if (is_file_exist(g_jvm_parameter_file_path))
 	{
-		std::ifstream inputStream(g_jvm_parameter_file_path, std::ios::binary);
+		std::ifstream input_stream(g_jvm_parameter_file_path, std::ios::binary);
 		std::string line;
 		std::string jvm_parameter;
-		while (std::getline(inputStream, line))
+		while (std::getline(input_stream, line))
 		{
 			jvm_parameter += line;
 			jvm_parameter += " ";
@@ -145,16 +149,16 @@ void init_jvm_parameters()
 		{
 			g_jvm_parameters = jvm_parameter;
 		}
-		inputStream.close();
+		input_stream.close();
 	}
 	else
 	{
-		std::ofstream outputStream(g_jvm_parameter_file_path, std::ios::binary);
-		for (char eachChar : g_jvm_parameters)
+		std::ofstream output_stream(g_jvm_parameter_file_path, std::ios::binary);
+		for (char each_char : g_jvm_parameters)
 		{
-			outputStream.put(eachChar == ' ' ? '\n' : eachChar);
+			output_stream.put(each_char == ' ' ? '\n' : each_char);
 		}
-		outputStream.close();
+		output_stream.close();
 	}
 }
 
@@ -328,10 +332,10 @@ inline void extract_zip()
 /**
  * 重启程序
  */
-void restart_file_engine(bool isIgnoreCloseFile)
+void restart_file_engine(const bool is_ignore_close_file)
 {
 	init_jvm_parameters();
-	if (isIgnoreCloseFile)
+	if (is_ignore_close_file)
 	{
 		remove(g_close_signal_file);
 	}
@@ -373,7 +377,7 @@ void restart_file_engine(bool isIgnoreCloseFile)
 	command.append("\"");
 	command.append(jre.substr(2));
 	command.append("bin\\java.exe\" ").append(g_jvm_parameters).append(" -jar File-Engine.jar").append(" 1> normal.log")
-	       .append(" 2>> ").append("\"").append(g_log_file_path).append(get_date()).append(".log").append("\"");
+		.append(" 2>> ").append("\"").append(g_log_file_path).append(get_date()).append(".log").append("\"");
 #ifdef TEST
 	std::cout << "running command: " << command << std::endl;
 #endif
@@ -548,12 +552,12 @@ bool is_launched()
 /**
  * 查找File-Engine进程是否存在
  */
-BOOL find_process()
+DWORD find_process()
 {
 	try
 	{
 		PROCESSENTRY32 pe;
-		BOOL ret = 0;
+		DWORD ret = 0;
 		auto* const hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 		pe.dwSize = sizeof(PROCESSENTRY32);
 		const std::string _workingDir(g_file_engine_working_dir);
@@ -561,7 +565,7 @@ BOOL find_process()
 		if (!Process32First(hSnapshot, &pe))
 		{
 			CloseHandle(hSnapshot);
-			return FALSE;
+			return ret;
 		}
 		while (true)
 		{
@@ -571,12 +575,12 @@ BOOL find_process()
 			if (wcscmp(pe.szExeFile, L"java.exe") == 0)
 			{
 				const DWORD id = pe.th32ProcessID;
-				TCHAR szProcessName[1000] = {0};
+				TCHAR szProcessName[1000] = { 0 };
 				get_process_full_path(id, szProcessName);
 				std::wstring processName(szProcessName);
 				if (processName.find(workingDir) != std::wstring::npos)
 				{
-					ret = TRUE;
+					ret = id;
 					break;
 				}
 			}
@@ -627,8 +631,7 @@ bool remove_dir(const char* szFileDir)
 		{
 			DeleteFileA((strDir + wfd.cFileName).c_str());
 		}
-	}
-	while (FindNextFileA(hFind, &wfd));
+	} while (FindNextFileA(hFind, &wfd));
 	FindClose(hFind);
 	RemoveDirectoryA(szFileDir);
 	return true;
