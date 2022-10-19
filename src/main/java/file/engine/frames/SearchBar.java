@@ -3862,7 +3862,7 @@ public class SearchBar {
             return String.format(template,
                     "<div>" +
                             highLight(commandName, new String[]{getSearchBarText().substring(1)}) +
-                            "<br><font size=\"-2\">" + "&gt;&gt;" + commandPath +
+                            "<br><font size=\"-1\">" + "&gt;&gt;" + commandPath +
                             "</div>");
         } else if (command == null) {
             // 普通模式
@@ -3880,7 +3880,7 @@ public class SearchBar {
             return String.format(template,
                     "<div>" +
                             highLight(fileName, keywords) +
-                            "<font size=\"-2\">" +
+                            "<font size=\"-1\">" +
                             getBlank(blankNUm) + parentPath +
                             "</font>" +
                             "</div>");
@@ -3931,7 +3931,7 @@ public class SearchBar {
                 String showPath = isContract ? path.substring(0, subNum) : path;
                 String add = isContract ? "..." : "";
                 String color = "#" + ColorUtil.parseColorHex(labelFontColor);
-                label.setName("<html><body style=\"color: " + color + ";\">" + highLight(FileUtil.getFileName(path), keywords) + getBlank(20) + "<font size=\"-2\">" + showPath + add + "</font></body></html>");
+                label.setName("<html><body style=\"color: " + color + ";\">" + highLight(FileUtil.getFileName(path), keywords) + getBlank(20) + "<font size=\"-1\">" + showPath + add + "</font></body></html>");
             } else {
                 label.setName(RESULT_LABEL_NAME_HOLDER);
             }
