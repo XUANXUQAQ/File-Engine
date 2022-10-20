@@ -106,7 +106,8 @@ public class DownloadManager {
             //设置超时为3秒
             con.setConnectTimeout(3000);
             //防止屏蔽程序抓取而返回403错误
-            con.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36 Edg/85.0.564.44");
+            con.setRequestProperty("User-Agent",
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36 Edg/106.0.1370.47");
             byte[] buffer = new byte[1];
             int currentProgress = 0;
             int len;
@@ -134,7 +135,7 @@ public class DownloadManager {
             if (isUserInterrupted) {
                 //删除文件
                 if (!fileFullPath.delete()) {
-                    System.err.println(fileName + "下载残余文件删除失败");
+                    throw new RuntimeException(fileName + "下载残余文件删除失败");
                 }
                 throw new IOException("User Interrupted");
             }
@@ -153,10 +154,6 @@ public class DownloadManager {
         BigDecimal b1 = new BigDecimal(Double.toString(v1));
         BigDecimal b2 = new BigDecimal(Double.toString(v2));
         return b1.divide(b2, 2, RoundingMode.HALF_UP).doubleValue();
-    }
-
-    protected void setDownloadDone() {
-        this.downloadStatus = Constants.Enums.DownloadStatus.DOWNLOAD_DONE;
     }
 
     protected void setInterrupt() {

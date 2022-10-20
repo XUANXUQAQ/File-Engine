@@ -36,7 +36,6 @@ import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.services.DatabaseService;
 import file.engine.services.TranslateService;
 import file.engine.services.download.DownloadManager;
-import file.engine.services.download.DownloadService;
 import file.engine.services.plugin.system.Plugin;
 import file.engine.services.plugin.system.PluginService;
 import file.engine.utils.CachedThreadPoolUtil;
@@ -97,6 +96,7 @@ public class SettingsFrame {
     private HashMap<String, Integer> suffixMap;
     private final Set<Component> excludeComponent = ConcurrentHashMap.newKeySet();
     private final LinkedHashSet<String> diskSet = new LinkedHashSet<>();
+    private final Set<String> downloadedPlugins = ConcurrentHashMap.newKeySet();
     private JTextField textFieldUpdateInterval;
     private JTextField textFieldCacheNum;
     private JTextArea textAreaIgnorePath;
@@ -651,14 +651,30 @@ public class SettingsFrame {
                         });
                         eventManagement.putEvent(new StartDownloadEvent(downloadManager.newJar));
                         cachedThreadPoolUtil.executeTask(() -> {
-                            boolean isDownloadSuccess = SetDownloadProgress.setProgress(labelDownloadProgress, buttonCheckUpdate, downloadManager.newLauncher, () -> Constants.FILE_NAME.equals(downloadManager.newJar.fileName), new File("user/update"), "", null, null);
+                            boolean isDownloadSuccess = SetDownloadProgress.setProgress(labelDownloadProgress,
+                                    buttonCheckUpdate,
+                                    downloadManager.newLauncher,
+                                    () -> Constants.FILE_NAME.equals(downloadManager.newJar.fileName),
+                                    () -> {
+                                        File updateSign = new File("user/update");
+                                        if (!updateSign.exists()) {
+                                            try {
+                                                if (updateSign.createNewFile()) {
+                                                    throw new RuntimeException("create user/update file failed.");
+                                                }
+                                            } catch (IOException ex) {
+                                                throw new RuntimeException(ex);
+                                            }
+                                        }
+                                    });
                             if (!isDownloadSuccess) {
                                 showManualDownloadDialog();
                             }
                         });
                     }
                 } else {
-                    JOptionPane.showMessageDialog(frame, TRANSLATE_SERVICE.getTranslation("Latest version:") + latestVersion + "\n" + TRANSLATE_SERVICE.getTranslation("The current version is the latest"));
+                    JOptionPane.showMessageDialog(frame, TRANSLATE_SERVICE.getTranslation("Latest version:") + latestVersion + "\n" +
+                            TRANSLATE_SERVICE.getTranslation("The current version is the latest"));
                 }
             }
         });
@@ -916,8 +932,7 @@ public class SettingsFrame {
                         buttonUpdatePlugin.setVisible(true);
                     });
                     if (PluginService.getInstance().hasPluginNotLatest(pluginName)) {
-                        DownloadManager downloadManager = new DownloadManager(null, pluginName + ".jar", new File("tmp", "pluginsUpdate").getAbsolutePath());
-                        boolean isTaskDone = DownloadService.getInstance().isTaskDoneBefore(downloadManager);
+                        boolean isTaskDone = downloadedPlugins.contains(pluginName);
                         if (isTaskDone) {
                             buttonUpdatePlugin.setEnabled(false);
                             buttonUpdatePlugin.setText(TRANSLATE_SERVICE.getTranslation("Downloaded"));
@@ -2436,7 +2451,7 @@ public class SettingsFrame {
                         waitForCheckUpdateResult(startCheckTime, checkUpdateThread);
                     }
 
-                    if (isVersionLatest.get()) {
+                    if (startCheckTime.get() == 0x100L && isVersionLatest.get()) {
                         JOptionPane.showMessageDialog(frame, TRANSLATE_SERVICE.getTranslation("Latest version:") + plugin.getVersion() + "\n" + TRANSLATE_SERVICE.getTranslation("The current version is the latest"));
                         return;
                     }
@@ -2458,10 +2473,18 @@ public class SettingsFrame {
                                     buttonUpdatePlugin,
                                     finalDownloadManager,
                                     () -> finalDownloadManager.fileName.equals(listPlugins.getSelectedValue() + ".jar"),
-                                    new File("user/updatePlugin"),
-                                    "",
-                                    null,
-                                    null));
+                                    () -> {
+                                        File updatePluginSign = new File("user/updatePlugin");
+                                        if (!updatePluginSign.exists()) {
+                                            try {
+                                                if (updatePluginSign.createNewFile()) {
+                                                    throw new RuntimeException("create user/updatePlugin file failed.");
+                                                }
+                                            } catch (IOException ex) {
+                                                throw new RuntimeException(ex);
+                                            }
+                                        }
+                                    }));
                 });
             }
         });

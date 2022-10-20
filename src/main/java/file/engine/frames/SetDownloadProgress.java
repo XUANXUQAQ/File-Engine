@@ -6,10 +6,6 @@ import file.engine.services.TranslateService;
 import file.engine.services.download.DownloadManager;
 
 import javax.swing.*;
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -23,23 +19,17 @@ public class SetDownloadProgress {
     /**
      * 当你点击下载按钮时使用，此时isDownloadStarted必须设为true
      *
-     * @param labelProgress           显示进度的label
-     * @param buttonInstall           设置文字为下载还是取消的下载点击按钮
-     * @param downloadManager         下载管理类的实例
-     * @param isLabelAndButtonVisible 判断是否需要显示label和button的状态
-     * @param successSign             下载成功后创建文件
-     * @param currentTaskStr          当前任务的标志
-     * @param getSelectedMethod       线程需要从哪个方法获取任务的标志，当获取的字符串不等于currentTaskStr时，则会停止设置buttonInstall和labelProgress的值
-     * @param invokeMethodObj         执行method需要的实例
+     * @param labelProgress   显示进度的label
+     * @param buttonInstall   设置文字为下载还是取消的下载点击按钮
+     * @param downloadManager 下载管理类的实例
+     * @param isShowProgress  判断是否需要显示label和button的状态
+     * @param successCallback 下载成功后执行方法
      */
     protected static boolean setProgress(JLabel labelProgress,
                                          JButton buttonInstall,
                                          DownloadManager downloadManager,
-                                         Supplier<Boolean> isLabelAndButtonVisible,
-                                         File successSign,
-                                         String currentTaskStr,
-                                         Method getSelectedMethod,
-                                         Object invokeMethodObj) {
+                                         Supplier<Boolean> isShowProgress,
+                                         Runnable successCallback) {
         boolean retVal = false;
         try {
             TranslateService translateService = TranslateService.getInstance();
@@ -47,15 +37,11 @@ public class SetDownloadProgress {
             String buttonOriginalText = buttonInstall.getText();
             boolean isStarted = true;
             while (isStarted) {
-                if (isLabelAndButtonVisible.get()) {
+                if (isShowProgress.get()) {
                     if (!eventManagement.notMainExit()) {
                         return true;
                     }
-                    String taskStrFromMethod = currentTaskStr;
-                    if (getSelectedMethod != null) {
-                        taskStrFromMethod = (String) getSelectedMethod.invoke(invokeMethodObj);
-                    }
-                    if (currentTaskStr.equals(taskStrFromMethod)) {
+                    if (isShowProgress.get()) {
                         double progress = downloadManager.getDownloadProgress();
                         Constants.Enums.DownloadStatus downloadStatus = downloadManager.getDownloadStatus();
                         if (downloadStatus == Constants.Enums.DownloadStatus.DOWNLOAD_DONE) {
@@ -64,11 +50,7 @@ public class SetDownloadProgress {
                             buttonInstall.setText(translateService.getTranslation("Downloaded"));
                             buttonInstall.setEnabled(false);
                             isStarted = false;
-                            if (!successSign.exists()) {
-                                if (!successSign.createNewFile()) {
-                                    throw new RuntimeException("创建更新标识符失败");
-                                }
-                            }
+                            successCallback.run();
                             retVal = true;
                         } else if (downloadStatus == Constants.Enums.DownloadStatus.DOWNLOAD_ERROR) {
                             //下载错误，重置button
@@ -93,7 +75,7 @@ public class SetDownloadProgress {
                 }
                 TimeUnit.MILLISECONDS.sleep(50);
             }
-        } catch (InterruptedException | IOException | InvocationTargetException | IllegalAccessException e) {
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
         return retVal;

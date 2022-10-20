@@ -16,7 +16,6 @@ import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.frames.components.LoadingPanel;
 import file.engine.services.TranslateService;
 import file.engine.services.download.DownloadManager;
-import file.engine.services.download.DownloadService;
 import file.engine.services.plugin.system.PluginService;
 import file.engine.utils.CachedThreadPoolUtil;
 import file.engine.utils.DpiUtil;
@@ -31,13 +30,12 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.lang.reflect.Method;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class PluginMarket {
 
@@ -63,6 +61,8 @@ public class PluginMarket {
     //保存插件名称和url的映射关系
     private final HashMap<String, String> NAME_PLUGIN_INFO_URL_MAP = new HashMap<>();
     private boolean isFramePrepared = false;
+    private final Set<String> downloadedPlugins = ConcurrentHashMap.newKeySet();
+
 
     private PluginMarket() {
     }
@@ -182,24 +182,25 @@ public class PluginMarket {
                     );
                     downloadManagerConcurrentHashMap.put(pluginName, downloadManager);
                     eventManagement.putEvent(new StartDownloadEvent(downloadManager));
-                    var getStringMethod = new Object() {
-                        Method getString = null;
-                    };
-                    try {
-                        getStringMethod.getString = listPlugins.getClass().getDeclaredMethod("getSelectedValue");
-                    } catch (NoSuchMethodException noSuchMethodException) {
-                        noSuchMethodException.printStackTrace();
-                    }
                     DownloadManager finalDownloadManager = downloadManager;
                     CachedThreadPoolUtil.getInstance().executeTask(
                             () -> SetDownloadProgress.setProgress(labelProgress,
                                     buttonInstall,
                                     finalDownloadManager,
                                     () -> finalDownloadManager.fileName.equals(listPlugins.getSelectedValue() + ".jar"),
-                                    new File("user/updatePlugin"),
-                                    pluginName,
-                                    getStringMethod.getString,
-                                    listPlugins)
+                                    () -> {
+                                        downloadedPlugins.add(finalDownloadManager.fileName);
+                                        File updatePluginSign = new File("user/updatePlugin");
+                                        if (!updatePluginSign.exists()) {
+                                            try {
+                                                if (!updatePluginSign.createNewFile()) {
+                                                    throw new RuntimeException("create user/updatePlugin file failed.");
+                                                }
+                                            } catch (IOException ex) {
+                                                throw new RuntimeException(ex);
+                                            }
+                                        }
+                                    })
                     );
                 }
             }
@@ -284,25 +285,25 @@ public class PluginMarket {
      * 当鼠标点击后在右边显示插件的基本信息
      */
     private void addSelectPluginOnListListener() {
-        final AtomicBoolean isStartGetPluginInfo = new AtomicBoolean(false);
+        final AtomicReference<String> currentShowingPluginName = new AtomicReference<>();
+        final TranslateService translateUtil = TranslateService.getInstance();
+        final CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+        final HashMap<String, Map<String, Object>> pluginsInfo = new HashMap<>();
+        final HashMap<String, ImageIcon> pluginsIcon = new HashMap<>();
 
         class getPluginInfo {
-            final CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
             final String pluginName;
-            final TranslateService translateUtil = TranslateService.getInstance();
 
             getPluginInfo(String pluginName) {
                 this.pluginName = pluginName;
             }
 
             void doGet() {
-                isStartGetPluginInfo.set(false);
                 cachedThreadPoolUtil.executeTask(() -> {
-                    if (isStartGetPluginInfo.get()) {
-                        //用户重新点击
-                        return;
+                    if (!pluginsInfo.containsKey(pluginName)) {
+                        pluginsInfo.put(pluginName, getPluginDetailInfo(pluginName));
                     }
-                    Map<String, Object> info = getPluginDetailInfo(pluginName);
+                    var info = pluginsInfo.get(pluginName);
                     if (info == null) {
                         return;
                     }
@@ -318,20 +319,14 @@ public class PluginMarket {
                     labelAuthor.setText(author);
                     buttonInstall.setVisible(true);
 
-                    var obj = new Object() {
-                        boolean hasPlugin;
-                        boolean downloaded;
-                    };
-                    obj.hasPlugin = PluginService.getInstance().hasPlugin(pluginName);
-                    obj.downloaded = DownloadService.getInstance().isTaskDoneBefore(new DownloadManager(
-                            null,
-                            pluginName + ".jar",
-                            new File("tmp", "pluginsUpdate").getAbsolutePath()
-                    ));
-                    if (obj.hasPlugin) {
+                    boolean isPluginInstalled;
+                    boolean isPluginDownloaded;
+                    isPluginInstalled = PluginService.getInstance().hasPlugin(pluginName);
+                    isPluginDownloaded = downloadedPlugins.contains(pluginName + ".jar");
+                    if (isPluginInstalled) {
                         buttonInstall.setEnabled(false);
                         buttonInstall.setText(translateUtil.getTranslation("Installed"));
-                    } else if (obj.downloaded) {
+                    } else if (isPluginDownloaded) {
                         buttonInstall.setEnabled(false);
                         buttonInstall.setText(translateUtil.getTranslation("Downloaded"));
                     } else {
@@ -340,12 +335,18 @@ public class PluginMarket {
                     }
                     //用户重新点击
                     try {
-                        ImageIcon icon = getImageByUrl(imageUrl, pluginName);
-                        if (isStartGetPluginInfo.get()) {
-                            return;
+                        ImageIcon icon;
+                        if (pluginsIcon.containsKey(pluginName)) {
+                            icon = pluginsIcon.get(pluginName);
+                        } else {
+                            icon = getImageByUrl(imageUrl, pluginName);
+                            pluginsIcon.put(pluginName, icon);
                         }
-                        labelIcon.setIcon(icon);
-                    } catch (IOException ignored) {
+                        if (this.pluginName.equals(currentShowingPluginName.get())) {
+                            labelIcon.setIcon(icon);
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
                 });
             }
@@ -356,7 +357,7 @@ public class PluginMarket {
                 String pluginName = (String) listPlugins.getSelectedValue();
                 buttonInstall.setVisible(false);
                 buttonInstall.setEnabled(false);
-                isStartGetPluginInfo.set(true);
+                currentShowingPluginName.set(pluginName);
                 labelVersion.setText("");
                 labelOfficialSite.setText("");
                 labelPluginName.setText("");
