@@ -736,7 +736,7 @@ public class SearchBar {
             @Override
             public void keyPressed(KeyEvent arg0) {
                 int key = arg0.getKeyCode();
-                if (key == 8 && getSearchBarText().isEmpty()) {
+                if (key == KeyEvent.VK_BACK_SPACE && getSearchBarText().isEmpty()) {
                     //消除搜索框为空时按删除键发出的无效提示音
                     arg0.consume();
                     if (currentUsingPlugin != null) {
@@ -744,6 +744,10 @@ public class SearchBar {
                         String substring = ">" + currentPluginIdentifier.substring(0, currentPluginIdentifier.length() - 1);
                         SwingUtilities.invokeLater(() -> textField.setText(substring));
                     }
+                }
+                if (key == KeyEvent.VK_ESCAPE) {
+                    closeSearchBar();
+                    return;
                 }
                 if (!listResults.isEmpty()) {
                     if (38 == key) {
