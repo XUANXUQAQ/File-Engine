@@ -1958,11 +1958,13 @@ public class SettingsFrame {
     }
 
     private void addButtonClosePreviewListener() {
-        buttonClosePreview.addActionListener(e -> {
-            eventManagement.putEvent(new StopPreviewEvent());
-            eventManagement.putEvent(new HideSearchBarEvent());
-            PreviewStatus.isPreview = false;
-        });
+        buttonClosePreview.addActionListener(e -> stopPreview());
+    }
+
+    private void stopPreview() {
+        eventManagement.putEvent(new StopPreviewEvent());
+        eventManagement.putEvent(new HideSearchBarEvent());
+        PreviewStatus.isPreview = false;
     }
 
     private void addButtonPreviewListener() {
@@ -3081,6 +3083,7 @@ public class SettingsFrame {
     }
 
     private void translate() {
+        initTreeSettings();
         translateLabels();
         translateCheckbox();
         translateButtons();
@@ -3104,6 +3107,7 @@ public class SettingsFrame {
             for (Component each : tabComponentNameMap.values()) {
                 tabbedPane.addTab("", each);
             }
+            stopPreview();
         });
     }
 
