@@ -237,20 +237,26 @@ public class DatabaseService {
         if (null == files || files.length == 0) {
             return;
         }
-        LinkedList<File> listRemainDir = new LinkedList<>(List.of(files));
+        List<File> filesList = List.of(files);
+        LinkedList<File> dirsToSearch = new LinkedList<>(filesList);
+        LinkedList<File> listRemainDir = new LinkedList<>(filesList);
         do {
             File remain = listRemainDir.poll();
             if (remain == null) {
                 continue;
             }
-            checkIsMatchedAndAddToList(remain.getAbsolutePath(), null);
             if (remain.isDirectory()) {
                 File[] subFiles = remain.listFiles();
                 if (subFiles != null) {
-                    listRemainDir.addAll(List.of(subFiles));
+                    List<File> subFilesList = List.of(subFiles);
+                    listRemainDir.addAll(subFilesList);
+                    dirsToSearch.addAll(subFilesList);
                 }
+            } else {
+                checkIsMatchedAndAddToList(remain.getAbsolutePath(), null);
             }
         } while (!listRemainDir.isEmpty() && !shouldStopSearch.get());
+        dirsToSearch.forEach(eachDir -> checkIsMatchedAndAddToList(eachDir.getAbsolutePath(), null));
     }
 
     /**
