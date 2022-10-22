@@ -371,7 +371,7 @@ public class SQLiteUtil {
     private static void initTables(String disk) {
         try (Statement stmt = getStatement(disk)) {
             for (int i = 0; i < 41; i++) {
-                stmt.executeUpdate("CREATE TABLE IF NOT EXISTS list" + i + "(ASCII INT, PATH TEXT, PRIORITY INT)");
+                stmt.executeUpdate("CREATE TABLE IF NOT EXISTS list" + i + "(ASCII INT, PATH TEXT, PRIORITY INT, PRIMARY KEY(\"ASCII\",\"PATH\",\"PRIORITY\"))");
             }
         } catch (SQLException exception) {
             exception.printStackTrace();

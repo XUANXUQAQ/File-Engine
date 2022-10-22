@@ -256,7 +256,6 @@ void volume::create_shared_memory_and_copy(const std::string& list_name, const i
 
 void volume::save_all_results_to_db()
 {
-	sqlite3_exec(db, "begin;", nullptr, nullptr, nullptr);
 	init_all_prepare_statement();
 	unsigned count = 0;
 	for (auto& [fst, snd] : all_results_map)
@@ -278,7 +277,6 @@ void volume::save_all_results_to_db()
 		}
 	}
 	finalize_all_statement();
-	sqlite3_exec(db, "commit;", nullptr, nullptr, nullptr);
 }
 
 int volume::get_priority_by_suffix(const std::string& suffix) const
@@ -355,6 +353,7 @@ void volume::finalize_all_statement() const
 	sqlite3_finalize(stmt38);
 	sqlite3_finalize(stmt39);
 	sqlite3_finalize(stmt40);
+	sqlite3_exec(db, "commit;", nullptr, nullptr, nullptr);
 }
 
 void volume::save_single_record_to_db(sqlite3_stmt* stmt, const std::string& record, const int ascii, const int priority)
@@ -368,6 +367,7 @@ void volume::save_single_record_to_db(sqlite3_stmt* stmt, const std::string& rec
 
 void volume::init_all_prepare_statement()
 {
+	sqlite3_exec(db, "begin;", nullptr, nullptr, nullptr);
 	init_single_prepare_statement(&stmt0, "INSERT OR IGNORE INTO list0 VALUES(?, ?, ?);");
 	init_single_prepare_statement(&stmt1, "INSERT OR IGNORE INTO list1 VALUES(?, ?, ?);");
 	init_single_prepare_statement(&stmt2, "INSERT OR IGNORE INTO list2 VALUES(?, ?, ?);");

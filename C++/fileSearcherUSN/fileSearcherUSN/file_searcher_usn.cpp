@@ -18,7 +18,8 @@ void init_tables(sqlite3* db)
 	sqlite3_exec(db, "BEGIN;", nullptr, nullptr, nullptr);
 	for (int i = 0; i < 41; i++)
 	{
-		string sql = "CREATE TABLE IF NOT EXISTS list" + to_string(i) + "(ASCII INT, PATH TEXT, PRIORITY INT)";
+		string sql = "CREATE TABLE IF NOT EXISTS list" + to_string(i) + 
+			R"(ASCII INT, PATH TEXT, PRIORITY INT, PRIMARY KEY("ASCII","PATH","PRIORITY"))";
 		sqlite3_exec(db, sql.c_str(), nullptr, nullptr, nullptr);
 	}
 	sqlite3_exec(db, "COMMIT", nullptr, nullptr, nullptr);
