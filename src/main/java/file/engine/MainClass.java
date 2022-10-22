@@ -382,6 +382,7 @@ public class MainClass {
         copyOrIgnoreFile("user/cudaAccelerator.dll", "/win32-native/cudaAccelerator.dll");
         copyOrIgnoreFile("cudart64_110.dll", "/win32-native/cudart64_110.dll");
         copyOrIgnoreFile("user/openclAccelerator.dll", "/win32-native/openclAccelerator.dll");
+        copyOrIgnoreFile("user/systemThemeInfo.dll", "/win32-native/systemThemeInfo.dll");
     }
 
     private static void copyOrIgnoreFile(String path, String rootPath) throws IOException {

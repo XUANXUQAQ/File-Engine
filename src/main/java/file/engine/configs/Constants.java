@@ -1,10 +1,14 @@
 package file.engine.configs;
 
+import file.engine.dllInterface.SystemThemeInfo;
 import file.engine.utils.system.properties.IsDebug;
+import lombok.NoArgsConstructor;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+
+import static file.engine.utils.BeanUtil.copyMatchingFields;
 
 public class Constants {
     public static String version;
@@ -40,16 +44,6 @@ public class Constants {
 
     public static class Enums {
 
-        public static class DefaultColors {
-            public static final int DEFAULT_LABEL_COLOR = 0xff9933;
-            public static final int DEFAULT_WINDOW_BACKGROUND_COLOR = 0xf6f6f6;
-            public static final int DEFAULT_BORDER_COLOR = 0xf6f6f6;
-            public static final int DEFAULT_FONT_COLOR = 0;
-            public static final int DEFAULT_FONT_COLOR_WITH_COVERAGE = 0xff3333;
-            public static final int DEFAULT_SEARCHBAR_COLOR = 0xf6f6f6;
-            public static final int DEFAULT_SEARCHBAR_FONT_COLOR = 0;
-        }
-
         public enum DatabaseStatus {
             NORMAL, _TEMP, _CREATING_CACHE, _SHARED_MEMORY, VACUUM, MANUAL_UPDATE
         }
@@ -79,6 +73,66 @@ public class Constants {
 
         public enum BorderType {
             EMPTY, AROUND, FULL
+        }
+    }
+
+    public static class DefaultColors {
+        private static final SearchBarColor dark;
+        private static final SearchBarColor light;
+
+        static {
+            dark = new SearchBarColor();
+            light = new SearchBarColor();
+            copyMatchingFields(new Dark(), dark);
+            copyMatchingFields(new Light(), light);
+        }
+
+        @NoArgsConstructor
+        public static class SearchBarColor {
+            public int DEFAULT_LABEL_COLOR;
+            public int DEFAULT_WINDOW_BACKGROUND_COLOR;
+            public int DEFAULT_BORDER_COLOR;
+            public int DEFAULT_FONT_COLOR;
+            public int DEFAULT_FONT_COLOR_WITH_COVERAGE;
+            public int DEFAULT_SEARCHBAR_COLOR;
+            public int DEFAULT_SEARCHBAR_FONT_COLOR;
+        }
+
+        @SuppressWarnings("unused")
+        private static class Light {
+            int DEFAULT_LABEL_COLOR = 0xff9933;
+            int DEFAULT_WINDOW_BACKGROUND_COLOR = 0xf6f6f6;
+            int DEFAULT_BORDER_COLOR = 0xf6f6f6;
+            int DEFAULT_FONT_COLOR = 0;
+            int DEFAULT_FONT_COLOR_WITH_COVERAGE = 0xff3333;
+            int DEFAULT_SEARCHBAR_COLOR = 0xf6f6f6;
+            int DEFAULT_SEARCHBAR_FONT_COLOR = 0;
+        }
+
+        @SuppressWarnings("unused")
+        private static class Dark {
+            int DEFAULT_LABEL_COLOR = 0x9999ff;
+            int DEFAULT_WINDOW_BACKGROUND_COLOR = 0x333333;
+            int DEFAULT_BORDER_COLOR = 0x333333;
+            int DEFAULT_FONT_COLOR = 0xffffff;
+            int DEFAULT_FONT_COLOR_WITH_COVERAGE = 0xff3333;
+            int DEFAULT_SEARCHBAR_COLOR = 0x333333;
+            int DEFAULT_SEARCHBAR_FONT_COLOR = 0xffffff;
+        }
+
+        public static SearchBarColor getDefaultSearchBarColor() {
+            if (SystemThemeInfo.INSTANCE.isDarkThemeEnabled()) {
+                return light;
+            }
+            return dark;
+        }
+
+        public static SearchBarColor getDark() {
+            return dark;
+        }
+
+        public static SearchBarColor getLight() {
+            return light;
         }
     }
 }

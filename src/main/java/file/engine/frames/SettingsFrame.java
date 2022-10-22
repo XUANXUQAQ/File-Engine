@@ -722,13 +722,14 @@ public class SettingsFrame {
      */
     private void addResetColorButtonListener() {
         buttonResetColor.addActionListener(e -> {
-            textFieldFontColorWithCoverage.setText(toRGBHexString(Constants.Enums.DefaultColors.DEFAULT_FONT_COLOR_WITH_COVERAGE));
-            textFieldSearchBarColor.setText(toRGBHexString(Constants.Enums.DefaultColors.DEFAULT_SEARCHBAR_COLOR));
-            textFieldLabelColor.setText(toRGBHexString(Constants.Enums.DefaultColors.DEFAULT_LABEL_COLOR));
-            textFieldBackgroundDefault.setText(toRGBHexString(Constants.Enums.DefaultColors.DEFAULT_WINDOW_BACKGROUND_COLOR));
-            textFieldFontColor.setText(toRGBHexString(Constants.Enums.DefaultColors.DEFAULT_FONT_COLOR));
-            textFieldSearchBarFontColor.setText(toRGBHexString(Constants.Enums.DefaultColors.DEFAULT_SEARCHBAR_FONT_COLOR));
-            textFieldBorderColor.setText(toRGBHexString(Constants.Enums.DefaultColors.DEFAULT_BORDER_COLOR));
+            var defaultSearchBarColor = Constants.DefaultColors.getDefaultSearchBarColor();
+            textFieldFontColorWithCoverage.setText(toRGBHexString(defaultSearchBarColor.DEFAULT_FONT_COLOR_WITH_COVERAGE));
+            textFieldSearchBarColor.setText(toRGBHexString(defaultSearchBarColor.DEFAULT_SEARCHBAR_COLOR));
+            textFieldLabelColor.setText(toRGBHexString(defaultSearchBarColor.DEFAULT_LABEL_COLOR));
+            textFieldBackgroundDefault.setText(toRGBHexString(defaultSearchBarColor.DEFAULT_WINDOW_BACKGROUND_COLOR));
+            textFieldFontColor.setText(toRGBHexString(defaultSearchBarColor.DEFAULT_FONT_COLOR));
+            textFieldSearchBarFontColor.setText(toRGBHexString(defaultSearchBarColor.DEFAULT_SEARCHBAR_FONT_COLOR));
+            textFieldBorderColor.setText(toRGBHexString(defaultSearchBarColor.DEFAULT_BORDER_COLOR));
         });
     }
 

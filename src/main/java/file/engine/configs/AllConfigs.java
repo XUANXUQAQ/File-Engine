@@ -438,9 +438,9 @@ public class AllConfigs {
     /**
      * 是否启动GPU加速，仅在初始化时，显示设置界面时使用
      * 当前启动GPU加速状态由isGPUAcceleratorEnabled()判断
-     * @see #isGPUAcceleratorEnabled()
      *
      * @return boolean
+     * @see #isGPUAcceleratorEnabled()
      */
     public boolean isEnableGpuAccelerate() {
         return configEntity.isEnableGpuAccelerate();
@@ -625,11 +625,27 @@ public class AllConfigs {
     }
 
     private void readSearchBarColor(Map<String, Object> settingsInJson) {
-        configEntity.setSearchBarColor(getFromJson(settingsInJson, "searchBarColor", Enums.DefaultColors.DEFAULT_SEARCHBAR_COLOR));
+        var defaultColor = Constants.DefaultColors.getDefaultSearchBarColor();
+        var dark = Constants.DefaultColors.getDark();
+        var light = Constants.DefaultColors.getLight();
+        int searchBarColor = getFromJson(settingsInJson, "searchBarColor", defaultColor.DEFAULT_SEARCHBAR_COLOR);
+        if (searchBarColor == dark.DEFAULT_SEARCHBAR_COLOR || searchBarColor == light.DEFAULT_SEARCHBAR_COLOR) {
+            configEntity.setSearchBarColor(defaultColor.DEFAULT_SEARCHBAR_COLOR);
+        } else {
+            configEntity.setSearchBarColor(searchBarColor);
+        }
     }
 
     private void readDefaultBackground(Map<String, Object> settingsInJson) {
-        configEntity.setDefaultBackgroundColor(getFromJson(settingsInJson, "defaultBackground", Enums.DefaultColors.DEFAULT_WINDOW_BACKGROUND_COLOR));
+        var defaultColor = Constants.DefaultColors.getDefaultSearchBarColor();
+        var dark = Constants.DefaultColors.getDark();
+        var light = Constants.DefaultColors.getLight();
+        int windowBackgroundColor = getFromJson(settingsInJson, "defaultBackground", defaultColor.DEFAULT_WINDOW_BACKGROUND_COLOR);
+        if (windowBackgroundColor == dark.DEFAULT_WINDOW_BACKGROUND_COLOR || windowBackgroundColor == light.DEFAULT_WINDOW_BACKGROUND_COLOR) {
+            configEntity.setDefaultBackgroundColor(defaultColor.DEFAULT_WINDOW_BACKGROUND_COLOR);
+        } else {
+            configEntity.setDefaultBackgroundColor(windowBackgroundColor);
+        }
     }
 
     private void readBorderType(Map<String, Object> settingsInJson) {
@@ -637,23 +653,63 @@ public class AllConfigs {
     }
 
     private void readBorderColor(Map<String, Object> settingsInJson) {
-        configEntity.setBorderColor(getFromJson(settingsInJson, "borderColor", Enums.DefaultColors.DEFAULT_BORDER_COLOR));
+        var defaultColor = Constants.DefaultColors.getDefaultSearchBarColor();
+        var dark = Constants.DefaultColors.getDark();
+        var light = Constants.DefaultColors.getLight();
+        int borderColor = getFromJson(settingsInJson, "borderColor", defaultColor.DEFAULT_BORDER_COLOR);
+        if (borderColor == dark.DEFAULT_BORDER_COLOR || borderColor == light.DEFAULT_BORDER_COLOR) {
+            configEntity.setBorderColor(defaultColor.DEFAULT_BORDER_COLOR);
+        } else {
+            configEntity.setBorderColor(borderColor);
+        }
     }
 
     private void readFontColorWithCoverage(Map<String, Object> settingsInJson) {
-        configEntity.setFontColorWithCoverage(getFromJson(settingsInJson, "fontColorWithCoverage", Enums.DefaultColors.DEFAULT_FONT_COLOR_WITH_COVERAGE));
+        var defaultColor = Constants.DefaultColors.getDefaultSearchBarColor();
+        var dark = Constants.DefaultColors.getDark();
+        var light = Constants.DefaultColors.getLight();
+        int fontColorWithCoverage = getFromJson(settingsInJson, "fontColorWithCoverage", defaultColor.DEFAULT_FONT_COLOR_WITH_COVERAGE);
+        if (fontColorWithCoverage == light.DEFAULT_FONT_COLOR_WITH_COVERAGE || fontColorWithCoverage == dark.DEFAULT_FONT_COLOR_WITH_COVERAGE) {
+            configEntity.setFontColorWithCoverage(defaultColor.DEFAULT_FONT_COLOR_WITH_COVERAGE);
+        } else {
+            configEntity.setFontColorWithCoverage(fontColorWithCoverage);
+        }
     }
 
     private void readLabelColor(Map<String, Object> settingsInJson) {
-        configEntity.setLabelColor(getFromJson(settingsInJson, "labelColor", Enums.DefaultColors.DEFAULT_LABEL_COLOR));
+        var defaultColor = Constants.DefaultColors.getDefaultSearchBarColor();
+        var dark = Constants.DefaultColors.getDark();
+        var light = Constants.DefaultColors.getLight();
+        int labelColor = getFromJson(settingsInJson, "labelColor", defaultColor.DEFAULT_LABEL_COLOR);
+        if (labelColor == dark.DEFAULT_LABEL_COLOR || labelColor == light.DEFAULT_LABEL_COLOR) {
+            configEntity.setLabelColor(defaultColor.DEFAULT_LABEL_COLOR);
+        } else {
+            configEntity.setLabelColor(labelColor);
+        }
     }
 
     private void readFontColor(Map<String, Object> settingsInJson) {
-        configEntity.setFontColor(getFromJson(settingsInJson, "fontColor", Enums.DefaultColors.DEFAULT_FONT_COLOR));
+        var defaultColor = Constants.DefaultColors.getDefaultSearchBarColor();
+        var dark = Constants.DefaultColors.getDark();
+        var light = Constants.DefaultColors.getLight();
+        int fontColor = getFromJson(settingsInJson, "fontColor", defaultColor.DEFAULT_FONT_COLOR);
+        if (fontColor == dark.DEFAULT_FONT_COLOR || fontColor == light.DEFAULT_FONT_COLOR) {
+            configEntity.setFontColor(defaultColor.DEFAULT_FONT_COLOR);
+        } else {
+            configEntity.setFontColor(fontColor);
+        }
     }
 
     private void readSearchBarFontColor(Map<String, Object> settingsInJson) {
-        configEntity.setSearchBarFontColor(getFromJson(settingsInJson, "searchBarFontColor", Enums.DefaultColors.DEFAULT_SEARCHBAR_FONT_COLOR));
+        var defaultColor = Constants.DefaultColors.getDefaultSearchBarColor();
+        var dark = Constants.DefaultColors.getDark();
+        var light = Constants.DefaultColors.getLight();
+        int searchBarFontColor = getFromJson(settingsInJson, "searchBarFontColor", defaultColor.DEFAULT_SEARCHBAR_FONT_COLOR);
+        if (searchBarFontColor == dark.DEFAULT_SEARCHBAR_FONT_COLOR || searchBarFontColor == light.DEFAULT_SEARCHBAR_FONT_COLOR) {
+            configEntity.setSearchBarFontColor(defaultColor.DEFAULT_SEARCHBAR_FONT_COLOR);
+        } else {
+            configEntity.setSearchBarFontColor(searchBarFontColor);
+        }
     }
 
     private void readBorderThickness(Map<String, Object> settingsInJson) {
