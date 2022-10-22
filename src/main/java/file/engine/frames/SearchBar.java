@@ -2963,7 +2963,7 @@ public class SearchBar {
                 label7.setFont(labelFont);
                 label8.setFont(labelFont);
                 showingMode = Constants.Enums.ShowingSearchBarMode.EXPLORER_ATTACH;
-                searchBar.setOpacity(1);
+//                searchBar.setOpacity(1);
                 TimeUnit.MILLISECONDS.sleep(150);
             }
         }
