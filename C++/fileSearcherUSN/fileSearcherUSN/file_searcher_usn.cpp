@@ -19,7 +19,7 @@ void init_tables(sqlite3* db)
 	for (int i = 0; i < 41; i++)
 	{
 		string sql = "CREATE TABLE IF NOT EXISTS list" + to_string(i) + 
-			R"(ASCII INT, PATH TEXT, PRIORITY INT, PRIMARY KEY("ASCII","PATH","PRIORITY"))";
+			R"((ASCII INT, PATH TEXT, PRIORITY INT, PRIMARY KEY("ASCII","PATH","PRIORITY")))";
 		sqlite3_exec(db, sql.c_str(), nullptr, nullptr, nullptr);
 	}
 	sqlite3_exec(db, "COMMIT", nullptr, nullptr, nullptr);
@@ -31,10 +31,8 @@ void init_tables(sqlite3* db)
 void init_usn(parameter p)
 {
 	init_tables(p.db);
-	sqlite3_exec(p.db, "BEGIN;", nullptr, nullptr, nullptr);
 	volume volume_instance(p.disk, p.db, &p.ignorePath, &suffix_priority_map);
 	volume_instance.init_volume();
-	sqlite3_exec(p.db, "COMMIT;", nullptr, nullptr, nullptr);
 	sqlite3_close(p.db);
 #ifdef TEST
 	std::cout << "path : " << p.disk << std::endl;
