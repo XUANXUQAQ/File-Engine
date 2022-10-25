@@ -450,7 +450,7 @@ public class MainClass {
         //检测是否为最新版本
         try {
             Map<String, Object> info = AllConfigs.getInstance().getUpdateInfo();
-            if (info != null) {
+            if (info != null && !info.isEmpty()) {
                 String latestVersion = (String) info.get("version");
                 if (Double.parseDouble(latestVersion) > Double.parseDouble(Constants.version) || IsPreview.isPreview()) {
                     return false;

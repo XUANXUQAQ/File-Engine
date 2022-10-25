@@ -443,11 +443,8 @@ public class DatabaseService {
         for (Map.Entry<String, Cache> entry : tableCache.entrySet()) {
             String key = entry.getKey();
             if (tableNeedCache.containsKey(key)) {
-                if (GPUAccelerator.INSTANCE.isCacheExist(key)) {
-                    continue;
-                }
-                //超过128M字节
-                if (tableNeedCache.get(key) > 128 * 1024 * 1024) {
+                //超过128M字节或已存在缓存
+                if (GPUAccelerator.INSTANCE.isCacheExist(key) || tableNeedCache.get(key) > 128 * 1024 * 1024) {
                     continue;
                 }
                 String[] info = RegexUtil.comma.split(key);
@@ -807,8 +804,8 @@ public class DatabaseService {
                                      Collection<String> resultContainer,
                                      LinkedHashMap<String, String> sqlToExecute,
                                      Bit currentTaskNum) {
-        var tempResults_ = tempResults;
-        var tempResultsForEvent_ = tempResultsForEvent;
+        var tempResultsLocal = tempResults;
+        var tempResultsForEventLocal = tempResultsForEvent;
         AllConfigs allConfigs = AllConfigs.getInstance();
         tasks.add(() -> {
             try {
@@ -839,10 +836,10 @@ public class DatabaseService {
                 ex.printStackTrace();
             } finally {
                 for (String s : resultContainer) {
-                    if (tempResultsForEvent_.size() >= MAX_RESULTS)
+                    if (tempResultsForEventLocal.size() >= MAX_RESULTS)
                         break;
-                    if (tempResultsForEvent_.add(s)) {
-                        tempResults_.add(s);
+                    if (tempResultsForEventLocal.add(s)) {
+                        tempResultsLocal.add(s);
                     }
                 }
                 //执行完后将对应的线程flag设为1
@@ -862,8 +859,8 @@ public class DatabaseService {
                                          Collection<String> resultContainer,
                                          LinkedHashMap<String, String> sqlToExecute,
                                          Bit currentTaskNum) {
-        var tempResults_ = tempResults;
-        var tempResultsForEvent_ = tempResultsForEvent;
+        var tempResultsLocal = tempResults;
+        var tempResultsForEventLocal = tempResultsForEvent;
         tasks.add(() -> {
             try {
                 for (var sqlAndTableName : sqlToExecute.entrySet()) {
@@ -884,10 +881,10 @@ public class DatabaseService {
                 ex.printStackTrace();
             } finally {
                 for (String s : resultContainer) {
-                    if (tempResultsForEvent_.size() >= MAX_RESULTS)
+                    if (tempResultsForEventLocal.size() >= MAX_RESULTS)
                         break;
-                    if (tempResultsForEvent_.add(s)) {
-                        tempResults_.add(s);
+                    if (tempResultsForEventLocal.add(s)) {
+                        tempResultsLocal.add(s);
                     }
                 }
                 byte[] originalBytes;
@@ -921,7 +918,7 @@ public class DatabaseService {
                 System.out.println("从缓存中读取 " + key);
             }
             matchedNum = cache.data.stream()
-                    .filter(record -> checkIsMatchedAndAddToList(record, container))
+                    .filter(eachRecord -> checkIsMatchedAndAddToList(eachRecord, container))
                     .count();
         } else {
             //格式化是为了以后的拓展性
@@ -966,20 +963,20 @@ public class DatabaseService {
         // 有d代表只需要搜索文件夹，文件夹的priority为-1
         if (searchCase != null && Arrays.asList(searchCase).contains("d")) {
             //首先根据输入的keywords找到对应的list
-            LinkedHashMap<String, String> _priorityMap = new LinkedHashMap<>();
-            String _sql = "SELECT %s FROM " + firstTableName + " WHERE PRIORITY=" + "-1";
-            _priorityMap.put(_sql, firstTableName);
+            LinkedHashMap<String, String> tmpPriorityMap = new LinkedHashMap<>();
+            String eachSql = "SELECT %s FROM " + firstTableName + " WHERE PRIORITY=" + "-1";
+            tmpPriorityMap.put(eachSql, firstTableName);
             tableQueue.stream().filter(each -> !each.equals(firstTableName)).forEach(each -> {
                 // where后面=不能有空格，否则解析priority会出错
                 String sql = "SELECT %s FROM " + each + " WHERE PRIORITY=" + "-1";
-                _priorityMap.put(sql, each);
+                tmpPriorityMap.put(sql, each);
             });
-            sqlColumnMap.add(_priorityMap);
+            sqlColumnMap.add(tmpPriorityMap);
         } else {
             for (Pair i : priorityMap) {
                 LinkedHashMap<String, String> eachPriorityMap = new LinkedHashMap<>();
-                String _sql = "SELECT %s FROM " + firstTableName + " WHERE PRIORITY=" + i.priority;
-                eachPriorityMap.put(_sql, firstTableName);
+                String eachSql = "SELECT %s FROM " + firstTableName + " WHERE PRIORITY=" + i.priority;
+                eachPriorityMap.put(eachSql, firstTableName);
                 tableQueue.stream().filter(each -> !each.equals(firstTableName)).forEach(each -> {
                     // where后面=不能有空格，否则解析priority会出错
                     String sql = "SELECT %s FROM " + each + " WHERE PRIORITY=" + i.priority;
@@ -1374,6 +1371,7 @@ public class DatabaseService {
                 TimeUnit.MILLISECONDS.sleep(1);
             }
         } catch (InterruptedException ignored) {
+            // ignore interruptedException
         }
         return status.get() == newVal;
     }
@@ -2143,6 +2141,7 @@ public class DatabaseService {
                         TimeUnit.MILLISECONDS.sleep(100);
                     }
                 } catch (InterruptedException ignored) {
+                    //ignored
                 }
             });
         }
@@ -2181,34 +2180,35 @@ public class DatabaseService {
                         TimeUnit.SECONDS.sleep(1);
                     }
                 } catch (InterruptedException ignored) {
+                    // ignored
                 }
             });
         }
 
-        private static void addRecord(String key, String record) {
+        private static void addRecord(String key, String fileRecord) {
             if (GPUAccelerator.INSTANCE.isCacheExist(key) && !GPUAccelerator.INSTANCE.isCacheValid(key)) {
                 invalidCacheKeys.add(key);
             } else {
                 Set<String> container;
                 if (recordsToAdd.containsKey(key)) {
                     container = recordsToAdd.get(key);
-                    container.add(record);
+                    container.add(fileRecord);
                 } else {
                     container = ConcurrentHashMap.newKeySet();
-                    container.add(record);
+                    container.add(fileRecord);
                     recordsToAdd.put(key, container);
                 }
             }
         }
 
-        private static void removeRecord(String key, String record) {
+        private static void removeRecord(String key, String fileRecord) {
             Set<String> container;
             if (recordsToRemove.containsKey(key)) {
                 container = recordsToRemove.get(key);
-                container.add(record);
+                container.add(fileRecord);
             } else {
                 container = ConcurrentHashMap.newKeySet();
-                container.add(record);
+                container.add(fileRecord);
                 recordsToRemove.put(key, container);
             }
         }
@@ -2228,8 +2228,8 @@ public class DatabaseService {
             if (!AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
                 return;
             }
-            GPUAddRecordEvent GPUAddRecordEvent = (GPUAddRecordEvent) event;
-            addRecord(GPUAddRecordEvent.key, GPUAddRecordEvent.record);
+            GPUAddRecordEvent gpuAddRecordEvent = (GPUAddRecordEvent) event;
+            addRecord(gpuAddRecordEvent.key, gpuAddRecordEvent.record);
         }
 
         @EventRegister(registerClass = GPURemoveRecordEvent.class)

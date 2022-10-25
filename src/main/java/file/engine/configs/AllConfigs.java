@@ -965,7 +965,7 @@ public class AllConfigs {
                     FlatDarculaLaf.setup();
                     break;
             }
-            ArrayList<Component> components = new ArrayList<>(Arrays.asList(JFrame.getFrames()));
+            ArrayList<Component> components = new ArrayList<>(Arrays.asList(Frame.getFrames()));
             EventManagement eventManagement = EventManagement.getInstance();
             GetExcludeComponentEvent event = new GetExcludeComponentEvent();
             eventManagement.putEvent(event);
@@ -1066,7 +1066,7 @@ public class AllConfigs {
         EventManagement eventManagement = EventManagement.getInstance();
         eventManagement.putEvent(new StartDownloadEvent(downloadManager));
         if (!downloadManager.waitFor(5000)) {
-            return null;
+            return Collections.emptyMap();
         }
         String eachLine;
         StringBuilder strBuilder = new StringBuilder();
@@ -1138,7 +1138,7 @@ public class AllConfigs {
             // 更新设置
             ConfigEntity tempConfigEntity = ((SetConfigsEvent) event).getConfigs();
             if (allConfigs.noNullValue(tempConfigEntity)) {
-                allConfigs.setInvalidConfigs(tempConfigEntity, (config) -> {
+                allConfigs.setInvalidConfigs(tempConfigEntity, config -> {
                     if (config.isEnableGpuAccelerate()) {
                         config.setEnableGpuAccelerate(GPUAccelerator.INSTANCE.isGPUAvailableOnSystem());
                     }

@@ -42,6 +42,10 @@ public class Constants {
         }
     }
 
+    private Constants() {
+        throw new RuntimeException("not allowed");
+    }
+
     public static class Enums {
 
         public enum DatabaseStatus {

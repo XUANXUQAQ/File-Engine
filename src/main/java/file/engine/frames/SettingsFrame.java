@@ -434,6 +434,7 @@ public class SettingsFrame {
 
             @Override
             public void keyTyped(KeyEvent e) {
+                // no use
             }
 
             @Override
@@ -619,7 +620,7 @@ public class SettingsFrame {
                 String latestVersion;
                 try {
                     updateInfo = allConfigs.getUpdateInfo();
-                    if (updateInfo != null) {
+                    if (updateInfo != null && !updateInfo.isEmpty()) {
                         latestVersion = (String) updateInfo.get("version");
                     } else {
                         throw new IOException("failed");
@@ -2980,9 +2981,9 @@ public class SettingsFrame {
     }
 
     private Component getTabComponent(String componentName) {
-        for (TabNameAndTitle each : tabComponentNameMap.keySet()) {
-            if (each.tabName.equals(componentName)) {
-                return tabComponentNameMap.get(each);
+        for (var eachEntry : tabComponentNameMap.entrySet()) {
+            if (eachEntry.getKey().tabName.equals(componentName)) {
+                return eachEntry.getValue();
             }
         }
         return tabGeneral;
@@ -3130,6 +3131,7 @@ public class SettingsFrame {
                     TimeUnit.SECONDS.sleep(1);
                 }
             } catch (InterruptedException ignored) {
+                // ignore
             }
         });
     }
