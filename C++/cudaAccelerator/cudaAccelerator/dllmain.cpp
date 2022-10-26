@@ -8,11 +8,13 @@
 #include "cuda_copy_vector_util.h"
 #include "str_convert.cuh"
 #include <thread>
+#include <Shlwapi.h>
 #ifdef DEBUG_OUTPUT
 #include <iostream>
 #endif
 
 #pragma comment(lib, "cudart.lib")
+#pragma comment(lib, "Shlwapi.lib")
 
 void clear_cache(const std::string& key);
 void clear_all_cache();
@@ -594,7 +596,10 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 					// 判断文件和文件夹
 					if (search_case_vec.empty())
 					{
-						_collect_func(key, matched_record_str, &matched_number);
+						if (PathFileExists(string2wstring(matched_record_str).c_str()))
+						{
+							_collect_func(key, matched_record_str, &matched_number);
+						}
 					}
 					else
 					{
@@ -614,7 +619,10 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 						}
 						else
 						{
-							_collect_func(key, matched_record_str, &matched_number);
+							if (PathFileExists(string2wstring(matched_record_str).c_str()))
+							{
+								_collect_func(key, matched_record_str, &matched_number);
+							}
 						}
 					}
 				}
