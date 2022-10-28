@@ -182,9 +182,7 @@ public class DatabaseService {
                     if (isExecuteImmediately.get()) {
                         try {
                             isExecuteImmediately.set(false);
-                            if (getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
-                                executeAllCommands();
-                            }
+                            executeAllCommands();
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -346,15 +344,16 @@ public class DatabaseService {
             final int startUpLatency = 10 * 1000; // 10s
             var startCheckInfo = new Object() {
                 long startCheckTimeMills = System.currentTimeMillis() - checkTimeInterval + startUpLatency;
-                boolean isCreatedOnDatabaseUpdate = false;
             };
             final Supplier<Boolean> isStopCreateCache =
                     () -> !eventManagement.notMainExit() || searchThreadCount.get() != 0 ||
-                            (status.get() != Constants.Enums.DatabaseStatus.NORMAL && status.get() != Constants.Enums.DatabaseStatus._CREATING_CACHE);
+                            status.get() == Constants.Enums.DatabaseStatus.MANUAL_UPDATE ||
+                            status.get() == Constants.Enums.DatabaseStatus.VACUUM;
             final Supplier<Boolean> isStartSaveCache =
                     () -> (System.currentTimeMillis() - startCheckInfo.startCheckTimeMills > checkTimeInterval &&
+                            status.get() == Constants.Enums.DatabaseStatus.NORMAL &&
                             !GetHandle.INSTANCE.isForegroundFullscreen()) ||
-                            (isDatabaseUpdated.get() && !startCheckInfo.isCreatedOnDatabaseUpdate);
+                            (isDatabaseUpdated.get());
             try {
                 AllConfigs allConfigs = AllConfigs.getInstance();
                 final int createMemoryThreshold = 70;
@@ -363,27 +362,24 @@ public class DatabaseService {
                 while (eventManagement.notMainExit()) {
                     if (isStartSaveCache.get()) {
                         if (isDatabaseUpdated.get()) {
-                            startCheckInfo.isCreatedOnDatabaseUpdate = true;
+                            isDatabaseUpdated.set(false);
                         }
-                        if (casSetStatus(Constants.Enums.DatabaseStatus.NORMAL, Constants.Enums.DatabaseStatus._CREATING_CACHE)) {
-                            startCheckInfo.startCheckTimeMills = System.currentTimeMillis();
-                            if (allConfigs.isGPUAcceleratorEnabled()) {
-                                final int gpuMemUsage = GPUAccelerator.INSTANCE.getGPUMemUsage();
-                                if (gpuMemUsage < createGPUCacheThreshold) {
-                                    createGpuCache(isStopCreateCache, createGPUCacheThreshold);
-                                }
-                            } else {
-                                final double memoryUsage = SystemInfoUtil.getMemoryUsage();
-                                if (memoryUsage * 100 < createMemoryThreshold) {
-                                    createMemoryCache(isStopCreateCache);
-                                }
+                        startCheckInfo.startCheckTimeMills = System.currentTimeMillis();
+                        if (allConfigs.isGPUAcceleratorEnabled()) {
+                            final int gpuMemUsage = GPUAccelerator.INSTANCE.getGPUMemUsage();
+                            if (gpuMemUsage < createGPUCacheThreshold) {
+                                createGpuCache(isStopCreateCache, createGPUCacheThreshold);
+                            }
+                        } else {
+                            final double memoryUsage = SystemInfoUtil.getMemoryUsage();
+                            if (memoryUsage * 100 < createMemoryThreshold) {
+                                createMemoryCache(isStopCreateCache);
                             }
                         }
-                        casSetStatus(Constants.Enums.DatabaseStatus._CREATING_CACHE, Constants.Enums.DatabaseStatus.NORMAL);
-                    } else {
-                        if (!isDatabaseUpdated.get()) {
-                            startCheckInfo.isCreatedOnDatabaseUpdate = false;
+                        if (status.get() == Constants.Enums.DatabaseStatus._SHARED_MEMORY) {
+                            casSetStatus(Constants.Enums.DatabaseStatus._SHARED_MEMORY, Constants.Enums.DatabaseStatus.NORMAL);
                         }
+                    } else {
                         if (allConfigs.isGPUAcceleratorEnabled()) {
                             final int gpuMemUsage = GPUAccelerator.INSTANCE.getGPUMemUsage();
                             if (gpuMemUsage >= freeGPUCacheThreshold) {
@@ -939,10 +935,6 @@ public class DatabaseService {
      * @return set
      */
     private LinkedList<LinkedHashMap<String, String>> getNonFormattedSqlFromTableQueue() {
-        if (isDatabaseUpdated.get()) {
-            isDatabaseUpdated.set(false);
-            initPriority();
-        }
         LinkedList<LinkedHashMap<String, String>> sqlColumnMap = new LinkedList<>();
         if (priorityMap.isEmpty()) {
             return sqlColumnMap;
@@ -1348,7 +1340,7 @@ public class DatabaseService {
     /**
      * 获取数据库状态
      *
-     * @return 装填
+     * @return 数据库状态
      */
     public Constants.Enums.DatabaseStatus getStatus() {
         var currentStatus = status.get();
@@ -1356,7 +1348,6 @@ public class DatabaseService {
             case NORMAL:
             case _TEMP:
             case _SHARED_MEMORY:
-            case _CREATING_CACHE:
                 return Constants.Enums.DatabaseStatus.NORMAL;
             default:
                 return currentStatus;
@@ -1470,6 +1461,16 @@ public class DatabaseService {
         }
     }
 
+    private void closeSharedMemory() throws IOException {
+        File closeSharedMemory = new File("tmp", "closeSharedMemory");
+        if (closeSharedMemory.exists()) {
+            return;
+        }
+        if (!closeSharedMemory.createNewFile()) {
+            throw new RuntimeException("closeSharedMemory创建失败");
+        }
+    }
+
     /**
      * 当软件空闲时将共享内存关闭
      */
@@ -1478,16 +1479,17 @@ public class DatabaseService {
             try {
                 SearchBar searchBar = SearchBar.getInstance();
                 while (isSharedMemoryCreated.get()) {
-                    if (getStatus() == Constants.Enums.DatabaseStatus.NORMAL && !searchBar.isVisible()) {
+                    if (status.get() == Constants.Enums.DatabaseStatus.NORMAL && !searchBar.isVisible()) {
                         isSharedMemoryCreated.set(false);
                         ResultPipe.INSTANCE.closeAllSharedMemory();
+                        closeSharedMemory();
                         if (IsDebug.isDebug()) {
                             System.out.println("已关闭共享内存");
                         }
                     }
                     TimeUnit.MILLISECONDS.sleep(250);
                 }
-            } catch (InterruptedException e) {
+            } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
             }
         });
@@ -1522,6 +1524,7 @@ public class DatabaseService {
         try {
             while (!ResultPipe.INSTANCE.isComplete() && ProcessUtil.isProcessExist("fileSearcherUSN.exe")) {
                 if (System.currentTimeMillis() - start > timeLimit) {
+                    System.out.println("等待共享内存超时");
                     break;
                 }
                 TimeUnit.SECONDS.sleep(1);
@@ -1530,13 +1533,15 @@ public class DatabaseService {
             e.printStackTrace();
         }
         casSetStatus(Constants.Enums.DatabaseStatus._TEMP, Constants.Enums.DatabaseStatus._SHARED_MEMORY);
-        // 搜索完成并写入数据库后，重新建立数据库连接
-        try {
-            ProcessUtil.waitForProcess("fileSearcherUSN.exe", 1000);
-            readSearchUsnOutput(searchByUsn);
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
+        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            try {
+                EventManagement eventManagement = EventManagement.getInstance();
+                while (!ResultPipe.INSTANCE.isDatabaseComplete() && eventManagement.notMainExit()) {
+                    TimeUnit.MILLISECONDS.sleep(10);
+                }
+            } catch (InterruptedException ignored) {
+                // ignore interrupt exception
+            }
             stopSearch();
             try {
                 final long startWaitingTime = System.currentTimeMillis();
@@ -1545,20 +1550,27 @@ public class DatabaseService {
                     TimeUnit.MILLISECONDS.sleep(20);
                 }
             } catch (InterruptedException ignored) {
+                // ignore interrupt exception
             }
-            casSetStatus(Constants.Enums.DatabaseStatus._SHARED_MEMORY, Constants.Enums.DatabaseStatus.MANUAL_UPDATE);
-            {
-                SQLiteUtil.closeAll();
-                invalidateAllCache();
-                SQLiteUtil.initAllConnections();
-                createAllIndex();
-            }
-            casSetStatus(Constants.Enums.DatabaseStatus.MANUAL_UPDATE, Constants.Enums.DatabaseStatus.NORMAL);
-            //关闭共享内存
+            SQLiteUtil.closeAll();
+            invalidateAllCache();
+            SQLiteUtil.initAllConnections();
+            createAllIndex();
+            waitForCommandSet(SqlTaskIds.CREATE_INDEX);
+            //空闲时关闭共享内存
             closeSharedMemoryOnIdle();
             // 搜索完成，更新isDatabaseUpdated标志，结束UpdateDatabaseEvent事件等待
             isDatabaseUpdated.set(true);
-        }
+            //重新初始化priority
+            initPriority();
+            // 搜索完成并写入数据库后，重新建立数据库连接
+            try {
+                ProcessUtil.waitForProcess("fileSearcherUSN.exe", 1000);
+                readSearchUsnOutput(searchByUsn);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     private static void readSearchUsnOutput(Process searchByUsn) {
@@ -1628,6 +1640,10 @@ public class DatabaseService {
         isSharedMemoryCreated.set(true);
         Process searchByUSN = null;
         try {
+            File closeSharedMemory = new File("tmp", "closeSharedMemory");
+            if (closeSharedMemory.exists() && !closeSharedMemory.delete()) {
+                throw new RuntimeException("删除共享内存标志失败");
+            }
             // 创建搜索进程并等待
             searchByUSN = searchByUSN(AllConfigs.getInstance().getAvailableDisks(), ignorePath.toLowerCase());
         } catch (IOException e) {
@@ -1639,31 +1655,31 @@ public class DatabaseService {
         return true;
     }
 
-    /*
+    /**
       等待sql任务执行
 
       @param taskId 任务id
      */
-//    private void waitForCommandSet(@SuppressWarnings("SameParameterValue") SqlTaskIds taskId) {
-//        try {
-//            EventManagement eventManagement = EventManagement.getInstance();
-//            long tmpStartTime = System.currentTimeMillis();
-//            while (eventManagement.notMainExit()) {
-//                //等待
-//                if (System.currentTimeMillis() - tmpStartTime > 60 * 1000) {
-//                    System.err.println("等待SQL语句任务" + taskId + "处理超时");
-//                    break;
-//                }
-//                //判断commandSet中是否还有taskId存在
-//                if (!isTaskExistInCommandSet(taskId)) {
-//                    break;
-//                }
-//                TimeUnit.MILLISECONDS.sleep(10);
-//            }
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-//    }
+    private void waitForCommandSet(@SuppressWarnings("SameParameterValue") SqlTaskIds taskId) {
+        try {
+            EventManagement eventManagement = EventManagement.getInstance();
+            long tmpStartTime = System.currentTimeMillis();
+            while (eventManagement.notMainExit()) {
+                //等待
+                if (System.currentTimeMillis() - tmpStartTime > 60 * 1000) {
+                    System.err.println("等待SQL语句任务" + taskId + "处理超时");
+                    break;
+                }
+                //判断commandSet中是否还有taskId存在
+                if (!isTaskExistInCommandSet(taskId)) {
+                    break;
+                }
+                TimeUnit.MILLISECONDS.sleep(10);
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 
     /**
      * 获取缓存数量
@@ -1674,14 +1690,14 @@ public class DatabaseService {
         return databaseCacheNum.get();
     }
 
-//    private boolean isTaskExistInCommandSet(SqlTaskIds taskId) {
-//        for (SQLWithTaskId tasks : commandQueue) {
-//            if (tasks.taskId == taskId) {
-//                return true;
-//            }
-//        }
-//        return false;
-//    }
+    private boolean isTaskExistInCommandSet(SqlTaskIds taskId) {
+        for (SQLWithTaskId tasks : commandQueue) {
+            if (tasks.taskId == taskId) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     private HashMap<String, Integer> queryAllWeights() {
         HashMap<String, Integer> stringIntegerHashMap = new HashMap<>();
@@ -1697,21 +1713,6 @@ public class DatabaseService {
         }
         return stringIntegerHashMap;
     }
-
-//    private void recreateDatabase() {
-//        commandQueue.clear();
-//        //删除所有索引
-//        String[] disks = RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks());
-//        //创建新表
-//        String sql = "CREATE TABLE IF NOT EXISTS list";
-//        for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
-//            String command = sql + i + " " + "(ASCII INT, PATH text unique, PRIORITY INT)" + ";";
-//            for (String disk : disks) {
-//                commandQueue.add(new SQLWithTaskId(command, SqlTaskIds.CREATE_TABLE, String.valueOf(disk.charAt(0))));
-//            }
-//        }
-//        sendExecuteSQLSignal();
-//    }
 
     private void checkTimeAndSendExecuteSqlSignalThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
@@ -1809,7 +1810,8 @@ public class DatabaseService {
 
     @EventRegister(registerClass = CheckDatabaseEmptyEvent.class)
     private static void checkDatabaseEmpty(Event event) {
-        event.setReturnValue(SQLiteUtil.isDatabaseDamaged());
+        boolean databaseDamaged = SQLiteUtil.isDatabaseDamaged();
+        event.setReturnValue(databaseDamaged);
     }
 
     @EventRegister(registerClass = InitializeDatabaseEvent.class)
@@ -2101,6 +2103,11 @@ public class DatabaseService {
         if (AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
             GPUAccelerator.INSTANCE.stopCollectResults();
             GPUAccelerator.INSTANCE.release();
+        }
+        try {
+            databaseService.closeSharedMemory();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

@@ -14,4 +14,6 @@ public enum ResultPipe {
     public native void closeAllSharedMemory();
 
     public native boolean isComplete();
+
+    public native boolean isDatabaseComplete();
 }

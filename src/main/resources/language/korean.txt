@@ -190,7 +190,7 @@ Including the color of the window, the hot key to call out the search box, the t
 End of the tutorial=튜 토리 얼 종료
 You can enter ":help" in the search bar at any time to enter the tutorial=검색 창 에 "help" 을 수시로 입력 하여 튜 토리 얼 에 들 어 갈 수 있 습 니 다
 There are more detailed tutorials on the Github wiki. Would you like to check it out?=githubwiki 에 더 자세 한 튜 토리 얼 이 있 습 니 다.보 실 래 요?
-Please wait up to 10 seconds=최대 10 초 동안 기다려주십시오
+Please wait up to 60 seconds=최대 60 초 동안 기다려주십시오
 Waiting overtime=대기 시간 초과
 Modify suffix priority=접미사 우선 순위 수정
 Modify=수정

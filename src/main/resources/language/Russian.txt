@@ -190,7 +190,7 @@ Including the color of the window, the hot key to call out the search box, the t
 End of the tutorial=конец курса
 You can enter ":help" in the search bar at any time to enter the tutorial=Вы можете в любое время ввести курс "help"
 There are more detailed tutorials on the Github wiki. Would you like to check it out?=на гитаubwiki есть более подробные учебники.Хочешь посмотреть?
-Please wait up to 10 seconds=Подождите до 10 секунд
+Please wait up to 60 seconds=Подождите до 60 секунд
 Waiting overtime=Тайм-аут ожидания
 Modify suffix priority=Изменить приоритет суффикса
 Modify=Изменить

@@ -190,7 +190,7 @@ Including the color of the window, the hot key to call out the search box, the t
 End of the tutorial=教程结束
 You can enter ":help" in the search bar at any time to enter the tutorial=您可以随时在搜索栏中输入“：help”进入教程
 There are more detailed tutorials on the Github wiki. Would you like to check it out?=github的wiki上有更详细的教程。你想看看吗？
-Please wait up to 10 seconds=请等待最多10秒
+Please wait up to 60 seconds=请等待最多60秒
 Waiting overtime=等待超时
 Modify suffix priority=修改后缀优先级
 Modify=修改

@@ -14,9 +14,8 @@
 #include "constants.h"
 
 CONCURRENT_MAP<HANDLE, LPVOID> shared_memory_map;
-static std::atomic_int* complete_task_count = new std::atomic_int(0);
-static std::atomic_int* all_task_count = new std::atomic_int(0);
-static std::atomic<LPVOID> is_complete_ptr(nullptr);
+static std::atomic_int complete_task_count(0);
+static std::atomic_int all_task_count(0);
 
 volume::volume(const char vol, sqlite3* database, std::vector<std::string>* ignore_paths, PriorityMap* priority_map)
 {
@@ -26,7 +25,7 @@ volume::volume(const char vol, sqlite3* database, std::vector<std::string>* igno
 	path = "";
 	db = database;
 	ignore_path_vector_ = ignore_paths;
-	++* all_task_count;
+	++all_task_count;
 }
 
 void volume::init_volume()
@@ -94,9 +93,8 @@ void volume::init_volume()
 			auto&& info = string("start to copy disk ") + this->getDiskPath() + " to shared memory";
 			printf("%s\n", info.c_str());
 			copy_results_to_shared_memory();
-			set_complete_signal();
-			++* complete_task_count;
 			printf("copy to shared memory complete. save to database.\n");
+			++complete_task_count;
 			if (save_results_to_db_thread.joinable())
 				save_results_to_db_thread.join();
 		}
@@ -204,12 +202,6 @@ void volume::collect_result_to_result_map(const int ascii, const std::string& fu
 	}
 }
 
-void volume::set_complete_signal()
-{
-	const BOOL is_all_done = all_task_count->load() == complete_task_count->load();
-	memcpy_s(is_complete_ptr.load(), sizeof(BOOL), &is_all_done, sizeof(BOOL));
-}
-
 void volume::create_shared_memory_and_copy(const std::string& list_name, const int priority,
 	const std::string& shared_memory_name)
 {
@@ -244,7 +236,9 @@ void volume::create_shared_memory_and_copy(const std::string& list_name, const i
 		{
 			continue;
 		}
-		memcpy_s(reinterpret_cast<void*>(reinterpret_cast<size_t>(p_buf) + count * RECORD_MAX_PATH),
+		auto buffer_addr = reinterpret_cast<void*>(reinterpret_cast<size_t>(p_buf) + count * RECORD_MAX_PATH);
+		memset(buffer_addr, 0, RECORD_MAX_PATH);
+		memcpy_s(buffer_addr,
 			RECORD_MAX_PATH,
 			iterator->c_str(), iterator->length());
 		++count;
@@ -739,18 +733,37 @@ std::string get_file_name(const std::string& path)
 	return file_name;
 }
 
-bool init_complete_signal_memory()
+bool init_complete_signal_database(void** complete_ptr)
+{
+	HANDLE handle;
+	LPVOID tmp;
+	create_file_mapping(handle, tmp, sizeof(bool), "sharedMemory:complete:database:status");
+	if (tmp == nullptr)
+	{
+		fprintf(stderr, "fileSearcherUSN: init sharedMemory:complete:database:status failed. Code: %ld\n", GetLastError());
+		return false;
+	}
+	*complete_ptr = tmp;
+	return true;
+}
+
+bool init_complete_signal_memory(void** complete_ptr)
 {
 	HANDLE handle;
 	LPVOID tmp;
 	create_file_mapping(handle, tmp, sizeof(bool), "sharedMemory:complete:status");
 	if (tmp == nullptr)
 	{
-		fprintf(stderr, "fileSearcherUSN: %ld\n", GetLastError());
+		fprintf(stderr, "fileSearcherUSN: init sharedMemory:complete:status failed. Code: %ld\n", GetLastError());
 		return false;
 	}
-	is_complete_ptr.store(tmp);
+	*complete_ptr = tmp;
 	return true;
+}
+
+bool is_all_shared_memory_copied()
+{
+	return all_task_count.load() == complete_task_count.load();
 }
 
 void close_shared_memory()

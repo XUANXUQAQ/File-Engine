@@ -3,14 +3,16 @@
 #include <Windows.h>
 #include <concurrent_unordered_map.h>
 #include "file_engine_dllInterface_ResultPipe.h"
+#define MAX_RECORD_LENGTH 384
+
 using namespace std;
 
 concurrency::concurrent_unordered_map<string, pair<HANDLE, LPVOID>> connectionPool;
 
-extern "C" __declspec(dllexport) char* getResult(char disk, const char* listName, int priority, int offset);
-extern "C" __declspec(dllexport) void closeAllSharedMemory();
-extern "C" __declspec(dllexport) BOOL isComplete();
-
+char* getResult(char disk, const char* listName, int priority, int offset);
+void closeAllSharedMemory();
+bool isComplete();
+bool isDatabaseComplete();
 
 JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_ResultPipe_getResult
 (JNIEnv* env, jobject, jchar disk, jstring listName, jint priority, jint offset)
@@ -30,14 +32,19 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_ResultPipe_closeAllSharedMe
 JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_ResultPipe_isComplete
 (JNIEnv*, jobject)
 {
-	return static_cast<jboolean>(isComplete());
+	return isComplete();
+}
+
+JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_ResultPipe_isDatabaseComplete
+(JNIEnv*, jobject)
+{
+	return isDatabaseComplete();
 }
 
 inline void createFileMapping(HANDLE& hMapFile, LPVOID& pBuf, size_t memorySize, const char* sharedMemoryName);
 
 char* getResult(char disk, const char* listName, const int priority, const int offset)
 {
-	constexpr int maxPath = 500;
 	string memoryName("sharedMemory:");
 	memoryName += disk;
 	memoryName += ":";
@@ -51,7 +58,7 @@ char* getResult(char disk, const char* listName, const int priority, const int o
 	void* resultsSize = nullptr;
 	try
 	{
-		resultsSize = static_cast<int*>(connectionPool.at(resultSizeMemoryName).second);
+		resultsSize = static_cast<size_t*>(connectionPool.at(resultSizeMemoryName).second);
 	}
 	catch(exception&)
 	{
@@ -61,8 +68,8 @@ char* getResult(char disk, const char* listName, const int priority, const int o
 	{
 		return nullptr;
 	}
-	const int resultCount = *static_cast<int*>(resultsSize) / maxPath;
-	if (resultCount < offset)
+	const auto resultCount = *static_cast<size_t*>(resultsSize) / MAX_RECORD_LENGTH;
+	if (resultCount <= static_cast<size_t>(offset) || resultCount == 0)
 	{
 		return nullptr;
 	}
@@ -75,7 +82,8 @@ char* getResult(char disk, const char* listName, const int priority, const int o
 	{
 		createFileMapping(hMapFile, resultsPtr, *static_cast<int*>(resultsSize), resultMemoryName.c_str());
 	}
-	return reinterpret_cast<char*>(reinterpret_cast<long long>(resultsPtr) + static_cast<long long>(offset) * maxPath);
+	const auto recordFromMemory = reinterpret_cast<char*>(reinterpret_cast<size_t>(resultsPtr) + static_cast<size_t>(offset) * MAX_RECORD_LENGTH);
+	return recordFromMemory;
 }
 
 inline void createFileMapping(HANDLE& hMapFile, LPVOID& pBuf, size_t memorySize, const char* sharedMemoryName)
@@ -100,14 +108,14 @@ inline void createFileMapping(HANDLE& hMapFile, LPVOID& pBuf, size_t memorySize,
 	connectionPool.insert(pair<string, pair<HANDLE, LPVOID>>(sharedMemoryName, pair<HANDLE, void*>(hMapFile, pBuf)));
 }
 
-BOOL isComplete()
+bool isComplete()
 {
 	void* pBuf;
 	static constexpr auto completeSignal = "sharedMemory:complete:status";
 	if (connectionPool.find(completeSignal) == connectionPool.end())
 	{
 		HANDLE hMapFile;
-		createFileMapping(hMapFile, pBuf, sizeof(BOOL), completeSignal);
+		createFileMapping(hMapFile, pBuf, sizeof(bool), completeSignal);
 	}
 	else
 	{
@@ -115,9 +123,29 @@ BOOL isComplete()
 	}
 	if (pBuf == nullptr)
 	{
-		return FALSE;
+		return false;
 	}
-	return *static_cast<BOOL*>(pBuf);
+	return *static_cast<bool*>(pBuf);
+}
+
+bool isDatabaseComplete()
+{
+	void* pBuf;
+	static constexpr auto completeSignal = "sharedMemory:complete:database:status";
+	if (connectionPool.find(completeSignal) == connectionPool.end())
+	{
+		HANDLE hMapFile;
+		createFileMapping(hMapFile, pBuf, sizeof(bool), completeSignal);
+	}
+	else
+	{
+		pBuf = connectionPool.at(completeSignal).second;
+	}
+	if (pBuf == nullptr)
+	{
+		return false;
+	}
+	return *static_cast<bool*>(pBuf);
 }
 
 void closeAllSharedMemory()

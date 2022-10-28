@@ -1056,19 +1056,20 @@ public class SearchBar {
         if (isPreviewMode.get()) {
             return;
         }
-        int count = 0;
-        final int maxWaiting = 30;
+        final int maxWaiting = 60_000;
+        final long startWait = System.currentTimeMillis();
         AtomicBoolean isCanceled = new AtomicBoolean(false);
         TranslateService translateService = TranslateService.getInstance();
         DatabaseService databaseService = DatabaseService.getInstance();
         //检查数据库是否正常
-        if (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL) {
+        if (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL || AllConfigs.isFirstRun()) {
+            closeSearchBar();
             JFrame frame = new JFrame();
             frame.setUndecorated(true);
             frame.getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
             LoadingPanel glassPane = new LoadingPanel(translateService.getTranslation("Waiting for searching disks")
                     + ", "
-                    + translateService.getTranslation("Please wait up to 30 seconds"));
+                    + translateService.getTranslation("Please wait up to 60 seconds"));
             glassPane.setSize(600, 400);
             frame.setGlassPane(glassPane);
             glassPane.start();//开始动画加载效果
@@ -1084,9 +1085,11 @@ public class SearchBar {
             });
             try {
                 //二次检查并尝试等待
-                while (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL && count < maxWaiting) {
-                    count++;
-                    TimeUnit.SECONDS.sleep(1);
+                while (System.currentTimeMillis() - startWait <= maxWaiting) {
+                    if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
+                        break;
+                    }
+                    TimeUnit.MILLISECONDS.sleep(1);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -1098,7 +1101,7 @@ public class SearchBar {
         if (isCanceled.get()) {
             return;
         }
-        if (count == maxWaiting) {
+        if (System.currentTimeMillis() - startWait > maxWaiting) {
             JOptionPane.showMessageDialog(null, translateService.getTranslation("Waiting overtime"));
             return;
         }

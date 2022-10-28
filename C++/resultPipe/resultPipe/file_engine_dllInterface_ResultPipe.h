@@ -31,6 +31,14 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_ResultPipe_closeAllSharedMe
 JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_ResultPipe_isComplete
   (JNIEnv *, jobject);
 
+/*
+ * Class:     file_engine_dllInterface_ResultPipe
+ * Method:    isDatabaseComplete
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_ResultPipe_isDatabaseComplete
+  (JNIEnv *, jobject);
+
 #ifdef __cplusplus
 }
 #endif

@@ -18,7 +18,7 @@ void init_tables(sqlite3* db)
 	sqlite3_exec(db, "BEGIN;", nullptr, nullptr, nullptr);
 	for (int i = 0; i < 41; i++)
 	{
-		string sql = "CREATE TABLE IF NOT EXISTS list" + to_string(i) + 
+		string sql = "CREATE TABLE IF NOT EXISTS list" + to_string(i) +
 			R"((ASCII INT, PATH TEXT, PRIORITY INT, PRIMARY KEY("ASCII","PATH","PRIORITY")))";
 		sqlite3_exec(db, sql.c_str(), nullptr, nullptr, nullptr);
 	}
@@ -64,7 +64,7 @@ inline bool init_priority_map(PriorityMap& priority_map, const char* priorityDbP
 	{
 		const string suffix(p_result[i]);
 		const string priority_val(p_result[i + 1]);
-		auto pair_priority = pair{suffix, stoi(priority_val)};
+		auto pair_priority = pair{ suffix, stoi(priority_val) };
 		priority_map.insert(pair_priority);
 	}
 	priority_map.insert(pair<string, int>("dirPriority", -1));
@@ -97,6 +97,33 @@ void split_string(const char* str, std::vector<std::string>& vec)
 	}
 }
 
+bool is_file_exist(const char* file_path)
+{
+	FILE* fp = nullptr;
+	fopen_s(&fp, file_path, "rb");
+	if (fp != nullptr)
+	{
+		fclose(fp);
+		return true;
+	}
+	return false;
+}
+
+bool get_search_info(char disk_path[500], char output[500], char ignore_path[500])
+{
+	std::ifstream input("MFTSearchInfo.dat", std::ios::in);
+	if (!input)
+	{
+		fprintf(stderr, "fileSearcherUSN: open MFTSearchInfo.dat failed\n");
+		return false;
+	}
+	input.getline(disk_path, 500);
+	input.getline(output, 500);
+	input.getline(ignore_path, 500);
+	input.close();
+	return true;
+}
+
 int main()
 {
 	using namespace std;
@@ -104,40 +131,39 @@ int main()
 	char output[500];
 	char ignore_path[500];
 
-	vector<string> disk_vector;
-	vector<string> ignore_paths_vector;
-
-	ifstream input("MFTSearchInfo.dat", ios::in);
-	if (!input)
+	if (!get_search_info(disk_path, output, ignore_path))
 	{
-		fprintf(stderr, "fileSearcherUSN: open MFTSearchInfo.dat failed\n");
 		return 1;
 	}
-	input.getline(disk_path, 500);
-	input.getline(output, 500);
-	input.getline(ignore_path, 500);
-	input.close();
 
 #ifdef TEST
 	cout << "disk path: " << disk_path << endl;
 	cout << "output: " << output << endl;
 	cout << "ignore_path" << ignore_path << endl;
 #endif
-	disk_vector.reserve(26);
+	vector<string> disk_vector;
+	vector<string> ignore_paths_vector;
 
-	sqlite3_config(SQLITE_CONFIG_MULTITHREAD);
-	sqlite3_config(SQLITE_CONFIG_MEMSTATUS, 0);
+	disk_vector.reserve(26);
 
 	split_string(disk_path, disk_vector);
 	split_string(ignore_path, ignore_paths_vector);
 
 	bool is_priority_map_initialized = false;
 	vector<thread> threads;
-	if (!init_complete_signal_memory())
+	void* complete_signal;
+	void* complete_signal_database;
+
+	if (!init_complete_signal_memory(&complete_signal) || !init_complete_signal_database(&complete_signal_database))
 	{
 		close_shared_memory();
 		return 1;
 	}
+	*static_cast<bool*>(complete_signal) = false;
+	*static_cast<bool*>(complete_signal_database) = false;
+
+	sqlite3_config(SQLITE_CONFIG_MULTITHREAD);
+	sqlite3_config(SQLITE_CONFIG_MEMSTATUS, 0);
 	// 创建线程
 	for (auto& iter : disk_vector)
 	{
@@ -178,10 +204,34 @@ int main()
 			threads.emplace_back(thread(init_usn, p));
 		}
 	}
+	//等待共享内存
+	while (!is_all_shared_memory_copied())
+	{
+		Sleep(100);
+	}
+	//设置共享内存可用标志
+	*static_cast<bool*>(complete_signal) = true;
 
+	//等待数据库写入
 	for (auto& each_thread : threads)
 	{
 		each_thread.join();
+	}
+	//设置数据库写入完成标志
+	*static_cast<bool*>(complete_signal_database) = true;
+
+	//等待关闭
+	char current_dir[1000]{ 0 };
+	GetModuleFileNameA(nullptr, current_dir, sizeof current_dir);
+	std::string tmp_current_dir(current_dir);
+	tmp_current_dir = tmp_current_dir.substr(0, tmp_current_dir.find_last_of('\\'));
+	tmp_current_dir = tmp_current_dir.substr(0, tmp_current_dir.find_last_of('\\'));
+	tmp_current_dir += "\\tmp\\closeSharedMemory";
+	strcpy_s(current_dir, tmp_current_dir.c_str());
+
+	while (!is_file_exist(current_dir))
+	{
+		Sleep(100);
 	}
 	close_shared_memory();
 	return 0;

@@ -190,7 +190,7 @@ Including the color of the window, the hot key to call out the search box, the t
 End of the tutorial=Fin du tutoriel
 You can enter ":help" in the search bar at any time to enter the tutorial=Vous pouvez entrer le tutoriel en entrant ": help" dans la barre de recherche à tout moment
 There are more detailed tutorials on the Github wiki. Would you like to check it out?=Des tutoriels plus détaillés sont disponibles sur githubwiki.Tu veux le voir?
-Please wait up to 10 seconds=Veuillez patienter jusqu'à 10 secondes
+Please wait up to 60 seconds=Veuillez patienter jusqu'à 60 secondes
 Waiting overtime=Délai d'attente
 Modify suffix priority=Modifier la priorité du suffixe
 Modify=Modifier

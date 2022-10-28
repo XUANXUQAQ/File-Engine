@@ -112,8 +112,7 @@ private:
 	void init_single_prepare_statement(sqlite3_stmt** statement, const char* init) const;
 	void save_all_results_to_db();
 	void create_shared_memory_and_copy(const std::string& list_name, int priority,
-	                               const std::string& shared_memory_name);
-	static void set_complete_signal();
+		const std::string& shared_memory_name);
 };
 
 
@@ -123,8 +122,12 @@ std::string to_utf8(const std::wstring& str);
 
 std::string get_file_name(const std::string& path);
 
-bool init_complete_signal_memory();
+bool init_complete_signal_memory(void** complete_ptr);
+
+bool init_complete_signal_database(void** complete_ptr);
 
 void close_shared_memory();
+
+bool is_all_shared_memory_copied();
 
 void create_file_mapping(HANDLE& h_map_file, LPVOID& p_buf, size_t memory_size, const char* shared_memory_name);
