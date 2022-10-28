@@ -216,7 +216,6 @@ void volume::create_shared_memory_and_copy(const std::string& list_name, const i
 	}
 	CONCURRENT_SET<std::string>& result = table->at(priority);
 	size_t result_size = result.size();
-	result_size = result_size > MAX_RECORD_COUNT ? MAX_RECORD_COUNT : result_size;
 	const size_t memory_size = result_size * RECORD_MAX_PATH;
 
 	// 创建共享文件句柄
@@ -228,11 +227,9 @@ void volume::create_shared_memory_and_copy(const std::string& list_name, const i
 		return;
 	}
 	size_t count = 0;
-	for (auto iterator = result.begin();
-		iterator != result.end() && count < MAX_RECORD_COUNT;
-		++iterator)
+	for (const auto& iterator : result)
 	{
-		if (iterator->length() >= RECORD_MAX_PATH)
+		if (iterator.length() >= RECORD_MAX_PATH)
 		{
 			continue;
 		}
@@ -240,7 +237,7 @@ void volume::create_shared_memory_and_copy(const std::string& list_name, const i
 		memset(buffer_addr, 0, RECORD_MAX_PATH);
 		memcpy_s(buffer_addr,
 			RECORD_MAX_PATH,
-			iterator->c_str(), iterator->length());
+			iterator.c_str(), iterator.length());
 		++count;
 	}
 	// 保存该结果的大小信息
