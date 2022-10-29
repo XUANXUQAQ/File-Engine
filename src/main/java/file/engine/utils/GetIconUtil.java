@@ -17,18 +17,16 @@ import java.util.function.Consumer;
  */
 public class GetIconUtil {
     private static final int MAX_WORKING_QUEUE_SIZE = 200;
-    private static final int WORKING_THREAD_NUMBER = 2;
     private static final FileSystemView FILE_SYSTEM_VIEW = FileSystemView.getFileSystemView();
     private final ConcurrentHashMap<String, ImageIcon> iconMap = new ConcurrentHashMap<>();
     private final LinkedBlockingQueue<Task> workingQueue = new LinkedBlockingQueue<>(MAX_WORKING_QUEUE_SIZE);
-    private final ExecutorService fixedThreadPool = Executors.newFixedThreadPool(WORKING_THREAD_NUMBER);
+    private Thread workingThread;
 
     private static volatile GetIconUtil INSTANCE = null;
 
     private GetIconUtil() {
         initIconCache();
         startWorkingThread();
-        sendShutdownThread();
     }
 
     public static GetIconUtil getInstance() {
@@ -124,39 +122,32 @@ public class GetIconUtil {
         return changeIcon(iconMap.get("blankIcon"), width, height);
     }
 
-    private void sendShutdownThread() {
-        new Thread(() -> {
+    private void startWorkingThread() {
+        workingThread = new Thread(() -> {
             EventManagement eventManagement = EventManagement.getInstance();
             try {
                 while (eventManagement.notMainExit()) {
-                    TimeUnit.SECONDS.sleep(1);
+                    var take = workingQueue.take();
+                    if (take.timeoutCallBack != null) {
+                        if (!take.isDone) {
+                            take.icon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(take.path), take.width, take.height);
+                        }
+                        take.timeoutCallBack.accept(take.icon);
+                    } else {
+                        take.icon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(take.path), take.width, take.height);
+                        take.isDone = true;
+                    }
                 }
             } catch (InterruptedException ignored) {
+                // ignore InterruptedException
             }
-            fixedThreadPool.shutdownNow();
-        }).start();
+        });
+        workingThread.start();
     }
 
-    private void startWorkingThread() {
-        for (int i = 0; i < WORKING_THREAD_NUMBER; i++) {
-            fixedThreadPool.submit(() -> {
-                EventManagement eventManagement = EventManagement.getInstance();
-                try {
-                    while (eventManagement.notMainExit()) {
-                        var take = workingQueue.take();
-                        if (take.timeoutCallBack != null) {
-                            if (!take.isDone) {
-                                take.icon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(take.path), take.width, take.height);
-                            }
-                            take.timeoutCallBack.accept(take.icon);
-                        } else {
-                            take.icon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(take.path), take.width, take.height);
-                            take.isDone = true;
-                        }
-                    }
-                } catch (InterruptedException ignored) {
-                }
-            });
+    public void stopWorkingThread() {
+        if (workingThread != null) {
+            workingThread.interrupt();
         }
     }
 

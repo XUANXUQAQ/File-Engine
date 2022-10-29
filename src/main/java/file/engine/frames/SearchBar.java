@@ -2681,6 +2681,7 @@ public class SearchBar {
     private static void hideSearchBarEvent(Event event) {
         SearchBar searchBar = getInstance();
         searchBar.closeSearchBar();
+        GetIconUtil.getInstance().stopWorkingThread();
     }
 
     @EventListener(listenClass = SetConfigsEvent.class)
