@@ -1,0 +1,1 @@
+--enable-preview -Xms8M -Xmx50M -XX:+CompactStrings -DFile_Engine_Debug=true -XX:+UseG1GC
