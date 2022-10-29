@@ -437,7 +437,9 @@ public class EventManagement {
                         Objects.requireNonNull(EventManagement.class.getResourceAsStream("/classes.list")), StandardCharsets.UTF_8))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                classesList.add(line);
+                if (!line.isBlank()) {
+                    classesList.add(line);
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();

@@ -1,12 +1,12 @@
 file.engine.frames.TaskBar
-file.engine.services.plugin.system.PluginService
 file.engine.services.CheckHotKeyService
+file.engine.services.plugin.system.PluginService
 file.engine.frames.PluginMarket
 file.engine.services.OpenFileService
 file.engine.services.download.DownloadService
 file.engine.services.DatabaseService
 file.engine.configs.AllConfigs
+file.engine.services.DatabaseService$GPUCacheService
 file.engine.frames.SettingsFrame
 file.engine.frames.SearchBar
 file.engine.services.DaemonService
-file.engine.services.DatabaseService$GPUCacheService

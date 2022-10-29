@@ -1,4 +1,4 @@
-package file.engine.utils.bit;
+package file.engine.utils;
 
 import java.util.Arrays;
 import java.util.Objects;

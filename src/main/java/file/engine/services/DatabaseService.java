@@ -26,7 +26,7 @@ import file.engine.services.utils.connection.SQLiteUtil;
 import file.engine.utils.CachedThreadPoolUtil;
 import file.engine.utils.ProcessUtil;
 import file.engine.utils.RegexUtil;
-import file.engine.utils.bit.Bit;
+import file.engine.utils.Bit;
 import file.engine.utils.gson.GsonUtil;
 import file.engine.utils.system.properties.IsDebug;
 import lombok.AllArgsConstructor;

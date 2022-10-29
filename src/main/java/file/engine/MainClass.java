@@ -226,7 +226,7 @@ public class MainClass {
             eventManagement.registerAllHandler();
             eventManagement.registerAllListener();
             if (IsDebug.isDebug()) {
-                ClassScannerUtil.printClassesWithAnnotation();
+                ClassScannerUtil.saveToClassListFile();
             }
         }
         eventManagement.releaseClassesList();

@@ -2,8 +2,13 @@ package file.engine.utils.clazz.scan;
 
 import file.engine.utils.system.properties.IsDebug;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -52,7 +57,18 @@ public class ClassScannerUtil {
         }
     }
 
-    public static void printClassesWithAnnotation() {
-        System.out.println(classWithAnnotation);
+    public static void saveToClassListFile() {
+        File classListFile = new File( "src/main/resources/classes.list");
+        if (!classListFile.exists()) {
+            return;
+        }
+        try (var classListStream = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(classListFile), StandardCharsets.UTF_8))) {
+            for (String s : classWithAnnotation) {
+                classListStream.write(s);
+                classListStream.newLine();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
