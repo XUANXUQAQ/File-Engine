@@ -360,7 +360,7 @@ char* strlwr(char* src)
 {
 	while (*src != '\0')
 	{
-		if (*src > 'A' && *src <= 'Z')
+		if (*src >= 'A' && *src <= 'Z')
 		{
 			*src += 32;
 		}

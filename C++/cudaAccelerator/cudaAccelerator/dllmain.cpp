@@ -563,9 +563,13 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 		for (const auto& [key, val] : cache_map)
 		{
 			if (stop_func())
+			{
 				break;
+			}
 			if (!val->is_cache_valid)
+			{
 				continue;
+			}
 			if (!val->is_match_done.load())
 			{
 				//发现仍然有结果未计算完，设置退出标志为false，跳到下一个计算结果
@@ -573,7 +577,9 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 				continue;
 			}
 			if (int expected = 0; !val->is_output_done.compare_exchange_strong(expected, 1))
+			{
 				continue;
+			}
 			unsigned matched_number = 0;
 			//复制结果数组到host，dev_output下标对应dev_cache中的下标，若dev_output[i]中的值为1，则对应dev_cache[i]字符串匹配成功
 			const auto output_ptr = new char[val->str_data.record_num + val->str_data.remain_blank_num];
@@ -583,7 +589,9 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 			for (size_t i = 0; i < val->str_data.record_num.load(); ++i)
 			{
 				if (stop_func())
+				{
 					break;
+				}
 				//dev_cache[i]字符串匹配成功
 				if (static_cast<bool>(output_ptr[i]))
 				{

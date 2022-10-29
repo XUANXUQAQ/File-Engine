@@ -367,6 +367,7 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 		dev_ptr_arr[count] = reinterpret_cast<size_t>(dev_total_number);
 		const auto total_number = cache->str_data.record_num + cache->str_data.remain_blank_num;
 		gpuErrchk(cudaMemcpy(dev_total_number, &total_number, sizeof(size_t), cudaMemcpyHostToDevice), true, nullptr);
+
 		check << <block_num, thread_num >> >
 			(cache->str_data.dev_str_addr,
 				dev_total_number,
