@@ -632,13 +632,19 @@ public class DatabaseService {
         EventManagement eventManagement = EventManagement.getInstance();
         try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement(sql, diskStr);
              ResultSet resultSet = pStmt.executeQuery()) {
-            while (eventManagement.notMainExit() && resultSet.next()) {
+            boolean isExit = false;
+            while (!isExit && eventManagement.notMainExit()) {
                 int i = 0;
                 // 先将结果查询出来，再进行字符串匹配，提高吞吐量
-                do {
-                    tmpQueryResultsCache[i] = resultSet.getString("PATH");
-                    ++i;
-                } while (eventManagement.notMainExit() && resultSet.next() && i < MAX_TEMP_QUERY_RESULT_CACHE);
+                while (i < MAX_TEMP_QUERY_RESULT_CACHE && eventManagement.notMainExit()) {
+                    if (resultSet.next()) {
+                        tmpQueryResultsCache[i] = resultSet.getString("PATH");
+                        ++i;
+                    } else {
+                        isExit = true;
+                        break;
+                    }
+                }
                 //结果太多则不再进行搜索
                 //用户重新输入了信息
                 if (shouldStopSearch.get()) {
