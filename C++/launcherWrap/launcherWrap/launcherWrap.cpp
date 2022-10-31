@@ -27,7 +27,7 @@
 
 constexpr auto* g_file_engine_zip_name = "File-Engine.zip";
 std::string g_jvm_parameters =
-"-Xms8M -Xmx64M -XX:+UseG1GC -XX:+UseStringDeduplication -XX:MaxHeapFreeRatio=20 -XX:MinHeapFreeRatio=10 -XX:+CompactStrings";
+"-Xms8M -Xmx256M -XX:+UseG1GC -XX:+UseStringDeduplication -XX:MaxHeapFreeRatio=20 -XX:MinHeapFreeRatio=10 -XX:+CompactStrings";
 
 char g_close_signal_file[1000];
 char g_file_engine_jar_path[1000];
