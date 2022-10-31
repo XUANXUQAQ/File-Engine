@@ -43,11 +43,15 @@ import java.awt.event.*;
 import java.awt.geom.RoundRectangle2D;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -2085,7 +2089,6 @@ public class SearchBar {
         } else if (runningMode == RunningMode.COMMAND_MODE) {
             //到达了最上端，刷新显示
             try {
-
                 String command = listResults.get(currentResultCount.get());
                 showCommandOnLabel(command, label1, true);
                 if (size > currentResultCount.get() + 1) {
@@ -2093,22 +2096,18 @@ public class SearchBar {
                     showCommandOnLabel(command, label2, false);
                 }
                 if (size > currentResultCount.get() + 2) {
-
                     command = listResults.get(currentResultCount.get() + 2);
                     showCommandOnLabel(command, label3, false);
                 }
                 if (size > currentResultCount.get() + 3) {
-
                     command = listResults.get(currentResultCount.get() + 3);
                     showCommandOnLabel(command, label4, false);
                 }
                 if (size > currentResultCount.get() + 4) {
-
                     command = listResults.get(currentResultCount.get() + 4);
                     showCommandOnLabel(command, label5, false);
                 }
                 if (size > currentResultCount.get() + 5) {
-
                     command = listResults.get(currentResultCount.get() + 5);
                     showCommandOnLabel(command, label6, false);
                 }
@@ -2660,7 +2659,7 @@ public class SearchBar {
      */
     private void initThreadPool() {
         sendSignalAndShowCommandThread();
-
+        sendGetIconTaskThread();
         switchSearchBarShowingMode();
     }
 
@@ -2777,6 +2776,61 @@ public class SearchBar {
     @EventRegister(registerClass = GetShowingModeEvent.class)
     private static void getShowingModeEvent(Event event) {
         event.setReturnValue(getInstance().showingMode);
+    }
+
+    private void sendGetIconTaskThread() {
+        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            try {
+                final int labelNumber = 8;
+                EventManagement eventManagement = EventManagement.getInstance();
+                Method getToolTipText = JComponent.class.getDeclaredMethod("getToolTipText");
+                getToolTipText.setAccessible(true);
+                Method setIcon = JLabel.class.getDeclaredMethod("setIcon", Icon.class);
+                setIcon.setAccessible(true);
+                SearchBar searchBarInstance = getInstance();
+                GetIconUtil getIconUtil = GetIconUtil.getInstance();
+                HashMap<String, Field> objectHashMap = new HashMap<>();
+                for (int i = 1; i <= labelNumber; i++) {
+                    String fieldName = "label" + i;
+                    Field declaredField = SearchBar.class.getDeclaredField(fieldName);
+                    declaredField.setAccessible(true);
+                    objectHashMap.put(fieldName, declaredField);
+                }
+                while (eventManagement.notMainExit()) {
+                    switch (runningMode) {
+                        case NORMAL_MODE:
+                        case COMMAND_MODE:
+                            if (isVisible()) {
+                                for (int i = 1; i <= labelNumber; ++i) {
+                                    Field labelField = objectHashMap.get("label" + i);
+                                    Object labelInstance = labelField.get(searchBarInstance);
+                                    String path = (String) getToolTipText.invoke(labelInstance);
+                                    if (!(path == null || path.isBlank() || !Files.exists(Path.of(path)))) {
+                                        ImageIcon icon = getIconUtil.getBigIcon(path, iconSideLength, iconSideLength, icon2 ->
+                                                SwingUtilities.invokeLater(() -> {
+                                                    try {
+                                                        setIcon.invoke(labelInstance, icon2);
+                                                    } catch (IllegalAccessException | InvocationTargetException e) {
+                                                        throw new RuntimeException(e);
+                                                    }
+                                                }));
+                                        setIcon.invoke(labelInstance, icon);
+                                    }
+                                }
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                    TimeUnit.SECONDS.sleep(1);
+                }
+            } catch (InterruptedException ignored) {
+                // ignore
+            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException |
+                     NoSuchFieldException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     /**
@@ -3947,8 +4001,9 @@ public class SearchBar {
             } else {
                 label.setName(RESULT_LABEL_NAME_HOLDER);
             }
+            label.setToolTipText(path);
             label.setText(allHtml);
-            ImageIcon icon = GetIconUtil.getInstance().getBigIcon(path, iconSideLength, iconSideLength, (icon2) ->
+            ImageIcon icon = GetIconUtil.getInstance().getBigIcon("blankIcon", iconSideLength, iconSideLength, icon2 ->
                     SwingUtilities.invokeLater(() -> label.setIcon(icon2)));
             label.setIcon(icon);
         }
@@ -4002,8 +4057,9 @@ public class SearchBar {
         String showStr = getHtml(null, command, new boolean[1]);
         label.setText(showStr);
         label.setName(RESULT_LABEL_NAME_HOLDER);
+        label.setToolTipText(path);
         ImageIcon imageIcon = getIconUtil.getCommandIcon(RegexUtil.colon.split(name)[1], iconSideLength, iconSideLength);
-        imageIcon = imageIcon == null ? getIconUtil.getBigIcon(path, iconSideLength, iconSideLength, (icon2) ->
+        imageIcon = imageIcon == null ? getIconUtil.getBigIcon("blankIcon", iconSideLength, iconSideLength, icon2 ->
                 SwingUtilities.invokeLater(() -> label.setIcon(icon2))) : imageIcon;
         label.setIcon(imageIcon);
         if (isChosen) {
@@ -4158,6 +4214,7 @@ public class SearchBar {
         label.setText(null);
         label.setName(null);
         label.setIcon(null);
+        label.setToolTipText(null);
     }
 
     /**
