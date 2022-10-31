@@ -2828,13 +2828,22 @@ public class SearchBar {
                 EventManagement eventManagement = EventManagement.getInstance();
                 GetHandle.INSTANCE.start();
                 AllConfigs allConfigs = AllConfigs.getInstance();
+                var screenInfo = new Object() {
+                    Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
+                    long screenSizeUpdateTime = System.currentTimeMillis();
+                };
+                final long updateScreenTimeLimit = 5000;
                 while (eventManagement.notMainExit()) {
+                    // 每隔5s更新一次屏幕大小
+                    if (System.currentTimeMillis() - screenInfo.screenSizeUpdateTime > updateScreenTimeLimit) {
+                        screenInfo.screenSizeUpdateTime = System.currentTimeMillis();
+                        screenInfo.screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+                    }
                     if (showingMode == Constants.Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
-                        getExplorerSizeAndChangeSearchBarSizeExplorerMode();
+                        getExplorerSizeAndChangeSearchBarSizeExplorerMode(screenInfo.screenSize);
                     } else {
-                        var screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
-                        int width = screenSize.width;
-                        int height = screenSize.height;
+                        int width = screenInfo.screenSize.width;
+                        int height = screenInfo.screenSize.height;
                         int searchBarWidth = (int) (width * 0.3);
                         int searchBarHeight = (int) (height * 0.4);
                         int positionX, positionY;
@@ -2854,7 +2863,7 @@ public class SearchBar {
                         switchToExplorerAttachMode();
                     } else {
                         if (showingMode != Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING && GetHandle.INSTANCE.changeToNormal()) {
-                            switchToNormalMode(true);
+                            switchToNormalMode(true, screenInfo.screenSize);
                         }
                     }
                     TimeUnit.MILLISECONDS.sleep(10);
@@ -2870,13 +2879,12 @@ public class SearchBar {
     /**
      * 获取explorer窗口大小，并修改显示模式和大小
      */
-    private void getExplorerSizeAndChangeSearchBarSizeExplorerMode() {
+    private void getExplorerSizeAndChangeSearchBarSizeExplorerMode(Dimension screenSize) {
         double dpi = DpiUtil.getDpi();
         long explorerWidth = (long) (GetHandle.INSTANCE.getExplorerWidth() / dpi);
         long explorerHeight = (long) (GetHandle.INSTANCE.getExplorerHeight() / dpi);
         long explorerX = (long) (GetHandle.INSTANCE.getExplorerX() / dpi);
         long explorerY = (long) (GetHandle.INSTANCE.getExplorerY() / dpi);
-        var screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         int searchBarWidth = (int) (explorerWidth * 0.3);
         int searchBarHeight = (int) (screenSize.height * 0.4);
 
@@ -3025,13 +3033,12 @@ public class SearchBar {
         return (int) (((searchBarHeight * 0.2) / 96 * 72) / 4.5);
     }
 
-    private void switchToNormalMode(boolean isCloseWindow) {
+    private void switchToNormalMode(boolean isCloseWindow, Dimension screenSize) {
         if (isCloseWindow) {
             closeSearchBar();
         } else {
             closeWithoutHideSearchBar();
         }
-        var screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
         int height = screenSize.height;
         int searchBarHeight = (int) (height * 0.5);
         //设置字体
@@ -3778,7 +3785,7 @@ public class SearchBar {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    switchToNormalMode(false);
+                    switchToNormalMode(false, Toolkit.getDefaultToolkit().getScreenSize());
                     isFocusGrabbed.set(true);
                 }
                 if (isBorderThreadNotExist.get()) {
