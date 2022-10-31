@@ -45,7 +45,6 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -54,6 +53,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -90,15 +90,17 @@ public class SearchBar {
     private Border pluginTopBorder;
     private Border pluginMiddleBorder;
     private Border pluginBottomBorder;
-    private final JFrame searchBar;
-    private JLabel label1;
-    private JLabel label2;
-    private JLabel label3;
-    private JLabel label4;
-    private JLabel label5;
-    private JLabel label6;
-    private JLabel label7;
-    private JLabel label8;
+    private final JFrame searchBar = new JFrame();
+    private final JLabel label1 = new JLabel();
+    private final JLabel label2 = new JLabel();
+    private final JLabel label3 = new JLabel();
+    private final JLabel label4 = new JLabel();
+    private final JLabel label5 = new JLabel();
+    private final JLabel label6 = new JLabel();
+    private final JLabel label7 = new JLabel();
+    private final JLabel label8 = new JLabel();
+    private final ConcurrentHashMap<JLabel, Boolean> labelIconLoadStatus = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<JLabel, String> labelShowingPathInfo = new ConcurrentHashMap<>();
     private JLabel searchInfoLabel;
     private final AtomicInteger currentResultCount;  //保存当前选中的结果是在listResults中的第几个 范围 0 - listResults.size()
     private JTextField textField;
@@ -139,7 +141,6 @@ public class SearchBar {
 
     private SearchBar() {
         listResults = new ArrayList<>();
-        searchBar = new JFrame();
         currentResultCount = new AtomicInteger(0);
         TranslateService translateService = TranslateService.getInstance();
         open = new JMenuItem(translateService.getTranslation("Open"));
@@ -240,14 +241,6 @@ public class SearchBar {
 
         //labels
         final Font labelFont = new Font(Font.SANS_SERIF, Font.BOLD, getLabelFontSizeBySearchBarHeight(searchBarHeight));
-        label1 = new JLabel();
-        label2 = new JLabel();
-        label3 = new JLabel();
-        label4 = new JLabel();
-        label5 = new JLabel();
-        label6 = new JLabel();
-        label7 = new JLabel();
-        label8 = new JLabel();
         searchInfoLabel = new JLabel();
         searchInfoLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
@@ -2783,10 +2776,6 @@ public class SearchBar {
             try {
                 final int labelNumber = 8;
                 EventManagement eventManagement = EventManagement.getInstance();
-                Method getToolTipText = JComponent.class.getDeclaredMethod("getToolTipText");
-                getToolTipText.setAccessible(true);
-                Method setIcon = JLabel.class.getDeclaredMethod("setIcon", Icon.class);
-                setIcon.setAccessible(true);
                 SearchBar searchBarInstance = getInstance();
                 GetIconUtil getIconUtil = GetIconUtil.getInstance();
                 HashMap<String, Field> objectHashMap = new HashMap<>();
@@ -2802,19 +2791,17 @@ public class SearchBar {
                         case COMMAND_MODE:
                             if (isVisible()) {
                                 for (int i = 1; i <= labelNumber; ++i) {
-                                    Field labelField = objectHashMap.get("label" + i);
-                                    Object labelInstance = labelField.get(searchBarInstance);
-                                    String path = (String) getToolTipText.invoke(labelInstance);
-                                    if (!(path == null || path.isBlank() || !Files.exists(Path.of(path)))) {
-                                        ImageIcon icon = getIconUtil.getBigIcon(path, iconSideLength, iconSideLength, icon2 ->
-                                                SwingUtilities.invokeLater(() -> {
-                                                    try {
-                                                        setIcon.invoke(labelInstance, icon2);
-                                                    } catch (IllegalAccessException | InvocationTargetException e) {
-                                                        throw new RuntimeException(e);
-                                                    }
-                                                }));
-                                        setIcon.invoke(labelInstance, icon);
+                                    String labelName = "label" + i;
+                                    Field labelField = objectHashMap.get(labelName);
+                                    JLabel labelInstance = (JLabel) labelField.get(searchBarInstance);
+                                    if (labelIconLoadStatus.containsKey(labelInstance) && !labelIconLoadStatus.get(labelInstance)) {
+                                        String path = labelShowingPathInfo.getOrDefault(labelInstance, "");
+                                        if (!(path == null || path.isEmpty() || !Files.exists(Path.of(path)))) {
+                                            ImageIcon icon = getIconUtil.getBigIcon(path, iconSideLength, iconSideLength, icon2 ->
+                                                    SwingUtilities.invokeLater(() -> labelInstance.setIcon(icon2)));
+                                            labelInstance.setIcon(icon);
+                                            labelIconLoadStatus.put(labelInstance, true);
+                                        }
                                     }
                                 }
                             }
@@ -2822,12 +2809,11 @@ public class SearchBar {
                         default:
                             break;
                     }
-                    TimeUnit.SECONDS.sleep(1);
+                    TimeUnit.MILLISECONDS.sleep(250);
                 }
             } catch (InterruptedException ignored) {
                 // ignore
-            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException |
-                     NoSuchFieldException e) {
+            } catch (IllegalAccessException | NoSuchFieldException e) {
                 e.printStackTrace();
             }
         });
@@ -3226,7 +3212,7 @@ public class SearchBar {
             try {
                 long time = System.currentTimeMillis();
                 SwingUtilities.invokeLater(() -> searchInfoLabel.setIcon(
-                        GetIconUtil.getInstance().getBigIcon("loadingIcon", iconSideLength, iconSideLength, (icon) -> searchInfoLabel.setIcon(icon))));
+                        GetIconUtil.getInstance().getBigIcon("loadingIcon", iconSideLength, iconSideLength, null)));
                 while (!"done".equals(searchInfoLabel.getName()) && isVisible() && startTime < time) {
                     SwingUtilities.invokeLater(() -> searchInfoLabel.setText(TranslateService.INSTANCE.getTranslation("Searching") + "    " +
                             TranslateService.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
@@ -3240,8 +3226,7 @@ public class SearchBar {
                                 TranslateService.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
                                 TranslateService.INSTANCE.getTranslation("Number of current results") + ": " + listResults.size());
                         searchInfoLabel.setIcon(
-                                GetIconUtil.getInstance().getBigIcon("completeIcon", iconSideLength, iconSideLength,
-                                        (icon) -> searchInfoLabel.setIcon(icon)));
+                                GetIconUtil.getInstance().getBigIcon("completeIcon", iconSideLength, iconSideLength, null));
                         CachedThreadPoolUtil.getInstance().executeTask(() -> {
                             long _time = System.currentTimeMillis();
                             int count = 0;
@@ -4001,10 +3986,10 @@ public class SearchBar {
             } else {
                 label.setName(RESULT_LABEL_NAME_HOLDER);
             }
-            label.setToolTipText(path);
+            labelShowingPathInfo.put(label, path);
+            labelIconLoadStatus.put(label, false);
             label.setText(allHtml);
-            ImageIcon icon = GetIconUtil.getInstance().getBigIcon("blankIcon", iconSideLength, iconSideLength, icon2 ->
-                    SwingUtilities.invokeLater(() -> label.setIcon(icon2)));
+            ImageIcon icon = GetIconUtil.getInstance().getBigIcon("blankIcon", iconSideLength, iconSideLength, null);
             label.setIcon(icon);
         }
         if (isChosen) {
@@ -4057,10 +4042,10 @@ public class SearchBar {
         String showStr = getHtml(null, command, new boolean[1]);
         label.setText(showStr);
         label.setName(RESULT_LABEL_NAME_HOLDER);
-        label.setToolTipText(path);
+        labelShowingPathInfo.put(label, path);
+        labelIconLoadStatus.put(label, false);
         ImageIcon imageIcon = getIconUtil.getCommandIcon(RegexUtil.colon.split(name)[1], iconSideLength, iconSideLength);
-        imageIcon = imageIcon == null ? getIconUtil.getBigIcon("blankIcon", iconSideLength, iconSideLength, icon2 ->
-                SwingUtilities.invokeLater(() -> label.setIcon(icon2))) : imageIcon;
+        imageIcon = imageIcon == null ? getIconUtil.getBigIcon("blankIcon", iconSideLength, iconSideLength, null) : imageIcon;
         label.setIcon(imageIcon);
         if (isChosen) {
             setLabelChosen(label);
@@ -4214,7 +4199,6 @@ public class SearchBar {
         label.setText(null);
         label.setName(null);
         label.setIcon(null);
-        label.setToolTipText(null);
     }
 
     /**
@@ -4362,9 +4346,6 @@ public class SearchBar {
      * @return true如果可见 否则false
      */
     public boolean isVisible() {
-        if (searchBar == null) {
-            return false;
-        }
         return searchBar.isVisible();
     }
 

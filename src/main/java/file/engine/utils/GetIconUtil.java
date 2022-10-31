@@ -106,11 +106,19 @@ public class GetIconUtil {
             Task task = new Task(f, width, height);
             if (workingQueue.offer(task)) {
                 final long start = System.currentTimeMillis();
-                final long timeout = 25; // 最长等待时间
+                final long timeout; // 最长等待时间
+                if (timeoutCallback == null) {
+                    // 无callback
+                    timeout = 10_000; // 延长超时时间到10s
+                } else {
+                    timeout = 25;
+                }
                 while (!task.isDone) {
                     if (System.currentTimeMillis() - start > timeout) {
-                        task.timeoutCallBack = timeoutCallback;
-                        workingQueue.offer(task);
+                        if (timeoutCallback != null) {
+                            task.timeoutCallBack = timeoutCallback;
+                            workingQueue.offer(task);
+                        }
                         return changeIcon(iconMap.get("blankIcon"), width, height);
                     }
                     Thread.onSpinWait();
