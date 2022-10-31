@@ -1606,7 +1606,8 @@ public class DatabaseService {
      */
     private boolean updateLists(String ignorePath, boolean isDropPrevious) throws IOException, InterruptedException {
         if (getStatus() == Constants.Enums.DatabaseStatus.MANUAL_UPDATE || ProcessUtil.isProcessExist("fileSearcherUSN.exe")) {
-            throw new RuntimeException("already searching");
+            System.out.println("already searching");
+            return true;
         }
         // 复制数据库到tmp
         SQLiteUtil.copyDatabases("data", "tmp");
