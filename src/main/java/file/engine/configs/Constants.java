@@ -35,10 +35,10 @@ public class Constants {
             Properties properties = new Properties();
             try (InputStream projectInfo = Constants.class.getResourceAsStream("/project-info.properties")) {
                 properties.load(projectInfo);
+                version = properties.getProperty("project.version");
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                e.printStackTrace();
             }
-            version = properties.getProperty("project.version");
         }
     }
 
