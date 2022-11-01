@@ -370,20 +370,39 @@ inline void setClickPos(const HWND& fileChooserHwnd)
 void setEditPath(const jchar* path)
 {
 	using namespace std::chrono;
-	POINT p;
-	p.x = toolbar_click_x;
-	p.y = toolbar_click_y;
+	const POINT toolbar_pos{toolbar_click_x, toolbar_click_y};
+	POINT origin_mouse_pos;
+	GetCursorPos(&origin_mouse_pos);
 	char class_name[50] = {"\0"};
 	const auto start_time = system_clock::now();
-	const auto end_time = start_time + seconds(5);
+	const auto end_time = start_time + seconds(3);
 	HWND hwnd_from_toolbar;
-	do
+	bool is_timeout = false;
+	while (true)
 	{
-		hwnd_from_toolbar = WindowFromPoint(p);
+		//检查toolbar位置是否已经变成Edit框
+		hwnd_from_toolbar = WindowFromPoint(toolbar_pos);
 		GetClassNameA(hwnd_from_toolbar, class_name, 50);
-		Sleep(1);
+		if (strcmp(class_name, "Edit") == 0)
+		{
+			break;
+		}
+		//尝试点击
+		SetCursorPos(toolbar_pos.x, toolbar_pos.y);
+		mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+		Sleep(15);
+		SetCursorPos(origin_mouse_pos.x, origin_mouse_pos.y);
+		if (system_clock::now() > end_time)
+		{
+			fprintf(stderr, "Get explorer edit path timeout.");
+			is_timeout = true;
+			break;
+		}
 	}
-	while (strcmp(class_name, "Edit") != 0 && system_clock::now() < end_time);
+	if (is_timeout)
+	{
+		return;
+	}
 	SendMessageW(hwnd_from_toolbar, EM_SETSEL, static_cast<WPARAM>(0), -1);
 	SendMessageW(hwnd_from_toolbar, EM_REPLACESEL, static_cast<WPARAM>(TRUE), reinterpret_cast<LPARAM>(path));
 }
@@ -418,7 +437,7 @@ BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam)
 		const int toolbar_height = rect.bottom - rect.top;
 		EnumChildWindows(hwd2, findToolbarWin32Internal, reinterpret_cast<LPARAM>(&toolbar_win32_width));
 		const int combo_box_width = toolbar_win32_width;
-		toolbar_click_x = toolbar_x + toolbar_width - combo_box_width - 10;
+		toolbar_click_x = toolbar_x + toolbar_width - combo_box_width - 15;
 		toolbar_click_y = toolbar_y + toolbar_height / 2;
 		return false;
 	}
