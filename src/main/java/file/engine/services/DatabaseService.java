@@ -23,10 +23,10 @@ import file.engine.frames.SearchBar;
 import file.engine.services.utils.PathMatchUtil;
 import file.engine.services.utils.SystemInfoUtil;
 import file.engine.services.utils.connection.SQLiteUtil;
+import file.engine.utils.Bit;
 import file.engine.utils.CachedThreadPoolUtil;
 import file.engine.utils.ProcessUtil;
 import file.engine.utils.RegexUtil;
-import file.engine.utils.Bit;
 import file.engine.utils.gson.GsonUtil;
 import file.engine.utils.system.properties.IsDebug;
 import lombok.AllArgsConstructor;
@@ -1606,8 +1606,7 @@ public class DatabaseService {
      */
     private boolean updateLists(String ignorePath, boolean isDropPrevious) throws IOException, InterruptedException {
         if (getStatus() == Constants.Enums.DatabaseStatus.MANUAL_UPDATE || ProcessUtil.isProcessExist("fileSearcherUSN.exe")) {
-            System.out.println("already searching");
-            return true;
+            throw new RuntimeException("already searching");
         }
         // 复制数据库到tmp
         SQLiteUtil.copyDatabases("data", "tmp");
@@ -1977,6 +1976,13 @@ public class DatabaseService {
         databaseService.checkTimeAndSendExecuteSqlSignalThread();
         databaseService.executeSqlCommandsThread();
         databaseService.saveTableCacheThread();
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                databaseService.closeSharedMemory();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }));
     }
 
     @EventRegister(registerClass = AddToCacheEvent.class)
