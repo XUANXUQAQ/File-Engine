@@ -677,25 +677,11 @@ public class SearchBar {
 
     //在explorer attach模式时操作鼠标和键盘以快速跳转到文件位置
     private void quickJump(String result) {
-        int x, y;
-        RobotUtil robotUtil = RobotUtil.INSTANCE;
         if (FileUtil.isFile(result)) {
             result = FileUtil.getParentPath(result);
         }
         saveCache(result);
-        final double dpi = DpiUtil.getDpi();
-        x = (int) (GetHandle.INSTANCE.getToolBarX() / dpi);
-        y = (int) (GetHandle.INSTANCE.getToolBarY() / dpi);
-        robotUtil.mouseClicked(x, y, 1, InputEvent.BUTTON1_DOWN_MASK);
-        //等待鼠标归位
-        Point location = MouseInfo.getPointerInfo().getLocation();
-        final long startWaiting = System.currentTimeMillis();
-        final long timeout = 3000;
-        while (location.x == x && location.y == y && System.currentTimeMillis() - startWaiting < timeout) {
-            Thread.onSpinWait();
-        }
         GetHandle.INSTANCE.setEditPath(new String(result.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8));
-        robotUtil.keyTyped(KeyEvent.VK_ENTER);
     }
 
     /**

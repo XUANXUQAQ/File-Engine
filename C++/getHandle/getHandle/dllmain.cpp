@@ -29,6 +29,8 @@ volatile long explorer_width;
 volatile long explorer_height;
 volatile int toolbar_click_x;
 volatile int toolbar_click_y;
+volatile int toolbar_width;
+volatile int toolbar_height;
 volatile int top_window_type;
 HWND current_attach_explorer;
 char drag_explorer_path[500];
@@ -378,20 +380,23 @@ void setEditPath(const jchar* path)
 	const auto end_time = start_time + seconds(3);
 	HWND hwnd_from_toolbar;
 	bool is_timeout = false;
+	const POINT toolbar_center{ toolbar_click_x - toolbar_width / 2, toolbar_click_y };
 	while (true)
 	{
-		//检查toolbar位置是否已经变成Edit框
-		hwnd_from_toolbar = WindowFromPoint(toolbar_pos);
-		GetClassNameA(hwnd_from_toolbar, class_name, 50);
-		if (strcmp(class_name, "Edit") == 0)
-		{
-			break;
-		}
 		//尝试点击
 		SetCursorPos(toolbar_pos.x, toolbar_pos.y);
 		mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
 		Sleep(15);
 		SetCursorPos(origin_mouse_pos.x, origin_mouse_pos.y);
+
+		//检查toolbar位置是否已经变成Edit框
+		hwnd_from_toolbar = WindowFromPoint(toolbar_center);
+		GetClassNameA(hwnd_from_toolbar, class_name, 50);
+		if (strcmp(class_name, "Edit") == 0)
+		{
+			break;
+		}
+		
 		if (system_clock::now() > end_time)
 		{
 			fprintf(stderr, "Get explorer edit path timeout.");
@@ -405,6 +410,10 @@ void setEditPath(const jchar* path)
 	}
 	SendMessageW(hwnd_from_toolbar, EM_SETSEL, static_cast<WPARAM>(0), -1);
 	SendMessageW(hwnd_from_toolbar, EM_REPLACESEL, static_cast<WPARAM>(TRUE), reinterpret_cast<LPARAM>(path));
+	INPUT input{};
+	input.type = INPUT_KEYBOARD;
+	input.ki.wVk = VK_RETURN;
+	SendInput(1, &input, sizeof(INPUT));
 }
 
 BOOL CALLBACK findToolbarWin32Internal(HWND hwndChild, LPARAM lParam)
@@ -433,8 +442,8 @@ BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam)
 		GetWindowRect(hwd2, &rect);
 		const int toolbar_x = rect.left;
 		const int toolbar_y = rect.top;
-		const int toolbar_width = rect.right - rect.left;
-		const int toolbar_height = rect.bottom - rect.top;
+		toolbar_width = rect.right - rect.left;
+		toolbar_height = rect.bottom - rect.top;
 		EnumChildWindows(hwd2, findToolbarWin32Internal, reinterpret_cast<LPARAM>(&toolbar_win32_width));
 		const int combo_box_width = toolbar_win32_width;
 		toolbar_click_x = toolbar_x + toolbar_width - combo_box_width - 15;
