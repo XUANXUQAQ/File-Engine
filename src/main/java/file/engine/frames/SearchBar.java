@@ -100,6 +100,7 @@ public class SearchBar {
     private final JLabel label6 = new JLabel();
     private final JLabel label7 = new JLabel();
     private final JLabel label8 = new JLabel();
+    // AtomicStampedReference的stamp 0代表需要获取图标，1代表获取完成
     private final ConcurrentHashMap<JLabel, AtomicStampedReference<String>> labelShowingPathInfo = new ConcurrentHashMap<>();
     private JLabel searchInfoLabel;
     private final AtomicInteger currentResultCount;  //保存当前选中的结果是在listResults中的第几个 范围 0 - listResults.size()
@@ -2802,13 +2803,13 @@ public class SearchBar {
                                 Field labelField = objectHashMap.get(labelName);
                                 JLabel labelInstance = (JLabel) labelField.get(searchBarInstance);
                                 var showPathRef = labelShowingPathInfo.get(labelInstance);
-                                if (showPathRef.getStamp() == 1) {
+                                if (showPathRef.getStamp() == 1 || showPathRef.getReference() == null) {
                                     continue;
                                 }
                                 while (true) {
                                     String showPath = showPathRef.getReference();
                                     int stamp = showPathRef.getStamp();
-                                    if (!(showPath.isEmpty() || !Files.exists(Path.of(showPath)))) {
+                                    if (!(showPath == null || showPath.isEmpty() || !Files.exists(Path.of(showPath)))) {
                                         ImageIcon icon = getIconUtil.getBigIcon(showPath, iconSideLength, iconSideLength, icon2 ->
                                                 SwingUtilities.invokeLater(() -> labelInstance.setIcon(icon2)));
                                         labelInstance.setIcon(icon);
