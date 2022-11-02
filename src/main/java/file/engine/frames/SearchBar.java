@@ -4207,6 +4207,7 @@ public class SearchBar {
         label.setText(null);
         label.setName(null);
         label.setIcon(null);
+        labelShowingPathInfo.get(label).set(null, 1);
     }
 
     /**

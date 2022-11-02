@@ -111,7 +111,7 @@ public class GetIconUtil {
                     // 无callback
                     timeout = 10_000; // 延长超时时间到10s
                 } else {
-                    timeout = 25;
+                    timeout = 50;
                 }
                 while (!task.isDone) {
                     if (System.currentTimeMillis() - start > timeout) {
