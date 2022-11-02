@@ -1942,6 +1942,9 @@ public class SearchBar {
     }
 
     private void tryToShowResultsAndSetLastChosen() {
+        if (currentResultCount.get() + 1 == listResults.size()) {
+            return;
+        }
         if (runningMode == RunningMode.NORMAL_MODE) {
             //到达最下端，刷新显示
             try {
@@ -2035,6 +2038,9 @@ public class SearchBar {
      * 尝试显示结果，并将第一个label设置为选中
      */
     private void tryToShowResultsAndSetFirstChosen() {
+        if (currentResultCount.get() == 0) {
+            return;
+        }
         int size = listResults.size();
         if (runningMode == RunningMode.NORMAL_MODE) {
             //到达了最上端，刷新显示
@@ -3917,30 +3923,21 @@ public class SearchBar {
                             "</div>");
         } else if (command == null) {
             // 普通模式
-            int maxShowCharNum = getMaxShowCharsNum(label1);
+            int maxCharsCanShow = getMaxShowCharsNum(label1);
             String parentPath = FileUtil.getParentPath(path);
             String fileName = FileUtil.getFileName(path);
-            int blankNUm = 20;
-            int charNumbers = fileName.length() + parentPath.length() + 20;
-            if (charNumbers > maxShowCharNum) {
-                parentPath = getContractPath(parentPath, maxShowCharNum);
+            if (parentPath.length() > maxCharsCanShow) {
+                parentPath = getContractPath(parentPath, maxCharsCanShow);
                 isParentPathEmpty[0] = parentPath.isEmpty();
-            } else {
-                blankNUm = Math.max(maxShowCharNum - fileName.length() - parentPath.length() - 20, 20);
             }
             return String.format(template,
                     "<div>" +
                             highLight(fileName, keywords) +
-                            "<font size=\"-1\">" +
-                            getBlank(blankNUm) + parentPath +
+                            "<br><font size=\"-1\">" + parentPath +
                             "</font>" +
                             "</div>");
         }
         return template.replace("%s", "");
-    }
-
-    private String getBlank(int num) {
-        return "&nbsp;".repeat(Math.max(0, num));
     }
 
     /**
@@ -3982,7 +3979,8 @@ public class SearchBar {
                 String showPath = isContract ? path.substring(0, subNum) : path;
                 String add = isContract ? "..." : "";
                 String color = "#" + ColorUtil.parseColorHex(labelFontColor);
-                label.setName("<html><body style=\"color: " + color + ";\">" + highLight(FileUtil.getFileName(path), keywords) + getBlank(20) + "<font size=\"-1\">" + showPath + add + "</font></body></html>");
+                label.setName("<html><body style=\"color: " + color + ";\">" + highLight(FileUtil.getFileName(path), keywords) +
+                        "<br><font size=\"-1\">" + showPath + add + "</font></body></html>");
             } else {
                 label.setName(RESULT_LABEL_NAME_HOLDER);
             }
