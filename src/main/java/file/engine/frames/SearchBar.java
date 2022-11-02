@@ -58,6 +58,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicStampedReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -99,8 +100,7 @@ public class SearchBar {
     private final JLabel label6 = new JLabel();
     private final JLabel label7 = new JLabel();
     private final JLabel label8 = new JLabel();
-    private final ConcurrentHashMap<JLabel, Boolean> labelIconLoadStatus = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<JLabel, String> labelShowingPathInfo = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<JLabel, AtomicStampedReference<String>> labelShowingPathInfo = new ConcurrentHashMap<>();
     private JLabel searchInfoLabel;
     private final AtomicInteger currentResultCount;  //保存当前选中的结果是在listResults中的第几个 范围 0 - listResults.size()
     private JTextField textField;
@@ -144,6 +144,16 @@ public class SearchBar {
     private SearchBar() {
         listResults = new ArrayList<>();
         currentResultCount = new AtomicInteger(0);
+
+        labelShowingPathInfo.put(label1, new AtomicStampedReference<>(null, 1));
+        labelShowingPathInfo.put(label2, new AtomicStampedReference<>(null, 1));
+        labelShowingPathInfo.put(label3, new AtomicStampedReference<>(null, 1));
+        labelShowingPathInfo.put(label4, new AtomicStampedReference<>(null, 1));
+        labelShowingPathInfo.put(label5, new AtomicStampedReference<>(null, 1));
+        labelShowingPathInfo.put(label6, new AtomicStampedReference<>(null, 1));
+        labelShowingPathInfo.put(label7, new AtomicStampedReference<>(null, 1));
+        labelShowingPathInfo.put(label8, new AtomicStampedReference<>(null, 1));
+
         TranslateService translateService = TranslateService.getInstance();
         open = new JMenuItem(translateService.getTranslation("Open"));
         openAsAdmin = new JMenuItem(translateService.getTranslation("Open as administrator"));
@@ -1944,9 +1954,6 @@ public class SearchBar {
     }
 
     private void tryToShowResultsAndSetLastChosen() {
-        if (currentResultCount.get() + 1 == listResults.size()) {
-            return;
-        }
         if (runningMode == RunningMode.NORMAL_MODE) {
             //到达最下端，刷新显示
             try {
@@ -2040,9 +2047,6 @@ public class SearchBar {
      * 尝试显示结果，并将第一个label设置为选中
      */
     private void tryToShowResultsAndSetFirstChosen() {
-        if (currentResultCount.get() == 0) {
-            return;
-        }
         int size = listResults.size();
         if (runningMode == RunningMode.NORMAL_MODE) {
             //到达了最上端，刷新显示
@@ -2790,19 +2794,27 @@ public class SearchBar {
                     switch (runningMode) {
                         case NORMAL_MODE:
                         case COMMAND_MODE:
-                            if (isVisible()) {
-                                for (int i = 1; i <= labelNumber; ++i) {
-                                    String labelName = "label" + i;
-                                    Field labelField = objectHashMap.get(labelName);
-                                    JLabel labelInstance = (JLabel) labelField.get(searchBarInstance);
-                                    if (labelIconLoadStatus.containsKey(labelInstance) && !labelIconLoadStatus.get(labelInstance)) {
-                                        String path = labelShowingPathInfo.getOrDefault(labelInstance, "");
-                                        if (!(path == null || path.isEmpty() || !Files.exists(Path.of(path)))) {
-                                            ImageIcon icon = getIconUtil.getBigIcon(path, iconSideLength, iconSideLength, icon2 ->
-                                                    SwingUtilities.invokeLater(() -> labelInstance.setIcon(icon2)));
-                                            labelInstance.setIcon(icon);
-                                            labelIconLoadStatus.put(labelInstance, true);
-                                        }
+                            if (!isVisible()) {
+                                break;
+                            }
+                            for (int i = 1; i <= labelNumber; ++i) {
+                                String labelName = "label" + i;
+                                Field labelField = objectHashMap.get(labelName);
+                                JLabel labelInstance = (JLabel) labelField.get(searchBarInstance);
+                                var showPathRef = labelShowingPathInfo.get(labelInstance);
+                                if (showPathRef.getStamp() == 1) {
+                                    continue;
+                                }
+                                while (true) {
+                                    String showPath = showPathRef.getReference();
+                                    int stamp = showPathRef.getStamp();
+                                    if (!(showPath.isEmpty() || !Files.exists(Path.of(showPath)))) {
+                                        ImageIcon icon = getIconUtil.getBigIcon(showPath, iconSideLength, iconSideLength, icon2 ->
+                                                SwingUtilities.invokeLater(() -> labelInstance.setIcon(icon2)));
+                                        labelInstance.setIcon(icon);
+                                    }
+                                    if (showPathRef.compareAndSet(showPath, showPath, stamp, 1)) {
+                                        break;
                                     }
                                 }
                             }
@@ -3934,6 +3946,7 @@ public class SearchBar {
             showPluginResultOnLabel(path, label, isChosen);
             return;
         }
+        GetIconUtil getIconUtil = GetIconUtil.getInstance();
         String searchBarText = getSearchBarText();
         if (!searchBarText.isEmpty() && searchBarText.charAt(0) == '>') {
             GetPluginByIdentifierEvent getPluginByIdentifierEvent = new GetPluginByIdentifierEvent(path);
@@ -3944,7 +3957,7 @@ public class SearchBar {
             pluginInfoByName.ifPresent(pluginInfo -> {
                 ImageIcon tmpIcon = pluginInfo.plugin.getPluginIcon();
                 if (tmpIcon != null) {
-                    ImageIcon pluginIcon = GetIconUtil.getInstance().changeIcon(tmpIcon, iconSideLength, iconSideLength);
+                    ImageIcon pluginIcon = getIconUtil.changeIcon(tmpIcon, iconSideLength, iconSideLength);
                     label.setIcon(pluginIcon);
                 }
             });
@@ -3961,11 +3974,21 @@ public class SearchBar {
             } else {
                 label.setName(RESULT_LABEL_NAME_HOLDER);
             }
-            labelShowingPathInfo.put(label, path);
-            labelIconLoadStatus.put(label, false);
+            var labelPath = labelShowingPathInfo.get(label);
+            if (!path.equals(labelPath.getReference())) {
+                while (true) {
+                    String reference = labelPath.getReference();
+                    int stamp = labelPath.getStamp();
+                    if (labelPath.compareAndSet(reference, path, stamp, 0)) {
+                        break;
+                    }
+                }
+            }
             label.setText(allHtml);
-            ImageIcon icon = GetIconUtil.getInstance().getBigIcon("blankIcon", iconSideLength, iconSideLength, null);
-            label.setIcon(icon);
+            if (label.getIcon() == null) {
+                ImageIcon icon = getIconUtil.getBigIcon("blankIcon", iconSideLength, iconSideLength, null);
+                label.setIcon(icon);
+            }
         }
         if (isChosen) {
             setLabelChosen(label);
@@ -4007,21 +4030,31 @@ public class SearchBar {
      * @param isChosen 是否当前被选中
      */
     private void showCommandOnLabel(String command, JLabel label, boolean isChosen) {
-        GetIconUtil getIconUtil = GetIconUtil.getInstance();
         String[] info = RegexUtil.semicolon.split(command);
         if (info.length != 2) {
             return;
         }
+        GetIconUtil getIconUtil = GetIconUtil.getInstance();
         String path = info[1];
         String name = info[0];
         String showStr = getHtml(null, command, new boolean[1]);
         label.setText(showStr);
         label.setName(RESULT_LABEL_NAME_HOLDER);
-        labelShowingPathInfo.put(label, path);
-        labelIconLoadStatus.put(label, false);
-        ImageIcon imageIcon = getIconUtil.getCommandIcon(RegexUtil.colon.split(name)[1], iconSideLength, iconSideLength);
-        imageIcon = imageIcon == null ? getIconUtil.getBigIcon("blankIcon", iconSideLength, iconSideLength, null) : imageIcon;
-        label.setIcon(imageIcon);
+        var labelPath = labelShowingPathInfo.get(label);
+        if (!path.equals(labelPath.getReference())) {
+            while (true) {
+                String reference = labelPath.getReference();
+                int stamp = labelPath.getStamp();
+                if (labelPath.compareAndSet(reference, path, stamp, 0)) {
+                    break;
+                }
+            }
+        }
+        if (label.getIcon() == null) {
+            ImageIcon imageIcon = getIconUtil.getCommandIcon(RegexUtil.colon.split(name)[1], iconSideLength, iconSideLength);
+            imageIcon = imageIcon == null ? getIconUtil.getBigIcon("blankIcon", iconSideLength, iconSideLength, null) : imageIcon;
+            label.setIcon(imageIcon);
+        }
         if (isChosen) {
             setLabelChosen(label);
         } else {
