@@ -136,6 +136,8 @@ public class SearchBar {
     private static final int SEND_PREPARE_SEARCH_TIMEOUT = 50;  //毫秒(ms)
     private static final int SEND_START_SEARCH_TIMEOUT = 250;  //ms
     private static final int SHOW_RESULTS_TIMEOUT = 300; //ms
+    private static final float SEARCH_BAR_WIDTH_RATIO = 0.3f;
+    private static final float SEARCH_BAR_HEIGHT_RATIO = 0.4f;
 
     private static volatile SearchBar instance = null;
 
@@ -210,8 +212,8 @@ public class SearchBar {
         var screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
         int width = screenSize.width;
         int height = screenSize.height;
-        int searchBarWidth = (int) (width * 0.3);
-        int searchBarHeight = (int) (height * 0.4);
+        int searchBarWidth = (int) (width * SEARCH_BAR_WIDTH_RATIO);
+        int searchBarHeight = (int) (height * SEARCH_BAR_HEIGHT_RATIO);
         final int positionX = width / 2 - searchBarWidth / 2;
         final int positionY = height / 2 - searchBarHeight / 3;
         JPanel panel = new JPanel();
@@ -2843,8 +2845,8 @@ public class SearchBar {
                     } else {
                         int width = screenInfo.screenSize.width;
                         int height = screenInfo.screenSize.height;
-                        int searchBarWidth = (int) (width * 0.3);
-                        int searchBarHeight = (int) (height * 0.4);
+                        int searchBarWidth = (int) (width * SEARCH_BAR_WIDTH_RATIO);
+                        int searchBarHeight = (int) (height * SEARCH_BAR_HEIGHT_RATIO);
                         int positionX, positionY;
                         if (isPreviewMode.get()) {
                             positionX = 50;
@@ -2884,8 +2886,8 @@ public class SearchBar {
         long explorerHeight = (long) (GetHandle.INSTANCE.getExplorerHeight() / dpi);
         long explorerX = (long) (GetHandle.INSTANCE.getExplorerX() / dpi);
         long explorerY = (long) (GetHandle.INSTANCE.getExplorerY() / dpi);
-        int searchBarWidth = (int) (explorerWidth * 0.3);
-        int searchBarHeight = (int) (screenSize.height * 0.4);
+        int searchBarWidth = (int) (explorerWidth * SEARCH_BAR_WIDTH_RATIO);
+        int searchBarHeight = (int) (screenSize.height * SEARCH_BAR_HEIGHT_RATIO);
 
         int labelHeight = searchBarHeight / 9;
         //explorer窗口大于20像素才开始显示，防止误判其他系统窗口
@@ -3812,22 +3814,12 @@ public class SearchBar {
     }
 
     /**
-     * @param label JLabel
-     * @return 计算出的每个label可显示的最大字符数量
-     */
-    private int getMaxShowCharsNum(JLabel label) {
-        int fontSize = (int) ((label.getFont().getSize() / 96.0f * 72) / 2);
-        return Math.max(label.getWidth() / fontSize, 20);
-    }
-
-    /**
      * 在路径中添加省略号
      *
-     * @param path               path
-     * @param maxShowingCharsNum 最大可显示字符数量
+     * @param path path
      * @return 生成后的字符串
      */
-    private String getContractPath(String path, int maxShowingCharsNum) {
+    private String getContractPath(String path) {
         String[] split = RegexUtil.getPattern("\\\\", 0).split(path);
         StringBuilder tmpPath = new StringBuilder();
         int contractLimit = 35;
@@ -3837,9 +3829,6 @@ public class SearchBar {
             } else {
                 tmpPath.append(tmp).append("\\");
             }
-        }
-        if (tmpPath.length() > maxShowingCharsNum) {
-            return "";
         }
         return tmpPath.toString();
     }
@@ -3906,36 +3895,29 @@ public class SearchBar {
             String[] info = RegexUtil.semicolon.split(command);
             String commandPath = info[1];
             String commandName = info[0];
-            int maxShowCharNum = getMaxShowCharsNum(label1);
-            if (commandPath.length() + ">>".length() > maxShowCharNum) {
-                String show = getContractPath(commandPath, maxShowCharNum);
-                if (show.isEmpty()) {
-                    int subNum = Math.max(0, maxShowCharNum - 10);
-                    subNum = Math.min(commandPath.length(), subNum);
-                    show = commandPath.substring(0, subNum) + "...";
-                    commandPath = show;
-                }
-            }
-            return String.format(template,
-                    "<div>" +
-                            highLight(commandName, new String[]{getSearchBarText().substring(1)}) +
-                            "<br><font size=\"-1\">" + "&gt;&gt;" + commandPath +
-                            "</div>");
+            return String.format(template, "<div>" +
+                    highLight(commandName, new String[]{getSearchBarText().substring(1)}) + "<br>" +
+                    "<div style=\"overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: smaller;\">" +
+                    "&gt;&gt;" + commandPath +
+                    "</div>" +
+                    "</div>");
         } else if (command == null) {
             // 普通模式
-            int maxCharsCanShow = getMaxShowCharsNum(label1);
             String parentPath = FileUtil.getParentPath(path);
             String fileName = FileUtil.getFileName(path);
-            if (parentPath.length() > maxCharsCanShow) {
-                parentPath = getContractPath(parentPath, maxCharsCanShow);
-                isParentPathEmpty[0] = parentPath.isEmpty();
+            parentPath = getContractPath(parentPath);
+            int needWidth = label1.getFontMetrics(label1.getFont()).stringWidth(parentPath);
+            if (label1.getWidth() >= needWidth) {
+                return String.format(template, "<div>" +
+                        highLight(fileName, keywords) + "<br>" +
+                        "<div style=\"overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: smaller;\">" + parentPath +
+                        "</div>" +
+                        "</div>");
             }
-            return String.format(template,
-                    "<div>" +
-                            highLight(fileName, keywords) +
-                            "<br><font size=\"-1\">" + parentPath +
-                            "</font>" +
-                            "</div>");
+            isParentPathEmpty[0] = true;
+            return String.format(template, "<div>" +
+                    highLight(fileName, keywords) +
+                    "</div>");
         }
         return template.replace("%s", "");
     }
@@ -3972,15 +3954,10 @@ public class SearchBar {
             boolean[] isParentPathEmpty = new boolean[1];
             String allHtml = getHtml(path, null, isParentPathEmpty);
             if (isParentPathEmpty[0]) {
-                int maxShowCharsNum = getMaxShowCharsNum(label1);
-                boolean isContract = path.length() > maxShowCharsNum;
-                int subNum = Math.max(0, maxShowCharsNum - "...".length() - 20);
-                subNum = Math.min(path.length(), subNum);
-                String showPath = isContract ? path.substring(0, subNum) : path;
-                String add = isContract ? "..." : "";
                 String color = "#" + ColorUtil.parseColorHex(labelFontColor);
-                label.setName("<html><body style=\"color: " + color + ";\">" + highLight(FileUtil.getFileName(path), keywords) +
-                        "<br><font size=\"-1\">" + showPath + add + "</font></body></html>");
+                label.setName("<html><body style=\"color: " + color + ";\">" + highLight(FileUtil.getFileName(path), keywords) + "<br>" +
+                        "<div style=\"overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: smaller;\">" +
+                        FileUtil.getParentPath(path) + "</div></body></html>");
             } else {
                 label.setName(RESULT_LABEL_NAME_HOLDER);
             }
