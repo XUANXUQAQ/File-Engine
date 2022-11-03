@@ -49,8 +49,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -2809,7 +2807,7 @@ public class SearchBar {
                                 while (true) {
                                     String showPath = showPathRef.getReference();
                                     int stamp = showPathRef.getStamp();
-                                    if (!(showPath == null || showPath.isEmpty() || !Files.exists(Path.of(showPath)))) {
+                                    if (!(showPath == null || showPath.isEmpty())) {
                                         ImageIcon icon = getIconUtil.getBigIcon(showPath, iconSideLength, iconSideLength, icon2 ->
                                                 SwingUtilities.invokeLater(() -> labelInstance.setIcon(icon2)));
                                         labelInstance.setIcon(icon);
@@ -4037,15 +4035,24 @@ public class SearchBar {
             return;
         }
         GetIconUtil getIconUtil = GetIconUtil.getInstance();
-        String path = info[1];
         String name = info[0];
+        String iconKey = RegexUtil.colon.split(name)[1];
         String showStr = getHtml(null, command, new boolean[1]);
         label.setText(showStr);
         label.setName(RESULT_LABEL_NAME_HOLDER);
+        var labelPath = labelShowingPathInfo.get(label);
+        if (!iconKey.equals(labelPath.getReference())) {
+            while (true) {
+                String reference = labelPath.getReference();
+                int stamp = labelPath.getStamp();
+                if (labelPath.compareAndSet(reference, iconKey, stamp, 0)) {
+                    break;
+                }
+            }
+        }
         if (label.getIcon() == null) {
-            ImageIcon imageIcon = getIconUtil.getCommandIcon(RegexUtil.colon.split(name)[1], iconSideLength, iconSideLength);
-            imageIcon = imageIcon == null ? getIconUtil.getBigIcon(path, iconSideLength, iconSideLength, null) : imageIcon;
-            label.setIcon(imageIcon);
+            ImageIcon icon = getIconUtil.getBigIcon("blankIcon", iconSideLength, iconSideLength, null);
+            label.setIcon(icon);
         }
         if (isChosen) {
             setLabelChosen(label);

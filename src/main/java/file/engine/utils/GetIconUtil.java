@@ -60,7 +60,7 @@ public class GetIconUtil {
         iconMap.put("loadingIcon", new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/loading.gif"))));
     }
 
-    public ImageIcon getCommandIcon(String commandName, int width, int height) {
+    private ImageIcon getCommandIcon(String commandName, int width, int height) {
         if (commandName == null || commandName.isEmpty()) {
             if (IsDebug.isDebug()) {
                 System.err.println("Command is empty");
@@ -88,6 +88,10 @@ public class GetIconUtil {
         }
         if (iconMap.containsKey(pathOrKey)) {
             return changeIcon(iconMap.get(pathOrKey), width, height);
+        }
+        ImageIcon commandIcon = getCommandIcon(pathOrKey, width, height);
+        if (commandIcon != null) {
+            return commandIcon;
         }
         pathOrKey = pathOrKey.toLowerCase();
         File f = new File(pathOrKey);
