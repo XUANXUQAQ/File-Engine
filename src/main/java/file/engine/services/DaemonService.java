@@ -16,6 +16,8 @@ import java.io.IOException;
 
 public class DaemonService {
 
+    private static final String OPEN_FROM_JAR_SIGNAL = "tmp/openFromJar";
+
     @EventRegister(registerClass = StopDaemonEvent.class)
     private static void stopDaemon(Event event) {
         DaemonUtil.stopDaemon();
@@ -32,6 +34,16 @@ public class DaemonService {
         if (IsDebug.isDebug()) {
             System.out.println("启动守护进程" + Constants.LAUNCH_WRAPPER_NAME);
             return;
+        }
+        File openFromJar = new File(OPEN_FROM_JAR_SIGNAL);
+        if (!openFromJar.exists()) {
+            try {
+                if (!openFromJar.createNewFile()) {
+                    System.err.println("error create open from jar file signal. File: " + OPEN_FROM_JAR_SIGNAL);
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
         }
         EventManagement.getInstance().putEvent(new OpenFileEvent(OpenFileEvent.OpenStatus.WITH_ADMIN, launcher.getAbsolutePath()));
     }

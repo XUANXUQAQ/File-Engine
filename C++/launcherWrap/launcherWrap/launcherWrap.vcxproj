@@ -144,10 +144,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="md5.cpp" />
     <ClCompile Include="launcherWrap.cpp" />
     <ClCompile Include="zip\zip.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="md5.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="zip\miniz.h" />
     <ClInclude Include="zip\zip.h" />

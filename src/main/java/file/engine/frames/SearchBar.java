@@ -3908,8 +3908,9 @@ public class SearchBar {
             String[] info = RegexUtil.semicolon.split(command);
             String commandPath = info[1];
             String commandName = info[0];
+            var keywordToHighlight = new String[]{getSearchBarText().substring(1)};
             return String.format(template, "<div>" +
-                    highLight(commandName, new String[]{getSearchBarText().substring(1)}) + "<br>" +
+                    highLight(commandName, keywordToHighlight) + "<br>" +
                     "<div style=\"overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: smaller;\">" +
                     "&gt;&gt;" + commandPath +
                     "</div>" +
@@ -4041,19 +4042,9 @@ public class SearchBar {
         String showStr = getHtml(null, command, new boolean[1]);
         label.setText(showStr);
         label.setName(RESULT_LABEL_NAME_HOLDER);
-        var labelPath = labelShowingPathInfo.get(label);
-        if (!path.equals(labelPath.getReference())) {
-            while (true) {
-                String reference = labelPath.getReference();
-                int stamp = labelPath.getStamp();
-                if (labelPath.compareAndSet(reference, path, stamp, 0)) {
-                    break;
-                }
-            }
-        }
         if (label.getIcon() == null) {
             ImageIcon imageIcon = getIconUtil.getCommandIcon(RegexUtil.colon.split(name)[1], iconSideLength, iconSideLength);
-            imageIcon = imageIcon == null ? getIconUtil.getBigIcon("blankIcon", iconSideLength, iconSideLength, null) : imageIcon;
+            imageIcon = imageIcon == null ? getIconUtil.getBigIcon(path, iconSideLength, iconSideLength, null) : imageIcon;
             label.setIcon(imageIcon);
         }
         if (isChosen) {

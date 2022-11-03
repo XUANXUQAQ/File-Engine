@@ -11,6 +11,7 @@
 #include <tchar.h>
 #include <codecvt>
 #include "zip/zip.h"
+#include "md5.h"
 #ifdef TEST
 #include <iostream>
 #endif
@@ -21,6 +22,8 @@
 #define MAX_LOG_PRESERVE_DAYS 5
 #define CHECK_TIME_THRESHOLD 1
 
+#define FILE_ENGINE_JAR_MD5 "638a69439d239cc3baa22f93321b7f14"
+
 #ifndef TEST
 #pragma comment( linker, "/subsystem:windows /entry:mainCRTStartup" )
 #endif
@@ -30,6 +33,7 @@ std::string g_jvm_parameters =
 "-Xms8M -Xmx256M -XX:+UseG1GC -XX:+UseStringDeduplication -XX:MaxHeapFreeRatio=20 -XX:MinHeapFreeRatio=10 -XX:+CompactStrings";
 
 char g_close_signal_file[1000];
+char g_open_from_jar_signal_file[1000];
 char g_file_engine_jar_path[1000];
 char g_file_engine_working_dir[1000];
 char g_jre_path[1000];
@@ -100,16 +104,22 @@ int main()
 			return 0;
 		}
 	}
-	const DWORD pid = find_process();
-	if (pid)
+	if (!is_file_exist(g_open_from_jar_signal_file))
 	{
-		system(("TASKKILL /PID " + std::to_string(pid) + " /F").c_str());
-	}
+		const DWORD pid = find_process();
+		if (pid)
+		{
+			system(("TASKKILL /PID " + std::to_string(pid) + " /F").c_str());
+		}
 #ifdef TEST
-	std::cout << "starting file-engine" << std::endl;
+		std::cout << "starting file-engine" << std::endl;
 #endif
-	restart_file_engine(true);
-
+		restart_file_engine(true);
+	}
+	else
+	{
+		remove(g_open_from_jar_signal_file);
+	}
 #ifdef TEST
 	std::cout << "start loop" << std::endl;
 #endif
@@ -187,6 +197,10 @@ inline void init_path()
 	std::string file_engine_directory(g_file_engine_working_dir);
 	file_engine_directory += "tmp\\closeDaemon";
 	strcpy_s(g_close_signal_file, file_engine_directory.c_str());
+
+	std::string open_from_jar_signal_file(g_file_engine_working_dir);
+	open_from_jar_signal_file += "tmp\\openFromJar";
+	strcpy_s(g_open_from_jar_signal_file, open_from_jar_signal_file.c_str());
 
 	std::string new_file_engine_path(g_file_engine_working_dir);
 	new_file_engine_path += "tmp\\File-Engine.jar";
@@ -346,9 +360,19 @@ void restart_file_engine(const bool is_ignore_close_file)
 			return;
 		}
 	}
+	// 更新到新版本
 	if (is_file_exist(g_update_signal_file))
 	{
 		update();
+	}
+	else if (is_file_exist(g_file_engine_jar_path))
+	{
+		// 检查File-Engine.jar是否与启动器中的版本一致
+		auto&& jar_md5 = GetFileHash(string2wstring(g_file_engine_jar_path).c_str());
+		if (jar_md5 != FILE_ENGINE_JAR_MD5)
+		{
+			release_all();
+		}
 	}
 	if (g_restart_count >= 4)
 	{
