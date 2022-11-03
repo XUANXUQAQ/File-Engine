@@ -4040,19 +4040,21 @@ public class SearchBar {
         String showStr = getHtml(null, command, new boolean[1]);
         label.setText(showStr);
         label.setName(RESULT_LABEL_NAME_HOLDER);
-        var labelPath = labelShowingPathInfo.get(label);
-        if (!iconKey.equals(labelPath.getReference())) {
-            while (true) {
-                String reference = labelPath.getReference();
-                int stamp = labelPath.getStamp();
-                if (labelPath.compareAndSet(reference, iconKey, stamp, 0)) {
-                    break;
+        ImageIcon commandIcon = getIconUtil.getCommandIcon(iconKey, iconSideLength, iconSideLength);
+        if (commandIcon == null) {
+            String path = info[1];
+            var labelPath = labelShowingPathInfo.get(label);
+            if (!path.equals(labelPath.getReference())) {
+                while (true) {
+                    String reference = labelPath.getReference();
+                    int stamp = labelPath.getStamp();
+                    if (labelPath.compareAndSet(reference, path, stamp, 0)) {
+                        break;
+                    }
                 }
             }
-        }
-        if (label.getIcon() == null) {
-            ImageIcon icon = getIconUtil.getBigIcon("blankIcon", iconSideLength, iconSideLength, null);
-            label.setIcon(icon);
+        } else {
+            label.setIcon(commandIcon);
         }
         if (isChosen) {
             setLabelChosen(label);
