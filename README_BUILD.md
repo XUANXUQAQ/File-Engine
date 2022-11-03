@@ -47,17 +47,9 @@ mvn clean compile package
 
 ![](https://p0.meituan.net/dpplatform/1d87be4c66fc8882ccf742a8b7022fb924871.png)
 
-### 4. 构建启动器
+### 3. 构建启动器
 
-使用Visual Studio打开**C++/launcherWrap**，进入launcherWrap文件夹源码根目录。创建**File-Engine.zip**文件。
-
-![](https://s1.328888.xyz/2022/09/17/o5XQy.png)
-
-File-Engine.zip压缩包中需要放入**jre运行环境**和刚才maven生成的**File-Engine.jar**
-
-![](https://p1.meituan.net/dpplatform/6b3c8049ab49dac3a18560ebefd9275546273.png)
-
-jre运行环境可以由jlink工具进行生成。
+### (1) 生成jre
 
 首先使用jdeps分析刚才maven生成的无依赖的jar包（File-Engine-(版本).jar)
 
@@ -73,7 +65,31 @@ jdeps --ignore-missing-deps --list-deps .\File-Engine-${version}.jar
 jlink --no-header-files --no-man-pages --compress=2 --module-path jmods --add-modules java.base,java.datatransfer,java.desktop,java.sql --output 输出文件夹位置
 ```
 
+### (2) 创建File-Engine.zip
+
 jlink生成完成之后，将生成的jre运行环境文件夹重命名为jre，和File-Engine.jar(带有依赖的jar包)一起压缩成File-Engine.zip然后放入launcherWrap源码根目录。
+
+使用Visual Studio打开**C++/launcherWrap/launcherWrap.sln**，进入launcherWrap文件夹源码根目录。创建**File-Engine.zip**文件。
+
+![](C:\Users\13927\AppData\Roaming\marktext\images\2022-11-03-15-20-29-image.png)
+
+File-Engine.zip压缩包中需要放入**jre运行环境**和刚才maven生成的**File-Engine.jar**
+
+![](https://p1.meituan.net/dpplatform/6b3c8049ab49dac3a18560ebefd9275546273.png)
+
+### (3) 更新MD5
+
+启动器通过检查File-Engine.jar的MD5值来更新资源，编译时需要计算**File-Engine.jar**的MD5值，并找到**launcherWrap.cpp**更新MD5
+
+进入target文件夹
+
+```batch
+certutil -hashfile File-Engine.jar md5
+```
+
+![](C:\Users\13927\AppData\Roaming\marktext\images\2022-11-03-15-27-48-image.png)
+
+[![xbzxVP.jpg](https://s1.ax1x.com/2022/11/03/xbzxVP.jpg)](https://imgse.com/i/xbzxVP)
 
 然后编译launcherWrap项目即可。使用release模式编译生成launcherWrap.exe
 
