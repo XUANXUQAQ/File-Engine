@@ -15,6 +15,7 @@ import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.frames.SearchBar;
 import file.engine.utils.CachedThreadPoolUtil;
 import file.engine.utils.RegexUtil;
+import lombok.Getter;
 
 import java.awt.event.KeyEvent;
 import java.util.HashMap;
@@ -27,6 +28,8 @@ public class CheckHotKeyService {
     private final HashMap<String, Integer> map;
     private boolean isRegistered = false;
     private static volatile CheckHotKeyService INSTANCE = null;
+    private static @Getter
+    volatile String currentHotkey;
 
     private static CheckHotKeyService getInstance() {
         if (INSTANCE == null) {
@@ -58,6 +61,7 @@ public class CheckHotKeyService {
 
     //注册快捷键
     private void registerHotkey(String hotkey) {
+        currentHotkey = hotkey;
         if (!isRegistered) {
             isRegistered = true;
             int[] hotkeyIds = parseHotkey(hotkey);
@@ -155,7 +159,7 @@ public class CheckHotKeyService {
     }
 
     @EventListener(listenClass = RestartEvent.class)
-    private static void restartEvent(Event event) {
+    private static void stopListen(Event event) {
         getInstance().stopListen();
     }
 

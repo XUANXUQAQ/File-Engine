@@ -1083,6 +1083,17 @@ public class AllConfigs {
         AllConfigs allConfigs = getInstance();
         AddCmdEvent event1 = (AddCmdEvent) event;
         allConfigs.cmdSet.add(event1.cmd);
+        //保存自定义命令
+        StringBuilder strb = new StringBuilder();
+        for (String each : allConfigs.getCmdSet()) {
+            strb.append(each);
+            strb.append("\n");
+        }
+        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("user/cmds.txt"), StandardCharsets.UTF_8))) {
+            bw.write(strb.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @EventRegister(registerClass = DeleteCmdEvent.class)
@@ -1090,6 +1101,17 @@ public class AllConfigs {
         AllConfigs allConfigs = AllConfigs.getInstance();
         DeleteCmdEvent deleteCmdEvent = (DeleteCmdEvent) event;
         allConfigs.cmdSet.remove(deleteCmdEvent.cmd);
+        //保存自定义命令
+        StringBuilder strb = new StringBuilder();
+        for (String each : allConfigs.getCmdSet()) {
+            strb.append(each);
+            strb.append("\n");
+        }
+        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("user/cmds.txt"), StandardCharsets.UTF_8))) {
+            bw.write(strb.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @EventRegister(registerClass = ReadConfigsEvent.class)

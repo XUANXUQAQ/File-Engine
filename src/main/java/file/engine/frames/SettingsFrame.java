@@ -33,6 +33,7 @@ import file.engine.event.handler.impl.plugin.AddPluginsCanUpdateEvent;
 import file.engine.event.handler.impl.plugin.GetPluginByNameEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
+import file.engine.services.CheckHotKeyService;
 import file.engine.services.DatabaseService;
 import file.engine.services.TranslateService;
 import file.engine.services.download.DownloadManager;
@@ -58,10 +59,12 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -329,7 +332,7 @@ public class SettingsFrame {
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                String errors = saveChanges();
+                String errors = saveChanges(false);
                 if (!errors.isEmpty()) {
                     int ret = JOptionPane.showConfirmDialog(null, TRANSLATE_SERVICE.getTranslation("Errors") + ":\n" + errors + "\n" + TRANSLATE_SERVICE.getTranslation("Failed to save settings, do you still close the window"));
                     if (ret == JOptionPane.YES_OPTION) {
@@ -3127,7 +3130,7 @@ public class SettingsFrame {
             try {
                 final long startVisible = System.currentTimeMillis();
                 while (SettingsFrame.frame.isVisible() || System.currentTimeMillis() - startVisible < 3000) {
-                    settingsFrame.saveChanges();
+                    settingsFrame.saveChanges(true);
                     TimeUnit.SECONDS.sleep(1);
                 }
             } catch (InterruptedException ignored) {
@@ -3315,7 +3318,7 @@ public class SettingsFrame {
      *
      * @return ConfigEntity
      */
-    private ConfigEntity getConfigEntity() {
+    private ConfigEntity getConfigEntity(boolean isContinuousUpdate) {
         ConfigEntity configEntity = new ConfigEntity();
         String ignorePathTemp = RegexUtil.getPattern("\n", 0).matcher(textAreaIgnorePath.getText()).replaceAll("");
         String swingTheme = (String) listSwingThemes.getSelectedValue();
@@ -3338,7 +3341,11 @@ public class SettingsFrame {
         }
         configEntity.setBorderType(borderType.toString());
         configEntity.setPriorityFolder(textFieldPriorityFolder.getText());
-        configEntity.setHotkey(textFieldHotkey.getText());
+        if (isContinuousUpdate) {
+            configEntity.setHotkey(CheckHotKeyService.getCurrentHotkey());
+        } else {
+            configEntity.setHotkey(textFieldHotkey.getText());
+        }
         configEntity.setCacheNumLimit(Integer.parseInt(textFieldCacheNum.getText()));
         configEntity.setUpdateTimeLimit(Integer.parseInt(textFieldUpdateInterval.getText()));
         configEntity.setIgnorePath(ignorePathTemp);
@@ -3380,7 +3387,7 @@ public class SettingsFrame {
      *
      * @return 出现的错误信息，若成功则为空
      */
-    private String saveChanges() {
+    private String saveChanges(boolean isContinuousUpdate) {
         StringBuilder errorsStrb = new StringBuilder();
 
         checkProxy(errorsStrb);
@@ -3411,7 +3418,7 @@ public class SettingsFrame {
 
         //所有配置均正确
         //使所有配置生效
-        ConfigEntity configEntity = getConfigEntity();
+        ConfigEntity configEntity = getConfigEntity(isContinuousUpdate);
 
         eventManagement.putEvent(new SetConfigsEvent(configEntity));
 
@@ -3433,18 +3440,6 @@ public class SettingsFrame {
         tmp_color = new Color(allConfigs.getBorderColor());
         borderColorChooser.setBackground(tmp_color);
         borderColorChooser.setForeground(tmp_color);
-
-        //保存自定义命令
-        StringBuilder strb = new StringBuilder();
-        for (String each : allConfigs.getCmdSet()) {
-            strb.append(each);
-            strb.append("\n");
-        }
-        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("user/cmds.txt"), StandardCharsets.UTF_8))) {
-            bw.write(strb.toString());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
         return "";
     }
 
