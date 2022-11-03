@@ -4045,6 +4045,7 @@ public class SearchBar {
             String path = info[1];
             var labelPath = labelShowingPathInfo.get(label);
             if (!path.equals(labelPath.getReference())) {
+                label.setIcon(getIconUtil.getBigIcon("blankIcon", iconSideLength, iconSideLength, null));
                 while (true) {
                     String reference = labelPath.getReference();
                     int stamp = labelPath.getStamp();
