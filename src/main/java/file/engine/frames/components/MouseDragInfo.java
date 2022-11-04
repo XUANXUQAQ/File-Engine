@@ -44,8 +44,7 @@ public class MouseDragInfo extends JFrame {
         Point point = pointSupplier.get();
         this.setBounds(point.x - length / 2, point.y - length + offset, length, length);
         jPanel.setSize(length, length);
-        ImageIcon bigIcon = GetIconUtil.getInstance().getBigIcon(result, iconLength, iconLength, iconLabel::setIcon);
-        iconLabel.setIcon(bigIcon);
+        GetIconUtil.getInstance().getBigIcon(result, iconLength, iconLength, iconLabel::setIcon, (icon, isTimeout) -> iconLabel.setIcon(icon));
         iconLabel.setBounds(offset, offset, iconLength, iconLength);
         this.setShape(new RoundRectangle2D.Double(0, 0, length, length, 15, 15));
         this.setVisible(true);

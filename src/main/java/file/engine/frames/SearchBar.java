@@ -2804,18 +2804,25 @@ public class SearchBar {
                                 if (showPathRef.getStamp() == 1 || showPathRef.getReference() == null) {
                                     continue;
                                 }
-                                while (true) {
-                                    String showPath = showPathRef.getReference();
-                                    int stamp = showPathRef.getStamp();
-                                    if (!(showPath == null || showPath.isEmpty())) {
-                                        ImageIcon icon = getIconUtil.getBigIcon(showPath, iconSideLength, iconSideLength, icon2 ->
-                                                SwingUtilities.invokeLater(() -> labelInstance.setIcon(icon2)));
-                                        labelInstance.setIcon(icon);
-                                    }
-                                    if (showPathRef.compareAndSet(showPath, showPath, stamp, 1)) {
-                                        break;
-                                    }
+                                String showPath = showPathRef.getReference();
+                                if (showPath == null || showPath.isEmpty()) {
+                                    continue;
                                 }
+                                getIconUtil.getBigIcon(showPathRef.getReference(), iconSideLength, iconSideLength, icon -> {
+                                    SwingUtilities.invokeLater(() -> labelInstance.setIcon(icon));
+                                    while (!showPathRef.compareAndSet(showPathRef.getReference(), showPathRef.getReference(), 0, 1) &&
+                                            showPathRef.getStamp() != 1) {
+                                        Thread.onSpinWait();
+                                    }
+                                }, (icon, isTimeout) -> {
+                                    if (!isTimeout) {
+                                        SwingUtilities.invokeLater(() -> labelInstance.setIcon(icon));
+                                        while (!showPathRef.compareAndSet(showPathRef.getReference(), showPathRef.getReference(), 0, 1) &&
+                                                showPathRef.getStamp() != 1) {
+                                            Thread.onSpinWait();
+                                        }
+                                    }
+                                });
                             }
                             break;
                         default:
@@ -3231,7 +3238,7 @@ public class SearchBar {
             try {
                 long time = System.currentTimeMillis();
                 SwingUtilities.invokeLater(() -> searchInfoLabel.setIcon(
-                        GetIconUtil.getInstance().getBigIcon("loadingIcon", iconSideLength, iconSideLength, null)));
+                        GetIconUtil.getInstance().getBigIcon("loadingIcon", iconSideLength, iconSideLength)));
                 while (!"done".equals(searchInfoLabel.getName()) && isVisible() && startTime < time) {
                     SwingUtilities.invokeLater(() -> searchInfoLabel.setText(TranslateService.INSTANCE.getTranslation("Searching") + "    " +
                             TranslateService.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
@@ -3245,7 +3252,7 @@ public class SearchBar {
                                 TranslateService.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
                                 TranslateService.INSTANCE.getTranslation("Number of current results") + ": " + listResults.size());
                         searchInfoLabel.setIcon(
-                                GetIconUtil.getInstance().getBigIcon("completeIcon", iconSideLength, iconSideLength, null));
+                                GetIconUtil.getInstance().getBigIcon("completeIcon", iconSideLength, iconSideLength));
                         CachedThreadPoolUtil.getInstance().executeTask(() -> {
                             long _time = System.currentTimeMillis();
                             int count = 0;
@@ -3985,7 +3992,7 @@ public class SearchBar {
             }
             label.setText(allHtml);
             if (label.getIcon() == null) {
-                ImageIcon icon = getIconUtil.getBigIcon("blankIcon", iconSideLength, iconSideLength, null);
+                ImageIcon icon = getIconUtil.getBigIcon("blankIcon", iconSideLength, iconSideLength);
                 label.setIcon(icon);
             }
         }
@@ -4044,7 +4051,7 @@ public class SearchBar {
             String path = info[1];
             var labelPath = labelShowingPathInfo.get(label);
             if (!path.equals(labelPath.getReference())) {
-                label.setIcon(getIconUtil.getBigIcon("blankIcon", iconSideLength, iconSideLength, null));
+                label.setIcon(getIconUtil.getBigIcon("blankIcon", iconSideLength, iconSideLength));
                 while (true) {
                     String reference = labelPath.getReference();
                     int stamp = labelPath.getStamp();

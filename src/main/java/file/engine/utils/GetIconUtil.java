@@ -2,6 +2,7 @@ package file.engine.utils;
 
 import file.engine.event.handler.EventManagement;
 import file.engine.utils.system.properties.IsDebug;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 import javax.swing.*;
@@ -9,7 +10,9 @@ import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.io.File;
 import java.util.Objects;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -82,52 +85,63 @@ public class GetIconUtil {
         }
     }
 
-    public ImageIcon getBigIcon(String pathOrKey, int width, int height, Consumer<ImageIcon> timeoutCallback) {
+    public ImageIcon getBigIcon(String pathOrKey, int width, int height) {
+        final ImageIcon[] image = new ImageIcon[1];
+        getBigIcon(pathOrKey, width, height, null, (img, isTimeout) -> image[0] = img);
+        return image[0];
+    }
+
+    public void getBigIcon(String pathOrKey,
+                           int width,
+                           int height,
+                           Consumer<ImageIcon> timeoutCallback,
+                           @NonNull BiConsumer<ImageIcon, Boolean> normalCallback) {
         if (pathOrKey == null || pathOrKey.isEmpty()) {
-            return changeIcon(iconMap.get("blankIcon"), width, height);
+            normalCallback.accept(changeIcon(iconMap.get("blankIcon"), width, height), false);
+            return;
         }
         if (iconMap.containsKey(pathOrKey)) {
-            return changeIcon(iconMap.get(pathOrKey), width, height);
+            normalCallback.accept(changeIcon(iconMap.get(pathOrKey), width, height), false);
+            return;
+        }
+        File f = new File(pathOrKey);
+        if (!f.exists()) {
+            normalCallback.accept(changeIcon(iconMap.get("blankIcon"), width, height), false);
+            return;
         }
         pathOrKey = pathOrKey.toLowerCase();
-        File f = new File(pathOrKey);
-        if (f.exists()) {
-            //已保存的常量图标
-            if (pathOrKey.endsWith(".dll") || pathOrKey.endsWith(".sys")) {
-                return changeIcon(iconMap.get("dllImageIcon"), width, height);
-            }
-            if (pathOrKey.endsWith(".txt")) {
-                return changeIcon(iconMap.get("txtImageIcon"), width, height);
-            }
-            //检测是否为文件夹
-            if (f.isDirectory()) {
-                return changeIcon(iconMap.get("folderImageIcon"), width, height);
-            }
-            Task task = new Task(f, width, height);
-            if (workingQueue.offer(task)) {
-                final long start = System.currentTimeMillis();
-                final long timeout; // 最长等待时间
-                if (timeoutCallback == null) {
-                    // 无callback
-                    timeout = 10_000; // 延长超时时间到10s
-                } else {
-                    timeout = 50;
-                }
-                while (!task.isDone) {
-                    if (System.currentTimeMillis() - start > timeout) {
-                        if (timeoutCallback != null) {
-                            task.timeoutCallBack = timeoutCallback;
-                            workingQueue.offer(task);
-                        }
-                        return changeIcon(iconMap.get("blankIcon"), width, height);
-                    }
-                    Thread.onSpinWait();
-                }
-                //图标获取完成
-                return task.icon;
-            }
+        //已保存的常量图标
+        if (pathOrKey.endsWith(".dll") || pathOrKey.endsWith(".sys")) {
+            normalCallback.accept(changeIcon(iconMap.get("dllImageIcon"), width, height), false);
+            return;
         }
-        return changeIcon(iconMap.get("blankIcon"), width, height);
+        if (pathOrKey.endsWith(".txt")) {
+            normalCallback.accept(changeIcon(iconMap.get("txtImageIcon"), width, height), false);
+            return;
+        }
+        //检测是否为文件夹
+        if (f.isDirectory()) {
+            normalCallback.accept(changeIcon(iconMap.get("folderImageIcon"), width, height), false);
+            return;
+        }
+        Task task = new Task(f, width, height);
+        if (workingQueue.offer(task)) {
+            final long start = System.currentTimeMillis();
+            final long timeout = timeoutCallback == null ? 10_000 : 50; // 最长等待时间
+            while (!task.isDone) {
+                if (System.currentTimeMillis() - start > timeout) {
+                    if (timeoutCallback != null) {
+                        task.timeoutCallBack = timeoutCallback;
+                        workingQueue.offer(task);
+                    }
+                    normalCallback.accept(changeIcon(iconMap.get("blankIcon"), width, height), true);
+                    return;
+                }
+                Thread.onSpinWait();
+            }
+            //图标获取完成
+            normalCallback.accept(task.icon, false);
+        }
     }
 
     private void startWorkingThread() {
