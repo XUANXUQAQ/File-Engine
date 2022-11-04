@@ -56,7 +56,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicStampedReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -98,8 +97,8 @@ public class SearchBar {
     private final JLabel label6 = new JLabel();
     private final JLabel label7 = new JLabel();
     private final JLabel label8 = new JLabel();
-    // AtomicStampedReference的stamp 0代表需要获取图标，1代表获取完成
-    private final ConcurrentHashMap<JLabel, AtomicStampedReference<String>> labelShowingPathInfo = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<JLabel, String> labelShowingPathInfo = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<JLabel, String> labelLastShowingPathInfo = new ConcurrentHashMap<>();
     private JLabel searchInfoLabel;
     private final AtomicInteger currentResultCount;  //保存当前选中的结果是在listResults中的第几个 范围 0 - listResults.size()
     private JTextField textField;
@@ -143,16 +142,6 @@ public class SearchBar {
     private SearchBar() {
         listResults = new ArrayList<>();
         currentResultCount = new AtomicInteger(0);
-
-        labelShowingPathInfo.put(label1, new AtomicStampedReference<>(null, 1));
-        labelShowingPathInfo.put(label2, new AtomicStampedReference<>(null, 1));
-        labelShowingPathInfo.put(label3, new AtomicStampedReference<>(null, 1));
-        labelShowingPathInfo.put(label4, new AtomicStampedReference<>(null, 1));
-        labelShowingPathInfo.put(label5, new AtomicStampedReference<>(null, 1));
-        labelShowingPathInfo.put(label6, new AtomicStampedReference<>(null, 1));
-        labelShowingPathInfo.put(label7, new AtomicStampedReference<>(null, 1));
-        labelShowingPathInfo.put(label8, new AtomicStampedReference<>(null, 1));
-
         TranslateService translateService = TranslateService.getInstance();
         open = new JMenuItem(translateService.getTranslation("Open"));
         openAsAdmin = new JMenuItem(translateService.getTranslation("Open as administrator"));
@@ -2800,29 +2789,27 @@ public class SearchBar {
                                 String labelName = "label" + i;
                                 Field labelField = objectHashMap.get(labelName);
                                 JLabel labelInstance = (JLabel) labelField.get(searchBarInstance);
-                                var showPathRef = labelShowingPathInfo.get(labelInstance);
-                                if (showPathRef.getStamp() == 1 || showPathRef.getReference() == null) {
-                                    continue;
-                                }
-                                String showPath = showPathRef.getReference();
-                                if (showPath == null || showPath.isEmpty()) {
-                                    continue;
-                                }
-                                getIconUtil.getBigIcon(showPathRef.getReference(), iconSideLength, iconSideLength, icon -> {
-                                    SwingUtilities.invokeLater(() -> labelInstance.setIcon(icon));
-                                    while (!showPathRef.compareAndSet(showPathRef.getReference(), showPathRef.getReference(), 0, 1) &&
-                                            showPathRef.getStamp() != 1) {
-                                        Thread.onSpinWait();
-                                    }
-                                }, (icon, isTimeout) -> {
-                                    if (!isTimeout) {
-                                        SwingUtilities.invokeLater(() -> labelInstance.setIcon(icon));
-                                        while (!showPathRef.compareAndSet(showPathRef.getReference(), showPathRef.getReference(), 0, 1) &&
-                                                showPathRef.getStamp() != 1) {
-                                            Thread.onSpinWait();
+                                var showPath = labelShowingPathInfo.getOrDefault(labelInstance, "");
+                                String lastShowPath = labelLastShowingPathInfo.getOrDefault(labelInstance, "");
+                                if (!showPath.equals(lastShowPath) && !showPath.isEmpty()) {
+                                    getIconUtil.getBigIcon(showPath, iconSideLength, iconSideLength, icon -> {
+                                        try {
+                                            SwingUtilities.invokeAndWait(() -> labelInstance.setIcon(icon));
+                                        } catch (InterruptedException | InvocationTargetException e) {
+                                            throw new RuntimeException(e);
                                         }
-                                    }
-                                });
+                                        labelLastShowingPathInfo.put(labelInstance, showPath);
+                                    }, (icon, isTimeout) -> {
+                                        if (!isTimeout) {
+                                            try {
+                                                SwingUtilities.invokeAndWait(() -> labelInstance.setIcon(icon));
+                                            } catch (InterruptedException | InvocationTargetException e) {
+                                                throw new RuntimeException(e);
+                                            }
+                                            labelLastShowingPathInfo.put(labelInstance, showPath);
+                                        }
+                                    });
+                                }
                             }
                             break;
                         default:
@@ -3980,15 +3967,10 @@ public class SearchBar {
             } else {
                 label.setName(RESULT_LABEL_NAME_HOLDER);
             }
-            var labelPath = labelShowingPathInfo.get(label);
-            if (!path.equals(labelPath.getReference())) {
-                while (true) {
-                    String reference = labelPath.getReference();
-                    int stamp = labelPath.getStamp();
-                    if (labelPath.compareAndSet(reference, path, stamp, 0)) {
-                        break;
-                    }
-                }
+            var lastPath = labelShowingPathInfo.put(label, path);
+            lastPath = lastPath == null ? "" : lastPath;
+            if (!lastPath.equals(path)) {
+                labelLastShowingPathInfo.put(label, lastPath);
             }
             label.setText(allHtml);
             if (label.getIcon() == null) {
@@ -4049,18 +4031,14 @@ public class SearchBar {
         ImageIcon commandIcon = getIconUtil.getCommandIcon(iconKey, iconSideLength, iconSideLength);
         if (commandIcon == null) {
             String path = info[1];
-            var labelPath = labelShowingPathInfo.get(label);
-            if (!path.equals(labelPath.getReference())) {
-                label.setIcon(getIconUtil.getBigIcon("blankIcon", iconSideLength, iconSideLength));
-                while (true) {
-                    String reference = labelPath.getReference();
-                    int stamp = labelPath.getStamp();
-                    if (labelPath.compareAndSet(reference, path, stamp, 0)) {
-                        break;
-                    }
-                }
+            String lastPath = labelShowingPathInfo.put(label, path);
+            lastPath = lastPath == null ? "" : lastPath;
+            if (!lastPath.equals(path)) {
+                labelLastShowingPathInfo.put(label, lastPath);
             }
         } else {
+            labelShowingPathInfo.remove(label);
+            labelLastShowingPathInfo.remove(label);
             label.setIcon(commandIcon);
         }
         if (isChosen) {
@@ -4215,7 +4193,8 @@ public class SearchBar {
         label.setText(null);
         label.setName(null);
         label.setIcon(null);
-        labelShowingPathInfo.get(label).set(null, 1);
+        labelShowingPathInfo.remove(label);
+        labelLastShowingPathInfo.remove(label);
     }
 
     /**
