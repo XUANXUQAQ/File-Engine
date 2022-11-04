@@ -4030,6 +4030,10 @@ public class SearchBar {
         label.setName(RESULT_LABEL_NAME_HOLDER);
         ImageIcon commandIcon = getIconUtil.getCommandIcon(iconKey, iconSideLength, iconSideLength);
         if (commandIcon == null) {
+            if (label.getIcon() == null) {
+                ImageIcon icon = getIconUtil.getBigIcon("blankIcon", iconSideLength, iconSideLength);
+                label.setIcon(icon);
+            }
             String path = info[1];
             String lastPath = labelShowingPathInfo.put(label, path);
             lastPath = lastPath == null ? "" : lastPath;
