@@ -231,6 +231,9 @@ public class DatabaseService {
         if (!path.exists()) {
             return;
         }
+        if (shouldStopSearch.get()) {
+            return;
+        }
         File[] files = path.listFiles();
         if (null == files || files.length == 0) {
             return;
@@ -254,7 +257,12 @@ public class DatabaseService {
                 checkIsMatchedAndAddToList(remain.getAbsolutePath(), null);
             }
         } while (!listRemainDir.isEmpty() && !shouldStopSearch.get());
-        dirsToSearch.forEach(eachDir -> checkIsMatchedAndAddToList(eachDir.getAbsolutePath(), null));
+        for (File eachDir : dirsToSearch) {
+            if (shouldStopSearch.get()) {
+                return;
+            }
+            checkIsMatchedAndAddToList(eachDir.getAbsolutePath(), null);
+        }
     }
 
     /**
@@ -992,16 +1000,9 @@ public class DatabaseService {
     private void startSearch() {
         searchCache();
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
-        AtomicBoolean isSearchFolderDone = new AtomicBoolean();
-        cachedThreadPoolUtil.executeTask(() -> {
-            searchPriorityFolder();
-            searchStartMenu();
-            searchDesktop();
-            isSearchFolderDone.set(true);
-        });
         final long start = System.currentTimeMillis();
         final long timeout = 500;
-        while (!isSearchFolderDone.get()) {
+        while (!PrepareSearchInfo.isSearchFolderDone.get()) {
             if (System.currentTimeMillis() - start > timeout) {
                 break;
             }
@@ -1662,9 +1663,9 @@ public class DatabaseService {
     }
 
     /**
-      等待sql任务执行
-
-      @param taskId 任务id
+     * 等待sql任务执行
+     *
+     * @param taskId 任务id
      */
     private void waitForCommandSet(@SuppressWarnings("SameParameterValue") SqlTaskIds taskId) {
         try {
@@ -1836,7 +1837,8 @@ public class DatabaseService {
         static ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskMap;
         static Bit taskStatus = new Bit(new byte[]{0});
         static Bit allTaskStatus = new Bit(new byte[]{0});
-        static AtomicBoolean isPreparing = new AtomicBoolean(false);
+        static AtomicBoolean isPreparing = new AtomicBoolean();
+        static AtomicBoolean isSearchFolderDone = new AtomicBoolean(true);
 
         private static ConcurrentHashMap<String, Set<String>> prepareSearchTasks() {
             DatabaseService databaseService = DatabaseService.getInstance();
@@ -1865,13 +1867,29 @@ public class DatabaseService {
                 System.out.println("进行预搜索并添加搜索任务");
             }
             DatabaseService databaseService = DatabaseService.getInstance();
-            final long startWaiting = System.currentTimeMillis();
+            long startWaiting = System.currentTimeMillis();
             final long timeout = 3000;
             while (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL && System.currentTimeMillis() - startWaiting < timeout) {
                 Thread.onSpinWait();
             }
             prepareSearch((PrepareSearchEvent) event);
             PrepareSearchInfo.isPreparing.set(false);
+            startWaiting = System.currentTimeMillis();
+            while (!PrepareSearchInfo.isSearchFolderDone.compareAndSet(true, false) &&
+                    System.currentTimeMillis() - startWaiting < timeout) {
+                Thread.onSpinWait();
+            }
+            CachedThreadPoolUtil.getInstance().executeTask(() -> {
+                try {
+                    databaseService.searchPriorityFolder();
+                    if (databaseService.shouldStopSearch.get()) return;
+                    databaseService.searchStartMenu();
+                    if (databaseService.shouldStopSearch.get()) return;
+                    databaseService.searchDesktop();
+                } finally {
+                    PrepareSearchInfo.isSearchFolderDone.set(true);
+                }
+            });
             event.setReturnValue(databaseService.tempResults);
         }
     }

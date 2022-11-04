@@ -3884,7 +3884,6 @@ public class SearchBar {
                 String s = "#" + ColorUtil.parseColorHex(fontColorWithCoverage);
                 return "<span style=\"color: " + s + ";\">" + group + "</span>";
             });
-            return html;
         }
         return html;
     }
