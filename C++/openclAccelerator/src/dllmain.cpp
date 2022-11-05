@@ -243,10 +243,13 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_match
 	}
 	//GPU并行计算
 	start_kernel(search_case_vec, is_ignore_case, search_text_chars, keywords_vec, keywords_lower_vec, is_keyword_path_ptr);
+	collect_results(env, result_collector, result_counter, max_results, search_case_vec);
 	for (auto&& each : collect_threads_vec)
 	{
 		if (each.joinable())
+		{
 			each.join();
+		}
 	}
 	for (auto& [_, cache_val] : cache_map)
 	{

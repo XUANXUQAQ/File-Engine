@@ -40,7 +40,6 @@ int is_dir_or_file(const char* path)
 
 bool is_file_exist(const char* path)
 {
-	const auto w_path = string2wstring(path);
-	DWORD dwAttrib = GetFileAttributes(w_path.c_str());
-	return INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY);
+	struct _stat64i32 buffer;
+	return _wstat(string2wstring(path).c_str(), &buffer) == 0;
 }
