@@ -458,7 +458,10 @@ public class DatabaseService {
                     GPUAccelerator.INSTANCE.initCache(key, () -> {
                         try {
                             if (resultSet.next() && eventManagement.notMainExit()) {
-                                return resultSet.getString("PATH");
+                                String path = resultSet.getString("PATH");
+                                if (Files.exists(Path.of(path))) {
+                                    return path;
+                                }
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -604,7 +607,7 @@ public class DatabaseService {
                 searchText,
                 keywords,
                 keywordsLowerCase,
-                isKeywordPath)) {
+                isKeywordPath) && Files.exists(Path.of(path))) {
             //字符串匹配通过
             ret = true;
             if (container == null) {
