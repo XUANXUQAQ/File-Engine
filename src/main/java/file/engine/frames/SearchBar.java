@@ -2815,7 +2815,7 @@ public class SearchBar {
                         default:
                             break;
                     }
-                    TimeUnit.MILLISECONDS.sleep(250);
+                    TimeUnit.MILLISECONDS.sleep(50);
                 }
             } catch (InterruptedException ignored) {
                 // ignore
