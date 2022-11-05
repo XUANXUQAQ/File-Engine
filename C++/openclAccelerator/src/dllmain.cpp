@@ -583,7 +583,10 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 					// 判断文件和文件夹
 					if (search_case_vec.empty())
 					{
-						_collect_func(key, matched_record_str, &matched_number);
+						if (is_file_exist(matched_record_str))
+						{
+							_collect_func(key, matched_record_str, &matched_number);
+						}
 					}
 					else
 					{
@@ -603,7 +606,10 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 						}
 						else
 						{
-							_collect_func(key, matched_record_str, &matched_number);
+							if (is_file_exist(matched_record_str))
+							{
+								_collect_func(key, matched_record_str, &matched_number);
+							}
 						}
 					}
 				}

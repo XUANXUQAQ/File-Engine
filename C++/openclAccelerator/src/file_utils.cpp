@@ -36,3 +36,11 @@ int is_dir_or_file(const char* path)
 	}
 	return -1;
 }
+
+
+bool is_file_exist(const char* path)
+{
+	const auto w_path = string2wstring(path);
+	DWORD dwAttrib = GetFileAttributes(w_path.c_str());
+	return INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY);
+}

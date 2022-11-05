@@ -27,6 +27,7 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 bool is_record_repeat(const std::string& record, const list_cache* cache);
 void release_all();
 int is_dir_or_file(const char* path);
+bool is_file_exist(const char* path);
 std::wstring string2wstring(const std::string& str);
 void handle_memory_fragmentation(const list_cache* cache);
 
@@ -604,7 +605,10 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 					// 判断文件和文件夹
 					if (search_case_vec.empty())
 					{
-						_collect_func(key, matched_record_str, &matched_number);
+						if (is_file_exist(matched_record_str))
+						{
+							_collect_func(key, matched_record_str, &matched_number);
+						}
 					}
 					else
 					{
@@ -624,7 +628,10 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 						}
 						else
 						{
-							_collect_func(key, matched_record_str, &matched_number);
+							if (is_file_exist(matched_record_str))
+							{
+								_collect_func(key, matched_record_str, &matched_number);
+							}
 						}
 					}
 				}
@@ -655,6 +662,13 @@ int is_dir_or_file(const char* path)
 		return 1;
 	}
 	return -1;
+}
+
+bool is_file_exist(const char* path)
+{
+	const auto w_path = string2wstring(path);
+	DWORD dwAttrib = GetFileAttributes(w_path.c_str());
+	return INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY);
 }
 
 std::wstring string2wstring(const std::string& str)
@@ -876,7 +890,7 @@ void remove_records_from_cache(const std::string& key, std::vector<std::string>&
 								true, get_cache_info(key, cache).c_str());
 							//记录字符串长度
 							cache->str_data.str_length[i] = cache->str_data.str_length[last_index];
-						}
+					}
 						else
 						{
 							// 不删除字符串，只更新字符串地址
@@ -892,13 +906,13 @@ void remove_records_from_cache(const std::string& key, std::vector<std::string>&
 							//记录字符串长度
 							cache->str_data.str_length[i] = cache->str_data.str_length[last_index];
 						}
-					}
+			}
 					--cache->str_data.record_num;
 					++cache->str_data.remain_blank_num;
 					cache->str_data.record_hash.unsafe_erase(hasher(*record));
-				}
-			}
 		}
+	}
+}
 		gpuErrchk(cudaStreamSynchronize(stream), true, nullptr);
 		gpuErrchk(cudaStreamDestroy(stream), true, nullptr);
 		// 处理内存碎片
@@ -938,7 +952,7 @@ void handle_memory_fragmentation(const list_cache* cache)
 		char tmp[MAX_PATH_LENGTH]{ 0 };
 		gpuErrchk(cudaMemcpy(tmp, str_address_in_device, cache->str_data.str_length[i], cudaMemcpyDeviceToHost), true, nullptr);
 		records.emplace_back(tmp);
-		}
+	}
 	auto target_addr = cache->str_data.dev_strs;
 	auto save_str_addr_ptr = cache->str_data.dev_str_addr;
 	cudaStream_t stream;
@@ -982,7 +996,7 @@ void handle_memory_fragmentation(const list_cache* cache)
 			}
 			p_last_addr = str_address_in_device;
 		}
-	}
+}
 #endif
 }
 
