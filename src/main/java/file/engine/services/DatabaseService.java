@@ -458,10 +458,7 @@ public class DatabaseService {
                     GPUAccelerator.INSTANCE.initCache(key, () -> {
                         try {
                             if (resultSet.next() && eventManagement.notMainExit()) {
-                                String path = resultSet.getString("PATH");
-                                if (Files.exists(Path.of(path))) {
-                                    return path;
-                                }
+                                return resultSet.getString("PATH");
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
