@@ -1813,6 +1813,13 @@ public class DatabaseService {
     private static void searchBarVisibleListener(Event event) {
         SQLiteUtil.openAllConnection();
         getInstance().sendExecuteSQLSignal();
+        int searchThreadNumber = AllConfigs.getInstance().getSearchThreadNumber();
+        CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+        for (int i = 0; i < searchThreadNumber; i++) {
+            cachedThreadPoolUtil.executeTask(() -> {
+                // create thread
+            });
+        }
     }
 
     @EventRegister(registerClass = CheckDatabaseEmptyEvent.class)
