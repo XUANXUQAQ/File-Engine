@@ -1020,14 +1020,14 @@ public class DatabaseService {
     private void startSearch() {
         searchCache();
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
-        final long start = System.currentTimeMillis();
-        final long timeout = 500;
-        while (!PrepareSearchInfo.isSearchFolderDone.get()) {
-            if (System.currentTimeMillis() - start > timeout) {
-                break;
-            }
-            Thread.onSpinWait();
-        }
+//        final long start = System.currentTimeMillis();
+//        final long timeout = 500;
+//        while (!PrepareSearchInfo.isSearchFolderDone.get()) {
+//            if (System.currentTimeMillis() - start > timeout) {
+//                break;
+//            }
+//            Thread.onSpinWait();
+//        }
         var taskMap = PrepareSearchInfo.taskMap;
         EventManagement eventManagement = EventManagement.getInstance();
         final int threadNumberPerDisk = Math.max(1, AllConfigs.getInstance().getSearchThreadNumber() / taskMap.size());
@@ -1906,24 +1906,28 @@ public class DatabaseService {
                 System.out.println("进行预搜索并添加搜索任务");
             }
             DatabaseService databaseService = DatabaseService.getInstance();
-            long startWaiting = System.currentTimeMillis();
+            final long startWaiting = System.currentTimeMillis();
             final long timeout = 3000;
             while (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL && System.currentTimeMillis() - startWaiting < timeout) {
                 Thread.onSpinWait();
             }
             prepareSearch((PrepareSearchEvent) event);
             PrepareSearchInfo.isPreparing.set(false);
-            startWaiting = System.currentTimeMillis();
-            while (!PrepareSearchInfo.isSearchFolderDone.compareAndSet(true, false) &&
-                    System.currentTimeMillis() - startWaiting < timeout) {
-                Thread.onSpinWait();
-            }
             CachedThreadPoolUtil.getInstance().executeTask(() -> {
                 try {
+                    final long startWaiting2 = System.currentTimeMillis();
+                    while (!PrepareSearchInfo.isSearchFolderDone.compareAndSet(true, false) &&
+                            System.currentTimeMillis() - startWaiting2 < timeout) {
+                        Thread.onSpinWait();
+                    }
                     databaseService.searchPriorityFolder();
-                    if (databaseService.shouldStopSearch.get()) return;
+                    if (databaseService.shouldStopSearch.get()) {
+                        return;
+                    }
                     databaseService.searchStartMenu();
-                    if (databaseService.shouldStopSearch.get()) return;
+                    if (databaseService.shouldStopSearch.get()) {
+                        return;
+                    }
                     databaseService.searchDesktop();
                 } finally {
                     PrepareSearchInfo.isSearchFolderDone.set(true);
