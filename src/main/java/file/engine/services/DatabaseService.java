@@ -226,10 +226,10 @@ public class DatabaseService {
     }
 
     private void searchFolder(String folder) {
-        File path = new File(folder);
-        if (!path.exists()) {
+        if (!Files.exists(Path.of(folder))) {
             return;
         }
+        File path = new File(folder);
         if (shouldStopSearch.get()) {
             return;
         }
@@ -238,8 +238,8 @@ public class DatabaseService {
             return;
         }
         List<File> filesList = List.of(files);
-        LinkedList<File> dirsToSearch = new LinkedList<>(filesList);
-        LinkedList<File> listRemainDir = new LinkedList<>(filesList);
+        ArrayDeque<File> dirsToSearch = new ArrayDeque<>(filesList);
+        ArrayDeque<File> listRemainDir = new ArrayDeque<>(filesList);
         do {
             File remain = listRemainDir.poll();
             if (remain == null) {
@@ -676,7 +676,7 @@ public class DatabaseService {
      */
     private ConcurrentLinkedQueue<String> initTableQueueByPriority() {
         ConcurrentLinkedQueue<String> tableQueue = new ConcurrentLinkedQueue<>();
-        LinkedList<TableNameWeightInfo> tmpCommandList = new LinkedList<>(tableSet);
+        ArrayList<TableNameWeightInfo> tmpCommandList = new ArrayList<>(tableSet);
         //将tableSet通过权重排序
         tmpCommandList.sort((o1, o2) -> Long.compare(o2.weight.get(), o1.weight.get()));
         for (TableNameWeightInfo each : tmpCommandList) {
@@ -768,7 +768,7 @@ public class DatabaseService {
      * @param nonFormattedSql 未格式化搜索字段的SQL
      * @return gpu搜索容器
      */
-    private ConcurrentHashMap<String, Set<String>> addSearchTasks(LinkedList<LinkedHashMap<String, String>> nonFormattedSql) {
+    private ConcurrentHashMap<String, Set<String>> addSearchTasks(ArrayList<LinkedHashMap<String, String>> nonFormattedSql) {
         ConcurrentHashMap<String, Set<String>> gpuSearchContainer = new ConcurrentHashMap<>();
         Bit number = new Bit(new byte[]{1});
         AllConfigs allConfigs = AllConfigs.getInstance();
@@ -968,8 +968,8 @@ public class DatabaseService {
      *
      * @return set
      */
-    private LinkedList<LinkedHashMap<String, String>> getNonFormattedSqlFromTableQueue() {
-        LinkedList<LinkedHashMap<String, String>> sqlColumnMap = new LinkedList<>();
+    private ArrayList<LinkedHashMap<String, String>> getNonFormattedSqlFromTableQueue() {
+        ArrayList<LinkedHashMap<String, String>> sqlColumnMap = new ArrayList<>();
         if (priorityMap.isEmpty()) {
             return sqlColumnMap;
         }
