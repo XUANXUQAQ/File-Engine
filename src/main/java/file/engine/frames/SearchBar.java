@@ -67,7 +67,6 @@ public class SearchBar {
     private final AtomicBoolean isLockMouseMotion = new AtomicBoolean(false);
     private final AtomicBoolean isOpenLastFolderPressed = new AtomicBoolean(false);
     private final AtomicBoolean isRunAsAdminPressed = new AtomicBoolean(false);
-    private final AtomicBoolean isFocusGrabbed = new AtomicBoolean(false);
     private final AtomicBoolean isCopyPathPressed = new AtomicBoolean(false);
     private final AtomicBoolean isUserPressed = new AtomicBoolean(false);
     private final AtomicBoolean isMouseDraggedInWindow = new AtomicBoolean(false);
@@ -77,9 +76,10 @@ public class SearchBar {
     private final AtomicBoolean isBorderThreadNotExist = new AtomicBoolean(true);
     private final AtomicBoolean isLockMouseMotionThreadNotExist = new AtomicBoolean(true);
     private final AtomicBoolean isTryToShowResultThreadNotExist = new AtomicBoolean(true);
-    private final AtomicBoolean isRoundRadiusSet = new AtomicBoolean(false);
-    private static final AtomicBoolean isPreviewMode = new AtomicBoolean(false);
-    private final AtomicBoolean isTutorialMode = new AtomicBoolean(false);
+    private final AtomicBoolean isRoundRadiusSet = new AtomicBoolean();
+    private static final AtomicBoolean isPreviewMode = new AtomicBoolean();
+    private final AtomicBoolean isTutorialMode = new AtomicBoolean();
+    private final AtomicBoolean isSwitchToNormalManual = new AtomicBoolean();
     private Border fullBorder;
     private Border topBorder;
     private Border middleBorder;
@@ -502,7 +502,7 @@ public class SearchBar {
                     if (menu.isVisible()) {
                         return;
                     }
-                    if ((showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING && allConfigs.isLoseFocusClose()) || isFocusGrabbed.get()) {
+                    if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING && allConfigs.isLoseFocusClose()) {
                         if (!isTutorialMode.get()) {
                             closeSearchBar();
                         }
@@ -2863,13 +2863,19 @@ public class SearchBar {
                         changeSearchBarSize(positionX, positionY, searchBarWidth, searchBarHeight);
                         setTextFieldAtTop(searchBarHeight);
                     }
+
                     boolean isChangeToAttach = GetHandle.INSTANCE.changeToAttach();
                     boolean attachExplorer = allConfigs.isAttachExplorer();
-                    if (isChangeToAttach && attachExplorer) {
+                    if (isChangeToAttach && attachExplorer && !isSwitchToNormalManual.get()) {
                         switchToExplorerAttachMode();
                     } else {
-                        if (showingMode != Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING && GetHandle.INSTANCE.changeToNormal()) {
+                        if (GetHandle.INSTANCE.changeToNormal() &&
+                                showingMode != Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
                             switchToNormalMode(true, screenInfo.screenSize);
+                        } else if (isSwitchToNormalManual.get() &&
+                                showingMode != Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                            grabFocus();
+                            switchToNormalMode(false, screenInfo.screenSize);
                         }
                     }
                     TimeUnit.MILLISECONDS.sleep(10);
@@ -3733,6 +3739,10 @@ public class SearchBar {
 
     private void grabFocus() {
         int x = 0, y = 0;
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        int height = screenSize.height;
+        int searchBarHeight = (int) (height * SEARCH_BAR_HEIGHT_RATIO);
+        int labelHeight = searchBarHeight / 9;
         long start = System.currentTimeMillis();
         try {
             while (!(searchBar.isVisible() || searchBar.isValid()) && System.currentTimeMillis() - start < 3000) {
@@ -3745,7 +3755,7 @@ public class SearchBar {
             y = searchBar.getY() + textField.getHeight() / 2;
         } else if (showingMode == Constants.Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
             x = searchBar.getX() + textField.getWidth() / 2;
-            y = searchBar.getY() + label1.getHeight() * 8 + searchInfoLabel.getHeight() + textField.getHeight() / 2;
+            y = searchBar.getY() + labelHeight * 8 + searchInfoLabel.getHeight() + textField.getHeight() / 2;
         }
         RobotUtil.INSTANCE.mouseClicked(x, y, 1, InputEvent.BUTTON1_DOWN_MASK);
     }
@@ -3773,26 +3783,9 @@ public class SearchBar {
                     searchInfoLabel.setIcon(null);
                     startTime = System.currentTimeMillis();
                     visibleStartTime = startTime;
-                    if (isGrabFocus) {
-                        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-                            try {
-                                TimeUnit.MILLISECONDS.sleep(50);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                            grabFocus();
-                        });
-                    }
                     eventManagement.putEvent(new SearchBarReadyEvent(showingMode.toString()));
                 } else if (isSwitchToNormal) {
-                    grabFocus();
-                    try {
-                        TimeUnit.MILLISECONDS.sleep(50);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    switchToNormalMode(false, Toolkit.getDefaultToolkit().getScreenSize());
-                    isFocusGrabbed.set(true);
+                    isSwitchToNormalManual.set(true);
                 }
                 if (isBorderThreadNotExist.get()) {
                     isBorderThreadNotExist.set(false);
@@ -3807,6 +3800,10 @@ public class SearchBar {
                     lockMouseMotionThread();
                 }
             });
+            if (isGrabFocus && !isSwitchToNormal) {
+                TimeUnit.MILLISECONDS.sleep(150);
+                grabFocus();
+            }
         } catch (InterruptedException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
@@ -4285,7 +4282,6 @@ public class SearchBar {
         if (!b) {
             if (!isPreviewMode.get()) {
                 searchBar.setVisible(false);
-                isFocusGrabbed.set(false);
             }
         } else {
             searchBar.setVisible(true);
@@ -4306,6 +4302,7 @@ public class SearchBar {
                 resetAllStatus();
             }
             menu.setVisible(false);
+            isSwitchToNormalManual.set(false);
         });
     }
 
