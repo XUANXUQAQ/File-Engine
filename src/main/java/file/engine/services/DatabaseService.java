@@ -53,7 +53,7 @@ import java.util.stream.Collectors;
 
 public class DatabaseService {
     private final ConcurrentLinkedQueue<SQLWithTaskId> commandQueue = new ConcurrentLinkedQueue<>();
-    private final ConcurrentHashMap<String, Integer> databaseResultsCount = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, AtomicInteger> databaseResultsCount = new ConcurrentHashMap<>();
     private final AtomicReference<Constants.Enums.DatabaseStatus> status = new AtomicReference<>(Constants.Enums.DatabaseStatus.NORMAL);
     private final AtomicBoolean isExecuteImmediately = new AtomicBoolean(false);
     private final AtomicInteger databaseCacheNum = new AtomicInteger(0);
@@ -320,7 +320,7 @@ public class DatabaseService {
                             if (resultCount.next()) {
                                 final int num = resultCount.getInt("total_num");
                                 canBeCached = num >= minRecordNum && num <= maxRecordNum;
-                                databaseResultsCount.put(disk + "," + tableName + "," + pair.priority, num);
+                                databaseResultsCount.put(disk + "," + tableName + "," + pair.priority, new AtomicInteger(num));
                             } else {
                                 canBeCached = false;
                             }
@@ -631,7 +631,7 @@ public class DatabaseService {
      *
      * @param sql sql
      */
-    private int searchAndAddToTempResults(String sql, Collection<String> container, String diskStr) {
+    private int searchAndAddToTempResults(String sql, Collection<String> container, Statement stmt) {
         int matchedResultCount = 0;
         //结果太多则不再进行搜索
         if (shouldStopSearch.get()) {
@@ -639,8 +639,7 @@ public class DatabaseService {
         }
         String[] tmpQueryResultsCache = new String[MAX_TEMP_QUERY_RESULT_CACHE];
         EventManagement eventManagement = EventManagement.getInstance();
-        try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement(sql, diskStr);
-             ResultSet resultSet = pStmt.executeQuery()) {
+        try (ResultSet resultSet = stmt.executeQuery(sql)) {
             boolean isExit = false;
             while (!isExit && eventManagement.notMainExit()) {
                 int i = 0;
@@ -820,6 +819,7 @@ public class DatabaseService {
         var tempResultsForEventLocal = tempResultsForEvent;
         AllConfigs allConfigs = AllConfigs.getInstance();
         tasks.add(() -> {
+            Statement stmt = null;
             try {
                 for (var sqlAndTableName : sqlToExecute.entrySet()) {
                     String diskStr = String.valueOf(diskChar.charAt(0));
@@ -835,10 +835,13 @@ public class DatabaseService {
                         if (!shouldStopSearch.get()) {
                             int recordsNum = 1;
                             if (databaseResultsCount.containsKey(key)) {
-                                recordsNum = databaseResultsCount.get(key);
+                                recordsNum = databaseResultsCount.get(key).get();
                             }
                             if (recordsNum != 0) {
-                                matchedNum = searchFromDatabaseOrCache(resultContainer, diskStr, eachSql, key);
+                                if (stmt == null) {
+                                    stmt = SQLiteUtil.getStatement(diskStr);
+                                }
+                                matchedNum = searchFromDatabaseOrCache(resultContainer, stmt, eachSql, key);
                             } else {
                                 matchedNum = 0;
                             }
@@ -868,6 +871,13 @@ public class DatabaseService {
                     Bit or = Bit.or(originalBytes, currentTaskNum.getBytes());
                     if (PrepareSearchInfo.taskStatus.set(originalBytes, or)) {
                         break;
+                    }
+                }
+                if (stmt != null) {
+                    try {
+                        stmt.close();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
                     }
                 }
             }
@@ -922,12 +932,12 @@ public class DatabaseService {
      * 从数据库中查找
      *
      * @param container 存储结果容器
-     * @param diskStr   磁盘盘符
+     * @param stmt      statement
      * @param sql       sql
      * @param key       查询key，例如 [C,list10,-1]
      * @return 查询的结果数量
      */
-    private long searchFromDatabaseOrCache(Collection<String> container, String diskStr, String sql, String key) {
+    private long searchFromDatabaseOrCache(Collection<String> container, Statement stmt, String sql, String key) {
         if (shouldStopSearch.get()) {
             return 0;
         }
@@ -947,7 +957,7 @@ public class DatabaseService {
             matchedNum = searchAndAddToTempResults(
                     formattedSql,
                     container,
-                    diskStr);
+                    stmt);
         }
         return matchedNum;
     }
@@ -1310,10 +1320,9 @@ public class DatabaseService {
                             int updateCount = stmt.getUpdateCount();
                             if (sqlWithTaskId.key != null && updateCount != -1 && updateCount != 0) {
                                 if (databaseResultsCount.containsKey(sqlWithTaskId.key)) {
-                                    int recordsNumber = databaseResultsCount.get(sqlWithTaskId.key);
+                                    var recordsNumber = databaseResultsCount.get(sqlWithTaskId.key);
                                     updateCount = sqlWithTaskId.taskId == SqlTaskIds.INSERT_TO_LIST ? updateCount : -updateCount;
-                                    recordsNumber += updateCount;
-                                    databaseResultsCount.put(sqlWithTaskId.key, recordsNumber);
+                                    recordsNumber.addAndGet(updateCount);
                                 }
                             }
                         }
