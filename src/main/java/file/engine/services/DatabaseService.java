@@ -31,15 +31,13 @@ import file.engine.utils.gson.GsonUtil;
 import file.engine.utils.system.properties.IsDebug;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.*;
@@ -55,6 +53,7 @@ import java.util.stream.Collectors;
 
 public class DatabaseService {
     private final ConcurrentLinkedQueue<SQLWithTaskId> commandQueue = new ConcurrentLinkedQueue<>();
+    private final ConcurrentHashMap<String, Integer> databaseResultsCount = new ConcurrentHashMap<>();
     private final AtomicReference<Constants.Enums.DatabaseStatus> status = new AtomicReference<>(Constants.Enums.DatabaseStatus.NORMAL);
     private final AtomicBoolean isExecuteImmediately = new AtomicBoolean(false);
     private final AtomicInteger databaseCacheNum = new AtomicInteger(0);
@@ -321,12 +320,14 @@ public class DatabaseService {
                             if (resultCount.next()) {
                                 final int num = resultCount.getInt("total_num");
                                 canBeCached = num >= minRecordNum && num <= maxRecordNum;
+                                databaseResultsCount.put(disk + "," + tableName + "," + pair.priority, num);
                             } else {
                                 canBeCached = false;
                             }
                         }
-                        if (!canBeCached)
+                        if (!canBeCached) {
                             continue;
+                        }
                         try (ResultSet resultsLength = stmt.executeQuery("SELECT SUM(LENGTH(PATH)) as total_bytes FROM " + tableName + " WHERE PRIORITY=" + pair.priority)) {
                             if (resultsLength.next()) {
                                 final int resultsBytes = resultsLength.getInt("total_bytes");
@@ -742,15 +743,16 @@ public class DatabaseService {
 
     /**
      * 解析出sql中的priority
+     * SELECT PATH FROM list[num] where priority=[priority];
      *
      * @param sql sql
      */
-    private String getPriorityFromSql(String sql) {
+    private String getPriorityFromSelectSql(String sql) {
         final int pos = sql.indexOf('=');
         if (pos == -1) {
             throw new RuntimeException("error sql no priority");
         }
-        return sql.substring(pos + 1);
+        return sql.substring(pos + 1, sql.length() - 1);
     }
 
     /**
@@ -800,7 +802,7 @@ public class DatabaseService {
                 for (var sqlAndTableName : commandsMap.entrySet()) {
                     String eachSql = sqlAndTableName.getKey();
                     String tableName = sqlAndTableName.getValue();
-                    String priority = getPriorityFromSql(eachSql);
+                    String priority = getPriorityFromSelectSql(eachSql);
                     String key = eachDisk.charAt(0) + "," + tableName + "," + priority;
                     gpuSearchContainer.put(key, container);
                 }
@@ -823,7 +825,7 @@ public class DatabaseService {
                     String diskStr = String.valueOf(diskChar.charAt(0));
                     String eachSql = sqlAndTableName.getKey();
                     String tableName = sqlAndTableName.getValue();
-                    String priority = getPriorityFromSql(eachSql);
+                    String priority = getPriorityFromSelectSql(eachSql);
                     String key = diskStr + "," + tableName + "," + priority;
                     final long matchedNum;
                     if (allConfigs.isGPUAcceleratorEnabled() && GPUAccelerator.INSTANCE.isMatchDone(key)) {
@@ -831,7 +833,15 @@ public class DatabaseService {
                         matchedNum = GPUAccelerator.INSTANCE.matchedNumber(key);
                     } else {
                         if (!shouldStopSearch.get()) {
-                            matchedNum = searchFromDatabaseOrCache(resultContainer, diskStr, eachSql, key);
+                            int recordsNum = 1;
+                            if (databaseResultsCount.containsKey(key)) {
+                                recordsNum = databaseResultsCount.get(key);
+                            }
+                            if (recordsNum != 0) {
+                                matchedNum = searchFromDatabaseOrCache(resultContainer, diskStr, eachSql, key);
+                            } else {
+                                matchedNum = 0;
+                            }
                         } else {
                             matchedNum = 0;
                         }
@@ -879,7 +889,7 @@ public class DatabaseService {
                     }
                     String eachSql = sqlAndTableName.getKey();
                     String listName = sqlAndTableName.getValue();
-                    int priority = Integer.parseInt(getPriorityFromSql(eachSql));
+                    int priority = Integer.parseInt(getPriorityFromSelectSql(eachSql));
                     String result;
                     for (int count = 0;
                          !shouldStopSearch.get() && ((result = ResultPipe.INSTANCE.getResult(diskChar.charAt(0), listName, priority, count)) != null);
@@ -970,22 +980,22 @@ public class DatabaseService {
         if (searchCase != null && Arrays.asList(searchCase).contains("d")) {
             //首先根据输入的keywords找到对应的list
             LinkedHashMap<String, String> tmpPriorityMap = new LinkedHashMap<>();
-            String eachSql = "SELECT %s FROM " + firstTableName + " WHERE PRIORITY=" + "-1";
+            String eachSql = "SELECT %s FROM " + firstTableName + " WHERE PRIORITY=" + "-1;";
             tmpPriorityMap.put(eachSql, firstTableName);
             tableQueue.stream().filter(each -> !each.equals(firstTableName)).forEach(each -> {
                 // where后面=不能有空格，否则解析priority会出错
-                String sql = "SELECT %s FROM " + each + " WHERE PRIORITY=" + "-1";
+                String sql = "SELECT %s FROM " + each + " WHERE PRIORITY=" + "-1;";
                 tmpPriorityMap.put(sql, each);
             });
             sqlColumnMap.add(tmpPriorityMap);
         } else {
             for (Pair i : priorityMap) {
                 LinkedHashMap<String, String> eachPriorityMap = new LinkedHashMap<>();
-                String eachSql = "SELECT %s FROM " + firstTableName + " WHERE PRIORITY=" + i.priority;
+                String eachSql = "SELECT %s FROM " + firstTableName + " WHERE PRIORITY=" + i.priority + ";";
                 eachPriorityMap.put(eachSql, firstTableName);
                 tableQueue.stream().filter(each -> !each.equals(firstTableName)).forEach(each -> {
                     // where后面=不能有空格，否则解析priority会出错
-                    String sql = "SELECT %s FROM " + each + " WHERE PRIORITY=" + i.priority;
+                    String sql = "SELECT %s FROM " + each + " WHERE PRIORITY=" + i.priority + ";";
                     eachPriorityMap.put(sql, each);
                 });
                 sqlColumnMap.add(eachPriorityMap);
@@ -1061,7 +1071,10 @@ public class DatabaseService {
         String sql = "DELETE FROM %s where PATH=\"%s\";";
         command = String.format(sql, "list" + asciiGroup, path);
         if (command != null && isCommandNotRepeat(command)) {
-            addToCommandQueue(new SQLWithTaskId(command, SqlTaskIds.DELETE_FROM_LIST, String.valueOf(path.charAt(0))));
+            String disk = String.valueOf(path.charAt(0));
+            SQLWithTaskId sqlWithTaskId = new SQLWithTaskId(command, SqlTaskIds.DELETE_FROM_LIST, disk);
+            sqlWithTaskId.key = disk + "," + "list" + asciiGroup + "," + getPriorityBySuffix(getSuffixByPath(path));
+            addToCommandQueue(sqlWithTaskId);
         }
     }
 
@@ -1079,7 +1092,10 @@ public class DatabaseService {
         String columnName = "list" + asciiGroup;
         String command = String.format(commandTemplate, columnName, asciiSum, path, priority);
         if (command != null && isCommandNotRepeat(command)) {
-            addToCommandQueue(new SQLWithTaskId(command, SqlTaskIds.INSERT_TO_LIST, String.valueOf(path.charAt(0))));
+            String disk = String.valueOf(path.charAt(0));
+            SQLWithTaskId sqlWithTaskId = new SQLWithTaskId(command, SqlTaskIds.INSERT_TO_LIST, String.valueOf(path.charAt(0)));
+            sqlWithTaskId.key = disk + "," + "list" + asciiGroup + "," + getPriorityBySuffix(getSuffixByPath(path));
+            addToCommandQueue(sqlWithTaskId);
         }
     }
 
@@ -1109,15 +1125,16 @@ public class DatabaseService {
      * 防止文件刚添加就被删除
      *
      * @param path 待删除文件路径
-     * @return true如果待删除文件已经在数据库中
+     * @return true如果待删除文件已经在任务队列中
      */
-    private boolean isRemoveFileInDatabase(String path) {
+    private boolean isRemoveFileInCommandQueue(String path, SQLWithTaskId[] sqlWithTaskId) {
         for (SQLWithTaskId each : commandQueue) {
             if (each.taskId == SqlTaskIds.INSERT_TO_LIST && each.sql.contains(path)) {
-                return false;
+                sqlWithTaskId[0] = each;
+                return true;
             }
         }
-        return true;
+        return false;
     }
 
     /**
@@ -1130,7 +1147,10 @@ public class DatabaseService {
             return;
         }
         int asciiSum = getAscIISum(getFileName(path));
-        if (isRemoveFileInDatabase(path)) {
+        SQLWithTaskId[] sqlWithTaskId = new SQLWithTaskId[1];
+        if (isRemoveFileInCommandQueue(path, sqlWithTaskId)) {
+            commandQueue.remove(sqlWithTaskId[0]);
+        } else {
             addDeleteSqlCommandByAscii(asciiSum, path);
             int priorityBySuffix = getPriorityBySuffix(getSuffixByPath(path));
             int asciiGroup = asciiSum / 100;
@@ -1269,41 +1289,44 @@ public class DatabaseService {
         synchronized (this) {
             if (!commandQueue.isEmpty()) {
                 LinkedHashSet<SQLWithTaskId> tempCommandSet = new LinkedHashSet<>(commandQueue);
-                HashMap<String, LinkedList<String>> commandMap = new HashMap<>();
-                for (SQLWithTaskId sqlWithTaskId : tempCommandSet) {
-                    if (commandMap.containsKey(sqlWithTaskId.key)) {
-                        commandMap.get(sqlWithTaskId.key).add(sqlWithTaskId.sql);
-                    } else {
-                        LinkedList<String> sqls = new LinkedList<>();
-                        sqls.add(sqlWithTaskId.sql);
-                        commandMap.put(sqlWithTaskId.key, sqls);
-                    }
-                }
-                commandMap.forEach((k, v) -> {
-                    Statement stmt = null;
+                HashMap<String, Statement> statementHashMap = new HashMap<>();
+
+                tempCommandSet.forEach(sqlWithTaskId -> {
+                    Statement stmt;
                     try {
-                        stmt = SQLiteUtil.getStatement(k);
-                        stmt.execute("BEGIN;");
-                        for (String sql : v) {
-                            if (IsDebug.isDebug()) {
-                                System.out.println("----------------------------------------------");
-                                System.out.println("执行SQL命令--" + sql);
-                                System.out.println("----------------------------------------------");
+                        if (statementHashMap.containsKey(sqlWithTaskId.diskStr)) {
+                            stmt = statementHashMap.get(sqlWithTaskId.diskStr);
+                        } else {
+                            stmt = SQLiteUtil.getStatement(sqlWithTaskId.diskStr);
+                            statementHashMap.put(sqlWithTaskId.diskStr, stmt);
+                            stmt.execute("BEGIN;");
+                        }
+                        if (IsDebug.isDebug()) {
+                            System.out.println("----------------------------------------------");
+                            System.out.println("执行SQL命令--" + sqlWithTaskId.sql);
+                            System.out.println("----------------------------------------------");
+                        }
+                        if (!stmt.execute(sqlWithTaskId.sql)) {
+                            int updateCount = stmt.getUpdateCount();
+                            if (sqlWithTaskId.key != null && updateCount != -1 && updateCount != 0) {
+                                if (databaseResultsCount.containsKey(sqlWithTaskId.key)) {
+                                    int recordsNumber = databaseResultsCount.get(sqlWithTaskId.key);
+                                    updateCount = sqlWithTaskId.taskId == SqlTaskIds.INSERT_TO_LIST ? updateCount : -updateCount;
+                                    recordsNumber += updateCount;
+                                    databaseResultsCount.put(sqlWithTaskId.key, recordsNumber);
+                                }
                             }
-                            stmt.execute(sql);
                         }
                     } catch (SQLException exception) {
                         exception.printStackTrace();
-                        System.err.println("执行失败：" + v);
-                    } finally {
-                        if (stmt != null) {
-                            try {
-                                stmt.execute("COMMIT;");
-                                stmt.close();
-                            } catch (SQLException e) {
-                                e.printStackTrace();
-                            }
-                        }
+                    }
+                });
+                statementHashMap.forEach((k, v) -> {
+                    try {
+                        v.execute("COMMIT;");
+                        v.close();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
                     }
                 });
                 commandQueue.removeAll(tempCommandSet);
@@ -2150,10 +2173,12 @@ public class DatabaseService {
     }
 
     @Data
+    @EqualsAndHashCode
     private static class SQLWithTaskId {
         private final String sql;
         private final SqlTaskIds taskId;
-        private final String key;
+        private final String diskStr;
+        private volatile String key;
     }
 
     private enum SqlTaskIds {
