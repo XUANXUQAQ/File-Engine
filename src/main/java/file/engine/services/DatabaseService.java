@@ -1950,6 +1950,9 @@ public class DatabaseService {
                         isKeywordPath,
                         MAX_RESULTS,
                         (key, path) -> {
+                            if (databaseService.shouldStopSearch.get()) {
+                                return;
+                            }
                             if (databaseService.tempResultsForEvent.add(path)) {
                                 databaseService.tempResults.add(path);
                                 if (resultCount.incrementAndGet() >= MAX_RESULTS) {
