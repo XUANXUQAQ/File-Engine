@@ -1875,12 +1875,12 @@ public class DatabaseService {
                     Thread.onSpinWait();
                 }
                 prepareSearch((PrepareSearchEvent) event);
+                event.setReturnValue(databaseService.tempResults);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
         PrepareSearchInfo.isPreparing.set(false);
-        event.setReturnValue(databaseService.tempResults);
     }
 
     @EventRegister(registerClass = StartSearchEvent.class)
@@ -1888,8 +1888,7 @@ public class DatabaseService {
         DatabaseService databaseService = getInstance();
         final long startWaiting = System.currentTimeMillis();
         final long timeout = 3000;
-        while (databaseService.searchThreadCount.get() != 0 ||
-                databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL ||
+        while (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL ||
                 PrepareSearchInfo.isPreparing.get()) {
             if (System.currentTimeMillis() - startWaiting > timeout) {
                 System.out.println("等待上次搜索结束超时");

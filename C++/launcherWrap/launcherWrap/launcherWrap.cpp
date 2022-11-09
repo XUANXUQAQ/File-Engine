@@ -22,7 +22,7 @@
 #define MAX_LOG_PRESERVE_DAYS 5
 #define CHECK_TIME_THRESHOLD 1
 
-#define FILE_ENGINE_JAR_MD5 "039f82e5ed55f700ec23b91da3a5af11"
+#define FILE_ENGINE_JAR_MD5 "11ffae6cf1cd398dcc25b5bef31102f0"
 
 #ifndef TEST
 #pragma comment( linker, "/subsystem:windows /entry:mainCRTStartup" )
