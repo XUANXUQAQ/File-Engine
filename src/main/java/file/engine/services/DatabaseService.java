@@ -736,7 +736,7 @@ public class DatabaseService {
         if (AllConfigs.getInstance().isGPUAcceleratorEnabled() && eventManagement.notMainExit()) {
             GPUAccelerator.INSTANCE.stopCollectResults();
         }
-        PrepareSearchInfo.taskMap = null;
+        PrepareSearchInfo.taskMap.clear();
     }
 
     /**
@@ -1839,6 +1839,7 @@ public class DatabaseService {
 
         private static void prepareSearchTasks() {
             DatabaseService databaseService = DatabaseService.getInstance();
+            databaseService.searchCache();
             //每个priority用一个线程，每一个后缀名对应一个优先级
             //按照优先级排列，key是sql和表名的对应，value是容器
             var nonFormattedSql = databaseService.getNonFormattedSqlFromTableQueue();
@@ -1865,7 +1866,6 @@ public class DatabaseService {
         while (databaseService.searchThreadCount.get() != 0 && System.currentTimeMillis() - startWaiting < timeout) {
             Thread.onSpinWait();
         }
-        databaseService.shouldStopSearch.set(false);
         if (PrepareSearchInfo.isPreparing.compareAndSet(false, true)) {
             if (IsDebug.isDebug()) {
                 System.out.println("进行预搜索并添加搜索任务");
@@ -1912,9 +1912,9 @@ public class DatabaseService {
         PrepareSearchInfo.taskMap = new ConcurrentHashMap<>();
         prepareSearchKeywords(startSearchEvent.searchText, startSearchEvent.searchCase, startSearchEvent.keywords);
         DatabaseService databaseService = getInstance();
+        databaseService.shouldStopSearch.set(false);
         databaseService.tempResults = new ConcurrentLinkedQueue<>();
         databaseService.tempResultsForEvent = new ConcurrentSkipListSet<>();
-        databaseService.searchCache();
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         if (PrepareSearchInfo.isSearchFolderDone.compareAndSet(true, false)) {
             cachedThreadPoolUtil.executeTask(() -> {
