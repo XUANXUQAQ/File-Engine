@@ -1865,19 +1865,23 @@ public class DatabaseService {
     @EventRegister(registerClass = PrepareSearchEvent.class)
     private static void prepareSearchEventHandle(Event event) {
         DatabaseService databaseService = DatabaseService.getInstance();
-        if (PrepareSearchInfo.isPreparing.compareAndSet(false, true)) {
-            if (IsDebug.isDebug()) {
-                System.out.println("进行预搜索并添加搜索任务");
+        try {
+            if (PrepareSearchInfo.isPreparing.compareAndSet(false, true)) {
+                if (IsDebug.isDebug()) {
+                    System.out.println("进行预搜索并添加搜索任务");
+                }
+                long timeout = 3000;
+                long startWaiting = System.currentTimeMillis();
+                while (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL &&
+                        System.currentTimeMillis() - startWaiting < timeout) {
+                    Thread.onSpinWait();
+                }
+                prepareSearch((PrepareSearchEvent) event);
             }
-            long timeout = 3000;
-            long startWaiting = System.currentTimeMillis();
-            while (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL &&
-                    System.currentTimeMillis() - startWaiting < timeout) {
-                Thread.onSpinWait();
-            }
-            prepareSearch((PrepareSearchEvent) event);
-            PrepareSearchInfo.isPreparing.set(false);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+        PrepareSearchInfo.isPreparing.set(false);
         event.setReturnValue(databaseService.tempResults);
     }
 
