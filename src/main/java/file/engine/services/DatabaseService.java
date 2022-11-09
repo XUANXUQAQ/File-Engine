@@ -1948,9 +1948,9 @@ public class DatabaseService {
                 }
                 Thread.onSpinWait();
             }
-            var tempResultsForEventRef = databaseService.tempResultsForEvent;
-            var tempResultsRef = databaseService.tempResults;
             cachedThreadPoolUtil.executeTask(() -> {
+                var tempResultsForEventRef = databaseService.tempResultsForEvent;
+                var tempResultsRef = databaseService.tempResults;
                 // 开始进行搜索
                 AtomicInteger resultCount = new AtomicInteger();
                 GPUAccelerator.INSTANCE.resetAllResultStatus();
