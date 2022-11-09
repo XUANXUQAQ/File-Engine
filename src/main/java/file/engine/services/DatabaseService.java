@@ -1714,16 +1714,20 @@ public class DatabaseService {
     private void checkTimeAndSendExecuteSqlSignalThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             // 时间检测线程
-            final long updateTimeLimit = AllConfigs.getInstance().getUpdateTimeLimit();
+            final long updateTimeLimit = AllConfigs.getInstance().getUpdateTimeLimit() * 1000L;
             final long timeout = Constants.CLOSE_DATABASE_TIMEOUT_MILLS - 30 * 1000;
             try {
                 EventManagement eventManagement = EventManagement.getInstance();
+                long checkTime = System.currentTimeMillis();
                 while (eventManagement.notMainExit()) {
-                    if ((getStatus() == Constants.Enums.DatabaseStatus.NORMAL && System.currentTimeMillis() - startSearchTimeMills.get() < timeout) ||
-                            (getStatus() == Constants.Enums.DatabaseStatus.NORMAL && commandQueue.size() > 100)) {
-                        sendExecuteSQLSignal();
+                    if (System.currentTimeMillis() - checkTime >= updateTimeLimit) {
+                        checkTime = System.currentTimeMillis();
+                        if ((getStatus() == Constants.Enums.DatabaseStatus.NORMAL && System.currentTimeMillis() - startSearchTimeMills.get() < timeout) ||
+                                (getStatus() == Constants.Enums.DatabaseStatus.NORMAL && commandQueue.size() > 100)) {
+                            sendExecuteSQLSignal();
+                        }
+                        TimeUnit.SECONDS.sleep(1);
                     }
-                    TimeUnit.SECONDS.sleep(updateTimeLimit);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -1861,23 +1865,20 @@ public class DatabaseService {
     @EventRegister(registerClass = PrepareSearchEvent.class)
     private static void prepareSearchEventHandle(Event event) {
         DatabaseService databaseService = DatabaseService.getInstance();
-        long startWaiting = System.currentTimeMillis();
-        long timeout = 3000;
-        while (databaseService.searchThreadCount.get() != 0 && System.currentTimeMillis() - startWaiting < timeout) {
-            Thread.onSpinWait();
-        }
         if (PrepareSearchInfo.isPreparing.compareAndSet(false, true)) {
             if (IsDebug.isDebug()) {
                 System.out.println("进行预搜索并添加搜索任务");
             }
-            startWaiting = System.currentTimeMillis();
-            while (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL && System.currentTimeMillis() - startWaiting < timeout) {
+            long timeout = 3000;
+            long startWaiting = System.currentTimeMillis();
+            while (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL &&
+                    System.currentTimeMillis() - startWaiting < timeout) {
                 Thread.onSpinWait();
             }
             prepareSearch((PrepareSearchEvent) event);
             PrepareSearchInfo.isPreparing.set(false);
-            event.setReturnValue(databaseService.tempResults);
         }
+        event.setReturnValue(databaseService.tempResults);
     }
 
     @EventRegister(registerClass = StartSearchEvent.class)
