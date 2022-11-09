@@ -985,7 +985,6 @@ public class DatabaseService {
      * 添加sql语句，并开始搜索
      */
     private void startSearch() {
-        searchCache();
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         var taskMap = PrepareSearchInfo.taskMap;
         EventManagement eventManagement = EventManagement.getInstance();
@@ -1898,7 +1897,6 @@ public class DatabaseService {
         if (PrepareSearchInfo.taskMap == null || PrepareSearchInfo.taskMap.isEmpty()) {
             prepareSearch((StartSearchEvent) event);
         }
-        //tempResultsForEvent和PrepareSearchInfo.containerMap在searchDone()中发送SearchDoneEvent后就已经清除，所以不需要清除，只清理tempResults
         //启动搜索线程
         CachedThreadPoolUtil.getInstance().executeTask(databaseService::startSearch);
         databaseService.startSearchTimeMills.set(System.currentTimeMillis());
@@ -1916,6 +1914,7 @@ public class DatabaseService {
         DatabaseService databaseService = getInstance();
         databaseService.tempResults = new ConcurrentLinkedQueue<>();
         databaseService.tempResultsForEvent = new ConcurrentSkipListSet<>();
+        databaseService.searchCache();
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         if (PrepareSearchInfo.isSearchFolderDone.compareAndSet(true, false)) {
             cachedThreadPoolUtil.executeTask(() -> {
