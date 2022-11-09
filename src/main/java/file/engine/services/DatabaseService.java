@@ -1712,20 +1712,21 @@ public class DatabaseService {
     private void checkTimeAndSendExecuteSqlSignalThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             // 时间检测线程
-            final long updateTimeLimit = AllConfigs.getInstance().getUpdateTimeLimit() * 1000L;
+            AllConfigs allConfigs = AllConfigs.getInstance();
             final long timeout = Constants.CLOSE_DATABASE_TIMEOUT_MILLS - 30 * 1000;
             try {
                 EventManagement eventManagement = EventManagement.getInstance();
                 long checkTime = System.currentTimeMillis();
                 while (eventManagement.notMainExit()) {
+                    final long updateTimeLimit = allConfigs.getUpdateTimeLimit() * 1000L;
                     if (System.currentTimeMillis() - checkTime >= updateTimeLimit) {
                         checkTime = System.currentTimeMillis();
                         if ((getStatus() == Constants.Enums.DatabaseStatus.NORMAL && System.currentTimeMillis() - startSearchTimeMills.get() < timeout) ||
                                 (getStatus() == Constants.Enums.DatabaseStatus.NORMAL && commandQueue.size() > 100)) {
                             sendExecuteSQLSignal();
                         }
-                        TimeUnit.SECONDS.sleep(1);
                     }
+                    TimeUnit.SECONDS.sleep(1);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
