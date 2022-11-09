@@ -227,7 +227,7 @@ public class DatabaseService {
         }
     }
 
-    private void searchFolder(String folder) {
+    private void searchFolder(String folder, Set<String> tempResultsForEventRef, Queue<String> tempResultsRef) {
         if (!Files.exists(Path.of(folder))) {
             return;
         }
@@ -239,8 +239,6 @@ public class DatabaseService {
         if (null == files || files.length == 0) {
             return;
         }
-        var tempResultsForEventRef = tempResultsForEvent;
-        var tempResultsRef = tempResults;
         List<File> filesList = List.of(files);
         ArrayDeque<File> dirsToSearch = new ArrayDeque<>(filesList);
         ArrayDeque<File> listRemainDir = new ArrayDeque<>(filesList);
@@ -271,24 +269,24 @@ public class DatabaseService {
     /**
      * 搜索文件夹
      */
-    private void searchStartMenu() {
-        searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{A4115719-D62E-491D-AA7C-E74B8BE3B067}"));
-        searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{625B53C3-AB48-4EC1-BA1F-A1EF4146FC19}"));
+    private void searchStartMenu(Set<String> tempResultsForEventRef, Queue<String> tempResultsRef) {
+        searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{A4115719-D62E-491D-AA7C-E74B8BE3B067}"), tempResultsForEventRef, tempResultsRef);
+        searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{625B53C3-AB48-4EC1-BA1F-A1EF4146FC19}"), tempResultsForEventRef, tempResultsRef);
     }
 
     /**
      * 搜索桌面
      */
-    private void searchDesktop() {
-        searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}"));
-        searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{C4AA340D-F20F-4863-AFEF-F87EF2E6BA25}"));
+    private void searchDesktop(Set<String> tempResultsForEventRef, Queue<String> tempResultsRef) {
+        searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}"), tempResultsForEventRef, tempResultsRef);
+        searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{C4AA340D-F20F-4863-AFEF-F87EF2E6BA25}"), tempResultsForEventRef, tempResultsRef);
     }
 
     /**
      * 搜索优先文件夹
      */
-    private void searchPriorityFolder() {
-        searchFolder(AllConfigs.getInstance().getPriorityFolder());
+    private void searchPriorityFolder(Set<String> tempResultsForEventRef, Queue<String> tempResultsRef) {
+        searchFolder(AllConfigs.getInstance().getPriorityFolder(), tempResultsForEventRef, tempResultsRef);
     }
 
     /**
@@ -1923,17 +1921,19 @@ public class DatabaseService {
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         if (PrepareSearchInfo.isSearchFolderDone.compareAndSet(true, false)) {
             cachedThreadPoolUtil.executeTask(() -> {
+                var tempResultsForEventRef = databaseService.tempResultsForEvent;
+                var tempResultsRef = databaseService.tempResults;
                 //noinspection ConstantConditions
                 do {
-                    databaseService.searchPriorityFolder();
+                    databaseService.searchPriorityFolder(tempResultsForEventRef, tempResultsRef);
                     if (databaseService.shouldStopSearch.get()) {
                         break;
                     }
-                    databaseService.searchStartMenu();
+                    databaseService.searchStartMenu(tempResultsForEventRef, tempResultsRef);
                     if (databaseService.shouldStopSearch.get()) {
                         break;
                     }
-                    databaseService.searchDesktop();
+                    databaseService.searchDesktop(tempResultsForEventRef, tempResultsRef);
                     if (databaseService.shouldStopSearch.get()) {
                         break;
                     }
