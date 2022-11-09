@@ -736,6 +736,7 @@ public class DatabaseService {
         if (AllConfigs.getInstance().isGPUAcceleratorEnabled() && eventManagement.notMainExit()) {
             GPUAccelerator.INSTANCE.stopCollectResults();
         }
+        PrepareSearchInfo.taskMap = null;
     }
 
     /**
