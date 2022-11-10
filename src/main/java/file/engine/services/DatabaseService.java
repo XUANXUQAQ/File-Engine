@@ -63,7 +63,7 @@ public class DatabaseService {
     private final AtomicBoolean isDatabaseUpdated = new AtomicBoolean(false);
     private ConcurrentLinkedQueue<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
     private Set<String> tempResultsForEvent; //在SearchDoneEvent中保存的容器
-    private final AtomicBoolean shouldStopSearch = new AtomicBoolean(true);
+    private volatile AtomicBoolean shouldStopSearch = new AtomicBoolean();
     private final ConcurrentLinkedQueue<Pair> priorityMap = new ConcurrentLinkedQueue<>();
     //tableCache 数据表缓存，在初始化时将会放入所有的key和一个空的cache，后续需要缓存直接放入空的cache中，不再创建新的cache实例
     private final ConcurrentHashMap<String, Cache> tableCache = new ConcurrentHashMap<>();
@@ -227,12 +227,12 @@ public class DatabaseService {
         }
     }
 
-    private void searchFolder(String folder, Set<String> tempResultsForEventRef, Queue<String> tempResultsRef) {
+    private void searchFolder(String folder, Set<String> tempResultsForEventRef, Queue<String> tempResultsRef, AtomicBoolean shouldStopSearchRef) {
         if (!Files.exists(Path.of(folder))) {
             return;
         }
         File path = new File(folder);
-        if (shouldStopSearch.get()) {
+        if (shouldStopSearchRef.get()) {
             return;
         }
         File[] files = path.listFiles();
@@ -257,9 +257,9 @@ public class DatabaseService {
             } else {
                 checkIsMatchedAndAddToList(remain.getAbsolutePath(), tempResultsForEventRef, tempResultsRef);
             }
-        } while (!listRemainDir.isEmpty() && !shouldStopSearch.get());
+        } while (!listRemainDir.isEmpty() && !shouldStopSearchRef.get());
         for (File eachDir : dirsToSearch) {
-            if (shouldStopSearch.get()) {
+            if (shouldStopSearchRef.get()) {
                 return;
             }
             checkIsMatchedAndAddToList(eachDir.getAbsolutePath(), tempResultsForEventRef, tempResultsRef);
@@ -269,24 +269,36 @@ public class DatabaseService {
     /**
      * 搜索文件夹
      */
-    private void searchStartMenu(Set<String> tempResultsForEventRef, Queue<String> tempResultsRef) {
-        searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{A4115719-D62E-491D-AA7C-E74B8BE3B067}"), tempResultsForEventRef, tempResultsRef);
-        searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{625B53C3-AB48-4EC1-BA1F-A1EF4146FC19}"), tempResultsForEventRef, tempResultsRef);
+    private void searchStartMenu(Set<String> tempResultsForEventRef, Queue<String> tempResultsRef, AtomicBoolean shouldStopSearchRef) {
+        searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{A4115719-D62E-491D-AA7C-E74B8BE3B067}"),
+                tempResultsForEventRef,
+                tempResultsRef,
+                shouldStopSearchRef);
+        searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{625B53C3-AB48-4EC1-BA1F-A1EF4146FC19}"),
+                tempResultsForEventRef,
+                tempResultsRef,
+                shouldStopSearchRef);
     }
 
     /**
      * 搜索桌面
      */
-    private void searchDesktop(Set<String> tempResultsForEventRef, Queue<String> tempResultsRef) {
-        searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}"), tempResultsForEventRef, tempResultsRef);
-        searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{C4AA340D-F20F-4863-AFEF-F87EF2E6BA25}"), tempResultsForEventRef, tempResultsRef);
+    private void searchDesktop(Set<String> tempResultsForEventRef, Queue<String> tempResultsRef, AtomicBoolean shouldStopSearchRef) {
+        searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}"),
+                tempResultsForEventRef,
+                tempResultsRef,
+                shouldStopSearchRef);
+        searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{C4AA340D-F20F-4863-AFEF-F87EF2E6BA25}"),
+                tempResultsForEventRef,
+                tempResultsRef,
+                shouldStopSearchRef);
     }
 
     /**
      * 搜索优先文件夹
      */
-    private void searchPriorityFolder(Set<String> tempResultsForEventRef, Queue<String> tempResultsRef) {
-        searchFolder(AllConfigs.getInstance().getPriorityFolder(), tempResultsForEventRef, tempResultsRef);
+    private void searchPriorityFolder(Set<String> tempResultsForEventRef, Queue<String> tempResultsRef, AtomicBoolean shouldStopSearchRef) {
+        searchFolder(AllConfigs.getInstance().getPriorityFolder(), tempResultsForEventRef, tempResultsRef, shouldStopSearchRef);
     }
 
     /**
@@ -583,16 +595,14 @@ public class DatabaseService {
     /**
      * 从缓存中搜索结果并将匹配的放入listResults
      */
-    private void searchCache() {
-        var tempResultsForEventRef = tempResultsForEvent;
-        var tempResultsRef = tempResults;
+    private void searchCache(Set<String> tempResultsForEventRef, Queue<String> tempResultsRef, AtomicBoolean shouldStopSearchRef) {
         for (String each : databaseCacheSet) {
             if (Files.exists(Path.of(each))) {
                 checkIsMatchedAndAddToList(each, tempResultsForEventRef, tempResultsRef);
             } else {
                 EventManagement.getInstance().putEvent(new DeleteFromCacheEvent(each));
             }
-            if (shouldStopSearch.get()) {
+            if (shouldStopSearchRef.get()) {
                 return;
             }
         }
@@ -630,10 +640,10 @@ public class DatabaseService {
      *
      * @param sql sql
      */
-    private int searchAndAddToTempResults(String sql, Statement stmt, Set<String> tempResultsForEvent, Queue<String> tempResults) {
+    private int searchAndAddToTempResults(String sql, Statement stmt, Set<String> tempResultsForEvent, Queue<String> tempResults, AtomicBoolean shouldStopSearchRef) {
         int matchedResultCount = 0;
         //结果太多则不再进行搜索
-        if (shouldStopSearch.get()) {
+        if (shouldStopSearchRef.get()) {
             return matchedResultCount;
         }
         String[] tmpQueryResultsCache = new String[MAX_TEMP_QUERY_RESULT_CACHE];
@@ -654,7 +664,7 @@ public class DatabaseService {
                 }
                 //结果太多则不再进行搜索
                 //用户重新输入了信息
-                if (shouldStopSearch.get()) {
+                if (shouldStopSearchRef.get()) {
                     return matchedResultCount;
                 }
                 for (int j = 0; j < i; ++j) {
@@ -803,6 +813,7 @@ public class DatabaseService {
                                      LinkedHashMap<String, String> sqlToExecute,
                                      Bit currentTaskNum) {
         AllConfigs allConfigs = AllConfigs.getInstance();
+        AtomicBoolean shouldStopSearchRef = shouldStopSearch;
         tasks.add(() -> {
             Statement stmt = null;
             try {
@@ -817,7 +828,7 @@ public class DatabaseService {
                         //gpu搜索已经放入container，只需要获取matchedNum修改权重即可
                         matchedNum = GPUAccelerator.INSTANCE.matchedNumber(key);
                     } else {
-                        if (!shouldStopSearch.get()) {
+                        if (!shouldStopSearchRef.get()) {
                             int recordsNum = 1;
                             if (databaseResultsCount.containsKey(key)) {
                                 recordsNum = databaseResultsCount.get(key).get();
@@ -826,7 +837,7 @@ public class DatabaseService {
                                 if (stmt == null) {
                                     stmt = SQLiteUtil.getStatement(diskStr);
                                 }
-                                matchedNum = searchFromDatabaseOrCache(stmt, eachSql, key);
+                                matchedNum = searchFromDatabaseOrCache(stmt, eachSql, key, shouldStopSearchRef);
                             } else {
                                 matchedNum = 0;
                             }
@@ -866,12 +877,13 @@ public class DatabaseService {
                                          ConcurrentLinkedQueue<Runnable> tasks,
                                          LinkedHashMap<String, String> sqlToExecute,
                                          Bit currentTaskNum) {
+        AtomicBoolean shouldStopSearchRef = shouldStopSearch;
         tasks.add(() -> {
             try {
                 var tempResultsForEventRef = tempResultsForEvent;
                 var tempResultsRef = tempResults;
                 for (var sqlAndTableName : sqlToExecute.entrySet()) {
-                    if (shouldStopSearch.get()) {
+                    if (shouldStopSearchRef.get()) {
                         return;
                     }
                     String eachSql = sqlAndTableName.getKey();
@@ -879,7 +891,7 @@ public class DatabaseService {
                     int priority = Integer.parseInt(getPriorityFromSelectSql(eachSql));
                     String result;
                     for (int count = 0;
-                         !shouldStopSearch.get() && ((result = ResultPipe.INSTANCE.getResult(diskChar.charAt(0), listName, priority, count)) != null);
+                         !shouldStopSearchRef.get() && ((result = ResultPipe.INSTANCE.getResult(diskChar.charAt(0), listName, priority, count)) != null);
                          ++count) {
                         checkIsMatchedAndAddToList(result, tempResultsForEventRef, tempResultsRef);
                     }
@@ -906,8 +918,8 @@ public class DatabaseService {
      * @param key  查询key，例如 [C,list10,-1]
      * @return 查询的结果数量
      */
-    private long searchFromDatabaseOrCache(Statement stmt, String sql, String key) {
-        if (shouldStopSearch.get()) {
+    private long searchFromDatabaseOrCache(Statement stmt, String sql, String key, AtomicBoolean shouldStopSearchRef) {
+        if (shouldStopSearchRef.get()) {
             return 0;
         }
         var tempResultsForEventRef = tempResultsForEvent;
@@ -925,7 +937,7 @@ public class DatabaseService {
             //格式化是为了以后的拓展性
             String formattedSql = String.format(sql, "PATH");
             //当前数据库表中有多少个结果匹配成功
-            matchedNum = searchAndAddToTempResults(formattedSql, stmt, tempResultsForEventRef, tempResultsRef);
+            matchedNum = searchAndAddToTempResults(formattedSql, stmt, tempResultsForEventRef, tempResultsRef, shouldStopSearchRef);
         }
         return matchedNum;
     }
@@ -1494,22 +1506,7 @@ public class DatabaseService {
     }
 
     private void stopSearch() {
-        final var startWaiting = System.currentTimeMillis();
-        final var timeout = 3000;
-        boolean isTimeout = false;
-        while (!shouldStopSearch.compareAndSet(shouldStopSearch.get(), true)) {
-            Thread.onSpinWait();
-            if (System.currentTimeMillis() - startWaiting >= timeout) {
-                isTimeout = true;
-                break;
-            }
-        }
-        if (isTimeout) {
-            if (IsDebug.isDebug()) {
-                System.out.println("设置停止搜索标识超时");
-            }
-            shouldStopSearch.set(true);
-        }
+        shouldStopSearch.set(true);
     }
 
     private void executeAllSQLAndWait(@SuppressWarnings("SameParameterValue") int timeoutMills) {// 等待剩余的sql全部执行完成
@@ -1931,28 +1928,39 @@ public class DatabaseService {
         PrepareSearchInfo.taskMap = new ConcurrentHashMap<>();
         prepareSearchKeywords(startSearchEvent.searchText, startSearchEvent.searchCase, startSearchEvent.keywords);
         var databaseService = getInstance();
-        while (!databaseService.shouldStopSearch.compareAndSet(true, false)) {
+        final var startSpin = System.currentTimeMillis();
+        final var timeout = 3000;
+        while (!databaseService.shouldStopSearch.get()) {
+            if (System.currentTimeMillis() - startSpin > timeout) {
+                if (IsDebug.isDebug()) {
+                    System.out.println("停止上次搜索超时");
+                }
+                databaseService.stopSearch();
+                break;
+            }
             Thread.onSpinWait();
         }
+        databaseService.shouldStopSearch = new AtomicBoolean(false);
         databaseService.tempResults = new ConcurrentLinkedQueue<>();
         databaseService.tempResultsForEvent = new ConcurrentSkipListSet<>();
         var tempResultsForEventRef = databaseService.tempResultsForEvent;
         var tempResultsRef = databaseService.tempResults;
+        var shouldStopSearchRef = databaseService.shouldStopSearch;
         var cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
-        databaseService.searchCache();
+        databaseService.searchCache(tempResultsForEventRef, tempResultsRef, shouldStopSearchRef);
         cachedThreadPoolUtil.executeTask(() -> {
             //noinspection ConstantConditions
             do {
-                databaseService.searchPriorityFolder(tempResultsForEventRef, tempResultsRef);
-                if (databaseService.shouldStopSearch.get()) {
+                databaseService.searchPriorityFolder(tempResultsForEventRef, tempResultsRef, shouldStopSearchRef);
+                if (shouldStopSearchRef.get()) {
                     break;
                 }
-                databaseService.searchStartMenu(tempResultsForEventRef, tempResultsRef);
-                if (databaseService.shouldStopSearch.get()) {
+                databaseService.searchStartMenu(tempResultsForEventRef, tempResultsRef, shouldStopSearchRef);
+                if (shouldStopSearchRef.get()) {
                     break;
                 }
-                databaseService.searchDesktop(tempResultsForEventRef, tempResultsRef);
-                if (databaseService.shouldStopSearch.get()) {
+                databaseService.searchDesktop(tempResultsForEventRef, tempResultsRef, shouldStopSearchRef);
+                if (shouldStopSearchRef.get()) {
                     break;
                 }
             } while (false);
