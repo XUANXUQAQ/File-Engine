@@ -592,6 +592,9 @@ public class DatabaseService {
             } else {
                 EventManagement.getInstance().putEvent(new DeleteFromCacheEvent(each));
             }
+            if (shouldStopSearch.get()) {
+                return;
+            }
         }
     }
 
@@ -1832,7 +1835,7 @@ public class DatabaseService {
     }
 
     private static class PrepareSearchInfo {
-        static AtomicBoolean isGpuThreadRunning = new AtomicBoolean(false);
+        static AtomicBoolean isGpuThreadRunning = new AtomicBoolean();
         //taskMap任务队列，key为磁盘盘符，value为任务
         static ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskMap;
         static Bit taskStatus = new Bit(new byte[]{0});
@@ -1842,7 +1845,6 @@ public class DatabaseService {
 
         private static void prepareSearchTasks() {
             DatabaseService databaseService = DatabaseService.getInstance();
-            databaseService.searchCache();
             //每个priority用一个线程，每一个后缀名对应一个优先级
             //按照优先级排列，key是sql和表名的对应，value是容器
             var nonFormattedSql = databaseService.getNonFormattedSqlFromTableQueue();
@@ -1941,6 +1943,7 @@ public class DatabaseService {
                 PrepareSearchInfo.isSearchFolderDone.set(true);
             });
         }
+        databaseService.searchCache();
         PrepareSearchInfo.prepareSearchTasks();
         if (AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
             // 退出上一次搜索
