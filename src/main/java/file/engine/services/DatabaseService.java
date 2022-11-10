@@ -63,7 +63,7 @@ public class DatabaseService {
     private final AtomicBoolean isDatabaseUpdated = new AtomicBoolean(false);
     private ConcurrentLinkedQueue<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
     private Set<String> tempResultsForEvent; //在SearchDoneEvent中保存的容器
-    private volatile AtomicBoolean shouldStopSearch = new AtomicBoolean();
+    private volatile AtomicBoolean shouldStopSearch = new AtomicBoolean(true);
     private final ConcurrentLinkedQueue<Pair> priorityMap = new ConcurrentLinkedQueue<>();
     //tableCache 数据表缓存，在初始化时将会放入所有的key和一个空的cache，后续需要缓存直接放入空的cache中，不再创建新的cache实例
     private final ConcurrentHashMap<String, Cache> tableCache = new ConcurrentHashMap<>();
@@ -1925,27 +1925,30 @@ public class DatabaseService {
      * @param startSearchEvent startSearchEvent
      */
     private static synchronized void prepareSearch(StartSearchEvent startSearchEvent) {
-        PrepareSearchInfo.taskMap = new ConcurrentHashMap<>();
         prepareSearchKeywords(startSearchEvent.searchText, startSearchEvent.searchCase, startSearchEvent.keywords);
+
         var databaseService = getInstance();
         final var startSpin = System.currentTimeMillis();
         final var timeout = 3000;
         while (!databaseService.shouldStopSearch.get()) {
             if (System.currentTimeMillis() - startSpin > timeout) {
                 if (IsDebug.isDebug()) {
-                    System.out.println("停止上次搜索超时");
+                    System.out.println("等待上次搜索停止超时");
                 }
                 databaseService.stopSearch();
                 break;
             }
             Thread.onSpinWait();
         }
+
+        PrepareSearchInfo.taskMap = new ConcurrentHashMap<>();
         databaseService.shouldStopSearch = new AtomicBoolean(false);
         databaseService.tempResults = new ConcurrentLinkedQueue<>();
         databaseService.tempResultsForEvent = new ConcurrentSkipListSet<>();
         var tempResultsForEventRef = databaseService.tempResultsForEvent;
         var tempResultsRef = databaseService.tempResults;
         var shouldStopSearchRef = databaseService.shouldStopSearch;
+
         var cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         databaseService.searchCache(tempResultsForEventRef, tempResultsRef, shouldStopSearchRef);
         cachedThreadPoolUtil.executeTask(() -> {
@@ -1969,13 +1972,16 @@ public class DatabaseService {
         if (AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
             // 退出上一次搜索
             GPUAccelerator.INSTANCE.stopCollectResults();
-            long start = System.currentTimeMillis();
-            while (!PrepareSearchInfo.isGpuThreadRunning.compareAndSet(false, true)) {
-                if (System.currentTimeMillis() - start > 3000) {
+            final long start = System.currentTimeMillis();
+            while (PrepareSearchInfo.isGpuThreadRunning.get()) {
+                if (System.currentTimeMillis() - start > timeout) {
                     System.out.println("等待上一次gpu加速完成超时");
                     break;
                 }
                 Thread.onSpinWait();
+            }
+            if (shouldStopSearchRef.get()) {
+                return;
             }
             cachedThreadPoolUtil.executeTask(() -> {
                 // 开始进行搜索
@@ -1990,6 +1996,9 @@ public class DatabaseService {
                         isKeywordPath,
                         MAX_RESULTS,
                         (key, path) -> {
+                            if (shouldStopSearchRef.get()) {
+                                return;
+                            }
                             if (tempResultsForEventRef.add(path)) {
                                 tempResultsRef.add(path);
                                 if (resultCount.incrementAndGet() >= MAX_RESULTS) {
