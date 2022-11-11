@@ -3304,17 +3304,15 @@ public class SearchBar {
                 if (System.currentTimeMillis() - visibleStartTime > 10_000 && !isVisible()) {
                     break;
                 }
-                if (System.currentTimeMillis() - startTime > SEND_START_SEARCH_TIMEOUT) {
-                    String each;
-                    for (var eachPlugin : allPlugins) {
-                        while ((each = eachPlugin.plugin.pollFromResultQueue()) != null) {
-                            each = "plugin" + pluginResultSplitStr + eachPlugin.plugin.identifier + pluginResultSplitStr + each;
-                            listResultsTemp.add(each);
-                        }
-                    }
-                    while (tempResultsFromDatabase != null && (each = tempResultsFromDatabase.poll()) != null) {
+                String each;
+                for (var eachPlugin : allPlugins) {
+                    while ((each = eachPlugin.plugin.pollFromResultQueue()) != null) {
+                        each = "plugin" + pluginResultSplitStr + eachPlugin.plugin.identifier + pluginResultSplitStr + each;
                         listResultsTemp.add(each);
                     }
+                }
+                while (tempResultsFromDatabase != null && (each = tempResultsFromDatabase.poll()) != null) {
+                    listResultsTemp.add(each);
                 }
                 TimeUnit.MILLISECONDS.sleep(1);
             }
