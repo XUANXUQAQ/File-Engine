@@ -115,7 +115,7 @@ public class SearchBar {
     private volatile long visibleStartTime = 0;  //记录窗口开始可见的事件，窗口默认最短可见时间0.5秒，防止窗口快速闪烁
     private volatile long firstResultStartShowingTime = 0;  //记录开始显示结果的时间，用于防止刚开始移动到鼠标导致误触
     private ArrayList<String> listResults;  //保存从数据库中找出符合条件的记录（文件路径）
-    private ConcurrentLinkedQueue<String> tempResultsFromDatabase = new ConcurrentLinkedQueue<>();
+    private ConcurrentLinkedQueue<String> tempResultsFromDatabase;
     private volatile String[] searchCase;
     private volatile String searchText = "";
     private volatile String[] keywords;
@@ -2403,6 +2403,7 @@ public class SearchBar {
         searchInfoLabel.setText("");
         searchInfoLabel.setName("");
         searchInfoLabel.setIcon(null);
+        tempResultsFromDatabase = null;
     }
 
     /**
@@ -3311,7 +3312,7 @@ public class SearchBar {
                             listResultsTemp.add(each);
                         }
                     }
-                    while ((each = tempResultsFromDatabase.poll()) != null) {
+                    while (tempResultsFromDatabase != null && (each = tempResultsFromDatabase.poll()) != null) {
                         listResultsTemp.add(each);
                     }
                 }
