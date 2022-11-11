@@ -2816,7 +2816,7 @@ public class SearchBar {
                         default:
                             break;
                     }
-                    TimeUnit.MILLISECONDS.sleep(50);
+                    TimeUnit.SECONDS.sleep(1);
                 }
             } catch (InterruptedException ignored) {
                 // ignore
@@ -3306,8 +3306,8 @@ public class SearchBar {
                 if (System.currentTimeMillis() - visibleStartTime > 10_000 && !isVisible()) {
                     break;
                 }
-                String each;
                 for (var eachPlugin : allPlugins) {
+                    String each;
                     while ((each = eachPlugin.plugin.pollFromResultQueue()) != null) {
                         each = "plugin" + pluginResultSplitStr + eachPlugin.plugin.identifier + pluginResultSplitStr + each;
                         if (listResultsSet.add(each)) {
@@ -3315,9 +3315,11 @@ public class SearchBar {
                         }
                     }
                 }
-                while (tempResultsFromDatabase != null && (each = tempResultsFromDatabase.poll()) != null) {
-                    if (listResultsSet.add(each)) {
-                        listResultsTemp.add(each);
+                if (tempResultsFromDatabase != null) {
+                    for (String each : tempResultsFromDatabase) {
+                        if (listResultsSet.add(each)) {
+                            listResultsTemp.add(each);
+                        }
                     }
                 }
                 TimeUnit.MILLISECONDS.sleep(1);
@@ -3623,12 +3625,18 @@ public class SearchBar {
                     if ((endTime - startTime > SEND_PREPARE_SEARCH_TIMEOUT) && isCudaSearchNotStarted.get() && startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
                         setSearchKeywordsAndSearchCase();
                         var resultsOptional = sendPrepareSearchEvent();
-                        resultsOptional.ifPresent(res -> tempResultsFromDatabase = res);
+                        resultsOptional.ifPresent(res -> {
+                            tempResultsFromDatabase = res;
+                            clearResults();
+                        });
                     }
                     if ((endTime - startTime > SEND_START_SEARCH_TIMEOUT) && isSearchNotStarted.get() && startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
                         setSearchKeywordsAndSearchCase();
                         var resultsOptional = sendSearchEvent();
-                        resultsOptional.ifPresent(res -> tempResultsFromDatabase = res);
+                        resultsOptional.ifPresent(res -> {
+                            tempResultsFromDatabase = res;
+                            clearResults();
+                        });
                     }
 
                     if ((endTime - startTime > SHOW_RESULTS_TIMEOUT) && startSearchSignal.get()) {
