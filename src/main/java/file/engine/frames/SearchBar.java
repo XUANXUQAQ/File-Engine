@@ -3294,12 +3294,14 @@ public class SearchBar {
     private void mergeResults() {
         PluginService pluginService = PluginService.getInstance();
         ArrayList<String> listResultsTemp = listResults;
+        Set<String> listResultsSet = new HashSet<>();
         var allPlugins = pluginService.getAllPlugins();
         try {
             while (true) {
                 //用户重新输入关键字
                 if (listResultsTemp != listResults) {
                     listResultsTemp = listResults;
+                    listResultsSet = new HashSet<>();
                 }
                 if (System.currentTimeMillis() - visibleStartTime > 10_000 && !isVisible()) {
                     break;
@@ -3308,11 +3310,15 @@ public class SearchBar {
                 for (var eachPlugin : allPlugins) {
                     while ((each = eachPlugin.plugin.pollFromResultQueue()) != null) {
                         each = "plugin" + pluginResultSplitStr + eachPlugin.plugin.identifier + pluginResultSplitStr + each;
-                        listResultsTemp.add(each);
+                        if (listResultsSet.add(each)) {
+                            listResultsTemp.add(each);
+                        }
                     }
                 }
                 while (tempResultsFromDatabase != null && (each = tempResultsFromDatabase.poll()) != null) {
-                    listResultsTemp.add(each);
+                    if (listResultsSet.add(each)) {
+                        listResultsTemp.add(each);
+                    }
                 }
                 TimeUnit.MILLISECONDS.sleep(1);
             }
