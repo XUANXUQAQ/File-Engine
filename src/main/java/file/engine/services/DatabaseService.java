@@ -1851,12 +1851,12 @@ public class DatabaseService {
     }
 
     private static class PrepareSearchInfo {
-        static AtomicBoolean isGpuThreadRunning = new AtomicBoolean();
+        static final AtomicBoolean isGpuThreadRunning = new AtomicBoolean();
         //taskMap任务队列，key为磁盘盘符，value为任务
         static ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskMap;
         static Bit taskStatus = new Bit(new byte[]{0});
         static Bit allTaskStatus = new Bit(new byte[]{0});
-        static AtomicBoolean isPreparing = new AtomicBoolean();
+        static final AtomicBoolean isPreparing = new AtomicBoolean();
 
         private static void prepareSearchTasks() {
             DatabaseService databaseService = DatabaseService.getInstance();
@@ -1987,7 +1987,6 @@ public class DatabaseService {
             }
             cachedThreadPoolUtil.executeTask(() -> {
                 // 开始进行搜索
-                AtomicInteger resultCount = new AtomicInteger();
                 GPUAccelerator.INSTANCE.resetAllResultStatus();
                 PrepareSearchInfo.isGpuThreadRunning.set(true);
                 GPUAccelerator.INSTANCE.match(searchCase,
@@ -2003,7 +2002,7 @@ public class DatabaseService {
                             }
                             if (tempResultsForEventRef.add(path)) {
                                 tempResultsRef.add(path);
-                                if (resultCount.incrementAndGet() >= MAX_RESULTS) {
+                                if (tempResultsForEventRef.size() >= MAX_RESULTS) {
                                     databaseService.stopSearch(shouldStopSearchRef);
                                 }
                             }
