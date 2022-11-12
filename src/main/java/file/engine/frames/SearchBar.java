@@ -2816,7 +2816,7 @@ public class SearchBar {
                         default:
                             break;
                     }
-                    TimeUnit.SECONDS.sleep(1);
+                    TimeUnit.MILLISECONDS.sleep(250);
                 }
             } catch (InterruptedException ignored) {
                 // ignore
@@ -3672,7 +3672,7 @@ public class SearchBar {
                             }
                         } else if (runningMode == RunningMode.NORMAL_MODE) {
                             String searchBarText = getSearchBarText();
-                            if (searchBarText.charAt(0) == '>') {
+                            if (!searchBarText.isEmpty() && searchBarText.charAt(0) == '>') {
                                 if (searchBarText.length() > 1) {
                                     searchBarText = searchBarText.substring(1);
                                 } else {
