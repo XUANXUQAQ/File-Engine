@@ -2386,16 +2386,12 @@ public class SearchBar {
         }
     }
 
-    private void clearResults() {
-        listResults = new ArrayList<>();
-    }
-
     /**
      * 只在重新输入需要初始化所有设置时使用
      */
     private void clearAllAndResetAll() {
         clearAllLabels();
-        clearResults();
+        listResults = new ArrayList<>();
         firstResultStartShowingTime = 0;
         currentResultCount.set(0);
         currentLabelSelectedPosition.set(0);
@@ -3626,8 +3622,8 @@ public class SearchBar {
                         setSearchKeywordsAndSearchCase();
                         var resultsOptional = sendPrepareSearchEvent();
                         resultsOptional.ifPresent(res -> {
+                            listResults = new ArrayList<>();
                             tempResultsFromDatabase = res;
-                            clearResults();
                         });
                     }
                     if ((endTime - startTime > SEND_START_SEARCH_TIMEOUT) && isSearchNotStarted.get() && startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
@@ -3635,7 +3631,7 @@ public class SearchBar {
                         var resultsOptional = sendSearchEvent();
                         resultsOptional.ifPresent(res -> {
                             tempResultsFromDatabase = res;
-                            clearResults();
+                            listResults = new ArrayList<>();
                         });
                     }
 
@@ -4335,7 +4331,7 @@ public class SearchBar {
         startTime = System.currentTimeMillis();//结束搜索
         currentResultCount.set(0);
         currentLabelSelectedPosition.set(0);
-        clearResults();
+        listResults = new ArrayList<>();
         isUserPressed.set(false);
         isLockMouseMotion.set(false);
         isOpenLastFolderPressed.set(false);
