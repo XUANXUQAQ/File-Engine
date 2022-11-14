@@ -29,7 +29,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -41,7 +40,6 @@ public class EventManagement {
     private final ConcurrentHashMap<String, Method> EVENT_HANDLER_MAP = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, ConcurrentLinkedQueue<Method>> EVENT_LISTENER_MAP = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, BiConsumer<Class<?>, Object>> PLUGIN_EVENT_HANDLER_MAP = new ConcurrentHashMap<>();
-    private final AtomicInteger failureEventNum = new AtomicInteger(0);
     private HashSet<String> classesList = new HashSet<>();
     private static final int ASYNC_THREAD_NUM = Runtime.getRuntime().availableProcessors();
 
@@ -117,7 +115,7 @@ public class EventManagement {
     }
 
     /**
-     * 根绝buildEventRequest中的信息创建任务
+     * 根据buildEventRequest中的信息创建任务
      *
      * @param buildEventRequestEvent build event request
      * @return true如果构建失败，false构建成功
@@ -533,7 +531,6 @@ public class EventManagement {
                 if (event.allRetryFailed()) {
                     //判断是否超过最大次数
                     event.setFailed();
-                    failureEventNum.incrementAndGet();
                     if (isDebug) {
                         System.err.println("任务超时---" + event);
                     }
