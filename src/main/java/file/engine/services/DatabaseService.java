@@ -1817,6 +1817,7 @@ public class DatabaseService {
     private static void searchBarVisibleListener(Event event) {
         SQLiteUtil.openAllConnection();
         getInstance().sendExecuteSQLSignal();
+        // FIXME 当使用虚拟线程时不再初始化线程
         int searchThreadNumber = AllConfigs.getInstance().getSearchThreadNumber();
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         for (int i = 0; i < searchThreadNumber; i++) {
