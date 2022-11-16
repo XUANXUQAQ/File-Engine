@@ -523,14 +523,18 @@ public class DatabaseService {
                     } catch (SQLException e) {
                         e.printStackTrace();
                     }
-                    cache.isCached.compareAndSet(cache.isCached.get(), true);
+                    cache.isCached.set(true);
                     cache.isFileLost.set(false);
                 }
             } else {
                 if (cache.isCached.get()) {
-                    cache.isCached.compareAndSet(cache.isCached.get(), false);
+                    cache.isCached.set(false);
                     int num = cache.data.size();
-                    tableCacheCount.compareAndSet(tableCacheCount.get(), tableCacheCount.get() - num);
+                    int tableCacheCountVal = tableCacheCount.get();
+                    while (!tableCacheCount.compareAndSet(tableCacheCountVal, tableCacheCountVal - num)) {
+                        tableCacheCountVal = tableCacheCount.get();
+                        Thread.onSpinWait();
+                    }
                     cache.data = null;
                 }
             }
