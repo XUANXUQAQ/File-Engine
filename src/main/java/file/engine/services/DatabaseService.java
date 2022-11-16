@@ -1957,24 +1957,27 @@ public class DatabaseService {
         });
         PrepareSearchInfo.prepareSearchTasks();
         if (AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
-            // 退出上一次搜索
-            final var timeout = 3000;
-            GPUAccelerator.INSTANCE.stopCollectResults();
-            final long start = System.currentTimeMillis();
-            while (PrepareSearchInfo.isGpuThreadRunning.get()) {
-                if (System.currentTimeMillis() - start > timeout) {
-                    System.err.println("等待上一次gpu加速完成超时");
-                    break;
-                }
-                Thread.onSpinWait();
-            }
             if (shouldStopSearchRef.get()) {
                 return;
             }
             cachedThreadPoolUtil.executeTask(() -> {
+                // 退出上一次搜索
+                final var timeout = 3000;
+                GPUAccelerator.INSTANCE.stopCollectResults();
+                final long start = System.currentTimeMillis();
+                while (!PrepareSearchInfo.isGpuThreadRunning.compareAndSet(false, true)) {
+                    if (System.currentTimeMillis() - start > timeout) {
+                        System.err.println("等待上一次gpu加速完成超时");
+                        PrepareSearchInfo.isGpuThreadRunning.set(true);
+                        break;
+                    }
+                    if (shouldStopSearchRef.get()) {
+                        return;
+                    }
+                    Thread.onSpinWait();
+                }
                 // 开始进行搜索
                 GPUAccelerator.INSTANCE.resetAllResultStatus();
-                PrepareSearchInfo.isGpuThreadRunning.set(true);
                 GPUAccelerator.INSTANCE.match(searchCase,
                         isIgnoreCase,
                         searchText,
