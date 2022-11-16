@@ -348,6 +348,10 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 		{
 			continue;
 		}
+		if (is_stop())
+		{
+			break;
+		}
 		int block_num, thread_num;
 		const auto total = cache->str_data.record_num.load() + cache->str_data.remain_blank_num.load();
 		const auto max_pow_of_2 = find_table_sizeof2(total);
@@ -392,7 +396,9 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 	// 等待执行完成
 	cudaStatus = cudaDeviceSynchronize();
 	if (cudaStatus != cudaSuccess)
+	{
 		fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launch!\n", cudaStatus);
+	}
 
 	for (auto&& each : cache_map)
 	{

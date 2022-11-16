@@ -245,10 +245,13 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_match
 			each_thread.join();
 		}
 	}
-	for (auto& [_, cache_val] : cache_map)
-	{
-		cache_val->is_output_done = 2;
-	}
+	// for (auto& [_, cache_val] : cache_map)
+	// {
+	// 	if (cache_val->is_output_done != 2)
+	// 	{
+	// 		cache_val->is_output_done = 2;
+	// 	}
+	// }
 	env->ReleaseStringUTFChars(search_text, search_text_chars);
 }
 

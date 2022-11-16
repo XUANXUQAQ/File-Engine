@@ -251,10 +251,10 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_match
 			each.join();
 		}
 	}
-	for (auto& [_, cache_val] : cache_map)
-	{
-		cache_val->is_output_done = 2;
-	}
+	// for (auto& [_, cache_val] : cache_map)
+	// {
+	// 	cache_val->is_output_done = 2;
+	// }
 	env->ReleaseStringUTFChars(search_text, search_text_chars);
 }
 
@@ -961,6 +961,10 @@ void start_kernel(const std::vector<std::string>& search_case,
 		if (!cache->is_cache_valid)
 		{
 			continue;
+		}
+		if (p_stop_signal[0])
+		{
+			break;
 		}
 		const auto total = cache->str_data.record_num.load() + cache->str_data.remain_blank_num.load();
 		cl_int ret = 0;
