@@ -436,6 +436,7 @@ public class DatabaseService {
                 100,
                 2000);
         saveTableCache(isStopCreateCache, tableNeedCache);
+        System.out.println("添加完成");
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -450,6 +451,7 @@ public class DatabaseService {
                 1,
                 Integer.MAX_VALUE);
         saveTableCacheForGPU(isStopCreateCache, tableNeedCache, createGpuCacheThreshold);
+        System.out.println("添加完成");
     }
 
     /**
@@ -560,6 +562,7 @@ public class DatabaseService {
                     });
                 }
                 fileChanges.put(() -> {
+                    //退出执行线程
                 });
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
@@ -751,6 +754,7 @@ public class DatabaseService {
         if (AllConfigs.getInstance().isGPUAcceleratorEnabled() && eventManagement.notMainExit()) {
             GPUAccelerator.INSTANCE.stopCollectResults();
         }
+        shouldStopSearch.set(true);
         PrepareSearchInfo.taskMap.clear();
     }
 
@@ -793,13 +797,12 @@ public class DatabaseService {
                 //为每个任务分配的位，不断左移以不断进行分配
                 number.shiftLeft(1);
                 Bit currentTaskNum = new Bit(number);
-                {//记录当前任务信息到allTaskStatus
-                    byte[] origin;
-                    while ((origin = PrepareSearchInfo.allTaskStatus.getBytes()) != null) {
-                        Bit or = Bit.or(origin, currentTaskNum.getBytes());
-                        if (PrepareSearchInfo.allTaskStatus.set(origin, or)) {
-                            break;
-                        }
+                //记录当前任务信息到allTaskStatus
+                byte[] origin;
+                while ((origin = PrepareSearchInfo.allTaskStatus.getBytes()) != null) {
+                    Bit or = Bit.or(origin, currentTaskNum.getBytes());
+                    if (PrepareSearchInfo.allTaskStatus.set(origin, or)) {
+                        break;
                     }
                 }
                 //每一个任务负责查询一个priority和list0-list40生成的41个SQL
