@@ -3143,10 +3143,18 @@ public class SearchBar {
                         ref.isLabel8Chosen = true;
                         break;
                 }
-                SwingUtilities.invokeLater(() -> showResults(
-                        ref.isLabel1Chosen, ref.isLabel2Chosen, ref.isLabel3Chosen, ref.isLabel4Chosen,
-                        ref.isLabel5Chosen, ref.isLabel6Chosen, ref.isLabel7Chosen, ref.isLabel8Chosen
-                ));
+                SwingUtilities.invokeLater(() -> {
+                    try {
+                        showResults(
+                                ref.isLabel1Chosen, ref.isLabel2Chosen, ref.isLabel3Chosen, ref.isLabel4Chosen,
+                                ref.isLabel5Chosen, ref.isLabel6Chosen, ref.isLabel7Chosen, ref.isLabel8Chosen
+                        );
+                    } catch (IndexOutOfBoundsException ignored) {
+                        // ignored
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
             }
         }
     }
@@ -3192,18 +3200,18 @@ public class SearchBar {
                         clearALabel(label8);
                         repaint();
                     }
-                    SwingUtilities.invokeLater(this::autoSetSearchBarRadius);
                     SwingUtilities.invokeLater(() -> {
+                        autoSetSearchBarRadius();
                         if (getSearchBarText().isEmpty()) {
                             searchInfoLabel.setText("");
                             searchInfoLabel.setName("");
                             searchInfoLabel.setIcon(null);
                         }
                     });
-                    TimeUnit.MILLISECONDS.sleep(1);
+                    TimeUnit.MILLISECONDS.sleep(200);
                 }
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                // ignored
             } finally {
                 isTryToShowResultThreadNotExist.set(true);
             }
@@ -4074,121 +4082,109 @@ public class SearchBar {
                              boolean isLabel5Chosen, boolean isLabel6Chosen, boolean isLabel7Chosen, boolean isLabel8Chosen) {
         int size;
         if (runningMode == RunningMode.NORMAL_MODE) {
-            try {
-                String path;
-                if (!listResults.isEmpty() && isLabelEmpty(label1)) {
-                    path = listResults.get(0);
-                    showResultOnLabel(path, label1, isLabel1Chosen);
-                }
-                size = listResults.size();
-                if (size > 1 && isLabelEmpty(label2)) {
-                    path = listResults.get(1);
-                    showResultOnLabel(path, label2, isLabel2Chosen);
-                }
-                if (size > 2 && isLabelEmpty(label3)) {
-                    path = listResults.get(2);
-                    showResultOnLabel(path, label3, isLabel3Chosen);
-                }
-                if (size > 3 && isLabelEmpty(label4)) {
-                    path = listResults.get(3);
-                    showResultOnLabel(path, label4, isLabel4Chosen);
-                }
-                if (size > 4 && isLabelEmpty(label5)) {
-                    path = listResults.get(4);
-                    showResultOnLabel(path, label5, isLabel5Chosen);
-                }
-                if (size > 5 && isLabelEmpty(label6)) {
-                    path = listResults.get(5);
-                    showResultOnLabel(path, label6, isLabel6Chosen);
-                }
-                if (size > 6 && isLabelEmpty(label7)) {
-                    path = listResults.get(6);
-                    showResultOnLabel(path, label7, isLabel7Chosen);
-                }
-                if (size > 7 && isLabelEmpty(label8)) {
-                    path = listResults.get(7);
-                    showResultOnLabel(path, label8, isLabel8Chosen);
-                }
-            } catch (IndexOutOfBoundsException e) {
-                e.printStackTrace();
+            String path;
+            if (!listResults.isEmpty() && isLabelEmpty(label1)) {
+                path = listResults.get(0);
+                showResultOnLabel(path, label1, isLabel1Chosen);
+            }
+            size = listResults.size();
+            if (size > 1 && isLabelEmpty(label2)) {
+                path = listResults.get(1);
+                showResultOnLabel(path, label2, isLabel2Chosen);
+            }
+            if (size > 2 && isLabelEmpty(label3)) {
+                path = listResults.get(2);
+                showResultOnLabel(path, label3, isLabel3Chosen);
+            }
+            if (size > 3 && isLabelEmpty(label4)) {
+                path = listResults.get(3);
+                showResultOnLabel(path, label4, isLabel4Chosen);
+            }
+            if (size > 4 && isLabelEmpty(label5)) {
+                path = listResults.get(4);
+                showResultOnLabel(path, label5, isLabel5Chosen);
+            }
+            if (size > 5 && isLabelEmpty(label6)) {
+                path = listResults.get(5);
+                showResultOnLabel(path, label6, isLabel6Chosen);
+            }
+            if (size > 6 && isLabelEmpty(label7)) {
+                path = listResults.get(6);
+                showResultOnLabel(path, label7, isLabel7Chosen);
+            }
+            if (size > 7 && isLabelEmpty(label8)) {
+                path = listResults.get(7);
+                showResultOnLabel(path, label8, isLabel8Chosen);
             }
         } else if (runningMode == RunningMode.COMMAND_MODE) {
-            try {
-                String command;
-                if (!listResults.isEmpty() && isLabelEmpty(label1)) {
-                    command = listResults.get(0);
-                    showCommandOnLabel(command, label1, isLabel1Chosen);
-                }
-                size = listResults.size();
-                if (size > 1 && isLabelEmpty(label2)) {
-                    command = listResults.get(1);
-                    showCommandOnLabel(command, label2, isLabel2Chosen);
-                }
-                if (size > 2 && isLabelEmpty(label3)) {
-                    command = listResults.get(2);
-                    showCommandOnLabel(command, label3, isLabel3Chosen);
-                }
-                if (size > 3 && isLabelEmpty(label4)) {
-                    command = listResults.get(3);
-                    showCommandOnLabel(command, label4, isLabel4Chosen);
-                }
-                if (size > 4 && isLabelEmpty(label5)) {
-                    command = listResults.get(4);
-                    showCommandOnLabel(command, label5, isLabel5Chosen);
-                }
-                if (size > 5 && isLabelEmpty(label6)) {
-                    command = listResults.get(5);
-                    showCommandOnLabel(command, label6, isLabel6Chosen);
-                }
-                if (size > 6 && isLabelEmpty(label7)) {
-                    command = listResults.get(6);
-                    showCommandOnLabel(command, label7, isLabel7Chosen);
-                }
-                if (size > 7 && isLabelEmpty(label8)) {
-                    command = listResults.get(7);
-                    showCommandOnLabel(command, label8, isLabel8Chosen);
-                }
-            } catch (IndexOutOfBoundsException e) {
-                e.printStackTrace();
+            String command;
+            if (!listResults.isEmpty() && isLabelEmpty(label1)) {
+                command = listResults.get(0);
+                showCommandOnLabel(command, label1, isLabel1Chosen);
+            }
+            size = listResults.size();
+            if (size > 1 && isLabelEmpty(label2)) {
+                command = listResults.get(1);
+                showCommandOnLabel(command, label2, isLabel2Chosen);
+            }
+            if (size > 2 && isLabelEmpty(label3)) {
+                command = listResults.get(2);
+                showCommandOnLabel(command, label3, isLabel3Chosen);
+            }
+            if (size > 3 && isLabelEmpty(label4)) {
+                command = listResults.get(3);
+                showCommandOnLabel(command, label4, isLabel4Chosen);
+            }
+            if (size > 4 && isLabelEmpty(label5)) {
+                command = listResults.get(4);
+                showCommandOnLabel(command, label5, isLabel5Chosen);
+            }
+            if (size > 5 && isLabelEmpty(label6)) {
+                command = listResults.get(5);
+                showCommandOnLabel(command, label6, isLabel6Chosen);
+            }
+            if (size > 6 && isLabelEmpty(label7)) {
+                command = listResults.get(6);
+                showCommandOnLabel(command, label7, isLabel7Chosen);
+            }
+            if (size > 7 && isLabelEmpty(label8)) {
+                command = listResults.get(7);
+                showCommandOnLabel(command, label8, isLabel8Chosen);
             }
         } else if (runningMode == RunningMode.PLUGIN_MODE) {
-            try {
-                String command;
-                if (!listResults.isEmpty()) {
-                    command = listResults.get(0);
-                    showPluginResultOnLabel(command, label1, isLabel1Chosen);
-                }
-                size = listResults.size();
-                if (size > 1) {
-                    command = listResults.get(1);
-                    showPluginResultOnLabel(command, label2, isLabel2Chosen);
-                }
-                if (size > 2) {
-                    command = listResults.get(2);
-                    showPluginResultOnLabel(command, label3, isLabel3Chosen);
-                }
-                if (size > 3) {
-                    command = listResults.get(3);
-                    showPluginResultOnLabel(command, label4, isLabel4Chosen);
-                }
-                if (size > 4) {
-                    command = listResults.get(4);
-                    showPluginResultOnLabel(command, label5, isLabel5Chosen);
-                }
-                if (size > 5) {
-                    command = listResults.get(5);
-                    showPluginResultOnLabel(command, label6, isLabel6Chosen);
-                }
-                if (size > 6) {
-                    command = listResults.get(6);
-                    showPluginResultOnLabel(command, label7, isLabel7Chosen);
-                }
-                if (size > 7) {
-                    command = listResults.get(7);
-                    showPluginResultOnLabel(command, label8, isLabel8Chosen);
-                }
-            } catch (IndexOutOfBoundsException e) {
-                e.printStackTrace();
+            String command;
+            if (!listResults.isEmpty()) {
+                command = listResults.get(0);
+                showPluginResultOnLabel(command, label1, isLabel1Chosen);
+            }
+            size = listResults.size();
+            if (size > 1) {
+                command = listResults.get(1);
+                showPluginResultOnLabel(command, label2, isLabel2Chosen);
+            }
+            if (size > 2) {
+                command = listResults.get(2);
+                showPluginResultOnLabel(command, label3, isLabel3Chosen);
+            }
+            if (size > 3) {
+                command = listResults.get(3);
+                showPluginResultOnLabel(command, label4, isLabel4Chosen);
+            }
+            if (size > 4) {
+                command = listResults.get(4);
+                showPluginResultOnLabel(command, label5, isLabel5Chosen);
+            }
+            if (size > 5) {
+                command = listResults.get(5);
+                showPluginResultOnLabel(command, label6, isLabel6Chosen);
+            }
+            if (size > 6) {
+                command = listResults.get(6);
+                showPluginResultOnLabel(command, label7, isLabel7Chosen);
+            }
+            if (size > 7) {
+                command = listResults.get(7);
+                showPluginResultOnLabel(command, label8, isLabel8Chosen);
             }
         }
     }
