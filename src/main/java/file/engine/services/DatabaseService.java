@@ -755,7 +755,6 @@ public class DatabaseService {
             GPUAccelerator.INSTANCE.stopCollectResults();
         }
         shouldStopSearch.set(true);
-        PrepareSearchInfo.taskMap.clear();
     }
 
     /**
@@ -1005,9 +1004,9 @@ public class DatabaseService {
      * 添加sql语句，并开始搜索
      */
     private void startSearch() {
-        CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+        var cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         var taskMap = PrepareSearchInfo.taskMap;
-        EventManagement eventManagement = EventManagement.getInstance();
+        var eventManagement = EventManagement.getInstance();
         final int threadNumberPerDisk = Math.max(1, AllConfigs.getInstance().getSearchThreadNumber() / taskMap.size());
         Consumer<ConcurrentLinkedQueue<Runnable>> taskHandler = (taskQueue) -> {
             while (!taskQueue.isEmpty() && eventManagement.notMainExit()) {
@@ -1868,6 +1867,15 @@ public class DatabaseService {
             //添加搜索任务到队列
             databaseService.addSearchTasks(nonFormattedSql);
         }
+
+        private static boolean isTaskMapEmpty() {
+            for (var entry : PrepareSearchInfo.taskMap.values()) {
+                if (!entry.isEmpty()) {
+                    return false;
+                }
+            }
+            return true;
+        }
     }
 
     @EventListener(listenClass = SetConfigsEvent.class)
@@ -1879,14 +1887,14 @@ public class DatabaseService {
     }
 
     @EventRegister(registerClass = PrepareSearchEvent.class)
-    private static void prepareSearchEventHandle(Event event) {
+    private static void prepareSearchEvent(Event event) {
         DatabaseService databaseService = DatabaseService.getInstance();
         try {
             if (PrepareSearchInfo.isPreparing.compareAndSet(false, true)) {
                 if (IsDebug.isDebug()) {
                     System.out.println("进行预搜索并添加搜索任务");
                 }
-                long timeout = 3000;
+                final long timeout = 3000;
                 long startWaiting = System.currentTimeMillis();
                 while (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL &&
                         System.currentTimeMillis() - startWaiting < timeout) {
@@ -1894,11 +1902,11 @@ public class DatabaseService {
                 }
                 prepareSearch((PrepareSearchEvent) event);
                 event.setReturnValue(databaseService.tempResults);
+                PrepareSearchInfo.isPreparing.set(false);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        PrepareSearchInfo.isPreparing.set(false);
     }
 
     @EventRegister(registerClass = StartSearchEvent.class)
@@ -1914,7 +1922,7 @@ public class DatabaseService {
             }
             Thread.onSpinWait();
         }
-        if (PrepareSearchInfo.taskMap == null || PrepareSearchInfo.taskMap.isEmpty()) {
+        if (PrepareSearchInfo.taskMap == null || PrepareSearchInfo.isTaskMapEmpty()) {
             prepareSearch((StartSearchEvent) event);
         }
         //启动搜索线程
@@ -1975,8 +1983,7 @@ public class DatabaseService {
                 while (!PrepareSearchInfo.isGpuThreadRunning.compareAndSet(false, true)) {
                     if (System.currentTimeMillis() - start > timeout) {
                         System.err.println("等待上一次gpu加速完成超时");
-                        PrepareSearchInfo.isGpuThreadRunning.set(true);
-                        break;
+                        return;
                     }
                     if (shouldStopSearchRef.get()) {
                         return;
