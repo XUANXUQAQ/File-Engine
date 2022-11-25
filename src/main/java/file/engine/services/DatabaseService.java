@@ -1896,9 +1896,12 @@ public class DatabaseService {
                 }
                 final long timeout = 3000;
                 long startWaiting = System.currentTimeMillis();
-                while (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL &&
-                        System.currentTimeMillis() - startWaiting < timeout) {
+                while (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL) {
                     Thread.onSpinWait();
+                    if (System.currentTimeMillis() - startWaiting > timeout) {
+                        System.err.println("prepareSearch，等待数据库状态超时");
+                        break;
+                    }
                 }
                 prepareSearch((PrepareSearchEvent) event);
                 event.setReturnValue(databaseService.tempResults);
