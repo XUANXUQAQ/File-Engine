@@ -369,7 +369,7 @@ public class DatabaseService {
                 long startCheckTimeMills = System.currentTimeMillis() - checkTimeInterval + startUpLatency;
             };
             final Supplier<Boolean> isStopCreateCache =
-                    () -> !eventManagement.notMainExit() || searchThreadCount.get() != 0 ||
+                    () -> !eventManagement.notMainExit() ||
                             status.get() == Constants.Enums.DatabaseStatus.MANUAL_UPDATE ||
                             status.get() == Constants.Enums.DatabaseStatus.VACUUM;
             final Supplier<Boolean> isStartSaveCache =
@@ -1823,14 +1823,11 @@ public class DatabaseService {
     private static void searchBarVisibleListener(Event event) {
         SQLiteUtil.openAllConnection();
         getInstance().sendExecuteSQLSignal();
-        // FIXME 当使用虚拟线程时不再初始化线程
-        int searchThreadNumber = AllConfigs.getInstance().getSearchThreadNumber();
-        CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
-        for (int i = 0; i < searchThreadNumber; i++) {
-            cachedThreadPoolUtil.executeTask(() -> {
-                // create thread
-            });
-        }
+        EventManagement eventManagement = EventManagement.getInstance();
+        String[] keywords = {"warmup"};
+        eventManagement.putEvent(new StartSearchEvent(
+                () -> "warmup", () -> null, () -> keywords
+        ));
     }
 
     @EventRegister(registerClass = CheckDatabaseEmptyEvent.class)
