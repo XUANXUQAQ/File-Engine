@@ -1495,7 +1495,7 @@ public class DatabaseService {
             try {
                 SearchBar searchBar = SearchBar.getInstance();
                 while (isSharedMemoryCreated.get()) {
-                    if (status.get() == Constants.Enums.DatabaseStatus.NORMAL && !searchBar.isVisible()) {
+                    if (status.get() == Constants.Enums.DatabaseStatus.NORMAL && !searchBar.isVisible() && searchThreadCount.get() == 0) {
                         isSharedMemoryCreated.set(false);
                         ResultPipe.INSTANCE.closeAllSharedMemory();
                         closeSharedMemory();
