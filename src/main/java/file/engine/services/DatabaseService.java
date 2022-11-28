@@ -784,7 +784,7 @@ public class DatabaseService {
      *
      * @param nonFormattedSql 未格式化搜索字段的SQL
      */
-    private void addSearchTasks(ArrayList<LinkedHashMap<String, String>> nonFormattedSql) {
+    private void addSearchTasks(ArrayList<LinkedHashMap<String, String>> nonFormattedSql, AtomicBoolean shouldStopSearchRef) {
         Bit number = new Bit(new byte[]{1});
         AllConfigs allConfigs = AllConfigs.getInstance();
         String availableDisks = allConfigs.getAvailableDisks();
@@ -806,9 +806,9 @@ public class DatabaseService {
                 }
                 //每一个任务负责查询一个priority和list0-list40生成的41个SQL
                 if (status.get() == Constants.Enums.DatabaseStatus._SHARED_MEMORY) {
-                    addTaskForSharedMemory0(eachDisk, tasks, commandsMap, currentTaskNum);
+                    addTaskForSharedMemory0(eachDisk, tasks, commandsMap, currentTaskNum, shouldStopSearchRef);
                 } else {
-                    addTaskForDatabase0(eachDisk, tasks, commandsMap, currentTaskNum);
+                    addTaskForDatabase0(eachDisk, tasks, commandsMap, currentTaskNum, shouldStopSearchRef);
                 }
                 if (shouldStopSearch.get()) {
                     return;
@@ -820,9 +820,9 @@ public class DatabaseService {
     private void addTaskForDatabase0(String diskChar,
                                      ConcurrentLinkedQueue<Runnable> tasks,
                                      LinkedHashMap<String, String> sqlToExecute,
-                                     Bit currentTaskNum) {
+                                     Bit currentTaskNum,
+                                     AtomicBoolean shouldStopSearchRef) {
         AllConfigs allConfigs = AllConfigs.getInstance();
-        AtomicBoolean shouldStopSearchRef = shouldStopSearch;
         tasks.add(() -> {
             Statement stmt = null;
             try {
@@ -885,8 +885,8 @@ public class DatabaseService {
     private void addTaskForSharedMemory0(String diskChar,
                                          ConcurrentLinkedQueue<Runnable> tasks,
                                          LinkedHashMap<String, String> sqlToExecute,
-                                         Bit currentTaskNum) {
-        AtomicBoolean shouldStopSearchRef = shouldStopSearch;
+                                         Bit currentTaskNum,
+                                         AtomicBoolean shouldStopSearchRef) {
         tasks.add(() -> {
             try {
                 var tempResultsForEventRef = tempResultsForEvent;
@@ -1852,7 +1852,7 @@ public class DatabaseService {
         static Bit allTaskStatus = new Bit(new byte[]{0});
         static final AtomicBoolean isPreparing = new AtomicBoolean();
 
-        private static void prepareSearchTasks() {
+        private static void prepareSearchTasks(AtomicBoolean shouldStopSearchRef) {
             DatabaseService databaseService = DatabaseService.getInstance();
             //每个priority用一个线程，每一个后缀名对应一个优先级
             //按照优先级排列，key是sql和表名的对应，value是容器
@@ -1860,7 +1860,7 @@ public class DatabaseService {
             taskStatus = new Bit(new byte[]{0});
             allTaskStatus = new Bit(new byte[]{0});
             //添加搜索任务到队列
-            databaseService.addSearchTasks(nonFormattedSql);
+            databaseService.addSearchTasks(nonFormattedSql, shouldStopSearchRef);
         }
 
         private static boolean isTaskMapEmpty() {
@@ -1968,7 +1968,7 @@ public class DatabaseService {
                 }
             } while (false);
         });
-        PrepareSearchInfo.prepareSearchTasks();
+        PrepareSearchInfo.prepareSearchTasks(shouldStopSearchRef);
         if (AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
             if (shouldStopSearchRef.get()) {
                 return;

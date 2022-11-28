@@ -70,7 +70,7 @@ public class EventManagement {
     /**
      * 等待任务
      *
-     * @param event 任务实例
+     * @param event   任务实例
      * @param timeout 超时时间
      * @return true如果任务执行失败， false如果执行正常完成
      */
@@ -92,6 +92,7 @@ public class EventManagement {
 
     /**
      * 等待任务
+     *
      * @param event 任务实例
      * @return true如果任务执行失败， false如果执行正常完成
      */
@@ -307,13 +308,9 @@ public class EventManagement {
         }
         if (!exit.get()) {
             if (event.isBlock()) {
-                if (!blockEventQueue.contains(event)) {
-                    blockEventQueue.add(event);
-                }
+                blockEventQueue.add(event);
             } else {
-                if (!asyncEventQueue.contains(event)) {
-                    asyncEventQueue.add(event);
-                }
+                asyncEventQueue.add(event);
             }
         } else {
             if (isDebug) {
@@ -512,6 +509,7 @@ public class EventManagement {
     /**
      * 事件处理器
      * 注意，容器不能使用SynchronousQueue，因为事件处理的过程中可能会放入其他事件，会导致putEvent和eventHandle互相等待的问题
+     *
      * @param eventQueue eventQueue
      */
     private void eventHandle(ConcurrentLinkedQueue<Event> eventQueue) {
