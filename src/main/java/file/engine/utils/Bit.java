@@ -137,7 +137,7 @@ public class Bit {
      * @param bit    更新的值
      * @return 是否成功
      */
-    public boolean set(byte[] expect, Bit bit) {
+    public boolean compareAndSet(byte[] expect, Bit bit) {
         byte[] bytes = Arrays.copyOf(bit.bytes.get(), bit.bytes.get().length);
         return this.bytes.compareAndSet(expect, bytes);
     }

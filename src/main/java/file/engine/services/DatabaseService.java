@@ -800,7 +800,7 @@ public class DatabaseService {
                 byte[] origin;
                 while ((origin = PrepareSearchInfo.allTaskStatus.getBytes()) != null) {
                     Bit or = Bit.or(origin, currentTaskNum.getBytes());
-                    if (PrepareSearchInfo.allTaskStatus.set(origin, or)) {
+                    if (PrepareSearchInfo.allTaskStatus.compareAndSet(origin, or)) {
                         break;
                     }
                 }
@@ -809,6 +809,9 @@ public class DatabaseService {
                     addTaskForSharedMemory0(eachDisk, tasks, commandsMap, currentTaskNum);
                 } else {
                     addTaskForDatabase0(eachDisk, tasks, commandsMap, currentTaskNum);
+                }
+                if (shouldStopSearch.get()) {
+                    return;
                 }
             }
         }
@@ -864,7 +867,7 @@ public class DatabaseService {
                 byte[] originalBytes;
                 while ((originalBytes = PrepareSearchInfo.taskStatus.getBytes()) != null) {
                     Bit or = Bit.or(originalBytes, currentTaskNum.getBytes());
-                    if (PrepareSearchInfo.taskStatus.set(originalBytes, or)) {
+                    if (PrepareSearchInfo.taskStatus.compareAndSet(originalBytes, or)) {
                         break;
                     }
                 }
@@ -908,7 +911,7 @@ public class DatabaseService {
                 byte[] originalBytes;
                 while ((originalBytes = PrepareSearchInfo.taskStatus.getBytes()) != null) {
                     Bit or = Bit.or(originalBytes, currentTaskNum.getBytes());
-                    if (PrepareSearchInfo.taskStatus.set(originalBytes, or)) {
+                    if (PrepareSearchInfo.taskStatus.compareAndSet(originalBytes, or)) {
                         break;
                     }
                 }
@@ -1823,11 +1826,6 @@ public class DatabaseService {
     private static void searchBarVisibleListener(Event event) {
         SQLiteUtil.openAllConnection();
         getInstance().sendExecuteSQLSignal();
-        EventManagement eventManagement = EventManagement.getInstance();
-        String[] keywords = {"warmup"};
-        eventManagement.putEvent(new StartSearchEvent(
-                () -> "warmup", () -> null, () -> keywords
-        ));
     }
 
     @EventRegister(registerClass = CheckDatabaseEmptyEvent.class)
