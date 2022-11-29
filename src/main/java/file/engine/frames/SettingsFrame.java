@@ -75,7 +75,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static file.engine.utils.ColorUtil.*;
 import static file.engine.utils.StartupUtil.hasStartup;
@@ -2388,31 +2387,33 @@ public class SettingsFrame {
     /**
      * 等待检查更新
      *
-     * @param startCheckTime    开始检查时间
      * @param checkUpdateThread 检查线程
      *                          0x100L 表示检查成功
      *                          0xFFFL 表示检查失败
+     * @return true如果检查成功
      */
-    private void waitForCheckUpdateResult(AtomicLong startCheckTime, Thread checkUpdateThread) {
+    private boolean waitForCheckUpdateResult(Thread checkUpdateThread, AtomicBoolean isCheckDone) {
         try {
-            while (startCheckTime.get() != 0x100L) {
-                TimeUnit.MILLISECONDS.sleep(200);
-                if ((System.currentTimeMillis() - startCheckTime.get() > 5000L && startCheckTime.get() != 0x100L) || startCheckTime.get() == 0xFFFL) {
+            final long timeout = 5000L;
+            final long startCheck = System.currentTimeMillis();
+            while (!isCheckDone.get()) {
+                if ((System.currentTimeMillis() - startCheck > timeout)) {
                     checkUpdateThread.interrupt();
                     JOptionPane.showMessageDialog(frame, TRANSLATE_SERVICE.getTranslation("Check update failed"));
-                    return;
+                    return false;
                 }
                 if (!eventManagement.notMainExit()) {
-                    return;
+                    return false;
                 }
+                TimeUnit.MILLISECONDS.sleep(200);
             }
         } catch (InterruptedException e1) {
             e1.printStackTrace();
         }
+        return true;
     }
 
     private void addButtonPluginUpdateCheckListener() {
-        AtomicLong startCheckTime = new AtomicLong(0L);
         AtomicBoolean isVersionLatest = new AtomicBoolean(true);
         AtomicBoolean isSkipConfirm = new AtomicBoolean(false);
 
@@ -2427,12 +2428,12 @@ public class SettingsFrame {
             if (downloadManagerContainer.downloadManager != null && downloadManagerContainer.downloadManager.getDownloadStatus() == Constants.Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                 eventManagement.putEvent(new StopDownloadEvent(downloadManagerContainer.downloadManager));
             } else {
-                startCheckTime.set(0L);
                 GetPluginByNameEvent getPluginByNameEvent = new GetPluginByNameEvent(pluginName);
                 eventManagement.putEvent(getPluginByNameEvent);
                 eventManagement.waitForEvent(getPluginByNameEvent);
                 Optional<PluginService.PluginInfo> pluginInfoOptional = getPluginByNameEvent.getReturnValue();
                 pluginInfoOptional.ifPresent(pluginInfo -> {
+                    AtomicBoolean isCheckDone = new AtomicBoolean();
                     Plugin plugin = pluginInfo.plugin;
                     String pluginFullName = pluginName + ".jar";
 
@@ -2442,23 +2443,25 @@ public class SettingsFrame {
                         isSkipConfirm.set(true);
                     } else {
                         Thread checkUpdateThread = new Thread(() -> {
-                            startCheckTime.set(System.currentTimeMillis());
                             try {
                                 isVersionLatest.set(plugin.isLatest());
                                 if (!Thread.interrupted()) {
-                                    startCheckTime.set(0x100L); //表示检查成功
+                                    isCheckDone.set(true); //表示检查成功
                                 }
                             } catch (Exception exception) {
                                 exception.printStackTrace();
-                                startCheckTime.set(0xFFFL);  //表示检查失败
                             }
                         });
-                        cachedThreadPoolUtil.executeTask(checkUpdateThread);
+                        checkUpdateThread.start();
                         //等待获取插件更新信息
-                        waitForCheckUpdateResult(startCheckTime, checkUpdateThread);
+                        if (!waitForCheckUpdateResult(checkUpdateThread, isCheckDone)) {
+                            return;
+                        }
                     }
-
-                    if (startCheckTime.get() == 0x100L && isVersionLatest.get()) {
+                    if (!isCheckDone.get()) {
+                        return;
+                    }
+                    if (isVersionLatest.get()) {
                         JOptionPane.showMessageDialog(frame, TRANSLATE_SERVICE.getTranslation("Latest version:") + plugin.getVersion() + "\n" + TRANSLATE_SERVICE.getTranslation("The current version is the latest"));
                         return;
                     }
