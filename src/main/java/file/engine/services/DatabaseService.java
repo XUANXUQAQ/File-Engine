@@ -1968,11 +1968,7 @@ public class DatabaseService {
                 }
             } while (false);
         });
-        PrepareSearchInfo.prepareSearchTasks(shouldStopSearchRef);
-        if (AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
-            if (shouldStopSearchRef.get()) {
-                return;
-            }
+        if (AllConfigs.getInstance().isGPUAcceleratorEnabled() && !shouldStopSearchRef.get()) {
             cachedThreadPoolUtil.executeTask(() -> {
                 // 退出上一次搜索
                 final var timeout = 3000;
@@ -2011,6 +2007,7 @@ public class DatabaseService {
                 PrepareSearchInfo.isGpuThreadRunning.set(false);
             }, false);
         }
+        PrepareSearchInfo.prepareSearchTasks(shouldStopSearchRef);
     }
 
     @EventRegister(registerClass = StopSearchEvent.class)
