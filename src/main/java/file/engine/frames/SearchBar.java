@@ -3627,20 +3627,15 @@ public class SearchBar {
                 try {
                     final long endTime = System.currentTimeMillis();
                     if ((endTime - startTime > SEND_PREPARE_SEARCH_TIMEOUT) && isCudaSearchNotStarted.get() && startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
+                        listResults = new ArrayList<>();
                         setSearchKeywordsAndSearchCase();
                         var resultsOptional = sendPrepareSearchEvent();
-                        resultsOptional.ifPresent(res -> {
-                            listResults = new ArrayList<>();
-                            tempResultsFromDatabase = res;
-                        });
+                        resultsOptional.ifPresent(res -> tempResultsFromDatabase = res);
                     }
                     if ((endTime - startTime > SEND_START_SEARCH_TIMEOUT) && isSearchNotStarted.get() && startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
                         setSearchKeywordsAndSearchCase();
                         var resultsOptional = sendSearchEvent();
-                        resultsOptional.ifPresent(res -> {
-                            tempResultsFromDatabase = res;
-                            listResults = new ArrayList<>();
-                        });
+                        resultsOptional.ifPresent(res -> tempResultsFromDatabase = res);
                     }
 
                     if ((endTime - startTime > SHOW_RESULTS_TIMEOUT) && startSearchSignal.get()) {
