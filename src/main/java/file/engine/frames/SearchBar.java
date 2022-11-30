@@ -114,7 +114,7 @@ public class SearchBar {
     private int iconSideLength;
     private volatile long visibleStartTime = 0;  //记录窗口开始可见的事件，窗口默认最短可见时间0.5秒，防止窗口快速闪烁
     private volatile long firstResultStartShowingTime = 0;  //记录开始显示结果的时间，用于防止刚开始移动到鼠标导致误触
-    private ArrayList<String> listResults;  //保存从数据库中找出符合条件的记录（文件路径）
+    private volatile ArrayList<String> listResults;  //保存从数据库中找出符合条件的记录（文件路径）
     private ConcurrentLinkedQueue<String> tempResultsFromDatabase;
     private volatile String[] searchCase;
     private volatile String searchText = "";
@@ -3626,16 +3626,23 @@ public class SearchBar {
             while (eventManagement.notMainExit()) {
                 try {
                     final long endTime = System.currentTimeMillis();
-                    if ((endTime - startTime > SEND_PREPARE_SEARCH_TIMEOUT) && isCudaSearchNotStarted.get() && startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
-                        listResults = new ArrayList<>();
+                    if ((endTime - startTime > SEND_PREPARE_SEARCH_TIMEOUT) && isCudaSearchNotStarted.get() &&
+                            startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
                         setSearchKeywordsAndSearchCase();
                         var resultsOptional = sendPrepareSearchEvent();
-                        resultsOptional.ifPresent(res -> tempResultsFromDatabase = res);
+                        resultsOptional.ifPresent(res -> {
+                            listResults = new ArrayList<>();
+                            tempResultsFromDatabase = res;
+                        });
                     }
-                    if ((endTime - startTime > SEND_START_SEARCH_TIMEOUT) && isSearchNotStarted.get() && startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
+                    if ((endTime - startTime > SEND_START_SEARCH_TIMEOUT) && isSearchNotStarted.get() &&
+                            startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
                         setSearchKeywordsAndSearchCase();
                         var resultsOptional = sendSearchEvent();
-                        resultsOptional.ifPresent(res -> tempResultsFromDatabase = res);
+                        resultsOptional.ifPresent(res -> {
+                            listResults = new ArrayList<>();
+                            tempResultsFromDatabase = res;
+                        });
                     }
 
                     if ((endTime - startTime > SHOW_RESULTS_TIMEOUT) && startSearchSignal.get()) {
