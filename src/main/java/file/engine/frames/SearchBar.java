@@ -3640,6 +3640,9 @@ public class SearchBar {
                         setSearchKeywordsAndSearchCase();
                         var resultsOptional = sendSearchEvent();
                         resultsOptional.ifPresent(res -> {
+                            if (tempResultsFromDatabase == res) {
+                                return;
+                            }
                             listResults = new ArrayList<>();
                             tempResultsFromDatabase = res;
                         });
