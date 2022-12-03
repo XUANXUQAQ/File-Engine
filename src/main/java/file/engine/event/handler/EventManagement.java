@@ -41,7 +41,7 @@ public class EventManagement {
     private final ConcurrentHashMap<String, ConcurrentLinkedQueue<Method>> EVENT_LISTENER_MAP = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, BiConsumer<Class<?>, Object>> PLUGIN_EVENT_HANDLER_MAP = new ConcurrentHashMap<>();
     private HashSet<String> classesList = new HashSet<>();
-    private static final int ASYNC_THREAD_NUM = Runtime.getRuntime().availableProcessors();
+    private static final int ASYNC_THREAD_NUM = Math.max(Runtime.getRuntime().availableProcessors(), 2);
 
     private EventManagement() {
         startBlockEventHandler();
