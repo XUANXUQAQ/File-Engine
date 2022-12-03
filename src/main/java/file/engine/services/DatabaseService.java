@@ -550,16 +550,21 @@ public class DatabaseService {
         cachedThreadPoolUtil.executeTask(() -> {
             try {
                 while (eventManagement.notMainExit()) {
-                    String addFile = FileMonitor.INSTANCE.pop_add_file();
-                    String deleteFile = FileMonitor.INSTANCE.pop_del_file();
-                    if (addFile == null && deleteFile == null) {
-                        TimeUnit.MILLISECONDS.sleep(1);
-                        continue;
+                    String addFilePath = FileMonitor.INSTANCE.pop_add_file();
+                    String deleteFilePath = FileMonitor.INSTANCE.pop_del_file();
+                    if (addFilePath != null) {
+                        File addFile = new File(addFilePath);
+                        do {
+                            if (addFile.getParentFile() != null) {
+                                File finalAddFile = addFile;
+                                fileChanges.put(() -> addFileToDatabase(finalAddFile.getAbsolutePath()));
+                            }
+                        } while ((addFile = addFile.getParentFile()) != null);
                     }
-                    fileChanges.put(() -> {
-                        addFileToDatabase(addFile);
-                        removeFileFromDatabase(deleteFile);
-                    });
+                    if (deleteFilePath != null) {
+                        fileChanges.put(() -> removeFileFromDatabase(deleteFilePath));
+                    }
+                    TimeUnit.MILLISECONDS.sleep(1);
                 }
                 fileChanges.put(() -> {
                     //退出执行线程
