@@ -1922,6 +1922,7 @@ public class DatabaseService {
         }
         if (PrepareSearchInfo.taskMap == null || PrepareSearchInfo.isTaskMapEmpty()) {
             prepareSearch((StartSearchEvent) event);
+            PrepareSearchInfo.prepareSearchTasks(databaseService.shouldStopSearch);
         }
         //启动搜索线程
         CachedThreadPoolUtil.getInstance().executeTask(databaseService::startSearch);
@@ -2007,7 +2008,6 @@ public class DatabaseService {
                 PrepareSearchInfo.isGpuThreadRunning.set(false);
             }, false);
         }
-        PrepareSearchInfo.prepareSearchTasks(shouldStopSearchRef);
     }
 
     @EventRegister(registerClass = StopSearchEvent.class)
