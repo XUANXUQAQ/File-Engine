@@ -151,16 +151,6 @@ int main()
 
 	bool is_priority_map_initialized = false;
 	vector<thread> threads;
-	void* complete_signal;
-	void* complete_signal_database;
-
-	if (!init_complete_signal_memory(&complete_signal) || !init_complete_signal_database(&complete_signal_database))
-	{
-		close_shared_memory();
-		return 1;
-	}
-	*static_cast<bool*>(complete_signal) = false;
-	*static_cast<bool*>(complete_signal_database) = false;
 
 	sqlite3_config(SQLITE_CONFIG_MULTITHREAD);
 	sqlite3_config(SQLITE_CONFIG_MEMSTATUS, 0);
@@ -204,35 +194,10 @@ int main()
 			threads.emplace_back(thread(init_usn, p));
 		}
 	}
-	//等待共享内存
-	while (!is_all_shared_memory_copied())
-	{
-		Sleep(100);
-	}
-	//设置共享内存可用标志
-	*static_cast<bool*>(complete_signal) = true;
-
 	//等待数据库写入
 	for (auto& each_thread : threads)
 	{
 		each_thread.join();
 	}
-	//设置数据库写入完成标志
-	*static_cast<bool*>(complete_signal_database) = true;
-
-	//等待关闭
-	char current_dir[1000]{ 0 };
-	GetModuleFileNameA(nullptr, current_dir, sizeof current_dir);
-	std::string tmp_current_dir(current_dir);
-	tmp_current_dir = tmp_current_dir.substr(0, tmp_current_dir.find_last_of('\\'));
-	tmp_current_dir = tmp_current_dir.substr(0, tmp_current_dir.find_last_of('\\'));
-	tmp_current_dir += "\\tmp\\closeSharedMemory";
-	strcpy_s(current_dir, tmp_current_dir.c_str());
-
-	while (!is_file_exist(current_dir))
-	{
-		Sleep(100);
-	}
-	close_shared_memory();
 	return 0;
 }

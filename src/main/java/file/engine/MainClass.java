@@ -91,7 +91,6 @@ public class MainClass {
         Class.forName("file.engine.dllInterface.HotkeyListener");
         Class.forName("file.engine.dllInterface.GetAscII");
         Class.forName("file.engine.dllInterface.GetHandle");
-        Class.forName("file.engine.dllInterface.ResultPipe");
         Class.forName("file.engine.dllInterface.EmptyRecycleBin");
         Class.forName("file.engine.dllInterface.gpu.GPUAccelerator");
     }
@@ -142,7 +141,7 @@ public class MainClass {
             System.out.println("正在更新插件");
         }
         File[] files = tmpPlugins.listFiles();
-        if (files == null || files.length == 0) {
+        if (files == null) {
             return;
         }
         for (File eachPlugin : files) {
@@ -374,7 +373,6 @@ public class MainClass {
         copyOrIgnoreFile("user/sqlite3.dll", "/win32-native/sqlite3.dll");
         copyOrIgnoreFile("user/getHandle.dll", "/win32-native/getHandle.dll");
         copyOrIgnoreFile("user/shortcutGenerator.vbs", "/shortcutGenerator.vbs");
-        copyOrIgnoreFile("user/resultPipe.dll", "/win32-native/resultPipe.dll");
         copyOrIgnoreFile("user/getDpi.exe", "/win32-native/getDpi.exe");
         copyOrIgnoreFile("user/getWindowsKnownFolder.dll", "/win32-native/getWindowsKnownFolder.dll");
         copyOrIgnoreFile("user/sqliteJDBC.dll", "/win32-native/sqliteJDBC.dll");

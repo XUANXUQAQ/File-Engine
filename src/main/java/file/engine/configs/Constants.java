@@ -49,7 +49,7 @@ public class Constants {
     public static class Enums {
 
         public enum DatabaseStatus {
-            NORMAL, _TEMP, _SHARED_MEMORY, VACUUM, MANUAL_UPDATE
+            NORMAL, _TEMP, VACUUM, MANUAL_UPDATE
         }
 
         public enum DownloadStatus {

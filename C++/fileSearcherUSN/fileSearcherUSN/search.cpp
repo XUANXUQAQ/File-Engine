@@ -9,13 +9,9 @@
 #include "sqlite3.h"
 #include <concurrent_unordered_set.h>
 #include <concurrent_unordered_map.h>
-#include <atomic>
 #include <mutex>
 #include "constants.h"
 
-CONCURRENT_MAP<HANDLE, LPVOID> shared_memory_map;
-static std::atomic_int complete_task_count(0);
-static std::atomic_int all_task_count(0);
 
 volume::volume(const char vol, sqlite3* database, std::vector<std::string>* ignore_paths, PriorityMap* priority_map)
 {
@@ -25,7 +21,6 @@ volume::volume(const char vol, sqlite3* database, std::vector<std::string>* igno
 	path = "";
 	db = database;
 	ignore_path_vector_ = ignore_paths;
-	++all_task_count;
 }
 
 void volume::init_volume()
@@ -86,17 +81,7 @@ void volume::init_volume()
 		{
 			search_internal();
 			printf("collect complete.\n");
-			thread save_results_to_db_thread([this]
-				{
-					save_all_results_to_db();
-				});
-			auto&& info = string("start to copy disk ") + this->getDiskPath() + " to shared memory";
-			printf("%s\n", info.c_str());
-			copy_results_to_shared_memory();
-			printf("copy to shared memory complete. save to database.\n");
-			++complete_task_count;
-			if (save_results_to_db_thread.joinable())
-				save_results_to_db_thread.join();
+			save_all_results_to_db();
 		}
 		catch (exception& e)
 		{
@@ -109,23 +94,6 @@ void volume::init_volume()
 	}
 	auto&& info = std::string("disk ") + this->getDiskPath() + " complete";
 	printf("%s\n", info.c_str());
-}
-
-void volume::copy_results_to_shared_memory()
-{
-	for (int i = 0; i <= 40; ++i)
-	{
-		for (const auto& [fst, snd] : *priority_map_)
-		{
-			static auto list_name_prefix = "list";
-			static auto prefix = "sharedMemory:";
-			std::string each_list_name = std::string(list_name_prefix) + std::to_string(i);
-			const auto& shared_memory_name =
-				// 共享内存名为 sharedMemory:[path]:list[num]:[priority]
-				std::string(prefix) + getDiskPath() + ":" + each_list_name + ":" + std::to_string(snd);
-			create_shared_memory_and_copy(each_list_name, snd, shared_memory_name);
-		}
-	}
 }
 
 void volume::collect_result_to_result_map(const int ascii, const std::string& full_path)
@@ -200,49 +168,6 @@ void volume::collect_result_to_result_map(const int ascii, const std::string& fu
 	{
 		priority_str_list->insert(full_path);
 	}
-}
-
-void volume::create_shared_memory_and_copy(const std::string& list_name, const int priority,
-	const std::string& shared_memory_name)
-{
-	if (all_results_map.find(list_name) == all_results_map.end())
-	{
-		return;
-	}
-	const auto& table = all_results_map.at(list_name);
-	if (table->find(priority) == table->end())
-	{
-		return;
-	}
-	CONCURRENT_SET<std::string>& result = table->at(priority);
-	size_t result_size = result.size();
-	const size_t memory_size = result_size * RECORD_MAX_PATH;
-
-	// 创建共享文件句柄
-	HANDLE h_map_file;
-	LPVOID p_buf = nullptr;
-	create_file_mapping(h_map_file, p_buf, memory_size, shared_memory_name.c_str());
-	if (p_buf == nullptr)
-	{
-		return;
-	}
-	size_t count = 0;
-	for (const auto& iterator : result)
-	{
-		if (iterator.length() >= RECORD_MAX_PATH)
-		{
-			continue;
-		}
-		auto buffer_addr = reinterpret_cast<void*>(reinterpret_cast<size_t>(p_buf) + count * RECORD_MAX_PATH);
-		memset(buffer_addr, 0, RECORD_MAX_PATH);
-		memcpy_s(buffer_addr,
-			RECORD_MAX_PATH,
-			iterator.c_str(), iterator.length());
-		++count;
-	}
-	// 保存该结果的大小信息
-	create_file_mapping(h_map_file, p_buf, sizeof size_t, (shared_memory_name + "size").c_str());
-	memcpy_s(p_buf, sizeof size_t, &memory_size, sizeof size_t);
 }
 
 void volume::save_all_results_to_db()
@@ -728,68 +653,4 @@ std::string get_file_name(const std::string& path)
 {
 	std::string file_name = path.substr(path.find_last_of('\\') + 1);
 	return file_name;
-}
-
-bool init_complete_signal_database(void** complete_ptr)
-{
-	HANDLE handle;
-	LPVOID tmp;
-	create_file_mapping(handle, tmp, sizeof(bool), "sharedMemory:complete:database:status");
-	if (tmp == nullptr)
-	{
-		fprintf(stderr, "fileSearcherUSN: init sharedMemory:complete:database:status failed. Code: %ld\n", GetLastError());
-		return false;
-	}
-	*complete_ptr = tmp;
-	return true;
-}
-
-bool init_complete_signal_memory(void** complete_ptr)
-{
-	HANDLE handle;
-	LPVOID tmp;
-	create_file_mapping(handle, tmp, sizeof(bool), "sharedMemory:complete:status");
-	if (tmp == nullptr)
-	{
-		fprintf(stderr, "fileSearcherUSN: init sharedMemory:complete:status failed. Code: %ld\n", GetLastError());
-		return false;
-	}
-	*complete_ptr = tmp;
-	return true;
-}
-
-bool is_all_shared_memory_copied()
-{
-	return all_task_count.load() == complete_task_count.load();
-}
-
-void close_shared_memory()
-{
-	for (const auto& [fst, snd] : shared_memory_map)
-	{
-		UnmapViewOfFile(snd);
-		CloseHandle(fst);
-	}
-}
-
-void create_file_mapping(HANDLE& h_map_file, LPVOID& p_buf, const size_t memory_size, const char* shared_memory_name)
-{
-	// 创建共享文件句柄
-	h_map_file = CreateFileMappingA(
-		INVALID_HANDLE_VALUE, // 物理文件句柄
-		nullptr, // 默认安全级别
-		PAGE_READWRITE, // 可读可写
-		0, // 高位文件大小
-		static_cast<DWORD>(memory_size), // 低位文件大小
-		shared_memory_name
-	);
-
-	p_buf = MapViewOfFile(
-		h_map_file, // 共享内存的句柄
-		FILE_MAP_ALL_ACCESS, // 可读写许可
-		0,
-		0,
-		memory_size
-	);
-	shared_memory_map.insert(std::pair(h_map_file, p_buf));
 }
