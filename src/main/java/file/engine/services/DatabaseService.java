@@ -779,12 +779,10 @@ public class DatabaseService {
     /**
      * 创建搜索任务
      * nonFormattedSql将会生成从list0-40，根据priority从高到低排序的SQL语句，第一个map中key保存未格式化的sql，value保存表名称
-     * containerMap中key为每个任务分配到的位，value为nonFormattedSql中的临时存储容器
      * 生成任务顺序会根据list的权重和priority来生成
      * <p>
      * PrepareSearchInfo.taskStatus      用于保存任务信息，这是一个通用变量，从第二个位开始，每一个位代表一个任务，当任务完成，该位将被置为1，否则为0，例如第一个和第三个任务完成，第二个未完成，则为1010
      * PrepareSearchInfo.allTaskStatus   所有的任务信息，从第二位开始，只要有任务被创建，该位就为1，例如三个任务被创建，则为1110
-     * PrepareSearchInfo.containerMap    每个任务搜索出来的结果都会被放到一个属于它自己的一个容器中，该容器保存任务与容器的映射关系
      * PrepareSearchInfo.taskMap         任务
      *
      * @param nonFormattedSql 未格式化搜索字段的SQL
