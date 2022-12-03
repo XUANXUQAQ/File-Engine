@@ -1888,23 +1888,29 @@ public class DatabaseService {
     private static void prepareSearchEvent(Event event) {
         DatabaseService databaseService = DatabaseService.getInstance();
         try {
-            if (PrepareSearchInfo.isPreparing.compareAndSet(false, true)) {
-                if (IsDebug.isDebug()) {
-                    System.out.println("进行预搜索并添加搜索任务");
+            final long timeout = 3000;
+            long startWaiting = System.currentTimeMillis();
+            while (!PrepareSearchInfo.isPreparing.compareAndSet(false, true)) {
+                if (System.currentTimeMillis() - startWaiting > timeout) {
+                    System.err.println("prepareSearch，切换预搜索状态超时");
+                    return;
                 }
-                final long timeout = 3000;
-                long startWaiting = System.currentTimeMillis();
-                while (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL) {
-                    Thread.onSpinWait();
-                    if (System.currentTimeMillis() - startWaiting > timeout) {
-                        System.err.println("prepareSearch，等待数据库状态超时");
-                        break;
-                    }
-                }
-                prepareSearch((PrepareSearchEvent) event);
-                event.setReturnValue(databaseService.tempResults);
-                PrepareSearchInfo.isPreparing.set(false);
+                Thread.onSpinWait();
             }
+            if (IsDebug.isDebug()) {
+                System.out.println("进行预搜索并添加搜索任务");
+            }
+            startWaiting = System.currentTimeMillis();
+            while (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL) {
+                if (System.currentTimeMillis() - startWaiting > timeout) {
+                    System.err.println("prepareSearch，等待数据库状态超时");
+                    break;
+                }
+                Thread.onSpinWait();
+            }
+            prepareSearch((PrepareSearchEvent) event);
+            event.setReturnValue(databaseService.tempResults);
+            PrepareSearchInfo.isPreparing.set(false);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -1925,8 +1931,8 @@ public class DatabaseService {
         }
         if (PrepareSearchInfo.taskMap == null || PrepareSearchInfo.isTaskMapEmpty()) {
             prepareSearch((StartSearchEvent) event);
-            PrepareSearchInfo.prepareSearchTasks(databaseService.shouldStopSearch);
         }
+        PrepareSearchInfo.prepareSearchTasks(databaseService.shouldStopSearch);
         //启动搜索线程
         CachedThreadPoolUtil.getInstance().executeTask(databaseService::startSearch);
         databaseService.startSearchTimeMills.set(System.currentTimeMillis());
