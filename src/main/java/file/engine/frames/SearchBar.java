@@ -131,9 +131,9 @@ public class SearchBar {
     private volatile int lastMousePositionX = 0;
     private volatile int lastMousePositionY = 0;
     private final String pluginResultSplitStr = "-@-@-";
-    private static final int SEND_PREPARE_SEARCH_TIMEOUT = 50;  //毫秒(ms)
+    private static final int SEND_PREPARE_SEARCH_TIMEOUT = 100;  //毫秒(ms)
     private static final int SEND_START_SEARCH_TIMEOUT = 250;  //ms
-    private static final int SHOW_RESULTS_TIMEOUT = 300; //ms
+    private static final int SHOW_RESULTS_TIMEOUT = 350; //ms
     private static final float SEARCH_BAR_WIDTH_RATIO = 0.3f;
     private static final float SEARCH_BAR_HEIGHT_RATIO = 0.4f;
 
