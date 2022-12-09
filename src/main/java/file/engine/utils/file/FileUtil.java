@@ -2,9 +2,21 @@ package file.engine.utils.file;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 
 public class FileUtil {
+
+    public static boolean isFileExist(String path) {
+        try {
+            if (Files.exists(Path.of(path))) {
+                return true;
+            }
+        } catch (InvalidPathException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 
     /**
      * 清空一个目录，不删除目录本身
@@ -16,7 +28,7 @@ public class FileUtil {
             return;
         }
         File[] content = file.listFiles();//取得当前目录下所有文件和文件夹
-        if (content == null || content.length == 0) {
+        if (content == null) {
             return;
         }
         for (File temp : content) {

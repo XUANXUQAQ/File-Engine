@@ -29,6 +29,7 @@ import file.engine.utils.Bit;
 import file.engine.utils.CachedThreadPoolUtil;
 import file.engine.utils.ProcessUtil;
 import file.engine.utils.RegexUtil;
+import file.engine.utils.file.FileUtil;
 import file.engine.utils.gson.GsonUtil;
 import file.engine.utils.system.properties.IsDebug;
 import lombok.AllArgsConstructor;
@@ -38,7 +39,6 @@ import lombok.EqualsAndHashCode;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -474,15 +474,7 @@ public class DatabaseService {
                     GPUAccelerator.INSTANCE.initCache(key, () -> {
                         try {
                             if (resultSet.next() && eventManagement.notMainExit()) {
-                                String path = resultSet.getString("PATH");
-                                try {
-                                    if (!Files.exists(Path.of(path))) {
-                                        removeFileFromDatabase(path, false);
-                                    }
-                                } catch (InvalidPathException e) {
-                                    removeFileFromDatabase(path, false);
-                                }
-                                return path;
+                                return resultSet.getString("PATH");
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -569,7 +561,7 @@ public class DatabaseService {
                         } while ((addFile = addFile.getParentFile()) != null);
                     }
                     if (deleteFilePath != null) {
-                        fileChanges.put(() -> removeFileFromDatabase(deleteFilePath, true));
+                        fileChanges.put(() -> removeFileFromDatabase(deleteFilePath));
                     }
                     TimeUnit.MILLISECONDS.sleep(1);
                 }
@@ -644,7 +636,9 @@ public class DatabaseService {
                 isKeywordPath) && Files.exists(Path.of(path))) {
             //字符串匹配通过
             ret = true;
-            if (tempResultsForEventRef.add(path)) {
+            if (!FileUtil.isFileExist(path)) {
+                removeFileFromDatabase(path);
+            } else if (tempResultsForEventRef.add(path)) {
                 tempResultsRef.add(path);
                 if (tempResultsForEventRef.size() >= MAX_RESULTS) {
                     shouldStopSearchRef.set(true);
@@ -1101,7 +1095,7 @@ public class DatabaseService {
      *
      * @param path 文件路径
      */
-    private void removeFileFromDatabase(String path, boolean isRemoveFromCache) {
+    private void removeFileFromDatabase(String path) {
         if (path == null || path.isEmpty()) {
             return;
         }
@@ -1111,9 +1105,6 @@ public class DatabaseService {
             commandQueue.remove(sqlWithTaskId[0]);
         } else {
             addDeleteSqlCommandByAscii(asciiSum, path);
-            if (!isRemoveFromCache) {
-                return;
-            }
             int priorityBySuffix = getPriorityBySuffix(getSuffixByPath(path));
             int asciiGroup = asciiSum / 100;
             asciiGroup = Math.min(asciiGroup, Constants.ALL_TABLE_NUM);
@@ -1919,6 +1910,10 @@ public class DatabaseService {
                         MAX_RESULTS,
                         (key, path) -> {
                             if (shouldStopSearchRef.get()) {
+                                return;
+                            }
+                            if (!FileUtil.isFileExist(path)) {
+                                databaseService.removeFileFromDatabase(path);
                                 return;
                             }
                             if (tempResultsForEventRef.add(path)) {
