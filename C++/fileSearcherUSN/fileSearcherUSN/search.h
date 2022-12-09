@@ -25,7 +25,7 @@ class volume
 public:
 	volume(char vol, sqlite3* database, std::vector<std::string>* ignore_paths, PriorityMap* priority_map);
 
-	~volume() = default;
+	~volume();
 
 	char getDiskPath() const
 	{
@@ -89,7 +89,7 @@ private:
 
 	std::vector<std::string>* ignore_path_vector_ = nullptr;
 	PriorityMap* priority_map_ = nullptr;
-	CONCURRENT_MAP<std::string, CONCURRENT_MAP<int, CONCURRENT_SET<std::string>&>*> all_results_map;
+	CONCURRENT_MAP<std::string, CONCURRENT_MAP<int, CONCURRENT_SET<std::string>*>*> all_results_map;
 
 	bool get_handle();
 	bool create_usn();

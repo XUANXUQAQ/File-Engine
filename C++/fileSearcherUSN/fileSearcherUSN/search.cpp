@@ -1,4 +1,5 @@
-﻿#include "search.h"
+﻿#include "constants.h"
+#include "search.h"
 #ifdef TEST
 #include <iostream>
 #endif
@@ -10,7 +11,6 @@
 #include <concurrent_unordered_set.h>
 #include <concurrent_unordered_map.h>
 #include <mutex>
-#include "constants.h"
 
 
 volume::volume(const char vol, sqlite3* database, std::vector<std::string>* ignore_paths, PriorityMap* priority_map)
@@ -21,6 +21,19 @@ volume::volume(const char vol, sqlite3* database, std::vector<std::string>* igno
 	path = "";
 	db = database;
 	ignore_path_vector_ = ignore_paths;
+}
+
+volume::~volume() 
+{
+	for (auto& [_, table_list_ptr] : this->all_results_map)
+	{
+		auto&& table_list = *table_list_ptr;
+		for (auto& [priority_num, priority_list_ptr] : table_list)
+		{
+			delete priority_list_ptr;
+		}
+		delete table_list_ptr;
+	}
 }
 
 void volume::init_volume()
@@ -106,7 +119,7 @@ void volume::collect_result_to_result_map(const int ascii, const std::string& fu
 	}
 	std::string list_name("list");
 	list_name += std::to_string(ascii_group);
-	CONCURRENT_MAP<int, CONCURRENT_SET<std::string>&>* tmp_results;
+	CONCURRENT_MAP<int, CONCURRENT_SET<std::string>*>* tmp_results;
 	CONCURRENT_SET<std::string>* priority_str_list = nullptr;
 	const int priority = get_priority_by_path(full_path);
 	try
@@ -114,7 +127,7 @@ void volume::collect_result_to_result_map(const int ascii, const std::string& fu
 		tmp_results = all_results_map.at(list_name);
 		try
 		{
-			priority_str_list = &tmp_results->at(priority);
+			priority_str_list = tmp_results->at(priority);
 		}
 		catch (std::exception&)
 		{
@@ -123,11 +136,11 @@ void volume::collect_result_to_result_map(const int ascii, const std::string& fu
 			if (iter == tmp_results->end())
 			{
 				priority_str_list = new CONCURRENT_SET<std::string>();
-				tmp_results->insert(std::pair<int, CONCURRENT_SET<std::string>&>(priority, *priority_str_list));
+				tmp_results->insert(std::pair(priority, priority_str_list));
 			}
 			else
 			{
-				priority_str_list = &iter->second;
+				priority_str_list = iter->second;
 			}
 		}
 	}
@@ -139,10 +152,9 @@ void volume::collect_result_to_result_map(const int ascii, const std::string& fu
 		if (iter == all_results_map.end())
 		{
 			priority_str_list = new CONCURRENT_SET<std::string>();
-			tmp_results = new CONCURRENT_MAP<int, CONCURRENT_SET<std::string>&>();
-			tmp_results->insert(std::pair<int, CONCURRENT_SET<std::string>&>(priority, *priority_str_list));
-			all_results_map.insert(
-				std::pair(list_name, tmp_results));
+			tmp_results = new CONCURRENT_MAP<int, CONCURRENT_SET<std::string>*>();
+			tmp_results->insert(std::pair(priority, priority_str_list));
+			all_results_map.insert(std::pair(list_name, tmp_results));
 		}
 		else
 		{
@@ -152,11 +164,11 @@ void volume::collect_result_to_result_map(const int ascii, const std::string& fu
 			if (iter2 == tmp_results->end())
 			{
 				priority_str_list = new CONCURRENT_SET<std::string>();
-				tmp_results->insert(std::pair<int, CONCURRENT_SET<std::string>&>(priority, *priority_str_list));
+				tmp_results->insert(std::pair(priority, priority_str_list));
 			}
 			else
 			{
-				priority_str_list = &iter2->second;
+				priority_str_list = iter2->second;
 			}
 		}
 	}
@@ -179,7 +191,7 @@ void volume::save_all_results_to_db()
 		const int ascii_group = stoi(fst.substr(4));
 		for (auto& [priority, result_container] : *snd)
 		{
-			for (auto&& iter = result_container.begin(); iter != result_container.end(); ++iter)
+			for (auto&& iter = result_container->begin(); iter != result_container->end(); ++iter)
 			{
 				save_result(*iter, get_asc_ii_sum(get_file_name(*iter)), ascii_group, priority);
 				++count;
