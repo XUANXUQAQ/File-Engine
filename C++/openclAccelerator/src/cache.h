@@ -13,12 +13,12 @@
  */
 using cache_data = struct cache_data
 {
-	Memory<char>* dev_cache_str = nullptr;
-	std::atomic_uint64_t remain_blank_num;
-	std::atomic_uint64_t record_num;
-	Memory<size_t>* dev_total_number = nullptr;
-	std::mutex lock;
-	concurrency::concurrent_unordered_set<size_t> record_hash;
+    Memory<char>* dev_cache_str = nullptr;
+    std::atomic_uint64_t remain_blank_num;
+    std::atomic_uint64_t record_num;
+    Memory<size_t>* dev_total_number = nullptr;
+    std::mutex lock;
+    concurrency::concurrent_unordered_set<size_t> record_hash;
 };
 
 
@@ -32,11 +32,11 @@ using cache_data = struct cache_data
  */
 using list_cache = struct cache_struct
 {
-	cache_data str_data;
-	Memory<char>* dev_output = nullptr;
-	bool is_cache_valid = false;
-	std::atomic_bool is_match_done;
-	std::atomic_int is_output_done;
+    cache_data str_data;
+    Memory<char>* dev_output = nullptr;
+    bool is_cache_valid = false;
+    std::atomic_bool is_match_done;
+    std::atomic_int is_output_done;
 };
 
 std::string get_cache_info(const std::string& key, const list_cache* cache);

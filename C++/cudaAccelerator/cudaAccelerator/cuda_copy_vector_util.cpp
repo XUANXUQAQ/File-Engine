@@ -8,24 +8,24 @@
  */
 cudaError_t vector_to_cuda_char_array(const std::vector<std::string>& vec, void** cuda_mem)
 {
-	cudaError_t cudaStatus;
-	const auto vec_size = vec.size();
-	const auto bytes = MAX_PATH_LENGTH * sizeof(char) * vec_size;
-	cudaStatus = cudaMemset(*cuda_mem, 0, bytes);
-	if (cudaStatus != cudaSuccess)
-	{
-		return cudaStatus;
-	}
-	for (size_t i = 0; i < vec_size; ++i)
-	{
-		auto& str = vec[i];
-		const auto address_num = reinterpret_cast<unsigned long long>(*cuda_mem) + i * MAX_PATH_LENGTH;
-		cudaStatus = cudaMemcpy(reinterpret_cast<void*>(address_num),
-			str.c_str(), str.length(), cudaMemcpyHostToDevice);
-		if (cudaStatus != cudaSuccess)
-		{
-			return cudaStatus;
-		}
-	}
-	return cudaStatus;
+    cudaError_t cudaStatus;
+    const auto vec_size = vec.size();
+    const auto bytes = MAX_PATH_LENGTH * sizeof(char) * vec_size;
+    cudaStatus = cudaMemset(*cuda_mem, 0, bytes);
+    if (cudaStatus != cudaSuccess)
+    {
+        return cudaStatus;
+    }
+    for (size_t i = 0; i < vec_size; ++i)
+    {
+        auto& str = vec[i];
+        const auto address_num = reinterpret_cast<unsigned long long>(*cuda_mem) + i * MAX_PATH_LENGTH;
+        cudaStatus = cudaMemcpy(reinterpret_cast<void*>(address_num),
+                                str.c_str(), str.length(), cudaMemcpyHostToDevice);
+        if (cudaStatus != cudaSuccess)
+        {
+            return cudaStatus;
+        }
+    }
+    return cudaStatus;
 }
