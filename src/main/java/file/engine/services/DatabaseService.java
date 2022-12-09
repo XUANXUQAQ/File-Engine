@@ -1493,6 +1493,7 @@ public class DatabaseService {
         invalidateAllCache();
         SQLiteUtil.initAllConnections();
         createAllIndex();
+        sendExecuteSQLSignal();
         waitForCommandSet(SqlTaskIds.CREATE_INDEX);
         // 搜索完成，更新isDatabaseUpdated标志
         isDatabaseUpdated.set(true);
