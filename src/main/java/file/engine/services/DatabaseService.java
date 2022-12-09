@@ -5,7 +5,10 @@ import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.Constants;
-import file.engine.dllInterface.*;
+import file.engine.dllInterface.FileMonitor;
+import file.engine.dllInterface.GetAscII;
+import file.engine.dllInterface.GetHandle;
+import file.engine.dllInterface.GetWindowsKnownFolder;
 import file.engine.dllInterface.gpu.GPUAccelerator;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
@@ -35,6 +38,7 @@ import lombok.EqualsAndHashCode;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -470,7 +474,15 @@ public class DatabaseService {
                     GPUAccelerator.INSTANCE.initCache(key, () -> {
                         try {
                             if (resultSet.next() && eventManagement.notMainExit()) {
-                                return resultSet.getString("PATH");
+                                String path = resultSet.getString("PATH");
+                                try {
+                                    if (!Files.exists(Path.of(path))) {
+                                        removeFileFromDatabase(path, false);
+                                    }
+                                } catch (InvalidPathException e) {
+                                    removeFileFromDatabase(path, false);
+                                }
+                                return path;
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -557,7 +569,7 @@ public class DatabaseService {
                         } while ((addFile = addFile.getParentFile()) != null);
                     }
                     if (deleteFilePath != null) {
-                        fileChanges.put(() -> removeFileFromDatabase(deleteFilePath));
+                        fileChanges.put(() -> removeFileFromDatabase(deleteFilePath, true));
                     }
                     TimeUnit.MILLISECONDS.sleep(1);
                 }
@@ -1089,7 +1101,7 @@ public class DatabaseService {
      *
      * @param path 文件路径
      */
-    private void removeFileFromDatabase(String path) {
+    private void removeFileFromDatabase(String path, boolean isRemoveFromCache) {
         if (path == null || path.isEmpty()) {
             return;
         }
@@ -1099,6 +1111,9 @@ public class DatabaseService {
             commandQueue.remove(sqlWithTaskId[0]);
         } else {
             addDeleteSqlCommandByAscii(asciiSum, path);
+            if (!isRemoveFromCache) {
+                return;
+            }
             int priorityBySuffix = getPriorityBySuffix(getSuffixByPath(path));
             int asciiGroup = asciiSum / 100;
             asciiGroup = Math.min(asciiGroup, Constants.ALL_TABLE_NUM);
