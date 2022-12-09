@@ -14,7 +14,7 @@
 #include <stdexcept>
 #include <string>
 #include <array>
-#include <fstream>
+// #include <fstream>
 #include <Shlwapi.h>
 
 #pragma comment(lib, "Shlwapi.lib")
@@ -36,7 +36,7 @@ void start_kernel(const std::vector<std::string>& search_case,
                   const std::vector<std::string>& keywords,
                   const std::vector<std::string>& keywords_lower_case,
                   const bool* is_keyword_path);
-size_t get_gpu_mem_use();
+// size_t get_gpu_mem_use();
 
 //lock
 inline void wait_for_clear_cache();
@@ -516,7 +516,13 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_clear
 JNIEXPORT jint JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_getGPUMemUsage
 (JNIEnv*, jobject)
 {
-    const auto mem_used = get_gpu_mem_use();
+    // const auto mem_used = get_gpu_mem_use();
+    const auto mem_used_vec = current_device.info.cl_device.getInfo<CL_DEVICE_GLOBAL_FREE_MEMORY_AMD>();
+    if (mem_used_vec.empty())
+    {
+        return 100;
+    }
+    const auto mem_used = mem_used_vec[0] * 1024;
     const auto total_mem = current_device.info.memory;
     return static_cast<jint>(mem_used * 100 / total_mem);
 }
@@ -1026,22 +1032,22 @@ std::string exec(const char* cmd)
     return result;
 }
 
-size_t get_gpu_mem_use()
-{
-    static auto command = R"(
-$GpuMemTotal = (((Get-Counter "\GPU Local Adapter Memory(*)\Local Usage").CounterSamples | where CookedValue).CookedValue | measure -sum).sum
-Write-Output $GpuMemTotal
-)";
-    char temp_path[512]{0};
-    GetTempPathA(sizeof temp_path, temp_path);
-    std::string gpu_info_path(temp_path);
-    gpu_info_path.append("\\gpu_info.ps1");
-
-    std::ofstream gpu_info;
-    gpu_info.open(gpu_info_path);
-    gpu_info << command;
-    gpu_info.close();
-
-    auto&& ret = exec(("powershell " + gpu_info_path).c_str());
-    return std::stoull(ret);
-}
+// size_t get_gpu_mem_use()
+// {
+//     static auto command = R"(
+// $GpuMemTotal = (((Get-Counter "\GPU Local Adapter Memory(*)\Local Usage").CounterSamples | where CookedValue).CookedValue | measure -sum).sum
+// Write-Output $GpuMemTotal
+// )";
+//     char temp_path[512]{0};
+//     GetTempPathA(sizeof temp_path, temp_path);
+//     std::string gpu_info_path(temp_path);
+//     gpu_info_path.append("\\gpu_info.ps1");
+//
+//     std::ofstream gpu_info;
+//     gpu_info.open(gpu_info_path);
+//     gpu_info << command;
+//     gpu_info.close();
+//
+//     auto&& ret = exec(("powershell " + gpu_info_path).c_str());
+//     return std::stoull(ret);
+// }
