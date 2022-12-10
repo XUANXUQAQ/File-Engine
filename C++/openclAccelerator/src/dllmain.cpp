@@ -517,13 +517,13 @@ JNIEXPORT jint JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_getGP
 (JNIEnv*, jobject)
 {
     // const auto mem_used = get_gpu_mem_use();
-    const auto mem_used_vec = current_device.info.cl_device.getInfo<CL_DEVICE_GLOBAL_FREE_MEMORY_AMD>();
-    if (mem_used_vec.empty())
+    const auto mem_free = current_device.info.cl_device.getInfo<CL_DEVICE_GLOBAL_FREE_MEMORY_AMD>();
+    if (mem_free.empty())
     {
         return 100;
     }
-    const auto mem_used = mem_used_vec[0] * 1024;
     const auto total_mem = current_device.info.memory;
+    const auto mem_used = total_mem - mem_free[0] * 1024;
     return static_cast<jint>(mem_used * 100 / total_mem);
 }
 
