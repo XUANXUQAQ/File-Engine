@@ -387,6 +387,9 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_initC
     cache->str_data.dev_cache_str->write_to_device();
     cache->str_data.dev_cache_str->delete_host_buffer();
     cache_map.insert(std::make_pair(key, cache));
+#ifdef DEBUG_OUTPUT
+    std::cout << "cache initialized. key: " << key << " cache size: " << records_vec.size() << std::endl;
+#endif // DEBUG_OUTPUT
     env->ReleaseStringUTFChars(key_jstring, _key);
     env->DeleteLocalRef(supplier_class);
 }

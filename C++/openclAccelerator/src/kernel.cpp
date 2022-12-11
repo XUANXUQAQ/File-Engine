@@ -4,7 +4,7 @@
 string opencl_c_container() {
 	// ########################## begin of OpenCL C code ####################################################################
 	return string(R"(
-#define MAX_PATH_LENGTH 384
+#define MAX_PATH_LENGTH 300
 #define MAX_KEYWORDS_NUMBER 150
 
 #define COMPBYTE(x, y) ((unsigned char)(x) << 8 | (unsigned char)(y))
