@@ -12,7 +12,7 @@ import file.engine.dllInterface.IsLocalDisk;
 import file.engine.dllInterface.gpu.GPUAccelerator;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
-import file.engine.event.handler.impl.SetSwingLaf;
+import file.engine.event.handler.impl.configs.SetSwingLaf;
 import file.engine.event.handler.impl.configs.AddCmdEvent;
 import file.engine.event.handler.impl.configs.DeleteCmdEvent;
 import file.engine.event.handler.impl.configs.SetConfigsEvent;

@@ -1,4 +1,4 @@
-package file.engine.event.handler.impl;
+package file.engine.event.handler.impl.configs;
 
 import file.engine.event.handler.Event;
 

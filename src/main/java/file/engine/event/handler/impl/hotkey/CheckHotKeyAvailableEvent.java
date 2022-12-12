@@ -1,7 +1,11 @@
 package file.engine.event.handler.impl.hotkey;
 
-public class CheckHotKeyAvailableEvent extends HotKeyEvent {
+import file.engine.event.handler.Event;
+
+public class CheckHotKeyAvailableEvent extends Event {
+    public final String hotkey;
+
     public CheckHotKeyAvailableEvent(String hotkey) {
-        super(hotkey);
+        this.hotkey = hotkey;
     }
 }

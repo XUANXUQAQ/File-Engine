@@ -9,7 +9,7 @@ import file.engine.dllInterface.gpu.GPUAccelerator;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.BootSystemEvent;
-import file.engine.event.handler.impl.ReadConfigsEvent;
+import file.engine.event.handler.impl.configs.ReadConfigsEvent;
 import file.engine.event.handler.impl.configs.CheckConfigsEvent;
 import file.engine.event.handler.impl.configs.SetConfigsEvent;
 import file.engine.event.handler.impl.daemon.StartDaemonEvent;
