@@ -19,6 +19,7 @@ import file.engine.event.handler.impl.database.gpu.GPUAddRecordEvent;
 import file.engine.event.handler.impl.database.gpu.GPUClearCacheEvent;
 import file.engine.event.handler.impl.database.gpu.GPURemoveRecordEvent;
 import file.engine.event.handler.impl.frame.searchBar.SearchBarReadyEvent;
+import file.engine.event.handler.impl.database.IsCacheExistEvent;
 import file.engine.event.handler.impl.monitor.disk.StartMonitorDiskEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
@@ -2235,6 +2236,12 @@ public class DatabaseService {
             }
             GPURemoveRecordEvent gpuRemoveRecordEvent = (GPURemoveRecordEvent) event;
             removeRecord(gpuRemoveRecordEvent.key, gpuRemoveRecordEvent.record);
+        }
+
+        @EventRegister(registerClass = IsCacheExistEvent.class)
+        private static void isCacheExistEvent(Event event) {
+            IsCacheExistEvent cacheExist = (IsCacheExistEvent) event;
+            event.setReturnValue(getInstance().databaseCacheSet.contains(cacheExist.cache));
         }
 
         @EventRegister(registerClass = GPUClearCacheEvent.class)

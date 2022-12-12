@@ -13,8 +13,7 @@ import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.configs.SetConfigsEvent;
 import file.engine.event.handler.impl.database.*;
 import file.engine.event.handler.impl.frame.searchBar.*;
-import file.engine.event.handler.impl.frame.settingsFrame.AddCacheEvent;
-import file.engine.event.handler.impl.frame.settingsFrame.IsCacheExistEvent;
+import file.engine.event.handler.impl.database.IsCacheExistEvent;
 import file.engine.event.handler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import file.engine.event.handler.impl.open.file.OpenFileEvent;
 import file.engine.event.handler.impl.plugin.GetPluginByIdentifierEvent;
@@ -4257,7 +4256,6 @@ public class SearchBar {
                     if (!isCacheExist) {
                         //不存在则添加
                         eventManagement.putEvent(new AddToCacheEvent(content));
-                        eventManagement.putEvent(new AddCacheEvent(content));
                     }
                 });
             }, null);

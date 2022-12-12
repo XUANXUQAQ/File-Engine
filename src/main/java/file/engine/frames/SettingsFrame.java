@@ -24,9 +24,7 @@ import file.engine.event.handler.impl.frame.searchBar.HideSearchBarEvent;
 import file.engine.event.handler.impl.frame.searchBar.PreviewSearchBarEvent;
 import file.engine.event.handler.impl.frame.searchBar.StartPreviewEvent;
 import file.engine.event.handler.impl.frame.searchBar.StopPreviewEvent;
-import file.engine.event.handler.impl.frame.settingsFrame.AddCacheEvent;
 import file.engine.event.handler.impl.frame.settingsFrame.GetExcludeComponentEvent;
-import file.engine.event.handler.impl.frame.settingsFrame.IsCacheExistEvent;
 import file.engine.event.handler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import file.engine.event.handler.impl.hotkey.CheckHotKeyAvailableEvent;
 import file.engine.event.handler.impl.plugin.AddPluginsCanUpdateEvent;
@@ -2954,16 +2952,6 @@ public class SettingsFrame {
     }
 
     /**
-     * 检查缓存是否存在
-     *
-     * @param cache cache
-     * @return boolean
-     */
-    private boolean isCacheExist(String cache) {
-        return cacheSet.contains(cache);
-    }
-
-    /**
      * 添加缓存到cacheSet
      *
      * @param cache cache
@@ -3142,16 +3130,10 @@ public class SettingsFrame {
         });
     }
 
-    @EventRegister(registerClass = IsCacheExistEvent.class)
-    private static void isCacheExistEvent(Event event) {
-        IsCacheExistEvent cacheExist = (IsCacheExistEvent) event;
-        event.setReturnValue(getInstance().isCacheExist(cacheExist.cache));
-    }
-
-    @EventRegister(registerClass = AddCacheEvent.class)
+    @EventListener(listenClass = AddToCacheEvent.class)
     private static void addCacheEvent(Event event) {
-        AddCacheEvent addCacheEvent = (AddCacheEvent) event;
-        getInstance().addCache(addCacheEvent.cache);
+        AddToCacheEvent addToCacheEvent = (AddToCacheEvent) event;
+        getInstance().addCache(addToCacheEvent.path);
     }
 
     @EventRegister(registerClass = GetExcludeComponentEvent.class)
