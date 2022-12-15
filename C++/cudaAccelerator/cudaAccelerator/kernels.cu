@@ -343,8 +343,16 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
     // 复制is_ignore_case
     gpuErrchk(cudaMemcpy(dev_is_ignore_case, &is_ignore_case, sizeof(bool), cudaMemcpyHostToDevice), true, nullptr);
     unsigned count = 0;
-    const auto dev_ptr_arr = new size_t[cache_map.size()];
+    const auto map_size = cache_map.size();
+    const auto dev_ptr_arr = new size_t[map_size];
 
+    auto* streams = new cudaStream_t[map_size];
+    for (size_t i = 0; i < map_size; ++i) 
+    {
+        gpuErrchk(cudaStreamCreate(&(streams[i])), true, nullptr);
+    }
+
+    void CUDART_CB cudaCallback(cudaStream_t, cudaError_t, void* data);
     for (auto&& each : cache_map)
     {
         const auto& cache = each.second;
@@ -376,7 +384,7 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
         const auto total_number = cache->str_data.record_num + cache->str_data.remain_blank_num;
         gpuErrchk(cudaMemcpy(dev_total_number, &total_number, sizeof(size_t), cudaMemcpyHostToDevice), true, nullptr);
 
-        check<<<block_num, thread_num>>>
+        check<<<block_num, thread_num, 0, streams[count]>>>
         (cache->str_data.dev_str_addr,
          dev_total_number,
          dev_search_case,
@@ -388,6 +396,7 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
          dev_is_keyword_path,
          cache->dev_output,
          get_dev_stop_signal());
+        gpuErrchk(cudaStreamAddCallback(streams[count], cudaCallback, cache, 0), true, nullptr);
         ++count;
     }
 
@@ -404,6 +413,11 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
         fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launch!\n", cudaStatus);
     }
 
+    for (size_t i = 0; i < map_size; ++i) 
+    {
+        gpuErrchk(cudaStreamDestroy(streams[i]), true, nullptr);
+    }
+
     for (auto&& each : cache_map)
     {
         each.second->is_match_done = true;
@@ -413,7 +427,14 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
     {
         gpuErrchk(cudaFree(reinterpret_cast<void*>(dev_ptr_arr[i])), false, nullptr);
     }
+    delete[] streams;
     delete[] dev_ptr_arr;
+}
+
+void CUDART_CB cudaCallback(cudaStream_t, cudaError_t, void* data) 
+{
+    auto&& each_cache = static_cast<list_cache*>(data);
+    each_cache->is_match_done = true;
 }
 
 void free_cuda_search_memory()

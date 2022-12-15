@@ -972,6 +972,9 @@ void start_kernel(const std::vector<std::string>& search_case,
     dev_is_ignore_case[0] = is_ignore_case;
     dev_is_ignore_case.write_to_device();
 
+    auto events = new cl::Event[cache_map.size()];
+    uint count = 0;
+    void CL_CALLBACK match_callback(cl_event, cl_int, void* user_data);
     for (auto& [_, cache] : cache_map)
     {
         if (!cache->is_cache_valid)
@@ -1002,12 +1005,15 @@ void start_kernel(const std::vector<std::string>& search_case,
             fprintf(stderr, "OpenCL: init kernel failed. Error code: %d\n", ret);
             break;
         }
-        search_kernel.enqueue_run(&ret);
+        auto&& each_event = events[count];
+        each_event.setCallback(CL_COMPLETE, match_callback, cache);
+        search_kernel.enqueue_run(&ret, &each_event);
         if (ret != CL_SUCCESS)
         {
             fprintf(stderr, "OpenCL: start kernel function failed. Error code: %d\n", ret);
             break;
         }
+        ++count;
     }
     current_device.finish_queue();
 #ifdef DEBUG_OUTPUT
@@ -1017,6 +1023,13 @@ void start_kernel(const std::vector<std::string>& search_case,
     {
         cache->is_match_done = true;
     }
+    delete[] events;
+}
+
+void CL_CALLBACK match_callback(cl_event, cl_int, void* user_data)
+{
+    auto&& cache = static_cast<list_cache*>(user_data);
+    cache->is_match_done = true;
 }
 
 // std::string exec(const char* cmd)
