@@ -126,15 +126,15 @@ public class SearchBar {
     private final JMenuItem openAsAdmin;
     private final JMenuItem copyDir;
     private final JMenuItem openLast;
-    private final float textFieldHeightRatio = 0.7f;
-    private volatile int lastMousePositionX = 0;
-    private volatile int lastMousePositionY = 0;
-    private final String pluginResultSplitStr = "-@-@-";
+    private int lastMousePositionX = 0;
+    private int lastMousePositionY = 0;
+    private final String PLUGIN_RESULT_SPLITTER_STR = "-@-@-";
     private static final int SEND_PREPARE_SEARCH_TIMEOUT = 100;  //毫秒(ms)
     private static final int SEND_START_SEARCH_TIMEOUT = 250;  //ms
     private static final int SHOW_RESULTS_TIMEOUT = 350; //ms
     private static final float SEARCH_BAR_WIDTH_RATIO = 0.3f;
     private static final float SEARCH_BAR_HEIGHT_RATIO = 0.4f;
+    private final float TEXT_FIELD_HEIGHT_RATIO = 0.7f;
 
     private static volatile SearchBar instance = null;
 
@@ -226,7 +226,7 @@ public class SearchBar {
         initFrame(positionX, positionY, searchBarWidth, searchBarHeight, transparentColor, panel);
 
         int labelHeight = searchBarHeight / 9;
-        int textFieldHeight = (int) (labelHeight * textFieldHeightRatio);
+        int textFieldHeight = (int) (labelHeight * TEXT_FIELD_HEIGHT_RATIO);
         //TextField
         textField = new JTextField(1000);
         textField.setSize(searchBarWidth, textFieldHeight);
@@ -284,7 +284,7 @@ public class SearchBar {
      * @return 以pluginResultSplitStr分开的字符串
      */
     private String[] splitPluginResult(String res) {
-        return RegexUtil.getPattern(pluginResultSplitStr, 0).split(res);
+        return RegexUtil.getPattern(PLUGIN_RESULT_SPLITTER_STR, 0).split(res);
     }
 
     /**
@@ -2811,7 +2811,11 @@ public class SearchBar {
                         default:
                             break;
                     }
-                    TimeUnit.MILLISECONDS.sleep(250);
+                    if (isVisible()) {
+                        TimeUnit.MILLISECONDS.sleep(250);
+                    } else {
+                        TimeUnit.MILLISECONDS.sleep(25);
+                    }
                 }
             } catch (InterruptedException ignored) {
                 // ignore
@@ -2923,7 +2927,7 @@ public class SearchBar {
     private void setLabelAtTop(int searchBarHeight) {
         int labelHeight = searchBarHeight / 9;
         SwingUtilities.invokeLater(() -> {
-            textField.setLocation(0, (int) (labelHeight * 8 + labelHeight * (1 - textFieldHeightRatio)));
+            textField.setLocation(0, (int) (labelHeight * 8 + labelHeight * (1 - TEXT_FIELD_HEIGHT_RATIO)));
             searchInfoLabel.setLocation(0, labelHeight * 8);
             int offset = 8 - listResults.size();
             offset = Math.max(0, offset);
@@ -2946,7 +2950,7 @@ public class SearchBar {
      */
     private void setTextFieldAtTop(int searchBarHeight) {
         int labelHeight = searchBarHeight / 9;
-        int textFieldHeight = (int) (labelHeight * textFieldHeightRatio);
+        int textFieldHeight = (int) (labelHeight * TEXT_FIELD_HEIGHT_RATIO);
         SwingUtilities.invokeLater(() -> {
             textField.setLocation(0, 0);
             searchInfoLabel.setLocation(0, textFieldHeight);
@@ -2979,7 +2983,7 @@ public class SearchBar {
                 //设置窗口大小
                 searchBar.setBounds(positionX, positionY, searchBarWidth, searchBarHeight);
                 //设置label大小
-                int textFieldHeight = (int) (labelHeight * textFieldHeightRatio);
+                int textFieldHeight = (int) (labelHeight * TEXT_FIELD_HEIGHT_RATIO);
                 setLabelSize(searchBarWidth, labelHeight, label1);
                 setLabelSize(searchBarWidth, labelHeight, label2);
                 setLabelSize(searchBarWidth, labelHeight, label3);
@@ -3014,7 +3018,7 @@ public class SearchBar {
         if (labelHeight > 35) {
             if (showingMode != Constants.Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
                 //设置字体
-                int textFieldHeight = (int) (labelHeight * textFieldHeightRatio);
+                int textFieldHeight = (int) (labelHeight * TEXT_FIELD_HEIGHT_RATIO);
                 Font textFieldFont = new Font(null, Font.PLAIN, getTextFieldFontSizeByTextFieldHeight(textFieldHeight));
                 textField.setFont(textFieldFont);
                 Font labelFont = new Font(null, Font.BOLD, getLabelFontSizeBySearchBarHeight(searchBarHeight));
@@ -3051,7 +3055,7 @@ public class SearchBar {
         int searchBarHeight = (int) (height * 0.5);
         //设置字体
         int labelHeight = searchBarHeight / 9;
-        int textFieldHeight = (int) (labelHeight * textFieldHeightRatio);
+        int textFieldHeight = (int) (labelHeight * TEXT_FIELD_HEIGHT_RATIO);
         Font labelFont = new Font(null, Font.BOLD, getLabelFontSizeBySearchBarHeight(searchBarHeight));
         Font textFieldFont = new Font(null, Font.PLAIN, getTextFieldFontSizeByTextFieldHeight(textFieldHeight));
         textField.setFont(textFieldFont);
@@ -3297,7 +3301,7 @@ public class SearchBar {
     private void mergeResults() {
         PluginService pluginService = PluginService.getInstance();
         ArrayList<String> listResultsTemp = listResults;
-        Set<String> listResultsSet = new HashSet<>();
+        HashSet<String> listResultsSet = new HashSet<>();
         var allPlugins = pluginService.getAllPlugins();
         try {
             while (true) {
@@ -3312,7 +3316,7 @@ public class SearchBar {
                 for (var eachPlugin : allPlugins) {
                     String each;
                     while ((each = eachPlugin.plugin.pollFromResultQueue()) != null) {
-                        each = "plugin" + pluginResultSplitStr + eachPlugin.plugin.identifier + pluginResultSplitStr + each;
+                        each = "plugin" + PLUGIN_RESULT_SPLITTER_STR + eachPlugin.plugin.identifier + PLUGIN_RESULT_SPLITTER_STR + each;
                         if (listResultsSet.add(each)) {
                             listResultsTemp.add(each);
                         }
@@ -3711,7 +3715,7 @@ public class SearchBar {
                                 while (currentUsingPlugin != null &&
                                         (result = currentUsingPlugin.pollFromResultQueue()) != null &&
                                         runningMode == RunningMode.PLUGIN_MODE) {
-                                    result = "plugin" + pluginResultSplitStr + currentUsingPlugin.identifier + pluginResultSplitStr + result;
+                                    result = "plugin" + PLUGIN_RESULT_SPLITTER_STR + currentUsingPlugin.identifier + PLUGIN_RESULT_SPLITTER_STR + result;
                                     if (!listResults.contains(result)) {
                                         listResults.add(result);
                                     }
@@ -4011,7 +4015,7 @@ public class SearchBar {
      * @param isChosen 是否当前被选中
      */
     private void showPluginResultOnLabel(String result, JLabel label, boolean isChosen) {
-        Pattern pattern = RegexUtil.getPattern(pluginResultSplitStr, 0);
+        Pattern pattern = RegexUtil.getPattern(PLUGIN_RESULT_SPLITTER_STR, 0);
         String[] resultWithPluginInfo = pattern.split(result);
         if (resultWithPluginInfo.length != 3) {
             throw new RuntimeException("plugin result error: " + result);

@@ -1839,7 +1839,6 @@ public class DatabaseService {
         if (PrepareSearchInfo.taskMap == null || PrepareSearchInfo.isTaskMapEmpty()) {
             prepareSearch((StartSearchEvent) event);
         }
-        PrepareSearchInfo.prepareSearchTasks(databaseService.shouldStopSearch);
         //启动搜索线程
         CachedThreadPoolUtil.getInstance().executeTask(databaseService::startSearch);
         databaseService.startSearchTimeMills.set(System.currentTimeMillis());
@@ -1885,6 +1884,7 @@ public class DatabaseService {
                 }
             } while (false);
         });
+        PrepareSearchInfo.prepareSearchTasks(databaseService.shouldStopSearch);
         if (AllConfigs.getInstance().isGPUAcceleratorEnabled() && !shouldStopSearchRef.get()) {
             cachedThreadPoolUtil.executeTask(() -> {
                 // 退出上一次搜索
