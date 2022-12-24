@@ -2790,7 +2790,10 @@ public class SearchBar {
                                 if (!showPath.equals(lastShowPath) && !showPath.isEmpty()) {
                                     getIconUtil.getBigIcon(showPath, iconSideLength, iconSideLength, icon -> {
                                         try {
-                                            SwingUtilities.invokeAndWait(() -> labelInstance.setIcon(icon));
+                                            SwingUtilities.invokeAndWait(() -> {
+                                                labelInstance.setIcon(icon);
+                                                searchBar.repaint();
+                                            });
                                         } catch (InterruptedException | InvocationTargetException e) {
                                             throw new RuntimeException(e);
                                         }
@@ -2798,7 +2801,10 @@ public class SearchBar {
                                     }, (icon, isTimeout) -> {
                                         if (!isTimeout) {
                                             try {
-                                                SwingUtilities.invokeAndWait(() -> labelInstance.setIcon(icon));
+                                                SwingUtilities.invokeAndWait(() -> {
+                                                    labelInstance.setIcon(icon);
+                                                    searchBar.repaint();
+                                                });
                                             } catch (InterruptedException | InvocationTargetException e) {
                                                 throw new RuntimeException(e);
                                             }

@@ -83,7 +83,7 @@
         <dependency>
             <groupId>com.github.oshi</groupId>
             <artifactId>oshi-core-java11</artifactId>
-            <version>6.3.1</version>
+            <version>6.4.0</version>
         </dependency>
         <dependency>
             <groupId>org.xerial</groupId>
@@ -93,7 +93,7 @@
         <dependency>
             <groupId>com.formdev</groupId>
             <artifactId>flatlaf</artifactId>
-            <version>2.6</version>
+            <version>3.0</version>
         </dependency>
 <!--    mvn install:install-file -Dfile=libs/forms_rt.jar -DgroupId=com.intellij -DartifactId=forms_rt -Dversion=1.0 -Dpackaging=jar    -->
         <dependency>
@@ -104,7 +104,7 @@
         <dependency>
             <groupId>com.formdev</groupId>
             <artifactId>flatlaf-intellij-themes</artifactId>
-            <version>2.6</version>
+            <version>3.0</version>
         </dependency>
         <dependency>
             <groupId>io.github.biezhi</groupId>
