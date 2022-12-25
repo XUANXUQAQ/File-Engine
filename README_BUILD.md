@@ -62,8 +62,34 @@ jdeps --ignore-missing-deps --list-deps .\File-Engine-${version}.jar
 分析完成后再使用jlink工具生成精简后的jre运行环境。
 
 ```bash
-jlink --no-header-files --no-man-pages --compress=2 --module-path jmods --add-modules java.base,java.datatransfer,java.desktop,java.sql --output 输出文件夹位置
+jlink --no-header-files --no-man-pages --compress=2 --module-path jmods --add-modules java.base,java.datatransfer,java.desktop,java.sql --output jre
 ```
+
+然后在根目录下创建build文件夹，将生成的jre放入build文件夹中。
+
+![DzFAL.jpeg](https://i.328888.xyz/2022/12/25/DzFAL.jpeg)
+
+然后打开x64 Native Tools Command Prompt for VS xxxx
+
+cd切换到项目根目录，使用python运行build.py即可。
+
+**visual studio平台工具集版本需要在v143及以上版本。**
+
+![DzSO3.jpeg](https://i.328888.xyz/2022/12/25/DzSO3.jpeg)
+
+![Dzsa5.jpeg](https://i.328888.xyz/2022/12/25/Dzsa5.jpeg)
+
+
+
+
+
+
+
+
+
+
+
+# 以下内容已过期
 
 ### (2) 创建File-Engine.zip
 
