@@ -43,6 +43,10 @@ mvn install:install-file -Dfile=libs/forms_rt.jar -DgroupId=com.intellij -Dartif
 
 ![DdEFU.jpeg](https://i.328888.xyz/2022/12/25/DdEFU.jpeg)
 
+脚本运行完成后在build文件夹将会生成File-Engine.exe
+
+![DdQsA.jpeg](https://i.328888.xyz/2022/12/26/DdQsA.jpeg)
+
 # 以下内容已过时
 
 通过maven进行编译构建
