@@ -3630,7 +3630,7 @@ public class SearchBar {
             if (AllConfigs.isFirstRun()) {
                 runInternalCommand("help");
             }
-            final AtomicBoolean isShowSearchStatusThreadNotExist = new AtomicBoolean(true);
+//            final AtomicBoolean isShowSearchStatusThreadNotExist = new AtomicBoolean(true);
             final AtomicBoolean isWaiting = new AtomicBoolean(false);
             while (eventManagement.notMainExit()) {
                 try {
@@ -3703,7 +3703,7 @@ public class SearchBar {
                             } else {
                                 DatabaseService databaseService = DatabaseService.getInstance();
                                 if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
-                                    addShowSearchStatusThread(isShowSearchStatusThreadNotExist);
+//                                    addShowSearchStatusThread(isShowSearchStatusThreadNotExist);
                                 } else if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.MANUAL_UPDATE) {
                                     setLabelChosen(label1);
                                     eventManagement.putEvent(new ShowTaskBarMessageEvent(translateService.getTranslation("Info"),
