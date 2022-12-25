@@ -141,13 +141,17 @@ fileEngineVersion = configs.get('version')
 os.chdir(buildDir)
 
 os.system(r'xcopy ..\target\File-Engine.jar . /Y')
-os.system(r'xcopy ..\target\File-Engine' + '-' + fileEngineVersion.data + '.jar . /Y')
 os.system(r'del /Q /F File-Engine.zip')
 
 # 生成jre
-deps = subprocess.check_output(['jdeps', '--ignore-missing-deps', '--print-module-deps', r'..\target\File-Engine-' + fileEngineVersion.data + '.jar'])
+binPath = os.path.join(jdkPath, 'bin')
+jdepExe = os.path.join(binPath, 'jdeps.exe')
+deps = subprocess.check_output([jdepExe, '--ignore-missing-deps', '--print-module-deps', r'..\target\File-Engine-' + fileEngineVersion.data + '.jar'])
 depsStr = deps.decode().strip()
-os.system(r'jlink --no-header-files --no-man-pages --compress=2 --module-path jmods --add-modules ' + depsStr + ' --output jre')
+shutil.rmtree('jre')
+jlinkExe = os.path.join(binPath, 'jlink.exe')
+jlinkExe = jlinkExe[0:1] + '\"' + jlinkExe[1:] + '\"'
+os.system(jlinkExe + r' --no-header-files --no-man-pages --compress=2 --module-path jmods --add-modules ' + depsStr + ' --output jre')
 
 # 精简jar
 delFileInZip()
