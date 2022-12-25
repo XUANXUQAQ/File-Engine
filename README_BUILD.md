@@ -8,7 +8,7 @@
 git clone https://github.com/XUANXUQAQ/File-Engine.git
 ```
 
-本项目需要jdk11及以上jdk才能编译。
+本项目需要jdk11及以上jdk，以及visual studio安装才能编译。
 
 ### 2. 编译项目
 
@@ -34,6 +34,16 @@ mvn install:install-file -Dfile=libs/forms_rt.jar -DgroupId=com.intellij -Dartif
     ...
 </project>
 ```
+
+进入项目根目录，打开cmd或者powershell，直接使用python运行build.py即可，后一个参数可以指定jdk目录位置。
+
+![Dd7jp.jpeg](https://i.328888.xyz/2022/12/25/Dd7jp.jpeg)
+
+或指定使用的jdk位置，在后面增加参数即可。
+
+![DdEFU.jpeg](https://i.328888.xyz/2022/12/25/DdEFU.jpeg)
+
+# 以下内容已过时
 
 通过maven进行编译构建
 
@@ -69,35 +79,13 @@ jlink --no-header-files --no-man-pages --compress=2 --module-path jmods --add-mo
 
 ![DzFAL.jpeg](https://i.328888.xyz/2022/12/25/DzFAL.jpeg)
 
-然后打开x64 Native Tools Command Prompt for VS xxxx
-
-cd切换到项目根目录，使用python运行build.py即可。
-
-**visual studio平台工具集版本需要在v143及以上版本。**
-
-![DzSO3.jpeg](https://i.328888.xyz/2022/12/25/DzSO3.jpeg)
-
-![Dzsa5.jpeg](https://i.328888.xyz/2022/12/25/Dzsa5.jpeg)
-
-
-
-
-
-
-
-
-
-
-
-# 以下内容已过期
-
 ### (2) 创建File-Engine.zip
 
 jlink生成完成之后，将生成的jre运行环境文件夹重命名为jre，和File-Engine.jar(带有依赖的jar包)一起压缩成File-Engine.zip然后放入launcherWrap源码根目录。
 
 使用Visual Studio打开**C++/launcherWrap/launcherWrap.sln**，进入launcherWrap文件夹源码根目录。创建**File-Engine.zip**文件。
 
-![](C:\Users\13927\AppData\Roaming\marktext\images\2022-11-03-15-20-29-image.png)
+![Dd5cZ.png](https://i.328888.xyz/2022/12/25/Dd5cZ.png)
 
 File-Engine.zip压缩包中需要放入**jre运行环境**和刚才maven生成的**File-Engine.jar**
 
@@ -113,7 +101,7 @@ File-Engine.zip压缩包中需要放入**jre运行环境**和刚才maven生成�
 certutil -hashfile File-Engine.jar md5
 ```
 
-![](C:\Users\13927\AppData\Roaming\marktext\images\2022-11-03-15-27-48-image.png)
+![DdsfH.png](https://i.328888.xyz/2022/12/25/DdsfH.png)
 
 [![xbzxVP.jpg](https://s1.ax1x.com/2022/11/03/xbzxVP.jpg)](https://imgse.com/i/xbzxVP)
 

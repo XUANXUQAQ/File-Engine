@@ -2799,17 +2799,18 @@ public class SearchBar {
                                         }
                                         labelLastShowingPathInfo.put(labelInstance, showPath);
                                     }, (icon, isTimeout) -> {
-                                        if (!isTimeout) {
-                                            try {
-                                                SwingUtilities.invokeAndWait(() -> {
-                                                    labelInstance.setIcon(icon);
-                                                    searchBar.repaint();
-                                                });
-                                            } catch (InterruptedException | InvocationTargetException e) {
-                                                throw new RuntimeException(e);
-                                            }
-                                            labelLastShowingPathInfo.put(labelInstance, showPath);
+                                        if (isTimeout) {
+                                            return;
                                         }
+                                        try {
+                                            SwingUtilities.invokeAndWait(() -> {
+                                                labelInstance.setIcon(icon);
+                                                searchBar.repaint();
+                                            });
+                                        } catch (InterruptedException | InvocationTargetException e) {
+                                            throw new RuntimeException(e);
+                                        }
+                                        labelLastShowingPathInfo.put(labelInstance, showPath);
                                     });
                                 }
                             }
@@ -2817,11 +2818,7 @@ public class SearchBar {
                         default:
                             break;
                     }
-                    if (isVisible()) {
-                        TimeUnit.MILLISECONDS.sleep(250);
-                    } else {
-                        TimeUnit.MILLISECONDS.sleep(25);
-                    }
+                    TimeUnit.MILLISECONDS.sleep(250);
                 }
             } catch (InterruptedException ignored) {
                 // ignore

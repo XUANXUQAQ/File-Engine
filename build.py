@@ -1,7 +1,11 @@
 import hashlib
 import os
 import shutil
+import subprocess
+import sys
 import zipfile
+import vswhere
+import jproperties
 
 
 rulesToDelete = [
@@ -118,17 +122,34 @@ def getFileMd5(file_name):
 
 buildDir = 'build'
 if not os.path.exists(buildDir):
-    raise RuntimeError('build dir not exist.')
+    os.mkdir(buildDir)
 
-jreDir = os.path.join(buildDir, 'jre')
-if not os.path.exists(jreDir):
-    raise RuntimeError('jre runtime dir not exist.')
+jdkPath = ''
+if len(sys.argv) == 2:
+    jdkPath = sys.argv[1]
+    print("JAVA_HOME set to " + jdkPath)
 
+# 编译jar
+os.system('set JAVA_HOME=' + jdkPath + '&& mvn clean compile package')
+# 获取版本
+configs = jproperties.Properties()
+with open(r'.\target\maven-archiver\pom.properties', 'rb') as f:
+    configs.load(f)
+fileEngineVersion = configs.get('version')
+
+# 切换到build
 os.chdir(buildDir)
 
 os.system(r'xcopy ..\target\File-Engine.jar . /Y')
+os.system(r'xcopy ..\target\File-Engine' + '-' + fileEngineVersion.data + '.jar . /Y')
 os.system(r'del /Q /F File-Engine.zip')
 
+# 生成jre
+deps = subprocess.check_output(['jdeps', '--ignore-missing-deps', '--print-module-deps', r'..\target\File-Engine-' + fileEngineVersion.data + '.jar'])
+depsStr = deps.decode().strip()
+os.system(r'jlink --no-header-files --no-man-pages --compress=2 --module-path jmods --add-modules ' + depsStr + ' --output jre')
+
+# 精简jar
 delFileInZip()
 md5Str = getFileMd5('File-Engine.jar')
 print("File-Engine.jar md5: " + md5Str)
@@ -137,6 +158,7 @@ current_dir = os.getcwd()
 launchWrapCppFile = os.path.join(
     current_dir, r'..\C++\launcherWrap\launcherWrap\launcherWrap.cpp')
 
+# 计算File-Engine.jar md5
 strs: list
 with open(launchWrapCppFile, 'r', encoding='utf-8') as f:
     strs = f.readlines()
@@ -157,7 +179,15 @@ with zipfile.ZipFile('File-Engine.zip', mode="a") as f:
 
 os.system(r'xcopy File-Engine.zip "..\C++\launcherWrap\launcherWrap\" /Y')
 
-os.system(r'msbuild ..\C++\launcherWrap\launcherWrap.sln /p:Configuration=Release')
+# 编译启动器
+vsPathList = vswhere.find(
+    latest=True, requires='Microsoft.Component.MSBuild', find='MSBuild\**\Bin\MSBuild.exe')
+
+if not vsPathList:
+    raise RuntimeError("Cannot find visual studio installation or MSBuild.exe")
+vsPath = vsPathList[0]
+vsPath = vsPath[0:1] + '\"' + vsPath[1:] + "\""
+os.system(vsPath + r' ..\C++\launcherWrap\launcherWrap.sln /p:Configuration=Release')
 
 os.system(r'xcopy ..\C++\launcherWrap\x64\Release\launcherWrap.exe .\ /F /Y')
 os.system(r'del /Q /F File-Engine.exe')
