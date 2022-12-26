@@ -36,6 +36,7 @@ import file.engine.utils.system.properties.IsDebug;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.SneakyThrows;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -180,21 +181,21 @@ public class DatabaseService {
      */
     private void executeSqlCommandsThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            try {
-                EventManagement eventManagement = EventManagement.getInstance();
-                while (eventManagement.notMainExit()) {
-                    if (isExecuteImmediately.get()) {
-                        try {
-                            isExecuteImmediately.set(false);
-                            executeAllCommands();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
+            EventManagement eventManagement = EventManagement.getInstance();
+            while (eventManagement.notMainExit()) {
+                if (isExecuteImmediately.get()) {
+                    try {
+                        isExecuteImmediately.set(false);
+                        executeAllCommands();
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                    TimeUnit.MILLISECONDS.sleep(20);
                 }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                try {
+                    TimeUnit.MILLISECONDS.sleep(20);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
         });
     }
@@ -380,46 +381,46 @@ public class DatabaseService {
                             status.get() == Constants.Enums.DatabaseStatus.NORMAL &&
                             !GetHandle.INSTANCE.isForegroundFullscreen()) ||
                             (isDatabaseUpdated.get());
-            try {
-                AllConfigs allConfigs = AllConfigs.getInstance();
-                final int createMemoryThreshold = 70;
-                final int createGPUCacheThreshold = 50;
-                final int freeGPUCacheThreshold = 70;
-                while (eventManagement.notMainExit()) {
-                    if (isStartSaveCache.get()) {
-                        if (isDatabaseUpdated.get()) {
-                            isDatabaseUpdated.set(false);
-                        }
-                        startCheckInfo.startCheckTimeMills = System.currentTimeMillis();
-                        if (allConfigs.isGPUAcceleratorEnabled()) {
-                            final int gpuMemUsage = GPUAccelerator.INSTANCE.getGPUMemUsage();
-                            if (gpuMemUsage < createGPUCacheThreshold) {
-                                createGpuCache(isStopCreateCache, createGPUCacheThreshold);
-                            }
-                        } else {
-                            final double memoryUsage = SystemInfoUtil.getMemoryUsage();
-                            if (memoryUsage * 100 < createMemoryThreshold) {
-                                createMemoryCache(isStopCreateCache);
-                            }
+            AllConfigs allConfigs = AllConfigs.getInstance();
+            final int createMemoryThreshold = 70;
+            final int createGPUCacheThreshold = 50;
+            final int freeGPUCacheThreshold = 70;
+            while (eventManagement.notMainExit()) {
+                if (isStartSaveCache.get()) {
+                    if (isDatabaseUpdated.get()) {
+                        isDatabaseUpdated.set(false);
+                    }
+                    startCheckInfo.startCheckTimeMills = System.currentTimeMillis();
+                    if (allConfigs.isGPUAcceleratorEnabled()) {
+                        final int gpuMemUsage = GPUAccelerator.INSTANCE.getGPUMemUsage();
+                        if (gpuMemUsage < createGPUCacheThreshold) {
+                            createGpuCache(isStopCreateCache, createGPUCacheThreshold);
                         }
                     } else {
-                        if (allConfigs.isGPUAcceleratorEnabled()) {
-                            final int gpuMemUsage = GPUAccelerator.INSTANCE.getGPUMemUsage();
-                            if (gpuMemUsage >= freeGPUCacheThreshold) {
-                                // 防止显存占用超过70%后仍然扫描数据库
-                                startCheckInfo.startCheckTimeMills = System.currentTimeMillis();
-                                if (GPUAccelerator.INSTANCE.hasCache()) {
-                                    GPUClearCacheEvent gpuClearCacheEvent = new GPUClearCacheEvent();
-                                    eventManagement.putEvent(gpuClearCacheEvent);
-                                    eventManagement.waitForEvent(gpuClearCacheEvent);
-                                }
+                        final double memoryUsage = SystemInfoUtil.getMemoryUsage();
+                        if (memoryUsage * 100 < createMemoryThreshold) {
+                            createMemoryCache(isStopCreateCache);
+                        }
+                    }
+                } else {
+                    if (allConfigs.isGPUAcceleratorEnabled()) {
+                        final int gpuMemUsage = GPUAccelerator.INSTANCE.getGPUMemUsage();
+                        if (gpuMemUsage >= freeGPUCacheThreshold) {
+                            // 防止显存占用超过70%后仍然扫描数据库
+                            startCheckInfo.startCheckTimeMills = System.currentTimeMillis();
+                            if (GPUAccelerator.INSTANCE.hasCache()) {
+                                GPUClearCacheEvent gpuClearCacheEvent = new GPUClearCacheEvent();
+                                eventManagement.putEvent(gpuClearCacheEvent);
+                                eventManagement.waitForEvent(gpuClearCacheEvent);
                             }
                         }
                     }
-                    TimeUnit.SECONDS.sleep(1);
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
+                try {
+                    TimeUnit.SECONDS.sleep(1);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
         });
     }
@@ -826,58 +827,57 @@ public class DatabaseService {
         AllConfigs allConfigs = AllConfigs.getInstance();
         tasks.add(() -> {
             Statement stmt = null;
-            try {
-                for (var sqlAndTableName : sqlToExecute.entrySet()) {
-                    String diskStr = String.valueOf(diskChar.charAt(0));
-                    String eachSql = sqlAndTableName.getKey();
-                    String tableName = sqlAndTableName.getValue();
-                    String priority = getPriorityFromSelectSql(eachSql);
-                    String key = diskStr + "," + tableName + "," + priority;
-                    final long matchedNum;
-                    if (allConfigs.isGPUAcceleratorEnabled() && GPUAccelerator.INSTANCE.isMatchDone(key)) {
-                        //gpu搜索已经放入container，只需要获取matchedNum修改权重即可
-                        matchedNum = GPUAccelerator.INSTANCE.matchedNumber(key);
-                    } else {
-                        if (!shouldStopSearchRef.get()) {
-                            int recordsNum = 1;
-                            if (databaseResultsCount.containsKey(key)) {
-                                recordsNum = databaseResultsCount.get(key).get();
-                            }
-                            if (recordsNum != 0) {
-                                if (stmt == null) {
+            for (var sqlAndTableName : sqlToExecute.entrySet()) {
+                String diskStr = String.valueOf(diskChar.charAt(0));
+                String eachSql = sqlAndTableName.getKey();
+                String tableName = sqlAndTableName.getValue();
+                String priority = getPriorityFromSelectSql(eachSql);
+                String key = diskStr + "," + tableName + "," + priority;
+                final long matchedNum;
+                if (allConfigs.isGPUAcceleratorEnabled() && GPUAccelerator.INSTANCE.isMatchDone(key)) {
+                    //gpu搜索已经放入container，只需要获取matchedNum修改权重即可
+                    matchedNum = GPUAccelerator.INSTANCE.matchedNumber(key);
+                } else {
+                    if (!shouldStopSearchRef.get()) {
+                        int recordsNum = 1;
+                        if (databaseResultsCount.containsKey(key)) {
+                            recordsNum = databaseResultsCount.get(key).get();
+                        }
+                        if (recordsNum != 0) {
+                            if (stmt == null) {
+                                try {
                                     stmt = SQLiteUtil.getStatement(diskStr);
+                                } catch (SQLException e) {
+                                    throw new RuntimeException(e);
                                 }
-                                matchedNum = searchFromDatabaseOrCache(stmt, eachSql, key, shouldStopSearchRef);
-                            } else {
-                                matchedNum = 0;
                             }
+                            matchedNum = searchFromDatabaseOrCache(stmt, eachSql, key, shouldStopSearchRef);
                         } else {
                             matchedNum = 0;
                         }
-                    }
-                    final long weight = Math.min(matchedNum, 5);
-                    if (weight != 0L) {
-                        //更新表的权重，每次搜索将会按照各个表的权重排序
-                        updateTableWeight(tableName, weight);
+                    } else {
+                        matchedNum = 0;
                     }
                 }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            } finally {
-                //执行完后将对应的线程flag设为1
-                byte[] originalBytes;
-                while ((originalBytes = PrepareSearchInfo.taskStatus.getBytes()) != null) {
-                    Bit or = Bit.or(originalBytes, currentTaskNum.getBytes());
-                    if (PrepareSearchInfo.taskStatus.compareAndSet(originalBytes, or)) {
-                        break;
-                    }
+                final long weight = Math.min(matchedNum, 5);
+                if (weight != 0L) {
+                    //更新表的权重，每次搜索将会按照各个表的权重排序
+                    updateTableWeight(tableName, weight);
                 }
-                if (stmt != null) {
-                    try {
-                        stmt.close();
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
+            }
+            //执行完后将对应的线程flag设为1
+            byte[] originalBytes;
+            while ((originalBytes = PrepareSearchInfo.taskStatus.getBytes()) != null) {
+                Bit or = Bit.or(originalBytes, currentTaskNum.getBytes());
+                if (PrepareSearchInfo.taskStatus.compareAndSet(originalBytes, or)) {
+                    break;
+                }
+            }
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
                 }
             }
         });
@@ -1453,21 +1453,18 @@ public class DatabaseService {
         }
     }
 
+    @SneakyThrows
     private void executeAllSQLAndWait(@SuppressWarnings("SameParameterValue") int timeoutMills) {// 等待剩余的sql全部执行完成
-        try {
-            final long time = System.currentTimeMillis();
-            // 将在队列中的sql全部执行并等待搜索线程全部完成
-            System.out.println("等待所有sql执行完成，并且退出搜索");
-            while (searchThreadCount.get() != 0 || !commandQueue.isEmpty()) {
-                sendExecuteSQLSignal();
-                TimeUnit.MILLISECONDS.sleep(10);
-                if (System.currentTimeMillis() - time > timeoutMills) {
-                    System.out.println("等待超时");
-                    break;
-                }
+        final long time = System.currentTimeMillis();
+        // 将在队列中的sql全部执行并等待搜索线程全部完成
+        System.out.println("等待所有sql执行完成，并且退出搜索");
+        while (searchThreadCount.get() != 0 || !commandQueue.isEmpty()) {
+            sendExecuteSQLSignal();
+            TimeUnit.MILLISECONDS.sleep(10);
+            if (System.currentTimeMillis() - time > timeoutMills) {
+                System.out.println("等待超时");
+                break;
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
     }
 
@@ -1585,24 +1582,21 @@ public class DatabaseService {
      *
      * @param taskId 任务id
      */
+    @SneakyThrows
     private void waitForCommandSet(@SuppressWarnings("SameParameterValue") SqlTaskIds taskId) {
-        try {
-            EventManagement eventManagement = EventManagement.getInstance();
-            long tmpStartTime = System.currentTimeMillis();
-            while (eventManagement.notMainExit()) {
-                //等待
-                if (System.currentTimeMillis() - tmpStartTime > 60 * 1000) {
-                    System.err.println("等待SQL语句任务" + taskId + "处理超时");
-                    break;
-                }
-                //判断commandSet中是否还有taskId存在
-                if (!isTaskExistInCommandSet(taskId)) {
-                    break;
-                }
-                TimeUnit.MILLISECONDS.sleep(10);
+        EventManagement eventManagement = EventManagement.getInstance();
+        long tmpStartTime = System.currentTimeMillis();
+        while (eventManagement.notMainExit()) {
+            //等待
+            if (System.currentTimeMillis() - tmpStartTime > 60 * 1000) {
+                System.err.println("等待SQL语句任务" + taskId + "处理超时");
+                break;
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            //判断commandSet中是否还有taskId存在
+            if (!isTaskExistInCommandSet(taskId)) {
+                break;
+            }
+            TimeUnit.MILLISECONDS.sleep(10);
         }
     }
 
@@ -1644,22 +1638,22 @@ public class DatabaseService {
             // 时间检测线程
             AllConfigs allConfigs = AllConfigs.getInstance();
             final long timeout = Constants.CLOSE_DATABASE_TIMEOUT_MILLS - 30 * 1000;
-            try {
-                EventManagement eventManagement = EventManagement.getInstance();
-                long checkTime = System.currentTimeMillis();
-                while (eventManagement.notMainExit()) {
-                    final long updateTimeLimit = allConfigs.getUpdateTimeLimit() * 1000L;
-                    if (System.currentTimeMillis() - checkTime >= updateTimeLimit) {
-                        checkTime = System.currentTimeMillis();
-                        if ((getStatus() == Constants.Enums.DatabaseStatus.NORMAL && System.currentTimeMillis() - startSearchTimeMills.get() < timeout) ||
-                                (getStatus() == Constants.Enums.DatabaseStatus.NORMAL && commandQueue.size() > 100)) {
-                            sendExecuteSQLSignal();
-                        }
+            EventManagement eventManagement = EventManagement.getInstance();
+            long checkTime = System.currentTimeMillis();
+            while (eventManagement.notMainExit()) {
+                final long updateTimeLimit = allConfigs.getUpdateTimeLimit() * 1000L;
+                if (System.currentTimeMillis() - checkTime >= updateTimeLimit) {
+                    checkTime = System.currentTimeMillis();
+                    if ((getStatus() == Constants.Enums.DatabaseStatus.NORMAL && System.currentTimeMillis() - startSearchTimeMills.get() < timeout) ||
+                            (getStatus() == Constants.Enums.DatabaseStatus.NORMAL && commandQueue.size() > 100)) {
+                        sendExecuteSQLSignal();
                     }
-                    TimeUnit.SECONDS.sleep(1);
                 }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                try {
+                    TimeUnit.SECONDS.sleep(1);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
         });
     }
@@ -1794,33 +1788,29 @@ public class DatabaseService {
     @EventRegister(registerClass = PrepareSearchEvent.class)
     private static void prepareSearchEvent(Event event) {
         DatabaseService databaseService = DatabaseService.getInstance();
-        try {
-            final long timeout = 3000;
-            long startWaiting = System.currentTimeMillis();
-            while (!PrepareSearchInfo.isPreparing.compareAndSet(false, true)) {
-                if (System.currentTimeMillis() - startWaiting > timeout) {
-                    System.err.println("prepareSearch，切换预搜索状态超时");
-                    return;
-                }
-                Thread.onSpinWait();
+        final long timeout = 3000;
+        long startWaiting = System.currentTimeMillis();
+        while (!PrepareSearchInfo.isPreparing.compareAndSet(false, true)) {
+            if (System.currentTimeMillis() - startWaiting > timeout) {
+                System.err.println("prepareSearch，切换预搜索状态超时");
+                return;
             }
-            if (IsDebug.isDebug()) {
-                System.out.println("进行预搜索并添加搜索任务");
-            }
-            startWaiting = System.currentTimeMillis();
-            while (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL) {
-                if (System.currentTimeMillis() - startWaiting > timeout) {
-                    System.err.println("prepareSearch，等待数据库状态超时");
-                    break;
-                }
-                Thread.onSpinWait();
-            }
-            prepareSearch((PrepareSearchEvent) event);
-            event.setReturnValue(databaseService.tempResults);
-            PrepareSearchInfo.isPreparing.set(false);
-        } catch (Exception e) {
-            e.printStackTrace();
+            Thread.onSpinWait();
         }
+        if (IsDebug.isDebug()) {
+            System.out.println("进行预搜索并添加搜索任务");
+        }
+        startWaiting = System.currentTimeMillis();
+        while (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL) {
+            if (System.currentTimeMillis() - startWaiting > timeout) {
+                System.err.println("prepareSearch，等待数据库状态超时");
+                break;
+            }
+            Thread.onSpinWait();
+        }
+        prepareSearch((PrepareSearchEvent) event);
+        event.setReturnValue(databaseService.tempResults);
+        PrepareSearchInfo.isPreparing.set(false);
     }
 
     @EventRegister(registerClass = StartSearchEvent.class)
@@ -2126,20 +2116,21 @@ public class DatabaseService {
                 DatabaseService databaseService = DatabaseService.getInstance();
                 long startCheckInvalidCacheTime = System.currentTimeMillis();
                 final long checkInterval = 10 * 60 * 1000; // 10min
-                try {
-                    while (eventManagement.notMainExit()) {
-                        if (System.currentTimeMillis() - startCheckInvalidCacheTime > checkInterval && !GetHandle.INSTANCE.isForegroundFullscreen()) {
-                            startCheckInvalidCacheTime = System.currentTimeMillis();
-                            String eachKey;
-                            while (eventManagement.notMainExit() && (eachKey = invalidCacheKeys.poll()) != null) {
-                                GPUAccelerator.INSTANCE.clearCache(eachKey);
-                            }
+                while (eventManagement.notMainExit()) {
+                    if (System.currentTimeMillis() - startCheckInvalidCacheTime > checkInterval && !GetHandle.INSTANCE.isForegroundFullscreen()) {
+                        startCheckInvalidCacheTime = System.currentTimeMillis();
+                        String eachKey;
+                        while (eventManagement.notMainExit() && (eachKey = invalidCacheKeys.poll()) != null) {
+                            GPUAccelerator.INSTANCE.clearCache(eachKey);
                         }
-                        TimeUnit.MILLISECONDS.sleep(100);
                     }
-                } catch (InterruptedException ignored) {
-                    //ignored
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(100);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
+
             });
         }
 
@@ -2147,37 +2138,37 @@ public class DatabaseService {
             CachedThreadPoolUtil.getInstance().executeTask(() -> {
                 EventManagement eventManagement = EventManagement.getInstance();
                 DatabaseService databaseService = DatabaseService.getInstance();
-                try {
-                    final int removeRecordsThreshold = 20;
-                    while (eventManagement.notMainExit()) {
-                        if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL &&
-                                !GetHandle.INSTANCE.isForegroundFullscreen() &&
-                                (!recordsToAdd.isEmpty() || !recordsToRemove.isEmpty())) {
-                            for (var entry : recordsToAdd.entrySet()) {
-                                String k = entry.getKey();
-                                Set<String> container = entry.getValue();
-                                if (container.isEmpty()) continue;
-                                var records = container.toArray();
-                                GPUAccelerator.INSTANCE.addRecordsToCache(k, records);
-                                for (Object record : records) {
-                                    container.remove((String) record);
-                                }
-                            }
-                            for (var entry : recordsToRemove.entrySet()) {
-                                String key = entry.getKey();
-                                Set<String> container = entry.getValue();
-                                if (container.size() < removeRecordsThreshold) continue;
-                                var records = container.toArray();
-                                GPUAccelerator.INSTANCE.removeRecordsFromCache(key, records);
-                                for (Object record : records) {
-                                    container.remove((String) record);
-                                }
+                final int removeRecordsThreshold = 20;
+                while (eventManagement.notMainExit()) {
+                    if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL &&
+                            !GetHandle.INSTANCE.isForegroundFullscreen() &&
+                            (!recordsToAdd.isEmpty() || !recordsToRemove.isEmpty())) {
+                        for (var entry : recordsToAdd.entrySet()) {
+                            String k = entry.getKey();
+                            Set<String> container = entry.getValue();
+                            if (container.isEmpty()) continue;
+                            var records = container.toArray();
+                            GPUAccelerator.INSTANCE.addRecordsToCache(k, records);
+                            for (Object record : records) {
+                                container.remove((String) record);
                             }
                         }
-                        TimeUnit.SECONDS.sleep(1);
+                        for (var entry : recordsToRemove.entrySet()) {
+                            String key = entry.getKey();
+                            Set<String> container = entry.getValue();
+                            if (container.size() < removeRecordsThreshold) continue;
+                            var records = container.toArray();
+                            GPUAccelerator.INSTANCE.removeRecordsFromCache(key, records);
+                            for (Object record : records) {
+                                container.remove((String) record);
+                            }
+                        }
                     }
-                } catch (InterruptedException ignored) {
-                    // ignored
+                    try {
+                        TimeUnit.SECONDS.sleep(1);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             });
         }

@@ -514,38 +514,39 @@ public class EventManagement {
      */
     private void eventHandle(ConcurrentLinkedQueue<Event> eventQueue) {
         final boolean isDebug = IsDebug.isDebug();
-        try {
-            while (isEventHandlerNotExit()) {
-                //取出任务
-                Event event = eventQueue.poll();
-                if (event == null) {
+        while (isEventHandlerNotExit()) {
+            //取出任务
+            Event event = eventQueue.poll();
+            if (event == null) {
+                try {
                     TimeUnit.MILLISECONDS.sleep(5);
-                    continue;
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
-                //判断任务是否执行完成或者失败
-                if (event.isFinished() || event.isFailed()) {
-                    continue;
+                continue;
+            }
+            //判断任务是否执行完成或者失败
+            if (event.isFinished() || event.isFailed()) {
+                continue;
+            }
+            if (event.allRetryFailed()) {
+                //判断是否超过最大次数
+                event.setFailed();
+                if (isDebug) {
+                    System.err.println("任务超时---" + event);
                 }
-                if (event.allRetryFailed()) {
-                    //判断是否超过最大次数
-                    event.setFailed();
-                    if (isDebug) {
-                        System.err.println("任务超时---" + event);
-                    }
+            } else {
+                if (executeTaskFailed(event)) {
+                    System.err.println("任务执行失败---" + event);
+                    eventQueue.add(event);
                 } else {
-                    if (executeTaskFailed(event)) {
-                        System.err.println("任务执行失败---" + event);
-                        eventQueue.add(event);
-                    } else {
-                        // 任务执行成功
-                        if (!(event instanceof EventProcessedBroadcastEvent)) {
-                            putEvent(new EventProcessedBroadcastEvent(event.getClass(), event));
-                        }
+                    // 任务执行成功
+                    if (!(event instanceof EventProcessedBroadcastEvent)) {
+                        putEvent(new EventProcessedBroadcastEvent(event.getClass(), event));
                     }
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
+
     }
 }

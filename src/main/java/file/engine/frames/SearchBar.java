@@ -29,6 +29,7 @@ import file.engine.services.plugin.system.PluginService;
 import file.engine.utils.*;
 import file.engine.utils.file.FileUtil;
 import file.engine.utils.system.properties.IsDebug;
+import lombok.SneakyThrows;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -2762,68 +2763,76 @@ public class SearchBar {
 
     private void sendGetIconTaskThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            try {
-                final int labelNumber = 8;
-                EventManagement eventManagement = EventManagement.getInstance();
-                SearchBar searchBarInstance = getInstance();
-                GetIconUtil getIconUtil = GetIconUtil.getInstance();
-                HashMap<String, Field> objectHashMap = new HashMap<>();
-                for (int i = 1; i <= labelNumber; i++) {
-                    String fieldName = "label" + i;
-                    Field declaredField = SearchBar.class.getDeclaredField(fieldName);
-                    declaredField.setAccessible(true);
-                    objectHashMap.put(fieldName, declaredField);
+            final int labelNumber = 8;
+            EventManagement eventManagement = EventManagement.getInstance();
+            SearchBar searchBarInstance = getInstance();
+            GetIconUtil getIconUtil = GetIconUtil.getInstance();
+            HashMap<String, Field> objectHashMap = new HashMap<>();
+            for (int i = 1; i <= labelNumber; i++) {
+                String fieldName = "label" + i;
+                Field declaredField;
+                try {
+                    declaredField = SearchBar.class.getDeclaredField(fieldName);
+                } catch (NoSuchFieldException e) {
+                    throw new RuntimeException(e);
                 }
-                while (eventManagement.notMainExit()) {
-                    switch (runningMode) {
-                        case NORMAL_MODE:
-                        case COMMAND_MODE:
-                            if (!isVisible()) {
-                                break;
-                            }
-                            for (int i = 1; i <= labelNumber; ++i) {
-                                String labelName = "label" + i;
-                                Field labelField = objectHashMap.get(labelName);
-                                JLabel labelInstance = (JLabel) labelField.get(searchBarInstance);
-                                var showPath = labelShowingPathInfo.getOrDefault(labelInstance, "");
-                                String lastShowPath = labelLastShowingPathInfo.getOrDefault(labelInstance, "");
-                                if (!showPath.equals(lastShowPath) && !showPath.isEmpty()) {
-                                    getIconUtil.getBigIcon(showPath, iconSideLength, iconSideLength, icon -> {
-                                        try {
-                                            SwingUtilities.invokeAndWait(() -> {
-                                                labelInstance.setIcon(icon);
-                                                searchBar.repaint();
-                                            });
-                                        } catch (InterruptedException | InvocationTargetException e) {
-                                            throw new RuntimeException(e);
-                                        }
-                                        labelLastShowingPathInfo.put(labelInstance, showPath);
-                                    }, (icon, isTimeout) -> {
-                                        if (isTimeout) {
-                                            return;
-                                        }
-                                        try {
-                                            SwingUtilities.invokeAndWait(() -> {
-                                                labelInstance.setIcon(icon);
-                                                searchBar.repaint();
-                                            });
-                                        } catch (InterruptedException | InvocationTargetException e) {
-                                            throw new RuntimeException(e);
-                                        }
-                                        labelLastShowingPathInfo.put(labelInstance, showPath);
-                                    });
-                                }
-                            }
+                declaredField.setAccessible(true);
+                objectHashMap.put(fieldName, declaredField);
+            }
+            while (eventManagement.notMainExit()) {
+                switch (runningMode) {
+                    case NORMAL_MODE:
+                    case COMMAND_MODE:
+                        if (!isVisible()) {
                             break;
-                        default:
-                            break;
-                    }
+                        }
+                        for (int i = 1; i <= labelNumber; ++i) {
+                            String labelName = "label" + i;
+                            Field labelField = objectHashMap.get(labelName);
+                            JLabel labelInstance;
+                            try {
+                                labelInstance = (JLabel) labelField.get(searchBarInstance);
+                            } catch (IllegalAccessException e) {
+                                throw new RuntimeException(e);
+                            }
+                            var showPath = labelShowingPathInfo.getOrDefault(labelInstance, "");
+                            String lastShowPath = labelLastShowingPathInfo.getOrDefault(labelInstance, "");
+                            if (!showPath.equals(lastShowPath) && !showPath.isEmpty()) {
+                                getIconUtil.getBigIcon(showPath, iconSideLength, iconSideLength, icon -> {
+                                    try {
+                                        SwingUtilities.invokeAndWait(() -> {
+                                            labelInstance.setIcon(icon);
+                                            searchBar.repaint();
+                                        });
+                                    } catch (InterruptedException | InvocationTargetException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                    labelLastShowingPathInfo.put(labelInstance, showPath);
+                                }, (icon, isTimeout) -> {
+                                    if (isTimeout) {
+                                        return;
+                                    }
+                                    try {
+                                        SwingUtilities.invokeAndWait(() -> {
+                                            labelInstance.setIcon(icon);
+                                            searchBar.repaint();
+                                        });
+                                    } catch (InterruptedException | InvocationTargetException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                    labelLastShowingPathInfo.put(labelInstance, showPath);
+                                });
+                            }
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                try {
                     TimeUnit.MILLISECONDS.sleep(250);
+                } catch (InterruptedException ignored) {
+                    // ignored
                 }
-            } catch (InterruptedException ignored) {
-                // ignore
-            } catch (IllegalAccessException | NoSuchFieldException e) {
-                e.printStackTrace();
             }
         });
     }
@@ -2833,61 +2842,65 @@ public class SearchBar {
      */
     private void switchSearchBarShowingMode() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            try {
-                EventManagement eventManagement = EventManagement.getInstance();
-                GetHandle.INSTANCE.start();
-                AllConfigs allConfigs = AllConfigs.getInstance();
-                var screenInfo = new Object() {
-                    Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
-                    long screenSizeUpdateTime = System.currentTimeMillis();
-                };
-                final long updateScreenTimeLimit = 5000;
-                while (eventManagement.notMainExit()) {
-                    // 每隔5s更新一次屏幕大小
-                    if (System.currentTimeMillis() - screenInfo.screenSizeUpdateTime > updateScreenTimeLimit) {
-                        screenInfo.screenSizeUpdateTime = System.currentTimeMillis();
-                        screenInfo.screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-                    }
-                    if (showingMode == Constants.Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
-                        getExplorerSizeAndChangeSearchBarSizeExplorerMode(screenInfo.screenSize);
-                    } else {
-                        int width = screenInfo.screenSize.width;
-                        int height = screenInfo.screenSize.height;
-                        int searchBarWidth = (int) (width * SEARCH_BAR_WIDTH_RATIO);
-                        int searchBarHeight = (int) (height * SEARCH_BAR_HEIGHT_RATIO);
-                        int positionX, positionY;
-                        if (isPreviewMode.get()) {
-                            positionX = 50;
-                            positionY = 50;
-                        } else {
-                            positionX = width / 2 - searchBarWidth / 2;
-                            positionY = height / 2 - searchBarHeight / 3;
-                        }
-                        changeSearchBarSize(positionX, positionY, searchBarWidth, searchBarHeight);
-                        setTextFieldAtTop(searchBarHeight);
-                    }
-
-                    boolean isChangeToAttach = GetHandle.INSTANCE.changeToAttach();
-                    boolean attachExplorer = allConfigs.isAttachExplorer();
-                    if (isChangeToAttach && attachExplorer && !isSwitchToNormalManual.get()) {
-                        switchToExplorerAttachMode();
-                    } else {
-                        if (GetHandle.INSTANCE.changeToNormal() &&
-                                showingMode != Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                            switchToNormalMode(true, screenInfo.screenSize);
-                        } else if (isSwitchToNormalManual.get() &&
-                                showingMode != Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                            grabFocus();
-                            switchToNormalMode(false, screenInfo.screenSize);
-                        }
-                    }
-                    TimeUnit.MILLISECONDS.sleep(10);
+            EventManagement eventManagement = EventManagement.getInstance();
+            GetHandle.INSTANCE.start();
+            AllConfigs allConfigs = AllConfigs.getInstance();
+            var screenInfo = new Object() {
+                Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
+                long screenSizeUpdateTime = System.currentTimeMillis();
+            };
+            final long updateScreenTimeLimit = 5000;
+            while (eventManagement.notMainExit()) {
+                // 每隔5s更新一次屏幕大小
+                if (System.currentTimeMillis() - screenInfo.screenSizeUpdateTime > updateScreenTimeLimit) {
+                    screenInfo.screenSizeUpdateTime = System.currentTimeMillis();
+                    screenInfo.screenSize = Toolkit.getDefaultToolkit().getScreenSize();
                 }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } finally {
-                GetHandle.INSTANCE.stop();
+                if (showingMode == Constants.Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
+                    getExplorerSizeAndChangeSearchBarSizeExplorerMode(screenInfo.screenSize);
+                } else {
+                    int width = screenInfo.screenSize.width;
+                    int height = screenInfo.screenSize.height;
+                    int searchBarWidth = (int) (width * SEARCH_BAR_WIDTH_RATIO);
+                    int searchBarHeight = (int) (height * SEARCH_BAR_HEIGHT_RATIO);
+                    int positionX, positionY;
+                    if (isPreviewMode.get()) {
+                        positionX = 50;
+                        positionY = 50;
+                    } else {
+                        positionX = width / 2 - searchBarWidth / 2;
+                        positionY = height / 2 - searchBarHeight / 3;
+                    }
+                    changeSearchBarSize(positionX, positionY, searchBarWidth, searchBarHeight);
+                    setTextFieldAtTop(searchBarHeight);
+                }
+
+                boolean isChangeToAttach = GetHandle.INSTANCE.changeToAttach();
+                boolean attachExplorer = allConfigs.isAttachExplorer();
+                if (isChangeToAttach && attachExplorer && !isSwitchToNormalManual.get()) {
+                    try {
+                        switchToExplorerAttachMode();
+                    } catch (InterruptedException ignored) {
+                        // ignored
+                    }
+                } else {
+                    if (GetHandle.INSTANCE.changeToNormal() &&
+                            showingMode != Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                        switchToNormalMode(true, screenInfo.screenSize);
+                    } else if (isSwitchToNormalManual.get() &&
+                            showingMode != Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                        grabFocus();
+                        switchToNormalMode(false, screenInfo.screenSize);
+                    }
+                }
+                try {
+                    TimeUnit.MILLISECONDS.sleep(10);
+                } catch (InterruptedException ignored) {
+                    // ignored
+                }
             }
+
+            GetHandle.INSTANCE.stop();
         });
     }
 
@@ -3171,56 +3184,55 @@ public class SearchBar {
     private void tryToShowRecordsThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             //显示结果线程
-            try {
-                clearAllLabels();
-                while (isVisible()) {
-                    String text = getSearchBarText();
-                    if (text.isEmpty()) {
-                        clearAllLabels();
-                    } else if (!listResults.isEmpty()) {
-                        //在结果不足8个的时候不断尝试显示
-                        tryToShowRecordsWhenHasLabelEmpty();
-                        //设置窗口是被选中还是未被选中，鼠标模式
-                        setLabelChosenOrNotChosenMouseMode(0, label1);
-                        setLabelChosenOrNotChosenMouseMode(1, label2);
-                        setLabelChosenOrNotChosenMouseMode(2, label3);
-                        setLabelChosenOrNotChosenMouseMode(3, label4);
-                        setLabelChosenOrNotChosenMouseMode(4, label5);
-                        setLabelChosenOrNotChosenMouseMode(5, label6);
-                        setLabelChosenOrNotChosenMouseMode(6, label7);
-                        setLabelChosenOrNotChosenMouseMode(7, label8);
+            clearAllLabels();
+            while (isVisible()) {
+                String text = getSearchBarText();
+                if (text.isEmpty()) {
+                    clearAllLabels();
+                } else if (!listResults.isEmpty()) {
+                    //在结果不足8个的时候不断尝试显示
+                    tryToShowRecordsWhenHasLabelEmpty();
+                    //设置窗口是被选中还是未被选中，鼠标模式
+                    setLabelChosenOrNotChosenMouseMode(0, label1);
+                    setLabelChosenOrNotChosenMouseMode(1, label2);
+                    setLabelChosenOrNotChosenMouseMode(2, label3);
+                    setLabelChosenOrNotChosenMouseMode(3, label4);
+                    setLabelChosenOrNotChosenMouseMode(4, label5);
+                    setLabelChosenOrNotChosenMouseMode(5, label6);
+                    setLabelChosenOrNotChosenMouseMode(6, label7);
+                    setLabelChosenOrNotChosenMouseMode(7, label8);
 
-                        if (!listResults.isEmpty() && firstResultStartShowingTime == 0) {
-                            firstResultStartShowingTime = System.currentTimeMillis();
-                        }
-                    } else {
-                        label1.setText(null);
-                        label1.setName(null);
-                        label1.setIcon(null);
-                        clearALabel(label2);
-                        clearALabel(label3);
-                        clearALabel(label4);
-                        clearALabel(label5);
-                        clearALabel(label6);
-                        clearALabel(label7);
-                        clearALabel(label8);
-                        repaint();
+                    if (!listResults.isEmpty() && firstResultStartShowingTime == 0) {
+                        firstResultStartShowingTime = System.currentTimeMillis();
                     }
-                    SwingUtilities.invokeLater(() -> {
-                        autoSetSearchBarRadius();
-                        if (getSearchBarText().isEmpty()) {
-                            searchInfoLabel.setText("");
-                            searchInfoLabel.setName("");
-                            searchInfoLabel.setIcon(null);
-                        }
-                    });
-                    TimeUnit.MILLISECONDS.sleep(200);
+                } else {
+                    label1.setText(null);
+                    label1.setName(null);
+                    label1.setIcon(null);
+                    clearALabel(label2);
+                    clearALabel(label3);
+                    clearALabel(label4);
+                    clearALabel(label5);
+                    clearALabel(label6);
+                    clearALabel(label7);
+                    clearALabel(label8);
+                    repaint();
                 }
-            } catch (InterruptedException e) {
-                // ignored
-            } finally {
-                isTryToShowResultThreadNotExist.set(true);
+                SwingUtilities.invokeLater(() -> {
+                    autoSetSearchBarRadius();
+                    if (getSearchBarText().isEmpty()) {
+                        searchInfoLabel.setText("");
+                        searchInfoLabel.setName("");
+                        searchInfoLabel.setIcon(null);
+                    }
+                });
+                try {
+                    TimeUnit.MILLISECONDS.sleep(200);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
+            isTryToShowResultThreadNotExist.set(true);
         });
     }
 
@@ -3239,47 +3251,46 @@ public class SearchBar {
             return;
         }
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            try {
-                long time = System.currentTimeMillis();
-                SwingUtilities.invokeLater(() -> searchInfoLabel.setIcon(
-                        GetIconUtil.getInstance().getBigIcon("loadingIcon", iconSideLength, iconSideLength)));
-                while (!"done".equals(searchInfoLabel.getName()) && isVisible() && startTime < time) {
-                    SwingUtilities.invokeLater(() -> searchInfoLabel.setText(TranslateService.INSTANCE.getTranslation("Searching") + "    " +
-                            TranslateService.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
-                            TranslateService.INSTANCE.getTranslation("Number of current results") + ": " + listResults.size()));
-                    repaint();
+            long time = System.currentTimeMillis();
+            SwingUtilities.invokeLater(() -> searchInfoLabel.setIcon(
+                    GetIconUtil.getInstance().getBigIcon("loadingIcon", iconSideLength, iconSideLength)));
+            while (!"done".equals(searchInfoLabel.getName()) && isVisible() && startTime < time) {
+                SwingUtilities.invokeLater(() -> searchInfoLabel.setText(TranslateService.INSTANCE.getTranslation("Searching") + "    " +
+                        TranslateService.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
+                        TranslateService.INSTANCE.getTranslation("Number of current results") + ": " + listResults.size()));
+                repaint();
+                try {
                     TimeUnit.MILLISECONDS.sleep(250);
+                } catch (InterruptedException ignored) {
+                    // ignored
                 }
-                if ("done".equals(searchInfoLabel.getName())) {
-                    SwingUtilities.invokeLater(() -> {
-                        searchInfoLabel.setText(TranslateService.INSTANCE.getTranslation("Search Done") + "    " +
-                                TranslateService.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
-                                TranslateService.INSTANCE.getTranslation("Number of current results") + ": " + listResults.size());
-                        searchInfoLabel.setIcon(
-                                GetIconUtil.getInstance().getBigIcon("completeIcon", iconSideLength, iconSideLength));
-                        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-                            long _time = System.currentTimeMillis();
-                            int count = 0;
-                            try {
-                                while (startTime < _time && count <= 60) {
-                                    count++;
-                                    TimeUnit.MILLISECONDS.sleep(50);
-                                }
-                                if (startTime > _time) {
-                                    return;
-                                }
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                            showSelectInfoOnLabel();
-                        });
-                    });
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } finally {
-                isShowSearchStatusThreadNotExist.set(true);
             }
+            if ("done".equals(searchInfoLabel.getName())) {
+                SwingUtilities.invokeLater(() -> {
+                    searchInfoLabel.setText(TranslateService.INSTANCE.getTranslation("Search Done") + "    " +
+                            TranslateService.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
+                            TranslateService.INSTANCE.getTranslation("Number of current results") + ": " + listResults.size());
+                    searchInfoLabel.setIcon(
+                            GetIconUtil.getInstance().getBigIcon("completeIcon", iconSideLength, iconSideLength));
+                    CachedThreadPoolUtil.getInstance().executeTask(() -> {
+                        long _time = System.currentTimeMillis();
+                        int count = 0;
+                        try {
+                            while (startTime < _time && count <= 60) {
+                                count++;
+                                TimeUnit.MILLISECONDS.sleep(50);
+                            }
+                            if (startTime > _time) {
+                                return;
+                            }
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        showSelectInfoOnLabel();
+                    });
+                });
+            }
+            isShowSearchStatusThreadNotExist.set(true);
         });
     }
 
@@ -3301,41 +3312,38 @@ public class SearchBar {
     /**
      * 将tempResults以及插件返回的结果转移到listResults中来显示
      */
+    @SneakyThrows
     private void mergeResults() {
         PluginService pluginService = PluginService.getInstance();
         ArrayList<String> listResultsTemp = listResults;
         HashSet<String> listResultsSet = new HashSet<>();
         var allPlugins = pluginService.getAllPlugins();
-        try {
-            while (true) {
-                //用户重新输入关键字
-                if (listResultsTemp != listResults) {
-                    listResultsTemp = listResults;
-                    listResultsSet = new HashSet<>();
-                }
-                if (System.currentTimeMillis() - visibleStartTime > 10_000 && !isVisible()) {
-                    break;
-                }
-                for (var eachPlugin : allPlugins) {
-                    String each;
-                    while ((each = eachPlugin.plugin.pollFromResultQueue()) != null) {
-                        each = "plugin" + PLUGIN_RESULT_SPLITTER_STR + eachPlugin.plugin.identifier + PLUGIN_RESULT_SPLITTER_STR + each;
-                        if (listResultsSet.add(each)) {
-                            listResultsTemp.add(each);
-                        }
-                    }
-                }
-                if (tempResultsFromDatabase != null) {
-                    for (String each : tempResultsFromDatabase) {
-                        if (listResultsSet.add(each)) {
-                            listResultsTemp.add(each);
-                        }
-                    }
-                }
-                TimeUnit.MILLISECONDS.sleep(1);
+        while (true) {
+            //用户重新输入关键字
+            if (listResultsTemp != listResults) {
+                listResultsTemp = listResults;
+                listResultsSet = new HashSet<>();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+            if (System.currentTimeMillis() - visibleStartTime > 10_000 && !isVisible()) {
+                break;
+            }
+            for (var eachPlugin : allPlugins) {
+                String each;
+                while ((each = eachPlugin.plugin.pollFromResultQueue()) != null) {
+                    each = "plugin" + PLUGIN_RESULT_SPLITTER_STR + eachPlugin.plugin.identifier + PLUGIN_RESULT_SPLITTER_STR + each;
+                    if (listResultsSet.add(each)) {
+                        listResultsTemp.add(each);
+                    }
+                }
+            }
+            if (tempResultsFromDatabase != null) {
+                for (String each : tempResultsFromDatabase) {
+                    if (listResultsSet.add(each)) {
+                        listResultsTemp.add(each);
+                    }
+                }
+            }
+            TimeUnit.MILLISECONDS.sleep(1);
         }
     }
 
@@ -3380,170 +3388,169 @@ public class SearchBar {
     }
 
     private void setBorderOnVisible() {
-        try {
-            while (isVisible()) {
-                String text = getSearchBarText();
-                if (text == null || text.isEmpty() || System.currentTimeMillis() - startTime < 300) {
-                    clearAllLabelBorder();
+        while (isVisible()) {
+            String text = getSearchBarText();
+            if (text == null || text.isEmpty() || System.currentTimeMillis() - startTime < 300) {
+                clearAllLabelBorder();
+                if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                    chooseAndSetBorder(textField, 1);
+                    chooseAndSetBorder(searchInfoLabel, 2);
+                } else {
+                    chooseAndSetBorder(textField, 2);
+                    chooseAndSetBorder(searchInfoLabel, 1);
+                }
+            } else {
+                if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                    chooseAndSetBorder(textField, 1);
+                    chooseAndSetBorder(searchInfoLabel, 2);
+                } else {
+                    chooseAndSetBorder(textField, 2);
+                    chooseAndSetBorder(searchInfoLabel, 1);
+                }
+                int resultNum = listResults.size();
+                if (resultNum == 0 || resultNum == 1) {
                     if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                        chooseAndSetBorder(textField, 1);
-                        chooseAndSetBorder(searchInfoLabel, 2);
+                        chooseAndSetBorder(label1, 2);
                     } else {
-                        chooseAndSetBorder(textField, 2);
-                        chooseAndSetBorder(searchInfoLabel, 1);
+                        chooseAndSetBorder(label1, 1);
                     }
+                    label2.setBorder(null);
+                    label3.setBorder(null);
+                    label4.setBorder(null);
+                    label5.setBorder(null);
+                    label6.setBorder(null);
+                    label7.setBorder(null);
+                    label8.setBorder(null);
+                } else if (resultNum == 2) {
+                    if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                        chooseAndSetBorder(label1, 3);
+                        chooseAndSetBorder(label2, 2);
+                    } else {
+                        chooseAndSetBorder(label1, 1);
+                        chooseAndSetBorder(label2, 3);
+                    }
+                    label3.setBorder(null);
+                    label4.setBorder(null);
+                    label5.setBorder(null);
+                    label6.setBorder(null);
+                    label7.setBorder(null);
+                    label8.setBorder(null);
+                } else if (resultNum == 3) {
+                    if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                        chooseAndSetBorder(label1, 3);
+                        chooseAndSetBorder(label2, 3);
+                        chooseAndSetBorder(label3, 2);
+                    } else {
+                        chooseAndSetBorder(label1, 1);
+                        chooseAndSetBorder(label2, 3);
+                        chooseAndSetBorder(label3, 3);
+                    }
+                    label4.setBorder(null);
+                    label5.setBorder(null);
+                    label6.setBorder(null);
+                    label7.setBorder(null);
+                    label8.setBorder(null);
+                } else if (resultNum == 4) {
+                    if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                        chooseAndSetBorder(label1, 3);
+                        chooseAndSetBorder(label2, 3);
+                        chooseAndSetBorder(label3, 3);
+                        chooseAndSetBorder(label4, 2);
+                    } else {
+                        chooseAndSetBorder(label1, 1);
+                        chooseAndSetBorder(label2, 3);
+                        chooseAndSetBorder(label3, 3);
+
+                        label4.setBorder(middleBorder);
+                    }
+                    label5.setBorder(null);
+                    label6.setBorder(null);
+                    label7.setBorder(null);
+                    label8.setBorder(null);
+                } else if (resultNum == 5) {
+                    if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                        chooseAndSetBorder(label1, 3);
+                        chooseAndSetBorder(label2, 3);
+                        chooseAndSetBorder(label3, 3);
+                        chooseAndSetBorder(label4, 3);
+                        chooseAndSetBorder(label5, 2);
+                    } else {
+                        chooseAndSetBorder(label1, 1);
+                        chooseAndSetBorder(label2, 3);
+                        chooseAndSetBorder(label3, 3);
+                        chooseAndSetBorder(label4, 3);
+                        chooseAndSetBorder(label5, 3);
+                    }
+                    label6.setBorder(null);
+                    label7.setBorder(null);
+                    label8.setBorder(null);
+                } else if (resultNum == 6) {
+                    if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                        chooseAndSetBorder(label1, 3);
+                        chooseAndSetBorder(label2, 3);
+                        chooseAndSetBorder(label3, 3);
+                        chooseAndSetBorder(label4, 3);
+                        chooseAndSetBorder(label5, 3);
+                        chooseAndSetBorder(label6, 2);
+                    } else {
+                        chooseAndSetBorder(label1, 1);
+                        chooseAndSetBorder(label2, 3);
+                        chooseAndSetBorder(label3, 3);
+                        chooseAndSetBorder(label4, 3);
+                        chooseAndSetBorder(label5, 3);
+                        chooseAndSetBorder(label6, 3);
+                    }
+                    label7.setBorder(null);
+                    label8.setBorder(null);
+                } else if (resultNum == 7) {
+                    if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                        chooseAndSetBorder(label1, 3);
+                        chooseAndSetBorder(label2, 3);
+                        chooseAndSetBorder(label3, 3);
+                        chooseAndSetBorder(label4, 3);
+                        chooseAndSetBorder(label5, 3);
+                        chooseAndSetBorder(label6, 3);
+                        chooseAndSetBorder(label7, 2);
+                    } else {
+                        chooseAndSetBorder(label1, 1);
+                        chooseAndSetBorder(label2, 3);
+                        chooseAndSetBorder(label3, 3);
+                        chooseAndSetBorder(label4, 3);
+                        chooseAndSetBorder(label5, 3);
+                        chooseAndSetBorder(label6, 3);
+                        chooseAndSetBorder(label7, 3);
+                    }
+                    label8.setBorder(null);
                 } else {
                     if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                        chooseAndSetBorder(textField, 1);
-                        chooseAndSetBorder(searchInfoLabel, 2);
+                        chooseAndSetBorder(label1, 3);
+                        chooseAndSetBorder(label2, 3);
+                        chooseAndSetBorder(label3, 3);
+                        chooseAndSetBorder(label4, 3);
+                        chooseAndSetBorder(label5, 3);
+                        chooseAndSetBorder(label6, 3);
+                        chooseAndSetBorder(label7, 3);
+                        chooseAndSetBorder(label8, 2);
                     } else {
-                        chooseAndSetBorder(textField, 2);
-                        chooseAndSetBorder(searchInfoLabel, 1);
-                    }
-                    int resultNum = listResults.size();
-                    if (resultNum == 0 || resultNum == 1) {
-                        if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                            chooseAndSetBorder(label1, 2);
-                        } else {
-                            chooseAndSetBorder(label1, 1);
-                        }
-                        label2.setBorder(null);
-                        label3.setBorder(null);
-                        label4.setBorder(null);
-                        label5.setBorder(null);
-                        label6.setBorder(null);
-                        label7.setBorder(null);
-                        label8.setBorder(null);
-                    } else if (resultNum == 2) {
-                        if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                            chooseAndSetBorder(label1, 3);
-                            chooseAndSetBorder(label2, 2);
-                        } else {
-                            chooseAndSetBorder(label1, 1);
-                            chooseAndSetBorder(label2, 3);
-                        }
-                        label3.setBorder(null);
-                        label4.setBorder(null);
-                        label5.setBorder(null);
-                        label6.setBorder(null);
-                        label7.setBorder(null);
-                        label8.setBorder(null);
-                    } else if (resultNum == 3) {
-                        if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                            chooseAndSetBorder(label1, 3);
-                            chooseAndSetBorder(label2, 3);
-                            chooseAndSetBorder(label3, 2);
-                        } else {
-                            chooseAndSetBorder(label1, 1);
-                            chooseAndSetBorder(label2, 3);
-                            chooseAndSetBorder(label3, 3);
-                        }
-                        label4.setBorder(null);
-                        label5.setBorder(null);
-                        label6.setBorder(null);
-                        label7.setBorder(null);
-                        label8.setBorder(null);
-                    } else if (resultNum == 4) {
-                        if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                            chooseAndSetBorder(label1, 3);
-                            chooseAndSetBorder(label2, 3);
-                            chooseAndSetBorder(label3, 3);
-                            chooseAndSetBorder(label4, 2);
-                        } else {
-                            chooseAndSetBorder(label1, 1);
-                            chooseAndSetBorder(label2, 3);
-                            chooseAndSetBorder(label3, 3);
-
-                            label4.setBorder(middleBorder);
-                        }
-                        label5.setBorder(null);
-                        label6.setBorder(null);
-                        label7.setBorder(null);
-                        label8.setBorder(null);
-                    } else if (resultNum == 5) {
-                        if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                            chooseAndSetBorder(label1, 3);
-                            chooseAndSetBorder(label2, 3);
-                            chooseAndSetBorder(label3, 3);
-                            chooseAndSetBorder(label4, 3);
-                            chooseAndSetBorder(label5, 2);
-                        } else {
-                            chooseAndSetBorder(label1, 1);
-                            chooseAndSetBorder(label2, 3);
-                            chooseAndSetBorder(label3, 3);
-                            chooseAndSetBorder(label4, 3);
-                            chooseAndSetBorder(label5, 3);
-                        }
-                        label6.setBorder(null);
-                        label7.setBorder(null);
-                        label8.setBorder(null);
-                    } else if (resultNum == 6) {
-                        if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                            chooseAndSetBorder(label1, 3);
-                            chooseAndSetBorder(label2, 3);
-                            chooseAndSetBorder(label3, 3);
-                            chooseAndSetBorder(label4, 3);
-                            chooseAndSetBorder(label5, 3);
-                            chooseAndSetBorder(label6, 2);
-                        } else {
-                            chooseAndSetBorder(label1, 1);
-                            chooseAndSetBorder(label2, 3);
-                            chooseAndSetBorder(label3, 3);
-                            chooseAndSetBorder(label4, 3);
-                            chooseAndSetBorder(label5, 3);
-                            chooseAndSetBorder(label6, 3);
-                        }
-                        label7.setBorder(null);
-                        label8.setBorder(null);
-                    } else if (resultNum == 7) {
-                        if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                            chooseAndSetBorder(label1, 3);
-                            chooseAndSetBorder(label2, 3);
-                            chooseAndSetBorder(label3, 3);
-                            chooseAndSetBorder(label4, 3);
-                            chooseAndSetBorder(label5, 3);
-                            chooseAndSetBorder(label6, 3);
-                            chooseAndSetBorder(label7, 2);
-                        } else {
-                            chooseAndSetBorder(label1, 1);
-                            chooseAndSetBorder(label2, 3);
-                            chooseAndSetBorder(label3, 3);
-                            chooseAndSetBorder(label4, 3);
-                            chooseAndSetBorder(label5, 3);
-                            chooseAndSetBorder(label6, 3);
-                            chooseAndSetBorder(label7, 3);
-                        }
-                        label8.setBorder(null);
-                    } else {
-                        if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                            chooseAndSetBorder(label1, 3);
-                            chooseAndSetBorder(label2, 3);
-                            chooseAndSetBorder(label3, 3);
-                            chooseAndSetBorder(label4, 3);
-                            chooseAndSetBorder(label5, 3);
-                            chooseAndSetBorder(label6, 3);
-                            chooseAndSetBorder(label7, 3);
-                            chooseAndSetBorder(label8, 2);
-                        } else {
-                            chooseAndSetBorder(label1, 1);
-                            chooseAndSetBorder(label2, 3);
-                            chooseAndSetBorder(label3, 3);
-                            chooseAndSetBorder(label4, 3);
-                            chooseAndSetBorder(label5, 3);
-                            chooseAndSetBorder(label6, 3);
-                            chooseAndSetBorder(label7, 3);
-                            chooseAndSetBorder(label8, 2);
-                        }
+                        chooseAndSetBorder(label1, 1);
+                        chooseAndSetBorder(label2, 3);
+                        chooseAndSetBorder(label3, 3);
+                        chooseAndSetBorder(label4, 3);
+                        chooseAndSetBorder(label5, 3);
+                        chooseAndSetBorder(label6, 3);
+                        chooseAndSetBorder(label7, 3);
+                        chooseAndSetBorder(label8, 2);
                     }
                 }
-                TimeUnit.MILLISECONDS.sleep(150);
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } finally {
-            clearAllLabelBorder();
-            isBorderThreadNotExist.set(true);
+            try {
+                TimeUnit.MILLISECONDS.sleep(150);
+            } catch (InterruptedException ignored) {
+                // ignored
+            }
         }
+        clearAllLabelBorder();
+        isBorderThreadNotExist.set(true);
     }
 
     /**
@@ -3630,111 +3637,115 @@ public class SearchBar {
 //            final AtomicBoolean isShowSearchStatusThreadNotExist = new AtomicBoolean(true);
             final AtomicBoolean isWaiting = new AtomicBoolean(false);
             while (eventManagement.notMainExit()) {
-                try {
-                    final long endTime = System.currentTimeMillis();
-                    if ((endTime - startTime > SEND_PREPARE_SEARCH_TIMEOUT) && isCudaSearchNotStarted.get() &&
-                            startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
-                        setSearchKeywordsAndSearchCase();
-                        var resultsOptional = sendPrepareSearchEvent();
-                        resultsOptional.ifPresent(res -> {
-                            listResults = new ArrayList<>();
-                            tempResultsFromDatabase = res;
-                        });
-                    }
-                    if ((endTime - startTime > SEND_START_SEARCH_TIMEOUT) && isSearchNotStarted.get() &&
-                            startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
-                        setSearchKeywordsAndSearchCase();
-                        var resultsOptional = sendSearchEvent();
-                        resultsOptional.ifPresent(res -> {
-                            if (tempResultsFromDatabase == res) {
-                                return;
-                            }
-                            listResults = new ArrayList<>();
-                            tempResultsFromDatabase = res;
-                        });
-                    }
+                final long endTime = System.currentTimeMillis();
+                if ((endTime - startTime > SEND_PREPARE_SEARCH_TIMEOUT) && isCudaSearchNotStarted.get() &&
+                        startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
+                    setSearchKeywordsAndSearchCase();
+                    var resultsOptional = sendPrepareSearchEvent();
+                    resultsOptional.ifPresent(res -> {
+                        listResults = new ArrayList<>();
+                        tempResultsFromDatabase = res;
+                    });
+                }
+                if ((endTime - startTime > SEND_START_SEARCH_TIMEOUT) && isSearchNotStarted.get() &&
+                        startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
+                    setSearchKeywordsAndSearchCase();
+                    var resultsOptional = sendSearchEvent();
+                    resultsOptional.ifPresent(res -> {
+                        if (tempResultsFromDatabase == res) {
+                            return;
+                        }
+                        listResults = new ArrayList<>();
+                        tempResultsFromDatabase = res;
+                    });
+                }
 
-                    if ((endTime - startTime > SHOW_RESULTS_TIMEOUT) && startSearchSignal.get()) {
-                        startSearchSignal.set(false); //开始搜索 计时停止
-                        currentResultCount.set(0);
-                        currentLabelSelectedPosition.set(0);
-                        clearAllLabels();
-                        if (!getSearchBarText().isEmpty()) {
-                            setLabelChosen(label1);
-                        }
-                        if (runningMode == RunningMode.COMMAND_MODE) {
-                            //去掉冒号
-                            String text = getSearchBarText();
-                            if (text.length() <= 1 || !runInternalCommand(text.substring(1).toLowerCase())) {
-                                AllConfigs allConfigs = AllConfigs.getInstance();
-                                LinkedHashSet<String> cmdSet = allConfigs.getCmdSet();
-                                cmdSet.add(":clearbin;" + translateService.getTranslation("Clear the recycle bin"));
-                                cmdSet.add(":update;" + translateService.getTranslation("Update file index"));
-                                cmdSet.add(":clearUpdate;" + translateService.getTranslation("Clear the database and update file index"));
-                                cmdSet.add(":help;" + translateService.getTranslation("View help"));
-                                cmdSet.add(":version;" + translateService.getTranslation("View Version"));
-                                for (String i : cmdSet) {
-                                    String[] cmdInfo = RegexUtil.semicolon.split(i);
-                                    if (cmdInfo[0].contains(text.substring(1))) {
-                                        String result = translateService.getTranslation("Run command") + i;
-                                        listResults.add(result);
-                                    }
-                                    if (cmdInfo[0].equals(text)) {
-                                        detectShowingModeAndClose();
-                                        openWithoutAdmin(cmdInfo[1]);
-                                    }
+                if ((endTime - startTime > SHOW_RESULTS_TIMEOUT) && startSearchSignal.get()) {
+                    startSearchSignal.set(false); //开始搜索 计时停止
+                    currentResultCount.set(0);
+                    currentLabelSelectedPosition.set(0);
+                    clearAllLabels();
+                    if (!getSearchBarText().isEmpty()) {
+                        setLabelChosen(label1);
+                    }
+                    if (runningMode == RunningMode.COMMAND_MODE) {
+                        //去掉冒号
+                        String text = getSearchBarText();
+                        if (text.length() <= 1 || !runInternalCommand(text.substring(1).toLowerCase())) {
+                            AllConfigs allConfigs = AllConfigs.getInstance();
+                            LinkedHashSet<String> cmdSet = allConfigs.getCmdSet();
+                            cmdSet.add(":clearbin;" + translateService.getTranslation("Clear the recycle bin"));
+                            cmdSet.add(":update;" + translateService.getTranslation("Update file index"));
+                            cmdSet.add(":clearUpdate;" + translateService.getTranslation("Clear the database and update file index"));
+                            cmdSet.add(":help;" + translateService.getTranslation("View help"));
+                            cmdSet.add(":version;" + translateService.getTranslation("View Version"));
+                            for (String i : cmdSet) {
+                                String[] cmdInfo = RegexUtil.semicolon.split(i);
+                                if (cmdInfo[0].contains(text.substring(1))) {
+                                    String result = translateService.getTranslation("Run command") + i;
+                                    listResults.add(result);
+                                }
+                                if (cmdInfo[0].equals(text)) {
+                                    detectShowingModeAndClose();
+                                    openWithoutAdmin(cmdInfo[1]);
                                 }
                             }
-                        } else if (runningMode == RunningMode.NORMAL_MODE) {
-                            String searchBarText = getSearchBarText();
-                            if (!searchBarText.isEmpty() && searchBarText.charAt(0) == '>') {
-                                if (searchBarText.length() > 1) {
-                                    searchBarText = searchBarText.substring(1);
-                                } else {
-                                    searchBarText = "";
-                                }
-                                var pluginInfos = PluginService.getInstance().searchPluginByKeyword(searchBarText);
-                                for (PluginService.PluginInfo pluginInfo : pluginInfos) {
-                                    listResults.add(pluginInfo.identifier);
-                                }
+                        }
+                    } else if (runningMode == RunningMode.NORMAL_MODE) {
+                        String searchBarText = getSearchBarText();
+                        if (!searchBarText.isEmpty() && searchBarText.charAt(0) == '>') {
+                            if (searchBarText.length() > 1) {
+                                searchBarText = searchBarText.substring(1);
                             } else {
-                                DatabaseService databaseService = DatabaseService.getInstance();
-                                if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
-//                                    addShowSearchStatusThread(isShowSearchStatusThreadNotExist);
-                                } else if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.MANUAL_UPDATE) {
-                                    setLabelChosen(label1);
-                                    eventManagement.putEvent(new ShowTaskBarMessageEvent(translateService.getTranslation("Info"),
-                                            translateService.getTranslation("Updating file index") + "..."));
-                                } else if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.VACUUM) {
-                                    setLabelChosen(label1);
-                                    eventManagement.putEvent(new ShowTaskBarMessageEvent(translateService.getTranslation("Info"),
-                                            translateService.getTranslation("Organizing database")));
-                                }
+                                searchBarText = "";
                             }
-                        } else if (runningMode == RunningMode.PLUGIN_MODE) {
-                            String result;
-                            //外层循环不断尝试获取消息
-                            while (runningMode == RunningMode.PLUGIN_MODE) {
-                                while (currentUsingPlugin != null &&
-                                        (result = currentUsingPlugin.pollFromResultQueue()) != null &&
-                                        runningMode == RunningMode.PLUGIN_MODE) {
-                                    result = "plugin" + PLUGIN_RESULT_SPLITTER_STR + currentUsingPlugin.identifier + PLUGIN_RESULT_SPLITTER_STR + result;
-                                    if (!listResults.contains(result)) {
-                                        listResults.add(result);
-                                    }
-                                }
-                                TimeUnit.MILLISECONDS.sleep(10);
+                            var pluginInfos = PluginService.getInstance().searchPluginByKeyword(searchBarText);
+                            for (PluginService.PluginInfo pluginInfo : pluginInfos) {
+                                listResults.add(pluginInfo.identifier);
+                            }
+                        } else {
+                            DatabaseService databaseService = DatabaseService.getInstance();
+                            if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
+//                                    addShowSearchStatusThread(isShowSearchStatusThreadNotExist);
+                            } else if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.MANUAL_UPDATE) {
+                                setLabelChosen(label1);
+                                eventManagement.putEvent(new ShowTaskBarMessageEvent(translateService.getTranslation("Info"),
+                                        translateService.getTranslation("Updating file index") + "..."));
+                            } else if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.VACUUM) {
+                                setLabelChosen(label1);
+                                eventManagement.putEvent(new ShowTaskBarMessageEvent(translateService.getTranslation("Info"),
+                                        translateService.getTranslation("Organizing database")));
                             }
                         }
-                        if (DatabaseService.getInstance().getStatus() != Constants.Enums.DatabaseStatus.NORMAL) {
-                            //开启线程等待搜索完成
-                            addSearchWaiter(isWaiting);
-                            clearAllLabels();
+                    } else if (runningMode == RunningMode.PLUGIN_MODE) {
+                        String result;
+                        //外层循环不断尝试获取消息
+                        while (runningMode == RunningMode.PLUGIN_MODE) {
+                            while (currentUsingPlugin != null &&
+                                    (result = currentUsingPlugin.pollFromResultQueue()) != null &&
+                                    runningMode == RunningMode.PLUGIN_MODE) {
+                                result = "plugin" + PLUGIN_RESULT_SPLITTER_STR + currentUsingPlugin.identifier + PLUGIN_RESULT_SPLITTER_STR + result;
+                                if (!listResults.contains(result)) {
+                                    listResults.add(result);
+                                }
+                            }
+                            try {
+                                TimeUnit.MILLISECONDS.sleep(10);
+                            } catch (InterruptedException ignored) {
+                                // ignored
+                            }
                         }
                     }
+                    if (DatabaseService.getInstance().getStatus() != Constants.Enums.DatabaseStatus.NORMAL) {
+                        //开启线程等待搜索完成
+                        addSearchWaiter(isWaiting);
+                        clearAllLabels();
+                    }
+                }
+                try {
                     TimeUnit.MILLISECONDS.sleep(10);
-                } catch (Exception e) {
-                    e.printStackTrace();
+                } catch (InterruptedException ignored) {
+                    // ignored
                 }
             }
         });
