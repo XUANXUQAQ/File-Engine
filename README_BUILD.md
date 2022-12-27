@@ -37,9 +37,21 @@ mvn install:install-file -Dfile=libs/forms_rt.jar -DgroupId=com.intellij -Dartif
 
 进入项目根目录，打开cmd或者powershell，直接使用python运行build.py即可，后一个参数可以指定jdk目录位置。
 
+```bash
+pip install vswhere jproperties
+```
+
+```powershell
+python .\build.py
+```
+
 ![Dd7jp.jpeg](https://i.328888.xyz/2022/12/25/Dd7jp.jpeg)
 
 或指定使用的jdk位置，在后面增加参数即可。
+
+```powershell
+python .\build.py "/path/to/jdk"
+```
 
 ![DdEFU.jpeg](https://i.328888.xyz/2022/12/25/DdEFU.jpeg)
 
