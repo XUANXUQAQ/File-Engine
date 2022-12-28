@@ -131,7 +131,7 @@ public class SearchBar {
     private int lastMousePositionY = 0;
     private final String PLUGIN_RESULT_SPLITTER_STR = "-@-@-";
     private static final int SEND_PREPARE_SEARCH_TIMEOUT = 100;  //毫秒(ms)
-    private static final int SEND_START_SEARCH_TIMEOUT = 250;  //ms
+    private static final int SEND_START_SEARCH_TIMEOUT = 350;  //ms
     private static final int SHOW_RESULTS_TIMEOUT = 350; //ms
     private static final float SEARCH_BAR_WIDTH_RATIO = 0.3f;
     private static final float SEARCH_BAR_HEIGHT_RATIO = 0.4f;
@@ -3246,53 +3246,53 @@ public class SearchBar {
         SwingUtilities.invokeLater(searchBar::repaint);
     }
 
-    private void addShowSearchStatusThread(AtomicBoolean isShowSearchStatusThreadNotExist) {
-        if (!isShowSearchStatusThreadNotExist.get()) {
-            return;
-        }
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            long time = System.currentTimeMillis();
-            SwingUtilities.invokeLater(() -> searchInfoLabel.setIcon(
-                    GetIconUtil.getInstance().getBigIcon("loadingIcon", iconSideLength, iconSideLength)));
-            while (!"done".equals(searchInfoLabel.getName()) && isVisible() && startTime < time) {
-                SwingUtilities.invokeLater(() -> searchInfoLabel.setText(TranslateService.INSTANCE.getTranslation("Searching") + "    " +
-                        TranslateService.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
-                        TranslateService.INSTANCE.getTranslation("Number of current results") + ": " + listResults.size()));
-                repaint();
-                try {
-                    TimeUnit.MILLISECONDS.sleep(250);
-                } catch (InterruptedException ignored) {
-                    // ignored
-                }
-            }
-            if ("done".equals(searchInfoLabel.getName())) {
-                SwingUtilities.invokeLater(() -> {
-                    searchInfoLabel.setText(TranslateService.INSTANCE.getTranslation("Search Done") + "    " +
-                            TranslateService.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
-                            TranslateService.INSTANCE.getTranslation("Number of current results") + ": " + listResults.size());
-                    searchInfoLabel.setIcon(
-                            GetIconUtil.getInstance().getBigIcon("completeIcon", iconSideLength, iconSideLength));
-                    CachedThreadPoolUtil.getInstance().executeTask(() -> {
-                        long _time = System.currentTimeMillis();
-                        int count = 0;
-                        try {
-                            while (startTime < _time && count <= 60) {
-                                count++;
-                                TimeUnit.MILLISECONDS.sleep(50);
-                            }
-                            if (startTime > _time) {
-                                return;
-                            }
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        showSelectInfoOnLabel();
-                    });
-                });
-            }
-            isShowSearchStatusThreadNotExist.set(true);
-        });
-    }
+//    private void addShowSearchStatusThread(AtomicBoolean isShowSearchStatusThreadNotExist) {
+//        if (!isShowSearchStatusThreadNotExist.get()) {
+//            return;
+//        }
+//        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+//            long time = System.currentTimeMillis();
+//            SwingUtilities.invokeLater(() -> searchInfoLabel.setIcon(
+//                    GetIconUtil.getInstance().getBigIcon("loadingIcon", iconSideLength, iconSideLength)));
+//            while (!"done".equals(searchInfoLabel.getName()) && isVisible() && startTime < time) {
+//                SwingUtilities.invokeLater(() -> searchInfoLabel.setText(TranslateService.INSTANCE.getTranslation("Searching") + "    " +
+//                        TranslateService.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
+//                        TranslateService.INSTANCE.getTranslation("Number of current results") + ": " + listResults.size()));
+//                repaint();
+//                try {
+//                    TimeUnit.MILLISECONDS.sleep(250);
+//                } catch (InterruptedException ignored) {
+//                    // ignored
+//                }
+//            }
+//            if ("done".equals(searchInfoLabel.getName())) {
+//                SwingUtilities.invokeLater(() -> {
+//                    searchInfoLabel.setText(TranslateService.INSTANCE.getTranslation("Search Done") + "    " +
+//                            TranslateService.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
+//                            TranslateService.INSTANCE.getTranslation("Number of current results") + ": " + listResults.size());
+//                    searchInfoLabel.setIcon(
+//                            GetIconUtil.getInstance().getBigIcon("completeIcon", iconSideLength, iconSideLength));
+//                    CachedThreadPoolUtil.getInstance().executeTask(() -> {
+//                        long _time = System.currentTimeMillis();
+//                        int count = 0;
+//                        try {
+//                            while (startTime < _time && count <= 60) {
+//                                count++;
+//                                TimeUnit.MILLISECONDS.sleep(50);
+//                            }
+//                            if (startTime > _time) {
+//                                return;
+//                            }
+//                        } catch (InterruptedException e) {
+//                            e.printStackTrace();
+//                        }
+//                        showSelectInfoOnLabel();
+//                    });
+//                });
+//            }
+//            isShowSearchStatusThreadNotExist.set(true);
+//        });
+//    }
 
     /**
      * 显示一共有多少个结果，当前选中哪个
@@ -3706,6 +3706,7 @@ public class SearchBar {
                         } else {
                             DatabaseService databaseService = DatabaseService.getInstance();
                             if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
+                                setLabelChosen(label1);
 //                                    addShowSearchStatusThread(isShowSearchStatusThreadNotExist);
                             } else if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.MANUAL_UPDATE) {
                                 setLabelChosen(label1);
