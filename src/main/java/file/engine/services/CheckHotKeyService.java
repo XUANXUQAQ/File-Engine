@@ -2,12 +2,14 @@ package file.engine.services;
 
 import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
+import file.engine.configs.AllConfigs;
 import file.engine.configs.Constants;
 import file.engine.dllInterface.HotkeyListener;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.configs.SetConfigsEvent;
 import file.engine.event.handler.impl.frame.searchBar.GetShowingModeEvent;
+import file.engine.event.handler.impl.frame.searchBar.GrabFocusOnAttachModeEvent;
 import file.engine.event.handler.impl.frame.searchBar.HideSearchBarEvent;
 import file.engine.event.handler.impl.frame.searchBar.ShowSearchBarEvent;
 import file.engine.event.handler.impl.hotkey.CheckHotKeyAvailableEvent;
@@ -101,7 +103,6 @@ public class CheckHotKeyService {
 
     private void startListenHotkeyThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            HotkeyListener instance = HotkeyListener.INSTANCE;
             EventManagement eventManagement = EventManagement.getInstance();
             try {
                 AtomicLong startVisibleTime = new AtomicLong();
@@ -110,8 +111,9 @@ public class CheckHotKeyService {
                 endVisibleTime.set(System.currentTimeMillis());
                 //获取快捷键状态，检测是否被按下线程
                 SearchBar searchBar = SearchBar.getInstance();
+                long grabFocusOnAttachModeTime = 0;
                 while (eventManagement.notMainExit()) {
-                    if (!isExecuted && instance.getKeyStatus()) {
+                    if (!isExecuted && shouldOpenSearchBar()) {
                         //是否搜索框可见
                         if (searchBar.isVisible()) {
                             //搜索框最小可见时间为200ms，必须显示超过200ms后才响应关闭事件，防止闪屏
@@ -136,13 +138,25 @@ public class CheckHotKeyService {
                             }
                         }
                     }
-                    isExecuted = instance.getKeyStatus();
+                    isExecuted = shouldOpenSearchBar();
+                    if (HotkeyListener.INSTANCE.isShiftDoubleClicked() && System.currentTimeMillis() - grabFocusOnAttachModeTime > 300) {
+                        eventManagement.putEvent(new GrabFocusOnAttachModeEvent());
+                        grabFocusOnAttachModeTime = System.currentTimeMillis();
+                    }
                     TimeUnit.MILLISECONDS.sleep(10);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         });
+    }
+
+    private boolean shouldOpenSearchBar() {
+        var allConfigs = AllConfigs.getInstance();
+        if (allConfigs.isResponseCtrl()) {
+            return HotkeyListener.INSTANCE.getKeyStatus() || HotkeyListener.INSTANCE.isCtrlDoubleClicked();
+        }
+        return HotkeyListener.INSTANCE.getKeyStatus();
     }
 
     @EventRegister(registerClass = CheckHotKeyAvailableEvent.class)
@@ -155,7 +169,6 @@ public class CheckHotKeyService {
     private static void registerHotKeyEvent(Event event) {
         SetConfigsEvent setConfigsEvent = (SetConfigsEvent) event;
         getInstance().registerHotkey(setConfigsEvent.getConfigs().getHotkey());
-        HotkeyListener.INSTANCE.setCtrlDoubleClick(setConfigsEvent.getConfigs().isDoubleClickCtrlOpen());
     }
 
     @EventListener(listenClass = RestartEvent.class)

@@ -241,3 +241,4 @@ Number of current results=Anzahl der aktuellen Ergebnisse
 Currently selected=Momentan ausgewählt
 Enable GPU acceleration=Aktivieren Sie die GPU-Beschleunigung
 Number of search threads=Anzahl der Suchthreads
+Double-click shift to switch here=Doppelklicken Sie auf die Umschalttaste, um hierher zu wechseln

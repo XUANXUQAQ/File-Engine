@@ -241,3 +241,4 @@ Number of current results=Количество текущих результат
 Currently selected=Выбрано в настоящее время
 Enable GPU acceleration=Включить ускорение графического процессора
 Number of search threads=количество поисковых потоков
+Double-click shift to switch here=Дважды щелкните Shift, чтобы переключиться здесь

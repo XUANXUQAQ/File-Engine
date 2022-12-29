@@ -241,3 +241,4 @@ Number of current results=현재 결과 수
 Currently selected=현재 선택됨
 Enable GPU acceleration=GPU 가속 활성화
 Number of search threads=검색 스레드 수
+Double-click shift to switch here=여기로 전환하려면 shift를 두 번 클릭하세요.

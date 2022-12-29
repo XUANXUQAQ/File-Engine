@@ -241,3 +241,4 @@ Number of current results=当前结果数量
 Currently selected=当前选中
 Enable GPU acceleration=开启GPU加速
 Number of search threads=搜索线程数
+Double-click shift to switch here=双击shift以切换到这里

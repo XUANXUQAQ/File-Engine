@@ -2646,6 +2646,14 @@ public class SearchBar {
         switchSearchBarShowingMode();
     }
 
+    @EventRegister(registerClass = GrabFocusOnAttachModeEvent.class)
+    private static void grabFocusOnAttachMode(Event event) {
+        SearchBar searchBarInstance = getInstance();
+        if (searchBarInstance.isVisible()) {
+            searchBarInstance.grabFocus();
+        }
+    }
+
     @EventRegister(registerClass = ShowSearchBarEvent.class)
     private static void showSearchBarEvent(Event event) {
         ShowSearchBarEvent showSearchBarTask = (ShowSearchBarEvent) event;
@@ -2857,6 +2865,13 @@ public class SearchBar {
                     screenInfo.screenSize = Toolkit.getDefaultToolkit().getScreenSize();
                 }
                 if (showingMode == Constants.Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
+                    String searchInfoLabelText = searchInfoLabel.getText();
+                    if (searchInfoLabelText != null && searchInfoLabelText.isEmpty()) {
+                        SwingUtilities.invokeLater(() ->
+                                searchInfoLabel.setText(TranslateService
+                                        .getInstance()
+                                        .getTranslation("Double-click shift to switch here")));
+                    }
                     getExplorerSizeAndChangeSearchBarSizeExplorerMode(screenInfo.screenSize);
                 } else {
                     int width = screenInfo.screenSize.width;
@@ -3047,7 +3062,6 @@ public class SearchBar {
                 label7.setFont(labelFont);
                 label8.setFont(labelFont);
                 showingMode = Constants.Enums.ShowingSearchBarMode.EXPLORER_ATTACH;
-//                searchBar.setOpacity(1);
                 TimeUnit.MILLISECONDS.sleep(150);
             }
         }
@@ -3220,7 +3234,7 @@ public class SearchBar {
                 }
                 SwingUtilities.invokeLater(() -> {
                     autoSetSearchBarRadius();
-                    if (getSearchBarText().isEmpty()) {
+                    if (getSearchBarText().isEmpty() && showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
                         searchInfoLabel.setText("");
                         searchInfoLabel.setName("");
                         searchInfoLabel.setIcon(null);

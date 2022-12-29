@@ -17,5 +17,7 @@ public enum HotkeyListener {
 
     public native void stopListen();
 
-    public native void setCtrlDoubleClick(boolean isResponse);
+    public native boolean isCtrlDoubleClicked();
+
+    public native boolean isShiftDoubleClicked();
 }
