@@ -548,40 +548,40 @@ public class DatabaseService {
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         EventManagement eventManagement = EventManagement.getInstance();
         var fileChanges = new SynchronousQueue<Runnable>();
+        cachedThreadPoolUtil.executeTask(() -> addFileChangesRecords(fileChanges));
         cachedThreadPoolUtil.executeTask(() -> {
-            try {
-                while (eventManagement.notMainExit()) {
-                    String addFilePath = FileMonitor.INSTANCE.pop_add_file();
-                    String deleteFilePath = FileMonitor.INSTANCE.pop_del_file();
-                    if (addFilePath != null) {
-                        File addFile = new File(addFilePath);
-                        do {
-                            if (addFile.getParentFile() != null) {
-                                File finalAddFile = addFile;
-                                fileChanges.put(() -> addFileToDatabase(finalAddFile.getAbsolutePath()));
-                            }
-                        } while ((addFile = addFile.getParentFile()) != null);
-                    }
-                    if (deleteFilePath != null) {
-                        fileChanges.put(() -> removeFileFromDatabase(deleteFilePath));
-                    }
-                    TimeUnit.MILLISECONDS.sleep(1);
+            while (eventManagement.notMainExit()) {
+                try {
+                    fileChanges.take().run();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
-                fileChanges.put(() -> {
-                    //退出执行线程
-                });
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
             }
         });
-        cachedThreadPoolUtil.executeTask(() -> {
-            try {
-                while (eventManagement.notMainExit()) {
-                    fileChanges.take().run();
-                }
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+    }
+
+    @SneakyThrows
+    private void addFileChangesRecords(SynchronousQueue<Runnable> fileChanges) {
+        var eventManagement = EventManagement.getInstance();
+        while (eventManagement.notMainExit()) {
+            String addFilePath = FileMonitor.INSTANCE.pop_add_file();
+            String deleteFilePath = FileMonitor.INSTANCE.pop_del_file();
+            if (addFilePath != null) {
+                File addFile = new File(addFilePath);
+                do {
+                    if (addFile.getParentFile() != null) {
+                        File finalAddFile = addFile;
+                        fileChanges.put(() -> addFileToDatabase(finalAddFile.getAbsolutePath()));
+                    }
+                } while ((addFile = addFile.getParentFile()) != null);
             }
+            if (deleteFilePath != null) {
+                fileChanges.put(() -> removeFileFromDatabase(deleteFilePath));
+            }
+            TimeUnit.MILLISECONDS.sleep(1);
+        }
+        fileChanges.put(() -> {
+            //退出执行线程
         });
     }
 
