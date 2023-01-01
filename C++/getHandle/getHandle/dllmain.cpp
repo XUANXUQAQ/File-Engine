@@ -69,7 +69,7 @@ __declspec(dllexport) void setEditPath(const jchar* path);
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_GetHandle_start
 (JNIEnv*, jobject)
 {
-	start();
+    start();
 }
 
 /*
@@ -80,7 +80,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_GetHandle_start
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_GetHandle_stop
 (JNIEnv*, jobject)
 {
-	stop();
+    stop();
 }
 
 /*
@@ -91,7 +91,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_GetHandle_stop
 JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_GetHandle_changeToAttach
 (JNIEnv*, jobject)
 {
-	return static_cast<jboolean>(changeToAttach());
+    return static_cast<jboolean>(changeToAttach());
 }
 
 /*
@@ -102,7 +102,7 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_GetHandle_changeToAttac
 JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_GetHandle_changeToNormal
 (JNIEnv*, jobject)
 {
-	return static_cast<jboolean>(changeToNormal());
+    return static_cast<jboolean>(changeToNormal());
 }
 
 /*
@@ -113,7 +113,7 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_GetHandle_changeToNorma
 JNIEXPORT jlong JNICALL Java_file_engine_dllInterface_GetHandle_getExplorerX
 (JNIEnv*, jobject)
 {
-	return getExplorerX();
+    return getExplorerX();
 }
 
 /*
@@ -124,7 +124,7 @@ JNIEXPORT jlong JNICALL Java_file_engine_dllInterface_GetHandle_getExplorerX
 JNIEXPORT jlong JNICALL Java_file_engine_dllInterface_GetHandle_getExplorerY
 (JNIEnv*, jobject)
 {
-	return getExplorerY();
+    return getExplorerY();
 }
 
 /*
@@ -135,7 +135,7 @@ JNIEXPORT jlong JNICALL Java_file_engine_dllInterface_GetHandle_getExplorerY
 JNIEXPORT jlong JNICALL Java_file_engine_dllInterface_GetHandle_getExplorerWidth
 (JNIEnv*, jobject)
 {
-	return getExplorerWidth();
+    return getExplorerWidth();
 }
 
 /*
@@ -146,7 +146,7 @@ JNIEXPORT jlong JNICALL Java_file_engine_dllInterface_GetHandle_getExplorerWidth
 JNIEXPORT jlong JNICALL Java_file_engine_dllInterface_GetHandle_getExplorerHeight
 (JNIEnv*, jobject)
 {
-	return getExplorerHeight();
+    return getExplorerHeight();
 }
 
 /*
@@ -157,8 +157,8 @@ JNIEXPORT jlong JNICALL Java_file_engine_dllInterface_GetHandle_getExplorerHeigh
 JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_GetHandle_getExplorerPath
 (JNIEnv* env, jobject)
 {
-	const char* tmp = getExplorerPath();
-	return env->NewStringUTF(tmp);
+    const char* tmp = getExplorerPath();
+    return env->NewStringUTF(tmp);
 }
 
 /*
@@ -169,7 +169,7 @@ JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_GetHandle_getExplorerPat
 JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_GetHandle_isDialogWindow
 (JNIEnv*, jobject)
 {
-	return static_cast<jboolean>(isDialogWindow());
+    return static_cast<jboolean>(isDialogWindow());
 }
 
 /*
@@ -180,7 +180,7 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_GetHandle_isDialogWindo
 JNIEXPORT jint JNICALL Java_file_engine_dllInterface_GetHandle_getToolBarX
 (JNIEnv*, jobject)
 {
-	return getToolBarX();
+    return getToolBarX();
 }
 
 /*
@@ -191,7 +191,7 @@ JNIEXPORT jint JNICALL Java_file_engine_dllInterface_GetHandle_getToolBarX
 JNIEXPORT jint JNICALL Java_file_engine_dllInterface_GetHandle_getToolBarY
 (JNIEnv*, jobject)
 {
-	return getToolBarY();
+    return getToolBarY();
 }
 
 /*
@@ -202,7 +202,7 @@ JNIEXPORT jint JNICALL Java_file_engine_dllInterface_GetHandle_getToolBarY
 JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_GetHandle_isKeyPressed
 (JNIEnv*, jobject, jint vk_key)
 {
-	return static_cast<jboolean>(isKeyPressed(vk_key));
+    return static_cast<jboolean>(isKeyPressed(vk_key));
 }
 
 /*
@@ -213,7 +213,7 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_GetHandle_isKeyPressed
 JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_GetHandle_isForegroundFullscreen
 (JNIEnv*, jobject)
 {
-	return static_cast<jboolean>(isForegroundFullscreen());
+    return static_cast<jboolean>(isForegroundFullscreen());
 }
 
 /*
@@ -224,9 +224,9 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_GetHandle_isForegroundF
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_GetHandle_setEditPath
 (JNIEnv* env, jobject, jstring path)
 {
-	const jchar* _tmp_path = env->GetStringChars(path, nullptr);
-	setEditPath(_tmp_path);
-	env->ReleaseStringChars(path, _tmp_path);
+    const jchar* _tmp_path = env->GetStringChars(path, nullptr);
+    setEditPath(_tmp_path);
+    env->ReleaseStringChars(path, _tmp_path);
 }
 
 #ifdef TEST
@@ -243,7 +243,7 @@ void outputHwndInfo(HWND hwnd)
 
 int getToolBarX()
 {
-	return toolbar_click_x;
+    return toolbar_click_x;
 }
 
 /**
@@ -251,52 +251,52 @@ int getToolBarX()
  */
 BOOL isForegroundFullscreen()
 {
-	bool b_fullscreen = false; //存放当前激活窗口是否是全屏的，true表示是，false表示不是
-	RECT rc_app;
-	RECT rc_desk;
+    bool b_fullscreen = false; //存放当前激活窗口是否是全屏的，true表示是，false表示不是
+    RECT rc_app;
+    RECT rc_desk;
 
-	HWND hWnd = GetForegroundWindow(); //获取当前正在与用户交互的当前激活窗口句柄
+    HWND hWnd = GetForegroundWindow(); //获取当前正在与用户交互的当前激活窗口句柄
 
-	if ((hWnd != GetDesktopWindow()) && (hWnd != GetShellWindow())) //如果当前激活窗口不是桌面窗口，也不是控制台窗口
-	{
-		GetWindowRect(hWnd, &rc_app); //获取当前激活窗口的坐标
-		GetWindowRect(GetDesktopWindow(), &rc_desk); //根据桌面窗口句柄，获取整个屏幕的坐标
+    if ((hWnd != GetDesktopWindow()) && (hWnd != GetShellWindow())) //如果当前激活窗口不是桌面窗口，也不是控制台窗口
+    {
+        GetWindowRect(hWnd, &rc_app); //获取当前激活窗口的坐标
+        GetWindowRect(GetDesktopWindow(), &rc_desk); //根据桌面窗口句柄，获取整个屏幕的坐标
 
-		if (rc_app.left <= rc_desk.left && //如果当前激活窗口的坐标完全覆盖住桌面窗口，就表示当前激活窗口是全屏的
-			rc_app.top <= rc_desk.top &&
-			rc_app.right >= rc_desk.right &&
-			rc_app.bottom >= rc_desk.bottom)
-		{
-			char szTemp[100];
+        if (rc_app.left <= rc_desk.left && //如果当前激活窗口的坐标完全覆盖住桌面窗口，就表示当前激活窗口是全屏的
+            rc_app.top <= rc_desk.top &&
+            rc_app.right >= rc_desk.right &&
+            rc_app.bottom >= rc_desk.bottom)
+        {
+            char szTemp[100];
 
-			if (GetClassNameA(hWnd, szTemp, sizeof(szTemp)) > 0) //如果获取当前激活窗口的类名成功
-			{
-				if (strcmp(szTemp, "WorkerW") != 0) //如果不是桌面窗口的类名，就认为当前激活窗口是全屏窗口
-					b_fullscreen = true;
-			}
-			else
-			{
-				b_fullscreen = true; //如果获取失败，就认为当前激活窗口是全屏窗口
-			}
-		}
-	} //如果当前激活窗口是桌面窗口，或者是控制台窗口，就直接返回不是全屏
+            if (GetClassNameA(hWnd, szTemp, sizeof(szTemp)) > 0) //如果获取当前激活窗口的类名成功
+            {
+                if (strcmp(szTemp, "WorkerW") != 0) //如果不是桌面窗口的类名，就认为当前激活窗口是全屏窗口
+                    b_fullscreen = true;
+            }
+            else
+            {
+                b_fullscreen = true; //如果获取失败，就认为当前激活窗口是全屏窗口
+            }
+        }
+    } //如果当前激活窗口是桌面窗口，或者是控制台窗口，就直接返回不是全屏
 
-	return b_fullscreen;
+    return b_fullscreen;
 }
 
 int getToolBarY()
 {
-	return toolbar_click_y;
+    return toolbar_click_y;
 }
 
 BOOL changeToNormal()
 {
-	return is_mouse_click_out_of_explorer || isDialogNotExist();
+    return is_mouse_click_out_of_explorer || isDialogNotExist();
 }
 
 BOOL isDialogWindow()
 {
-	return top_window_type == G_DIALOG;
+    return top_window_type == G_DIALOG;
 }
 
 /**
@@ -304,12 +304,12 @@ BOOL isDialogWindow()
  */
 const char* getExplorerPath()
 {
-	POINT p;
-	GetCursorPos(&p);
-	auto* hd = WindowFromPoint(p);
-	hd = GetAncestor(hd, GA_ROOT);
-	strcpy_s(drag_explorer_path, getPathByHWND(hd).c_str());
-	return drag_explorer_path;
+    POINT p;
+    GetCursorPos(&p);
+    auto* hd = WindowFromPoint(p);
+    hd = GetAncestor(hd, GA_ROOT);
+    strcpy_s(drag_explorer_path, getPathByHWND(hd).c_str());
+    return drag_explorer_path;
 }
 
 /**
@@ -317,7 +317,7 @@ const char* getExplorerPath()
  */
 BOOL isKeyPressed(const int vk_key)
 {
-	return GetAsyncKeyState(vk_key) & 0x8000 ? TRUE : FALSE;
+    return GetAsyncKeyState(vk_key) & 0x8000 ? TRUE : FALSE;
 }
 
 /**
@@ -325,9 +325,9 @@ BOOL isKeyPressed(const int vk_key)
  */
 inline bool isMouseClicked()
 {
-	return isKeyPressed(VK_RBUTTON) ||
-		isKeyPressed(VK_MBUTTON) ||
-		isKeyPressed(VK_LBUTTON);
+    return isKeyPressed(VK_RBUTTON) ||
+        isKeyPressed(VK_MBUTTON) ||
+        isKeyPressed(VK_LBUTTON);
 }
 
 /**
@@ -335,30 +335,30 @@ inline bool isMouseClicked()
  */
 bool isDialogNotExist()
 {
-	RECT window_rect;
-	auto* hd = GetDesktopWindow(); //得到桌面窗口
-	hd = GetWindow(hd, GW_CHILD); //得到屏幕上第一个子窗口
-	while (hd != nullptr) //循环得到所有的子窗口
-	{
-		if (IsWindowVisible(hd) && !IsIconic(hd))
-		{
-			GetWindowRect(hd, &window_rect);
-			const int tmp_explorerWidth = window_rect.right - window_rect.left;
-			const int tmp_explorerHeight = window_rect.bottom - window_rect.top;
-			if (!(tmp_explorerHeight < EXPLORER_MIN_HEIGHT || tmp_explorerWidth < EXPLORER_MIN_WIDTH))
-			{
-				if (is_explorer_window_by_class_name(hd) || is_file_chooser_window(hd))
-				{
-					return false;
-				}
-			}
-		}
-		hd = GetWindow(hd, GW_HWNDNEXT);
-	}
+    RECT window_rect;
+    auto* hd = GetDesktopWindow(); //得到桌面窗口
+    hd = GetWindow(hd, GW_CHILD); //得到屏幕上第一个子窗口
+    while (hd != nullptr) //循环得到所有的子窗口
+    {
+        if (IsWindowVisible(hd) && !IsIconic(hd))
+        {
+            GetWindowRect(hd, &window_rect);
+            const int tmp_explorerWidth = window_rect.right - window_rect.left;
+            const int tmp_explorerHeight = window_rect.bottom - window_rect.top;
+            if (!(tmp_explorerHeight < EXPLORER_MIN_HEIGHT || tmp_explorerWidth < EXPLORER_MIN_WIDTH))
+            {
+                if (is_explorer_window_by_class_name(hd) || is_file_chooser_window(hd))
+                {
+                    return false;
+                }
+            }
+        }
+        hd = GetWindow(hd, GW_HWNDNEXT);
+    }
 #ifdef TEST
     cout << "all dialog not exist" << endl;
 #endif
-	return true;
+    return true;
 }
 
 /**
@@ -366,67 +366,69 @@ bool isDialogNotExist()
  */
 inline void setClickPos(const HWND& fileChooserHwnd)
 {
-	EnumChildWindows(fileChooserHwnd, findToolbar, NULL);
+    EnumChildWindows(fileChooserHwnd, findToolbar, NULL);
 }
 
 void setEditPath(const jchar* path)
 {
-	using namespace std::chrono;
-	const POINT toolbar_pos{toolbar_click_x, toolbar_click_y};
-	POINT origin_mouse_pos;
-	GetCursorPos(&origin_mouse_pos);
-	char class_name[50] = {"\0"};
-	const auto start_time = system_clock::now();
-	const auto end_time = start_time + seconds(3);
-	HWND hwnd_from_toolbar;
-	bool is_timeout = false;
-	const POINT toolbar_center{ toolbar_click_x - toolbar_width / 2, toolbar_click_y };
-	while (true)
-	{
-		//尝试点击
-		SetCursorPos(toolbar_pos.x, toolbar_pos.y);
-		mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-		Sleep(15);
-		SetCursorPos(origin_mouse_pos.x, origin_mouse_pos.y);
+    using namespace std::chrono;
+    const POINT toolbar_pos{toolbar_click_x, toolbar_click_y};
+    POINT origin_mouse_pos;
+    GetCursorPos(&origin_mouse_pos);
+    char class_name[50] = {"\0"};
+    const auto start_time = system_clock::now();
+    const auto end_time = start_time + seconds(3);
+    HWND hwnd_from_toolbar;
+    bool is_timeout = false;
+    const POINT toolbar_center{toolbar_click_x - toolbar_width / 2, toolbar_click_y};
+    while (true)
+    {
+        //尝试点击
+        SetCursorPos(toolbar_pos.x, toolbar_pos.y);
+        INPUT input;
+        input.type = INPUT_MOUSE;
+        input.mi.dwFlags = MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP;
+        SendInput(1, &input, sizeof(INPUT));
+        Sleep(15);
 
-		//检查toolbar位置是否已经变成Edit框
-		hwnd_from_toolbar = WindowFromPoint(toolbar_center);
-		GetClassNameA(hwnd_from_toolbar, class_name, 50);
-		if (strcmp(class_name, "Edit") == 0)
-		{
-			break;
-		}
-		
-		if (system_clock::now() > end_time)
-		{
-			fprintf(stderr, "Get explorer edit path timeout.");
-			is_timeout = true;
-			break;
-		}
-	}
-	if (is_timeout)
-	{
-		return;
-	}
-	SendMessageW(hwnd_from_toolbar, EM_SETSEL, static_cast<WPARAM>(0), -1);
-	SendMessageW(hwnd_from_toolbar, EM_REPLACESEL, static_cast<WPARAM>(TRUE), reinterpret_cast<LPARAM>(path));
-	INPUT input{};
-	input.type = INPUT_KEYBOARD;
-	input.ki.wVk = VK_RETURN;
-	SendInput(1, &input, sizeof(INPUT));
+        //检查toolbar位置是否已经变成Edit框
+        hwnd_from_toolbar = WindowFromPoint(toolbar_center);
+        GetClassNameA(hwnd_from_toolbar, class_name, sizeof class_name);
+        if (strcmp(class_name, "Edit") == 0)
+        {
+            break;
+        }
+        if (system_clock::now() > end_time)
+        {
+            // fprintf(stderr, "Get explorer edit path timeout.");
+            is_timeout = true;
+            break;
+        }
+    }
+    SetCursorPos(origin_mouse_pos.x, origin_mouse_pos.y);
+    if (is_timeout)
+    {
+        return;
+    }
+    SendMessageW(hwnd_from_toolbar, EM_SETSEL, static_cast<WPARAM>(0), -1);
+    SendMessageW(hwnd_from_toolbar, EM_REPLACESEL, static_cast<WPARAM>(TRUE), reinterpret_cast<LPARAM>(path));
+    INPUT input{};
+    input.type = INPUT_KEYBOARD;
+    input.ki.wVk = VK_RETURN;
+    SendInput(1, &input, sizeof(INPUT));
 }
 
 BOOL CALLBACK findToolbarWin32Internal(HWND hwndChild, LPARAM lParam)
 {
-	auto* hwd_tool_bar = FindWindowExA(hwndChild, nullptr, "ToolbarWindow32", nullptr);
-	if (IsWindow(hwd_tool_bar))
-	{
-		RECT combo_box_rect;
-		GetWindowRect(hwd_tool_bar, &combo_box_rect);
-		*reinterpret_cast<int*>(lParam) = combo_box_rect.right - combo_box_rect.left;
-		return false;
-	}
-	return true;
+    auto* hwd_tool_bar = FindWindowExA(hwndChild, nullptr, "ToolbarWindow32", nullptr);
+    if (IsWindow(hwd_tool_bar))
+    {
+        RECT combo_box_rect;
+        GetWindowRect(hwd_tool_bar, &combo_box_rect);
+        *reinterpret_cast<int*>(lParam) = combo_box_rect.right - combo_box_rect.left;
+        return false;
+    }
+    return true;
 }
 
 /**
@@ -434,23 +436,23 @@ BOOL CALLBACK findToolbarWin32Internal(HWND hwndChild, LPARAM lParam)
  */
 BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam)
 {
-	auto* hwd2 = FindWindowExA(hwndChild, nullptr, "Address Band Root", nullptr);
-	if (IsWindow(hwd2))
-	{
-		RECT rect;
-		int toolbar_win32_width = 0;
-		GetWindowRect(hwd2, &rect);
-		const int toolbar_x = rect.left;
-		const int toolbar_y = rect.top;
-		toolbar_width = rect.right - rect.left;
-		toolbar_height = rect.bottom - rect.top;
-		EnumChildWindows(hwd2, findToolbarWin32Internal, reinterpret_cast<LPARAM>(&toolbar_win32_width));
-		const int combo_box_width = toolbar_win32_width;
-		toolbar_click_x = toolbar_x + toolbar_width - combo_box_width - 15;
-		toolbar_click_y = toolbar_y + toolbar_height / 2;
-		return false;
-	}
-	return true;
+    auto* hwd2 = FindWindowExA(hwndChild, nullptr, "Address Band Root", nullptr);
+    if (IsWindow(hwd2))
+    {
+        RECT rect;
+        int toolbar_win32_width = 0;
+        GetWindowRect(hwd2, &rect);
+        const int toolbar_x = rect.left;
+        const int toolbar_y = rect.top;
+        toolbar_width = rect.right - rect.left;
+        toolbar_height = rect.bottom - rect.top;
+        EnumChildWindows(hwd2, findToolbarWin32Internal, reinterpret_cast<LPARAM>(&toolbar_win32_width));
+        const int combo_box_width = toolbar_win32_width;
+        toolbar_click_x = toolbar_x + toolbar_width - combo_box_width - 15;
+        toolbar_click_y = toolbar_y + toolbar_height / 2;
+        return false;
+    }
+    return true;
 }
 
 /**
@@ -458,14 +460,14 @@ BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam)
  */
 void start()
 {
-	if (!is_running)
-	{
-		is_running = true;
-		thread checkTopWindow(checkTopWindowThread);
-		checkTopWindow.detach();
-		thread checkMouse(checkMouseThread);
-		checkMouse.detach();
-	}
+    if (!is_running)
+    {
+        is_running = true;
+        thread checkTopWindow(checkTopWindowThread);
+        checkTopWindow.detach();
+        thread checkMouse(checkMouseThread);
+        checkMouse.detach();
+    }
 }
 
 /**
@@ -473,7 +475,7 @@ void start()
  */
 void stop()
 {
-	is_running = false;
+    is_running = false;
 }
 
 /**
@@ -481,7 +483,7 @@ void stop()
  */
 BOOL changeToAttach()
 {
-	return is_explorer_window_at_top;
+    return is_explorer_window_at_top;
 }
 
 /**
@@ -489,7 +491,7 @@ BOOL changeToAttach()
  */
 long getExplorerX()
 {
-	return explorer_x;
+    return explorer_x;
 }
 
 /**
@@ -497,7 +499,7 @@ long getExplorerX()
  */
 long getExplorerY()
 {
-	return explorer_y;
+    return explorer_y;
 }
 
 /**
@@ -505,7 +507,7 @@ long getExplorerY()
  */
 long getExplorerWidth()
 {
-	return explorer_width;
+    return explorer_width;
 }
 
 /**
@@ -513,54 +515,54 @@ long getExplorerWidth()
  */
 long getExplorerHeight()
 {
-	return explorer_height;
+    return explorer_height;
 }
 
 void checkMouseThread()
 {
-	POINT point;
-	RECT explorer_area;
-	RECT search_bar_area;
-	int count = 0;
-	constexpr int wait_count_times = 25;
-	constexpr int max_wait_count = wait_count_times * 2;
-	bool is_mouse_clicked_flag = false;
-	while (is_running)
-	{
-		if (count <= max_wait_count)
-		{
-			count++;
-		}
-		// count防止窗口闪烁
-		if (is_mouse_clicked_flag && count > wait_count_times && !is_mouse_click_out_of_explorer || count >
-			max_wait_count)
-		{
-			count = 0;
-			is_mouse_clicked_flag = false;
-			HWND top_window = GetForegroundWindow();
-			is_mouse_click_out_of_explorer = !(is_explorer_window_by_process(top_window) || is_file_chooser_window(
-					top_window)
-				|| is_search_bar_window(top_window));
-		}
-		// 如果窗口句柄已经失效或者最小化，则判定为关闭窗口
-		if (!IsWindow(current_attach_explorer) || IsIconic(current_attach_explorer))
-		{
-			is_mouse_click_out_of_explorer = true;
-		}
-		else if (isMouseClicked())
-		{
-			// 检测鼠标位置，如果点击位置不在explorer窗口内则判定为关闭窗口
-			if (GetCursorPos(&point))
-			{
-				GetWindowRect(current_attach_explorer, &explorer_area);
-				GetWindowRect(get_search_bar_hwnd(), &search_bar_area);
-				is_mouse_click_out_of_explorer =
-					!(explorer_area.left <= point.x && point.x <= explorer_area.right && (explorer_area.top <= point.y
-						&&
-						point.y <= explorer_area.bottom)) &&
-					!(search_bar_area.left <= point.x && point.x <= search_bar_area.right && (search_bar_area.top <=
-						point.y
-						&& point.y <= search_bar_area.bottom));
+    POINT point;
+    RECT explorer_area;
+    RECT search_bar_area;
+    int count = 0;
+    constexpr int wait_count_times = 25;
+    constexpr int max_wait_count = wait_count_times * 2;
+    bool is_mouse_clicked_flag = false;
+    while (is_running)
+    {
+        if (count <= max_wait_count)
+        {
+            count++;
+        }
+        // count防止窗口闪烁
+        if (is_mouse_clicked_flag && count > wait_count_times && !is_mouse_click_out_of_explorer || count >
+            max_wait_count)
+        {
+            count = 0;
+            is_mouse_clicked_flag = false;
+            HWND top_window = GetForegroundWindow();
+            is_mouse_click_out_of_explorer = !(is_explorer_window_by_process(top_window) || is_file_chooser_window(
+                    top_window)
+                || is_search_bar_window(top_window));
+        }
+        // 如果窗口句柄已经失效或者最小化，则判定为关闭窗口
+        if (!IsWindow(current_attach_explorer) || IsIconic(current_attach_explorer))
+        {
+            is_mouse_click_out_of_explorer = true;
+        }
+        else if (isMouseClicked())
+        {
+            // 检测鼠标位置，如果点击位置不在explorer窗口内则判定为关闭窗口
+            if (GetCursorPos(&point))
+            {
+                GetWindowRect(current_attach_explorer, &explorer_area);
+                GetWindowRect(get_search_bar_hwnd(), &search_bar_area);
+                is_mouse_click_out_of_explorer =
+                    !(explorer_area.left <= point.x && point.x <= explorer_area.right && (explorer_area.top <= point.y
+                        &&
+                        point.y <= explorer_area.bottom)) &&
+                    !(search_bar_area.left <= point.x && point.x <= search_bar_area.right && (search_bar_area.top <=
+                        point.y
+                        && point.y <= search_bar_area.bottom));
 #ifdef TEST
                 cout << "point X:" << point.x << endl;
                 cout << "point Y:" << point.y << endl;
@@ -570,22 +572,22 @@ void checkMouseThread()
                     cout << "return false" << endl;
                 }
 #endif
-			}
-			count = 0;
-			is_mouse_clicked_flag = true;
-		}
-		if (IsWindowVisible(get_search_bar_hwnd()))
-		{
-			Sleep(10);
-		}
-		else
-		{
+            }
+            count = 0;
+            is_mouse_clicked_flag = true;
+        }
+        if (IsWindowVisible(get_search_bar_hwnd()))
+        {
+            Sleep(10);
+        }
+        else
+        {
 #ifdef TEST
             cout << "search bar not visible" << endl;
 #endif
-			Sleep(300);
-		}
-	}
+            Sleep(300);
+        }
+    }
 }
 
 /**
@@ -593,59 +595,59 @@ void checkMouseThread()
  */
 void checkTopWindowThread()
 {
-	RECT window_rect;
-	while (is_running)
-	{
-		HWND hwnd = GetForegroundWindow();
-		const auto isExplorerWindow = is_explorer_window_by_class_name(hwnd);
-		const auto isDialogWindow = is_file_chooser_window(hwnd);
+    RECT window_rect;
+    while (is_running)
+    {
+        HWND hwnd = GetForegroundWindow();
+        const auto isExplorerWindow = is_explorer_window_by_class_name(hwnd);
+        const auto isDialogWindow = is_file_chooser_window(hwnd);
 
-		if (isExplorerWindow || isDialogWindow)
-		{
-			GetWindowRect(hwnd, &window_rect);
-			if (IsZoomed(hwnd))
-			{
-				explorer_x = 0;
-				explorer_y = 0;
-			}
-			else
-			{
-				explorer_x = window_rect.left;
-				explorer_y = window_rect.top;
-			}
-			explorer_width = window_rect.right - window_rect.left;
-			explorer_height = window_rect.bottom - window_rect.top;
-			if (explorer_height < EXPLORER_MIN_HEIGHT || explorer_width < EXPLORER_MIN_WIDTH)
-			{
-				is_explorer_window_at_top = false;
-			}
-			else
-			{
-				if (isExplorerWindow)
-				{
-					top_window_type = G_EXPLORER;
-				}
-				else if (isDialogWindow)
-				{
-					top_window_type = G_DIALOG;
-				}
-				current_attach_explorer = hwnd;
-				setClickPos(hwnd);
-				is_explorer_window_at_top = true;
-				is_mouse_click_out_of_explorer = false;
-			}
-		}
-		else
-		{
-			is_explorer_window_at_top = false;
-		}
-		if (is_explorer_window_at_top)
-		{
-			Sleep(5);
-		}
-		else
-		{
-			Sleep(300);
-		}
-	}
+        if (isExplorerWindow || isDialogWindow)
+        {
+            GetWindowRect(hwnd, &window_rect);
+            if (IsZoomed(hwnd))
+            {
+                explorer_x = 0;
+                explorer_y = 0;
+            }
+            else
+            {
+                explorer_x = window_rect.left;
+                explorer_y = window_rect.top;
+            }
+            explorer_width = window_rect.right - window_rect.left;
+            explorer_height = window_rect.bottom - window_rect.top;
+            if (explorer_height < EXPLORER_MIN_HEIGHT || explorer_width < EXPLORER_MIN_WIDTH)
+            {
+                is_explorer_window_at_top = false;
+            }
+            else
+            {
+                if (isExplorerWindow)
+                {
+                    top_window_type = G_EXPLORER;
+                }
+                else if (isDialogWindow)
+                {
+                    top_window_type = G_DIALOG;
+                }
+                current_attach_explorer = hwnd;
+                setClickPos(hwnd);
+                is_explorer_window_at_top = true;
+                is_mouse_click_out_of_explorer = false;
+            }
+        }
+        else
+        {
+            is_explorer_window_at_top = false;
+        }
+        if (is_explorer_window_at_top)
+        {
+            Sleep(5);
+        }
+        else
+        {
+            Sleep(300);
+        }
+    }
 }
