@@ -11,19 +11,19 @@ import java.awt.*;
 import java.io.File;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-/**
- * @author XUANXU
- */
 public class GetIconUtil {
     private static final int MAX_WORKING_QUEUE_SIZE = 200;
+    private static final int MAX_CONSUMER_THREAD_NUM = 4;
     private static final FileSystemView FILE_SYSTEM_VIEW = FileSystemView.getFileSystemView();
     private final ConcurrentHashMap<String, ImageIcon> iconMap = new ConcurrentHashMap<>();
     private final LinkedBlockingQueue<Task> workingQueue = new LinkedBlockingQueue<>(MAX_WORKING_QUEUE_SIZE);
-    private Thread workingThread;
+    private final ExecutorService iconTaskConsumer = Executors.newFixedThreadPool(MAX_CONSUMER_THREAD_NUM);
 
     private static volatile GetIconUtil INSTANCE = null;
 
@@ -145,32 +145,31 @@ public class GetIconUtil {
     }
 
     private void startWorkingThread() {
-        workingThread = new Thread(() -> {
-            EventManagement eventManagement = EventManagement.getInstance();
-            try {
-                while (eventManagement.notMainExit()) {
-                    var take = workingQueue.take();
-                    if (take.timeoutCallBack != null) {
-                        if (!take.isDone) {
+        for (int i = 0; i < MAX_CONSUMER_THREAD_NUM; i++) {
+            iconTaskConsumer.execute(() -> {
+                EventManagement eventManagement = EventManagement.getInstance();
+                try {
+                    while (eventManagement.notMainExit()) {
+                        var take = workingQueue.take();
+                        if (take.timeoutCallBack != null) {
+                            if (!take.isDone) {
+                                take.icon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(take.path), take.width, take.height);
+                            }
+                            take.timeoutCallBack.accept(take.icon);
+                        } else {
                             take.icon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(take.path), take.width, take.height);
+                            take.isDone = true;
                         }
-                        take.timeoutCallBack.accept(take.icon);
-                    } else {
-                        take.icon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(take.path), take.width, take.height);
-                        take.isDone = true;
                     }
+                } catch (InterruptedException ignored) {
+                    // ignore InterruptedException
                 }
-            } catch (InterruptedException ignored) {
-                // ignore InterruptedException
-            }
-        });
-        workingThread.start();
+            });
+        }
     }
 
     public void stopWorkingThread() {
-        if (workingThread != null) {
-            workingThread.interrupt();
-        }
+        iconTaskConsumer.shutdownNow();
     }
 
     @RequiredArgsConstructor
