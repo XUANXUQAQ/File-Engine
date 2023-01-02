@@ -476,9 +476,8 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_clearCa
 JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_isCudaAvailable
 (JNIEnv*, jobject)
 {
-    cudaError_t cudaStatus;
     int device_num = 0;
-    cudaStatus = cudaGetDeviceCount(&device_num);
+    cudaError_t cudaStatus = cudaGetDeviceCount(&device_num);
     if (cudaStatus != cudaSuccess)
     {
         return FALSE;
@@ -670,7 +669,7 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 int is_dir_or_file(const char* path)
 {
     const auto w_path = string2wstring(path);
-    DWORD dwAttrib = GetFileAttributes(w_path.c_str());
+    const DWORD dwAttrib = GetFileAttributes(w_path.c_str());
     if (dwAttrib != INVALID_FILE_ATTRIBUTES)
     {
         if (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)

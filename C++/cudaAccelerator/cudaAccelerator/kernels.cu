@@ -364,18 +364,18 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
         {
             break;
         }
-        int block_num, thread_num;
+        int grid_size, block_size;
         const auto total = cache->str_data.record_num.load() + cache->str_data.remain_blank_num.load();
         const auto max_pow_of_2 = find_table_sizeof2(total);
         if (cache->str_data.record_num.load() > MAX_THREAD_PER_BLOCK)
         {
-            thread_num = MAX_THREAD_PER_BLOCK;
-            block_num = static_cast<int>(max_pow_of_2 / thread_num);
+            block_size = MAX_THREAD_PER_BLOCK;
+            grid_size = static_cast<int>(max_pow_of_2 / block_size);
         }
         else
         {
-            thread_num = static_cast<int>(cache->str_data.record_num.load());
-            block_num = 1;
+            block_size = static_cast<int>(cache->str_data.record_num.load());
+            grid_size = 1;
         }
 
         size_t* dev_total_number = nullptr;
@@ -384,7 +384,7 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
         const auto total_number = cache->str_data.record_num + cache->str_data.remain_blank_num;
         gpuErrchk(cudaMemcpy(dev_total_number, &total_number, sizeof(size_t), cudaMemcpyHostToDevice), true, nullptr);
 
-        check<<<block_num, thread_num, 0, streams[count]>>>
+        check<<<grid_size, block_size, 0, streams[count]>>>
         (cache->str_data.dev_str_addr,
          dev_total_number,
          dev_search_case,
@@ -407,10 +407,14 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
         fprintf(stderr, "check launch failed: %s\n", cudaGetErrorString(cudaStatus));
     }
     // 等待执行完成
-    cudaStatus = cudaDeviceSynchronize();
-    if (cudaStatus != cudaSuccess)
+    // cudaStatus = cudaDeviceSynchronize();
+    // if (cudaStatus != cudaSuccess)
+    // {
+    //     fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launch!\n", cudaStatus);
+    // }
+    for (size_t i = 0; i < map_size; ++i)
     {
-        fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launch!\n", cudaStatus);
+        gpuErrchk(cudaStreamSynchronize(streams[i]), true, nullptr);
     }
 
     for (size_t i = 0; i < map_size; ++i) 
