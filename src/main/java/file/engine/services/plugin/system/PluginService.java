@@ -27,7 +27,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -57,42 +57,43 @@ public class PluginService {
      */
     private void checkPluginThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            try {
-                String[] message;
-                Plugin plugin;
-                EventManagement eventManagement = EventManagement.getInstance();
-                long lastCheckEventTime = System.currentTimeMillis();
-                while (eventManagement.notMainExit()) {
-                    for (PluginInfo each : pluginInfoSet) {
-                        plugin = each.plugin;
-                        message = plugin.getMessage();
-                        if (message != null) {
-                            eventManagement.putEvent(new ShowTaskBarMessageEvent(message[0], message[1]));
-                        }
-                        Object[] registerEventHandler = plugin.pollFromEventHandlerQueue();
-                        if (registerEventHandler != null) {
-                            //noinspection unchecked
-                            eventManagement.registerPluginHandler((String) registerEventHandler[0], (BiConsumer<Class<?>, Object>) registerEventHandler[1]);
-                        }
-                        String className = plugin.restoreFileEngineEventHandler();
-                        if (!(className == null || className.isEmpty())) {
-                            eventManagement.unregisterPluginHandler(className);
-                        }
+            String[] message;
+            Plugin plugin;
+            EventManagement eventManagement = EventManagement.getInstance();
+            long lastCheckEventTime = System.currentTimeMillis();
+            while (eventManagement.notMainExit()) {
+                for (PluginInfo each : pluginInfoSet) {
+                    plugin = each.plugin;
+                    message = plugin.getMessage();
+                    if (message != null) {
+                        eventManagement.putEvent(new ShowTaskBarMessageEvent(message[0], message[1]));
                     }
-                    if (System.currentTimeMillis() - lastCheckEventTime > 1000) {
-                        lastCheckEventTime = System.currentTimeMillis();
-                        for (PluginInfo pluginInfo : pluginInfoSet) {
-                            plugin = pluginInfo.plugin;
-                            Object[] eventInfo = plugin.pollFromEventQueue();
-                            // 构建事件并发出
-                            if (eventInfo != null) {
-                                eventManagement.putEvent(new BuildEventRequestEvent(eventInfo));
-                            }
-                        }
+                    Object[] registerEventHandler = plugin.pollFromEventHandlerQueue();
+                    if (registerEventHandler != null) {
+                        //noinspection unchecked
+                        eventManagement.registerPluginHandler((String) registerEventHandler[0], (BiConsumer<Class<?>, Object>) registerEventHandler[1]);
                     }
-                    TimeUnit.MILLISECONDS.sleep(50);
+                    String className = plugin.restoreFileEngineEventHandler();
+                    if (!(className == null || className.isEmpty())) {
+                        eventManagement.unregisterPluginHandler(className);
+                    }
                 }
-            } catch (InterruptedException ignored) {
+                if (System.currentTimeMillis() - lastCheckEventTime > 1000) {
+                    lastCheckEventTime = System.currentTimeMillis();
+                    for (PluginInfo pluginInfo : pluginInfoSet) {
+                        plugin = pluginInfo.plugin;
+                        Object[] eventInfo = plugin.pollFromEventQueue();
+                        // 构建事件并发出
+                        if (eventInfo != null) {
+                            eventManagement.putEvent(new BuildEventRequestEvent(eventInfo));
+                        }
+                    }
+                }
+                try {
+                    TimeUnit.MILLISECONDS.sleep(50);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
         });
     }
@@ -429,38 +430,31 @@ public class PluginService {
     }
 
     private boolean isPluginLatest(Plugin plugin) throws InterruptedException {
-        final long checkSuccess = 0x100L;
-        AtomicLong startCheckTime = new AtomicLong();
         AtomicBoolean isVersionLatest = new AtomicBoolean();
+        AtomicInteger finishFlag = new AtomicInteger(0);
         Thread checkUpdateThread = new Thread(() -> {
-            startCheckTime.set(System.currentTimeMillis());
             try {
                 isVersionLatest.set(plugin.isLatest());
-                if (!Thread.interrupted()) {
-                    startCheckTime.set(checkSuccess); //表示检查成功
-                }
+                finishFlag.set(1);
             } catch (Exception e) {
                 e.printStackTrace();
-                startCheckTime.set(0xFFFL);
+                finishFlag.set(2);
             }
         });
-        CachedThreadPoolUtil.getInstance().executeTask(checkUpdateThread);
+        checkUpdateThread.start();
         //等待获取插件更新信息
-        try {
-            while (startCheckTime.get() != checkSuccess) {
-                TimeUnit.MILLISECONDS.sleep(200);
-                if ((System.currentTimeMillis() - startCheckTime.get() > 5000L && startCheckTime.get() != checkSuccess) || startCheckTime.get() == 0xFFFL) {
-                    checkUpdateThread.interrupt();
-                    throw new InterruptedException("check update failed.");
-                }
-                if (!EventManagement.getInstance().notMainExit()) {
-                    break;
-                }
+        long startCheckTime = System.currentTimeMillis();
+        while (finishFlag.get() == 0) {
+            if (System.currentTimeMillis() - startCheckTime > 5000L || !EventManagement.getInstance().notMainExit()) {
+                checkUpdateThread.interrupt();
+                throw new InterruptedException("check update failed.");
             }
-            return isVersionLatest.get();
-        } catch (InterruptedException e) {
-            throw new InterruptedException("check update failed.");
+            TimeUnit.MILLISECONDS.sleep(200);
         }
+        if (finishFlag.get() == 1) {
+            return isVersionLatest.get();
+        }
+        throw new InterruptedException("check update failed.");
     }
 
     /**

@@ -5,7 +5,9 @@ import javax.swing.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Plugin {
@@ -75,12 +77,12 @@ public class Plugin {
 
     @SuppressWarnings("unchecked")
     private <T> T invokeByKeyNoExcept(String key, Object... args) {
-        try {
-            if (methodHashMap.containsKey(key)) {
+        if (methodHashMap.containsKey(key)) {
+            try {
                 return (T) methodHashMap.get(key).invoke(instance, args);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
         return null;
     }
