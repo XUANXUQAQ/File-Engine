@@ -1,3 +1,4 @@
 #pragma once
-//#define TEST
-#define RECORD_MAX_PATH 384
+// #define TEST
+// #define RECORD_MAX_PATH 384
+#define SAVE_TO_DATABASE_RECORD_CHECKPOINT 300000

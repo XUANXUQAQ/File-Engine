@@ -23,7 +23,7 @@
 #define CHECK_TIME_THRESHOLD 1
 
 // TODO 该变量为File-Engine.zip中的File-Engine.jar的md5值
-#define FILE_ENGINE_JAR_MD5 "03fc4669f6016504c79c7aec740389cc"
+#define FILE_ENGINE_JAR_MD5 "57b37539011b048fdd7af8ca17e3da2f"
 
 #ifndef TEST
 #pragma comment( linker, "/subsystem:windows /entry:mainCRTStartup" )
