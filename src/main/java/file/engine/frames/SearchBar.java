@@ -1633,12 +1633,10 @@ public class SearchBar {
     private boolean isLabelEmpty(JLabel label) {
         boolean isEmpty = true;
         String text;
-        String name;
         if (label != null) {
             text = label.getText();
-            name = label.getText();
-            if (text != null && name != null) {
-                isEmpty = text.isEmpty() && name.isEmpty();
+            if (text != null) {
+                isEmpty = text.isEmpty();
             }
         }
         return isEmpty;
@@ -3129,15 +3127,15 @@ public class SearchBar {
 
     private void tryToShowRecordsWhenHasLabelEmpty() {
         if (currentResultCount.get() < listResults.size()) {
-            if (
+            var hasLabelEmpty = isLabelEmpty(label1) ||
                     isLabelEmpty(label2) ||
-                            isLabelEmpty(label3) ||
-                            isLabelEmpty(label4) ||
-                            isLabelEmpty(label5) ||
-                            isLabelEmpty(label6) ||
-                            isLabelEmpty(label7) ||
-                            isLabelEmpty(label8)
-            ) {
+                    isLabelEmpty(label3) ||
+                    isLabelEmpty(label4) ||
+                    isLabelEmpty(label5) ||
+                    isLabelEmpty(label6) ||
+                    isLabelEmpty(label7) ||
+                    isLabelEmpty(label8);
+            if (hasLabelEmpty) {
                 //设置窗口上的文字和图片显示，键盘模式
                 int pos = getCurrentLabelPos();
                 var ref = new Object() {
