@@ -51,23 +51,23 @@ public class TaskBar {
 
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             EventManagement instance = EventManagement.getInstance();
-            try {
-                while (instance.notMainExit()) {
-                    if (popupMenu != null && popupMenu.isVisible() && (GetHandle.INSTANCE.isKeyPressed(L_BUTTON) || GetHandle.INSTANCE.isKeyPressed(R_BUTTON))) {
-                        Point point = java.awt.MouseInfo.getPointerInfo().getLocation();
-                        Point location = popupMenu.getLocationOnScreen();
-                        int X = location.x;
-                        int Y = location.y;
-                        int width = popupMenu.getWidth();
-                        int height = popupMenu.getHeight();
-                        if (!(X <= point.x && point.x <= X + width && Y < point.y && point.y <= Y + height)) {
-                            SwingUtilities.invokeLater(() -> popupMenu.setVisible(false));
-                        }
+            while (instance.notMainExit()) {
+                if (popupMenu != null && popupMenu.isVisible() && (GetHandle.INSTANCE.isKeyPressed(L_BUTTON) || GetHandle.INSTANCE.isKeyPressed(R_BUTTON))) {
+                    Point point = java.awt.MouseInfo.getPointerInfo().getLocation();
+                    Point location = popupMenu.getLocationOnScreen();
+                    int X = location.x;
+                    int Y = location.y;
+                    int width = popupMenu.getWidth();
+                    int height = popupMenu.getHeight();
+                    if (!(X <= point.x && point.x <= X + width && Y < point.y && point.y <= Y + height)) {
+                        SwingUtilities.invokeLater(() -> popupMenu.setVisible(false));
                     }
-                    TimeUnit.MILLISECONDS.sleep(50);
                 }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                try {
+                    TimeUnit.MILLISECONDS.sleep(50);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
         });
     }
@@ -77,30 +77,30 @@ public class TaskBar {
      */
     private void startShowMessageThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            try {
-                EventManagement eventManagement = EventManagement.getInstance();
-                MessageStruct message;
-                int count = 0;
-                while (eventManagement.notMainExit()) {
-                    if (isMessageClear.get()) {
-                        currentShowingMessageWithEvent = null;
-                        message = messageQueue.poll();
-                        if (message != null) {
-                            currentShowingMessageWithEvent = message.event;
-                            showMessageOnTrayIcon(message.caption, message.message);
-                            isMessageClear.set(false);
-                            count = 0;
-                        }
-                    } else {
-                        count++;
+            EventManagement eventManagement = EventManagement.getInstance();
+            MessageStruct message;
+            int count = 0;
+            while (eventManagement.notMainExit()) {
+                if (isMessageClear.get()) {
+                    currentShowingMessageWithEvent = null;
+                    message = messageQueue.poll();
+                    if (message != null) {
+                        currentShowingMessageWithEvent = message.event;
+                        showMessageOnTrayIcon(message.caption, message.message);
+                        isMessageClear.set(false);
+                        count = 0;
                     }
-                    if (count > 100) {
-                        isMessageClear.set(true);
-                    }
-                    TimeUnit.MILLISECONDS.sleep(50);
+                } else {
+                    count++;
                 }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                if (count > 100) {
+                    isMessageClear.set(true);
+                }
+                try {
+                    TimeUnit.MILLISECONDS.sleep(50);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
         });
     }

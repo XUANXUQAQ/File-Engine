@@ -475,7 +475,7 @@ public class SearchBar {
         }
     }
 
-    public static SearchBar getInstance() {
+    private static SearchBar getInstance() {
         if (instance == null) {
             synchronized (SearchBar.class) {
                 if (instance == null) {
@@ -492,7 +492,7 @@ public class SearchBar {
             @Override
             public void focusGained(FocusEvent e) {
                 if (!IsDebug.isDebug()) {
-                    resetAllStatus();
+                    SwingUtilities.invokeLater(() -> resetAllStatus());
                 }
             }
 
@@ -3799,7 +3799,7 @@ public class SearchBar {
         int labelHeight = searchBarHeight / 9;
         long start = System.currentTimeMillis();
         try {
-            while (!(searchBar.isVisible() || searchBar.isValid()) && System.currentTimeMillis() - start < 3000) {
+            while (!(isVisible() || searchBar.isValid()) && System.currentTimeMillis() - start < 3000) {
                 TimeUnit.MILLISECONDS.sleep(5);
             }
         } catch (InterruptedException ignored) {
@@ -4232,12 +4232,14 @@ public class SearchBar {
      * @param label 需要清空的label
      */
     private void clearALabel(JLabel label) {
-        label.setBackground(null);
-        label.setText(null);
-        label.setName(null);
-        label.setIcon(null);
-        labelShowingPathInfo.remove(label);
-        labelLastShowingPathInfo.remove(label);
+        SwingUtilities.invokeLater(() -> {
+            label.setBackground(null);
+            label.setText(null);
+            label.setName(null);
+            label.setIcon(null);
+            labelShowingPathInfo.remove(label);
+            labelLastShowingPathInfo.remove(label);
+        });
     }
 
     /**
@@ -4319,10 +4321,11 @@ public class SearchBar {
         }
     }
 
-    private void setVisible(boolean b) {
-        if (!b) {
+    private void setVisible(boolean visible) {
+        if (!visible) {
             if (!isPreviewMode.get()) {
                 searchBar.setVisible(false);
+                EventManagement.getInstance().putEvent(new SearchBarCloseEvent());
             }
         } else {
             searchBar.setVisible(true);
@@ -4383,7 +4386,7 @@ public class SearchBar {
      *
      * @return true如果可见 否则false
      */
-    public boolean isVisible() {
+    private boolean isVisible() {
         return searchBar.isVisible();
     }
 

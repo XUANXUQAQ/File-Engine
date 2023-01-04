@@ -31,6 +31,7 @@ import file.engine.event.handler.impl.plugin.AddPluginsCanUpdateEvent;
 import file.engine.event.handler.impl.plugin.GetPluginByNameEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
+import file.engine.frames.components.SetDownloadProgress;
 import file.engine.services.CheckHotKeyService;
 import file.engine.services.DatabaseService;
 import file.engine.services.TranslateService;

@@ -466,17 +466,17 @@ public class EventManagement {
      *
      * @param eventType 需要监听的任务类型
      */
-    private void registerListener(String eventType, Method todo) {
+    private void registerListener(String eventType, Method listenerMethod) {
         if (IsDebug.isDebug()) {
             System.err.println("注册监听器" + eventType);
         }
         ConcurrentLinkedQueue<Method> queue = EVENT_LISTENER_MAP.get(eventType);
         if (queue == null) {
             queue = new ConcurrentLinkedQueue<>();
-            queue.add(todo);
+            queue.add(listenerMethod);
             EVENT_LISTENER_MAP.put(eventType, queue);
         } else {
-            queue.add(todo);
+            queue.add(listenerMethod);
         }
     }
 
