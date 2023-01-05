@@ -30,7 +30,7 @@ A tool can make you work more efficiently.
 
 ## 如何手动更新
 
-进入File-Engine目录，用新版本覆盖File-Engine.exe，然后进入data文件夹，删除File-Engine.jar。然后打开File-Engine.exe即可。
+进入File-Engine目录，用新版本覆盖File-Engine.exe，然后打开File-Engine.exe即可。
 
 ## 使用
 
