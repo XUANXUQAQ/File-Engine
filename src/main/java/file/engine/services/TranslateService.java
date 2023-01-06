@@ -17,8 +17,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public enum TranslateService {
     INSTANCE;
 
-    private volatile @Getter
-    String language;
+    @Getter
+    private volatile String language;
     private final ConcurrentHashMap<String, String> translationMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, String> fileMap = new ConcurrentHashMap<>();
     private Font[] fList;
@@ -85,37 +85,17 @@ public enum TranslateService {
         //TODO 添加语言
         Locale l = Locale.getDefault();
         String lang = l.toLanguageTag();
-        switch (lang) {
-            case "zh-CN":
-                return "简体中文";
-            case "ja-JP":
-            case "ja-JP-u-ca-japanese":
-            case "ja-JP-x-lvariant-JP":
-                return "日本語";
-            case "zh-HK":
-            case "zh-TW":
-                return "繁體中文";
-            case "ru-RU":
-                return "русский";
-            case "it-IT":
-            case "it-CH":
-                return "italiano";
-            case "de-AT":
-            case "de-DE":
-            case "de-LU":
-            case "de-CH":
-                return "German";
-            case "ko-KR":
-                return "한국어";
-            case "fr-BE":
-            case "fr-CA":
-            case "fr-FR":
-            case "fr-LU":
-            case "fr-CH":
-                return "français";
-            default:
-                return "English(US)";
-        }
+        return switch (lang) {
+            case "zh-CN" -> "简体中文";
+            case "ja-JP", "ja-JP-u-ca-japanese", "ja-JP-x-lvariant-JP" -> "日本語";
+            case "zh-HK", "zh-TW" -> "繁體中文";
+            case "ru-RU" -> "русский";
+            case "it-IT", "it-CH" -> "italiano";
+            case "de-AT", "de-DE", "de-LU", "de-CH" -> "German";
+            case "ko-KR" -> "한국어";
+            case "fr-BE", "fr-CA", "fr-FR", "fr-LU", "fr-CH" -> "français";
+            default -> "English(US)";
+        };
     }
 
     private void initLanguageFileMap() {
@@ -221,6 +201,7 @@ public enum TranslateService {
 
     /**
      * 测试字体是否能显示所有的翻译文字
+     *
      * @param font 字体
      * @return boolean
      */

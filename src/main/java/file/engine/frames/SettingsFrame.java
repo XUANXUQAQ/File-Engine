@@ -3470,13 +3470,6 @@ public class SettingsFrame {
         }
     }
 
-    private static class TabNameAndTitle {
-        private final String title;
-        private final String tabName;
-
-        private TabNameAndTitle(String tabName, String title) {
-            this.tabName = tabName;
-            this.title = title;
-        }
+    private record TabNameAndTitle(String tabName, String title) {
     }
 }

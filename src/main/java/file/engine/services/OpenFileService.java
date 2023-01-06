@@ -15,17 +15,10 @@ public class OpenFileService {
         OpenFileEvent openFileEvent = (OpenFileEvent) event;
         OpenFileEvent.OpenStatus openStatus = openFileEvent.openStatus;
         switch (openStatus) {
-            case NORMAL_OPEN:
-                openFile(openFileEvent.path);
-                break;
-            case LAST_DIR:
-                openParentPath(openFileEvent.path);
-                break;
-            case WITH_ADMIN:
-                openFileWithAdmin(openFileEvent.path);
-                break;
-            default:
-                throw new RuntimeException("error open status");
+            case NORMAL_OPEN -> openFile(openFileEvent.path);
+            case LAST_DIR -> openParentPath(openFileEvent.path);
+            case WITH_ADMIN -> openFileWithAdmin(openFileEvent.path);
+            default -> throw new RuntimeException("error open status");
         }
     }
 

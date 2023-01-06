@@ -158,8 +158,8 @@ public class StartupUtil {
             resultsArray[i] = results.substring(valIndex, valIndex + strLength);
             valIndex += strLength + 1;
         }
-        List<String> keyList = Arrays.stream(keysArray).filter(each -> !each.isBlank()).map(String::trim).collect(Collectors.toList());
-        List<String> resultList = Arrays.stream(resultsArray).filter(each -> !each.isBlank()).map(String::trim).collect(Collectors.toList());
+        List<String> keyList = Arrays.stream(keysArray).filter(each -> !each.isBlank()).map(String::trim).toList();
+        List<String> resultList = Arrays.stream(resultsArray).filter(each -> !each.isBlank()).map(String::trim).toList();
         int keySize = keyList.size();
         if (keySize == resultList.size()) {
             return IntStream.range(0, keySize).boxed().collect(Collectors.toMap(keyList::get, resultList::get));

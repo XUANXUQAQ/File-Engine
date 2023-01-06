@@ -1,7 +1,5 @@
 package file.engine.frames;
 
-import file.engine.utils.DpiUtil;
-import file.engine.utils.system.properties.IsDebug;
 import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.dllInterface.GetHandle;
@@ -12,9 +10,10 @@ import file.engine.event.handler.impl.stop.CloseEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.event.handler.impl.taskbar.ShowTrayIconEvent;
-import file.engine.utils.CachedThreadPoolUtil;
 import file.engine.services.TranslateService;
-import lombok.Data;
+import file.engine.utils.CachedThreadPoolUtil;
+import file.engine.utils.DpiUtil;
+import file.engine.utils.system.properties.IsDebug;
 
 import javax.swing.*;
 import java.awt.*;
@@ -37,11 +36,7 @@ public class TaskBar {
 
     private static volatile TaskBar INSTANCE = null;
 
-    @Data
-    private static class MessageStruct {
-        private final String caption;
-        private final String message;
-        private final Event event;
+    private record MessageStruct(String caption, String message, Event event) {
     }
 
     private TaskBar() {

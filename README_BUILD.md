@@ -8,7 +8,7 @@
 git clone https://github.com/XUANXUQAQ/File-Engine.git
 ```
 
-本项目需要jdk11及以上jdk，以及visual studio安装才能编译。
+本项目需要jdk17及以上jdk，以及visual studio安装才能编译。
 
 ### 2. 编译项目
 

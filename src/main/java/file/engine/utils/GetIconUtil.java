@@ -70,19 +70,13 @@ public class GetIconUtil {
             }
             return null;
         }
-        switch (commandName) {
-            case "clearbin":
-                return changeIcon(iconMap.get("recycleBin"), width, height);
-            case "update":
-            case "clearUpdate":
-                return changeIcon(iconMap.get("updateIcon"), width, height);
-            case "help":
-                return changeIcon(iconMap.get("helpIcon"), width, height);
-            case "version":
-                return changeIcon(iconMap.get("blankIcon"), width, height);
-            default:
-                return null;
-        }
+        return switch (commandName) {
+            case "clearbin" -> changeIcon(iconMap.get("recycleBin"), width, height);
+            case "update", "clearUpdate" -> changeIcon(iconMap.get("updateIcon"), width, height);
+            case "help" -> changeIcon(iconMap.get("helpIcon"), width, height);
+            case "version" -> changeIcon(iconMap.get("blankIcon"), width, height);
+            default -> null;
+        };
     }
 
     public ImageIcon getBigIcon(String pathOrKey, int width, int height) {

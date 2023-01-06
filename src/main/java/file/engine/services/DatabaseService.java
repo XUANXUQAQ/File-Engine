@@ -19,7 +19,6 @@ import file.engine.event.handler.impl.database.gpu.GPUAddRecordEvent;
 import file.engine.event.handler.impl.database.gpu.GPUClearCacheEvent;
 import file.engine.event.handler.impl.database.gpu.GPURemoveRecordEvent;
 import file.engine.event.handler.impl.frame.searchBar.SearchBarReadyEvent;
-import file.engine.event.handler.impl.database.IsCacheExistEvent;
 import file.engine.event.handler.impl.monitor.disk.StartMonitorDiskEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
@@ -33,7 +32,6 @@ import file.engine.utils.RegexUtil;
 import file.engine.utils.file.FileUtil;
 import file.engine.utils.gson.GsonUtil;
 import file.engine.utils.system.properties.IsDebug;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.SneakyThrows;
@@ -56,7 +54,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
-import java.util.stream.Collectors;
 
 public class DatabaseService {
     private final ConcurrentLinkedQueue<SQLWithTaskId> commandQueue = new ConcurrentLinkedQueue<>();
@@ -89,10 +86,7 @@ public class DatabaseService {
 
     private static volatile DatabaseService INSTANCE = null;
 
-    @AllArgsConstructor
-    private static class Pair {
-        private final String suffix;
-        private final int priority;
+    private record Pair(String suffix, int priority) {
     }
 
     private static class Cache {
@@ -1160,7 +1154,7 @@ public class DatabaseService {
      */
     @SuppressWarnings("IndexOfReplaceableByContains")
     private int getPriorityBySuffix(String suffix) {
-        List<Pair> result = priorityMap.stream().filter(each -> each.suffix.equals(suffix)).collect(Collectors.toList());
+        List<Pair> result = priorityMap.stream().filter(each -> each.suffix.equals(suffix)).toList();
         if (result.isEmpty()) {
             if (suffix.indexOf(File.separator) != -1) {
                 return getPriorityBySuffix("dirPriority");
@@ -1327,13 +1321,10 @@ public class DatabaseService {
      */
     public Constants.Enums.DatabaseStatus getStatus() {
         var currentStatus = status.get();
-        switch (currentStatus) {
-            case NORMAL:
-            case _TEMP:
-                return Constants.Enums.DatabaseStatus.NORMAL;
-            default:
-                return currentStatus;
-        }
+        return switch (currentStatus) {
+            case NORMAL, _TEMP -> Constants.Enums.DatabaseStatus.NORMAL;
+            default -> currentStatus;
+        };
     }
 
     public boolean casSetStatus(Constants.Enums.DatabaseStatus expect, Constants.Enums.DatabaseStatus newVal) {

@@ -10,7 +10,6 @@ import java.awt.geom.*;
 import java.util.concurrent.TimeUnit;
 
 public class LoadingPanel extends JComponent implements MouseListener {
-    private static final long serialVersionUID = 1L;
     private Area[] ticker = null;
     private Thread animation = null;
     private boolean started = false;

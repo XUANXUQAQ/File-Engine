@@ -447,7 +447,7 @@ public class PluginMarket {
      */
     private String getPluginListUrl() {
         AllConfigs allConfigs = AllConfigs.getInstance();
-        return allConfigs.getUpdateUrlFromMap().pluginListUrl;
+        return allConfigs.getUpdateUrlFromMap().pluginListUrl();
     }
 
     /**

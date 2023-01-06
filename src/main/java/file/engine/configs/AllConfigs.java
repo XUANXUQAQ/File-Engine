@@ -16,8 +16,6 @@ import file.engine.dllInterface.gpu.GPUAccelerator;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.BootSystemEvent;
-import file.engine.event.handler.impl.configs.ReadConfigsEvent;
-import file.engine.event.handler.impl.configs.SetSwingLaf;
 import file.engine.event.handler.impl.configs.*;
 import file.engine.event.handler.impl.download.StartDownloadEvent;
 import file.engine.event.handler.impl.frame.settingsFrame.GetExcludeComponentEvent;
@@ -31,7 +29,6 @@ import file.engine.services.download.DownloadManager;
 import file.engine.utils.RegexUtil;
 import file.engine.utils.gson.GsonUtil;
 import file.engine.utils.system.properties.IsDebug;
-import lombok.Data;
 
 import javax.swing.*;
 import java.awt.*;
@@ -881,93 +878,43 @@ public class AllConfigs {
     private static void setSwingLaf(Constants.Enums.SwingThemes theme) {
         SwingUtilities.invokeLater(() -> {
             switch (theme) {
-                case CoreFlatIntelliJLaf:
-                    FlatIntelliJLaf.setup();
-                    break;
-                case CoreFlatLightLaf:
-                    FlatLightLaf.setup();
-                    break;
-                case CoreFlatDarkLaf:
-                    FlatDarkLaf.setup();
-                    break;
-                case Arc:
-                    FlatArcIJTheme.setup();
-                    break;
-                case ArcDark:
-                    FlatArcDarkIJTheme.setup();
-                    break;
-                case DarkFlat:
-                    FlatDarkFlatIJTheme.setup();
-                    break;
-                case Carbon:
-                    FlatCarbonIJTheme.setup();
-                    break;
-                case CyanLight:
-                    FlatCyanLightIJTheme.setup();
-                    break;
-                case DarkPurple:
-                    FlatDarkPurpleIJTheme.setup();
-                    break;
-                case LightFlat:
-                    FlatLightFlatIJTheme.setup();
-                    break;
-                case Monocai:
-                    FlatMonocaiIJTheme.setup();
-                    break;
-                case OneDark:
-                    FlatOneDarkIJTheme.setup();
-                    break;
-                case Gray:
-                    FlatGrayIJTheme.setup();
-                    break;
-                case MaterialDesignDark:
-                    FlatMaterialDesignDarkIJTheme.setup();
-                    break;
-                case MaterialLighter:
-                    FlatMaterialLighterIJTheme.setup();
-                    break;
-                case MaterialDarker:
-                    FlatMaterialDarkerIJTheme.setup();
-                    break;
-                case ArcDarkOrange:
-                    FlatArcDarkOrangeIJTheme.setup();
-                    break;
-                case Dracula:
-                    FlatDraculaIJTheme.setup();
-                    break;
-                case Nord:
-                    FlatNordIJTheme.setup();
-                    break;
-                case SolarizedDark:
-                    FlatSolarizedDarkIJTheme.setup();
-                    break;
-                case SolarizedLight:
-                    FlatSolarizedLightIJTheme.setup();
-                    break;
-                case Vuesion:
-                    FlatVuesionIJTheme.setup();
-                    break;
-                case XcodeDark:
-                    FlatXcodeDarkIJTheme.setup();
-                    break;
-                case Spacegray:
-                    FlatSpacegrayIJTheme.setup();
-                    break;
-                case SystemDefault:
+                case CoreFlatIntelliJLaf -> FlatIntelliJLaf.setup();
+                case CoreFlatLightLaf -> FlatLightLaf.setup();
+                case CoreFlatDarkLaf -> FlatDarkLaf.setup();
+                case Arc -> FlatArcIJTheme.setup();
+                case ArcDark -> FlatArcDarkIJTheme.setup();
+                case DarkFlat -> FlatDarkFlatIJTheme.setup();
+                case Carbon -> FlatCarbonIJTheme.setup();
+                case CyanLight -> FlatCyanLightIJTheme.setup();
+                case DarkPurple -> FlatDarkPurpleIJTheme.setup();
+                case LightFlat -> FlatLightFlatIJTheme.setup();
+                case Monocai -> FlatMonocaiIJTheme.setup();
+                case OneDark -> FlatOneDarkIJTheme.setup();
+                case Gray -> FlatGrayIJTheme.setup();
+                case MaterialDesignDark -> FlatMaterialDesignDarkIJTheme.setup();
+                case MaterialLighter -> FlatMaterialLighterIJTheme.setup();
+                case MaterialDarker -> FlatMaterialDarkerIJTheme.setup();
+                case ArcDarkOrange -> FlatArcDarkOrangeIJTheme.setup();
+                case Dracula -> FlatDraculaIJTheme.setup();
+                case Nord -> FlatNordIJTheme.setup();
+                case SolarizedDark -> FlatSolarizedDarkIJTheme.setup();
+                case SolarizedLight -> FlatSolarizedLightIJTheme.setup();
+                case Vuesion -> FlatVuesionIJTheme.setup();
+                case XcodeDark -> FlatXcodeDarkIJTheme.setup();
+                case Spacegray -> FlatSpacegrayIJTheme.setup();
+                case SystemDefault -> {
                     try {
                         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
                     } catch (ClassNotFoundException | InstantiationException | IllegalAccessException |
                              UnsupportedLookAndFeelException e) {
                         e.printStackTrace();
                     }
-                    break;
-                default:
-                    FlatDarculaLaf.setup();
-                    break;
+                }
+                default -> FlatDarculaLaf.setup();
             }
             ArrayList<Component> components = new ArrayList<>(Arrays.asList(Frame.getFrames()));
-            EventManagement eventManagement = EventManagement.getInstance();
-            GetExcludeComponentEvent event = new GetExcludeComponentEvent();
+            var eventManagement = EventManagement.getInstance();
+            var event = new GetExcludeComponentEvent();
             eventManagement.putEvent(event);
             if (!eventManagement.waitForEvent(event)) {
                 Optional<Collection<? extends Component>> returnValue = event.getReturnValue();
@@ -1190,9 +1137,6 @@ public class AllConfigs {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> EventManagement.getInstance().putEvent(new CloseEvent())));
     }
 
-    @Data
-    public static class AddressUrl {
-        public final String fileEngineVersionUrl;
-        public final String pluginListUrl;
+    public record AddressUrl(String fileEngineVersionUrl, String pluginListUrl) {
     }
 }

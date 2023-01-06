@@ -29,12 +29,7 @@ public class MoveDesktopFilesUtil {
         }
     }
 
-    private static class MoveFilesUtil {
-        private final ArrayList<String> preserveFiles;
-
-        protected MoveFilesUtil(ArrayList<String> preserveFiles) {
-            this.preserveFiles = preserveFiles;
-        }
+    private record MoveFilesUtil(ArrayList<String> preserveFiles) {
 
         /**
          * 清空文件夹
@@ -128,7 +123,7 @@ public class MoveDesktopFilesUtil {
          * @param newPath 移动到的文件夹
          * @return 是否含有冲突文件
          */
-        protected boolean moveFolder(String oldPath, String newPath) {
+        private boolean moveFolder(String oldPath, String newPath) {
             // 先复制文件
             boolean isDirCreated;
             File newPathFile = new File(newPath);

@@ -971,7 +971,7 @@ public class SearchBar {
         TranslateService translateService = TranslateService.getInstance();
         EventManagement eventManagement = EventManagement.getInstance();
         switch (commandName) {
-            case "clearbin":
+            case "clearbin" -> {
                 detectShowingModeAndClose();
 //                if (JOptionPane.showConfirmDialog(null, translateService.getTranslation(
 //                        "Are you sure you want to empty the recycle bin")) == JOptionPane.OK_OPTION) {
@@ -989,7 +989,8 @@ public class SearchBar {
 //                }
                 EmptyRecycleBin.INSTANCE.emptyRecycleBin();
                 return true;
-            case "update":
+            }
+            case "update" -> {
                 detectShowingModeAndClose();
                 eventManagement.putEvent(new ShowTaskBarMessageEvent(
                         translateService.getTranslation("Info"),
@@ -1005,7 +1006,8 @@ public class SearchBar {
                 isSearchNotStarted.set(false);
                 isCudaSearchNotStarted.set(false);
                 return true;
-            case "clearUpdate":
+            }
+            case "clearUpdate" -> {
                 detectShowingModeAndClose();
                 eventManagement.putEvent(new ShowTaskBarMessageEvent(
                         translateService.getTranslation("Info"),
@@ -1021,7 +1023,8 @@ public class SearchBar {
                 isSearchNotStarted.set(false);
                 isCudaSearchNotStarted.set(false);
                 return true;
-            case "help":
+            }
+            case "help" -> {
                 detectShowingModeAndClose();
                 if (JOptionPane.showConfirmDialog(null, translateService.getTranslation("Whether to view help"))
                         == JOptionPane.OK_OPTION) {
@@ -1032,13 +1035,16 @@ public class SearchBar {
                     });
                 }
                 return true;
-            case "version":
+            }
+            case "version" -> {
                 detectShowingModeAndClose();
                 JOptionPane.showMessageDialog(null, translateService.getTranslation(
                         "Current Version:") + Constants.version);
                 return true;
-            default:
+            }
+            default -> {
                 return false;
+            }
         }
     }
 
@@ -1361,7 +1367,7 @@ public class SearchBar {
                                 currentResultCount.getAndAdd(ret);
                                 currentLabelSelectedPosition.getAndAdd(ret);
                                 switch (mouseOnWhichLabel) {
-                                    case 0:
+                                    case 0 -> {
                                         if (isLabelNotEmpty(label1)) {
                                             setLabelChosen(label1);
                                         }
@@ -1386,8 +1392,8 @@ public class SearchBar {
                                         if (isLabelNotEmpty(label8)) {
                                             setLabelNotChosen(label8);
                                         }
-                                        break;
-                                    case 1:
+                                    }
+                                    case 1 -> {
                                         if (isLabelNotEmpty(label1)) {
                                             setLabelNotChosen(label1);
                                         }
@@ -1412,8 +1418,8 @@ public class SearchBar {
                                         if (isLabelNotEmpty(label8)) {
                                             setLabelNotChosen(label8);
                                         }
-                                        break;
-                                    case 2:
+                                    }
+                                    case 2 -> {
                                         if (isLabelNotEmpty(label1)) {
                                             setLabelNotChosen(label1);
                                         }
@@ -1438,8 +1444,8 @@ public class SearchBar {
                                         if (isLabelNotEmpty(label8)) {
                                             setLabelNotChosen(label8);
                                         }
-                                        break;
-                                    case 3:
+                                    }
+                                    case 3 -> {
                                         if (isLabelNotEmpty(label1)) {
                                             setLabelNotChosen(label1);
                                         }
@@ -1464,8 +1470,8 @@ public class SearchBar {
                                         if (isLabelNotEmpty(label8)) {
                                             setLabelNotChosen(label8);
                                         }
-                                        break;
-                                    case 4:
+                                    }
+                                    case 4 -> {
                                         if (isLabelNotEmpty(label1)) {
                                             setLabelNotChosen(label1);
                                         }
@@ -1490,8 +1496,8 @@ public class SearchBar {
                                         if (isLabelNotEmpty(label8)) {
                                             setLabelNotChosen(label8);
                                         }
-                                        break;
-                                    case 5:
+                                    }
+                                    case 5 -> {
                                         if (isLabelNotEmpty(label1)) {
                                             setLabelNotChosen(label1);
                                         }
@@ -1516,8 +1522,8 @@ public class SearchBar {
                                         if (isLabelNotEmpty(label8)) {
                                             setLabelNotChosen(label8);
                                         }
-                                        break;
-                                    case 6:
+                                    }
+                                    case 6 -> {
                                         if (isLabelNotEmpty(label1)) {
                                             setLabelNotChosen(label1);
                                         }
@@ -1542,8 +1548,8 @@ public class SearchBar {
                                         if (isLabelNotEmpty(label8)) {
                                             setLabelNotChosen(label8);
                                         }
-                                        break;
-                                    case 7:
+                                    }
+                                    case 7 -> {
                                         if (isLabelNotEmpty(label1)) {
                                             setLabelNotChosen(label1);
                                         }
@@ -1568,7 +1574,7 @@ public class SearchBar {
                                         if (isLabelNotEmpty(label8)) {
                                             setLabelChosen(label8);
                                         }
-                                        break;
+                                    }
                                 }
                             }
                         }
@@ -1587,45 +1593,46 @@ public class SearchBar {
     private boolean isNextLabelValid() {
         boolean isNextLabelValid = false;
         switch (currentResultCount.get()) {
-            case 0:
+            case 0 -> {
                 if (isLabelNotEmpty(label2)) {
                     isNextLabelValid = true;
                 }
-                break;
-            case 1:
+            }
+            case 1 -> {
                 if (isLabelNotEmpty(label3)) {
                     isNextLabelValid = true;
                 }
-                break;
-            case 2:
+            }
+            case 2 -> {
                 if (isLabelNotEmpty(label4)) {
                     isNextLabelValid = true;
                 }
-                break;
-            case 3:
+            }
+            case 3 -> {
                 if (isLabelNotEmpty(label5)) {
                     isNextLabelValid = true;
                 }
-                break;
-            case 4:
+            }
+            case 4 -> {
                 if (isLabelNotEmpty(label6)) {
                     isNextLabelValid = true;
                 }
-                break;
-            case 5:
+            }
+            case 5 -> {
                 if (isLabelNotEmpty(label7)) {
                     isNextLabelValid = true;
                 }
-                break;
-            case 6:
+            }
+            case 6 -> {
                 if (isLabelNotEmpty(label8)) {
                     isNextLabelValid = true;
                 }
-                break;
-            default:
+            }
+            default -> {
                 if (listResults.size() > 8) {
                     return true;
                 }
+            }
         }
         return isNextLabelValid;
     }
@@ -2156,11 +2163,11 @@ public class SearchBar {
         showSelectInfoOnLabel();
         int size;
         switch (position) {
-            case 0:
+            case 0 -> {
                 tryToShowResultsAndSetFirstChosen();
                 repaint();
-                break;
-            case 1:
+            }
+            case 1 -> {
                 size = listResults.size();
                 if (size == 2) {
                     setLabelChosen(label1);
@@ -2205,8 +2212,8 @@ public class SearchBar {
                     setLabelNotChosen(label7);
                     setLabelNotChosen(label8);
                 }
-                break;
-            case 2:
+            }
+            case 2 -> {
                 size = listResults.size();
                 if (size == 3) {
                     setLabelNotChosen(label1);
@@ -2248,8 +2255,8 @@ public class SearchBar {
                     setLabelNotChosen(label7);
                     setLabelNotChosen(label8);
                 }
-                break;
-            case 3:
+            }
+            case 3 -> {
                 size = listResults.size();
                 if (size == 4) {
                     setLabelNotChosen(label1);
@@ -2287,8 +2294,8 @@ public class SearchBar {
                     setLabelNotChosen(label7);
                     setLabelNotChosen(label8);
                 }
-                break;
-            case 4:
+            }
+            case 4 -> {
                 size = listResults.size();
                 if (size == 5) {
                     setLabelNotChosen(label1);
@@ -2321,8 +2328,8 @@ public class SearchBar {
                     setLabelNotChosen(label7);
                     setLabelNotChosen(label8);
                 }
-                break;
-            case 5:
+            }
+            case 5 -> {
                 size = listResults.size();
                 if (size == 6) {
                     setLabelNotChosen(label1);
@@ -2349,8 +2356,8 @@ public class SearchBar {
                     setLabelNotChosen(label7);
                     setLabelNotChosen(label8);
                 }
-                break;
-            case 6:
+            }
+            case 6 -> {
                 size = listResults.size();
                 if (size == 7) {
                     setLabelNotChosen(label1);
@@ -2370,8 +2377,8 @@ public class SearchBar {
                     setLabelNotChosen(label7);
                     setLabelNotChosen(label8);
                 }
-                break;
-            case 7:
+            }
+            case 7 -> {
                 setLabelNotChosen(label1);
                 setLabelNotChosen(label2);
                 setLabelNotChosen(label3);
@@ -2380,7 +2387,7 @@ public class SearchBar {
                 setLabelNotChosen(label6);
                 setLabelChosen(label7);
                 setLabelNotChosen(label8);
-                break;
+            }
         }
     }
 
@@ -2680,10 +2687,10 @@ public class SearchBar {
     private static void setSearchBar(Event event) {
         SetConfigsEvent task1 = (SetConfigsEvent) event;
         var configs = task1.getConfigs();
-        searchSearchBarLaf(configs);
+        setSearchBarLaf(configs);
     }
 
-    private static void searchSearchBarLaf(ConfigEntity configs) {
+    private static void setSearchBarLaf(ConfigEntity configs) {
         SearchBar searchBar = getInstance();
         searchBar.setTransparency(configs.getTransparency());
         searchBar.setBorderColor(AllConfigs.getInstance().getBorderType(), configs.getBorderColor(), configs.getBorderThickness());
@@ -2787,8 +2794,7 @@ public class SearchBar {
             }
             while (eventManagement.notMainExit()) {
                 switch (runningMode) {
-                    case NORMAL_MODE:
-                    case COMMAND_MODE:
+                    case NORMAL_MODE, COMMAND_MODE -> {
                         if (!isVisible()) {
                             break;
                         }
@@ -2830,9 +2836,9 @@ public class SearchBar {
                                 });
                             }
                         }
-                        break;
-                    default:
-                        break;
+                    }
+                    default -> {
+                    }
                 }
                 try {
                     TimeUnit.MILLISECONDS.sleep(250);
@@ -3149,30 +3155,14 @@ public class SearchBar {
                     boolean isLabel8Chosen = false;
                 };
                 switch (pos) {
-                    case 0:
-                        ref.isLabel1Chosen = true;
-                        break;
-                    case 1:
-                        ref.isLabel2Chosen = true;
-                        break;
-                    case 2:
-                        ref.isLabel3Chosen = true;
-                        break;
-                    case 3:
-                        ref.isLabel4Chosen = true;
-                        break;
-                    case 4:
-                        ref.isLabel5Chosen = true;
-                        break;
-                    case 5:
-                        ref.isLabel6Chosen = true;
-                        break;
-                    case 6:
-                        ref.isLabel7Chosen = true;
-                        break;
-                    case 7:
-                        ref.isLabel8Chosen = true;
-                        break;
+                    case 0 -> ref.isLabel1Chosen = true;
+                    case 1 -> ref.isLabel2Chosen = true;
+                    case 2 -> ref.isLabel3Chosen = true;
+                    case 3 -> ref.isLabel4Chosen = true;
+                    case 4 -> ref.isLabel5Chosen = true;
+                    case 5 -> ref.isLabel6Chosen = true;
+                    case 6 -> ref.isLabel7Chosen = true;
+                    case 7 -> ref.isLabel8Chosen = true;
                 }
                 SwingUtilities.invokeLater(() -> {
                     try {
@@ -3372,22 +3362,18 @@ public class SearchBar {
 
     private void setBorder0(JComponent component, int type, Border topBorder, Border bottomBorder, Border middleBorder, Border fullBorder) {
         switch (type) {
-            case 1:
+            case 1 ->
                 // 顶部
-                component.setBorder(topBorder);
-                break;
-            case 2:
+                    component.setBorder(topBorder);
+            case 2 ->
                 // 底部
-                component.setBorder(bottomBorder);
-                break;
-            case 3:
+                    component.setBorder(bottomBorder);
+            case 3 ->
                 // 左右
-                component.setBorder(middleBorder);
-                break;
-            case 4:
+                    component.setBorder(middleBorder);
+            case 4 ->
                 // 全部
-                component.setBorder(fullBorder);
-                break;
+                    component.setBorder(fullBorder);
         }
     }
 
@@ -3896,7 +3882,7 @@ public class SearchBar {
      */
     private String highLight(String html, String[] keywords) {
         StringBuilder regexPatternBuilder = new StringBuilder();
-        List<String> collect = Arrays.stream(keywords).sorted((o1, o2) -> o2.length() - o1.length()).collect(Collectors.toList());
+        List<String> collect = Arrays.stream(keywords).sorted((o1, o2) -> o2.length() - o1.length()).toList();
         for (String keyword : collect) {
             if (!keyword.isBlank()) {
                 if (".".equals(keyword)) {

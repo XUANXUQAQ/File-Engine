@@ -19,7 +19,7 @@ public class DataDataTypeAdapter extends TypeAdapter<Object> {
     public Object read(JsonReader in) throws IOException {
         JsonToken token = in.peek();
         switch (token) {
-            case BEGIN_ARRAY:
+            case BEGIN_ARRAY -> {
                 List<Object> list = new ArrayList<>();
                 in.beginArray();
                 while (in.hasNext()) {
@@ -27,7 +27,8 @@ public class DataDataTypeAdapter extends TypeAdapter<Object> {
                 }
                 in.endArray();
                 return list;
-            case BEGIN_OBJECT:
+            }
+            case BEGIN_OBJECT -> {
                 Map<String, Object> map = new LinkedTreeMap<>();
                 in.beginObject();
                 while (in.hasNext()) {
@@ -35,10 +36,11 @@ public class DataDataTypeAdapter extends TypeAdapter<Object> {
                 }
                 in.endObject();
                 return map;
-
-            case STRING:
+            }
+            case STRING -> {
                 return in.nextString();
-            case NUMBER:
+            }
+            case NUMBER -> {
                 /*
                  * 改写数字的处理逻辑，将数字值分为整型与浮点型。
                  */
@@ -62,13 +64,15 @@ public class DataDataTypeAdapter extends TypeAdapter<Object> {
                         return dbNum;
                     }
                 }
-            case BOOLEAN:
+            }
+            case BOOLEAN -> {
                 return in.nextBoolean();
-            case NULL:
+            }
+            case NULL -> {
                 in.nextNull();
                 return null;
-            default:
-                throw new IllegalStateException();
+            }
+            default -> throw new IllegalStateException();
         }
     }
 
