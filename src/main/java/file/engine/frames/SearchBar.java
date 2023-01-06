@@ -2811,27 +2811,13 @@ public class SearchBar {
                             String lastShowPath = labelLastShowingPathInfo.getOrDefault(labelInstance, "");
                             if (!showPath.equals(lastShowPath) && !showPath.isEmpty()) {
                                 getIconUtil.getBigIcon(showPath, iconSideLength, iconSideLength, icon -> {
-                                    try {
-                                        SwingUtilities.invokeAndWait(() -> {
-                                            labelInstance.setIcon(icon);
-                                            searchBar.repaint();
-                                        });
-                                    } catch (InterruptedException | InvocationTargetException e) {
-                                        throw new RuntimeException(e);
-                                    }
+                                    SwingUtilities.invokeLater(() -> labelInstance.setIcon(icon));
                                     labelLastShowingPathInfo.put(labelInstance, showPath);
                                 }, (icon, isTimeout) -> {
                                     if (isTimeout) {
                                         return;
                                     }
-                                    try {
-                                        SwingUtilities.invokeAndWait(() -> {
-                                            labelInstance.setIcon(icon);
-                                            searchBar.repaint();
-                                        });
-                                    } catch (InterruptedException | InvocationTargetException e) {
-                                        throw new RuntimeException(e);
-                                    }
+                                    SwingUtilities.invokeLater(() -> labelInstance.setIcon(icon));
                                     labelLastShowingPathInfo.put(labelInstance, showPath);
                                 });
                             }

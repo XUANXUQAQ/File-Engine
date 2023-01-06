@@ -4,25 +4,22 @@ import file.engine.event.handler.EventManagement;
 import file.engine.utils.system.properties.IsDebug;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.io.File;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class GetIconUtil {
-    private static final int MAX_WORKING_QUEUE_SIZE = 200;
     private static final int MAX_CONSUMER_THREAD_NUM = 4;
     private static final FileSystemView FILE_SYSTEM_VIEW = FileSystemView.getFileSystemView();
     private final ConcurrentHashMap<String, ImageIcon> iconMap = new ConcurrentHashMap<>();
-    private final LinkedBlockingQueue<Task> workingQueue = new LinkedBlockingQueue<>(MAX_WORKING_QUEUE_SIZE);
+    private final ConcurrentLinkedQueue<Task> workingQueue = new ConcurrentLinkedQueue<>();
     private final ExecutorService iconTaskConsumer = Executors.newFixedThreadPool(MAX_CONSUMER_THREAD_NUM);
 
     private static volatile GetIconUtil INSTANCE = null;
@@ -119,46 +116,54 @@ public class GetIconUtil {
             return;
         }
         Task task = new Task(f, width, height);
-        if (workingQueue.offer(task)) {
-            final long start = System.currentTimeMillis();
-            final long timeout = timeoutCallback == null ? 10_000 : 50; // 最长等待时间
-            while (!task.isDone) {
-                if (System.currentTimeMillis() - start > timeout) {
-                    if (timeoutCallback != null) {
-                        task.timeoutCallBack = timeoutCallback;
-                        workingQueue.offer(task);
-                    }
-                    normalCallback.accept(changeIcon(iconMap.get("blankIcon"), width, height), true);
-                    return;
-                }
-                Thread.onSpinWait();
-            }
-            //图标获取完成
-            normalCallback.accept(task.icon, false);
+        if (!workingQueue.add(task)) {
+            throw new RuntimeException("add to working queue failed");
         }
+        final long startMills = System.currentTimeMillis();
+        final long timeoutThreshold = timeoutCallback == null ? 10_000 : 50; // 最长等待时间
+        while (!task.isDone) {
+            if (System.currentTimeMillis() - startMills > timeoutThreshold) {
+                normalCallback.accept(changeIcon(iconMap.get("blankIcon"), width, height), true);
+                if (timeoutCallback != null) {
+                    task.timeoutCallBack = timeoutCallback;
+                    workingQueue.add(task);
+                }
+                return;
+            }
+            Thread.onSpinWait();
+        }
+        //图标获取完成
+        normalCallback.accept(task.icon, false);
     }
 
     private void startWorkingThread() {
         for (int i = 0; i < MAX_CONSUMER_THREAD_NUM; i++) {
-            iconTaskConsumer.execute(() -> {
-                EventManagement eventManagement = EventManagement.getInstance();
-                try {
-                    while (eventManagement.notMainExit()) {
-                        var take = workingQueue.take();
-                        if (take.timeoutCallBack != null) {
-                            if (!take.isDone) {
-                                take.icon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(take.path), take.width, take.height);
-                            }
-                            take.timeoutCallBack.accept(take.icon);
-                        } else {
-                            take.icon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(take.path), take.width, take.height);
-                            take.isDone = true;
-                        }
-                    }
-                } catch (InterruptedException ignored) {
-                    // ignore InterruptedException
+            iconTaskConsumer.execute(this::consumeTaskFunc);
+        }
+    }
+
+    @SneakyThrows
+    private void consumeTaskFunc() {
+        EventManagement eventManagement = EventManagement.getInstance();
+        while (eventManagement.notMainExit()) {
+            var task = workingQueue.poll();
+            if (task == null) {
+                TimeUnit.MILLISECONDS.sleep(1);
+                continue;
+            }
+            if (task.timeoutCallBack != null) {
+                ImageIcon icon;
+                if (task.isDone) {
+                    icon = task.icon;
+                } else {
+                    icon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(task.path), task.width, task.height);
                 }
-            });
+                task.timeoutCallBack.accept(icon);
+            } else {
+                task.icon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(task.path), task.width, task.height);
+                task.isDone = true;
+            }
+            TimeUnit.MILLISECONDS.sleep(1);
         }
     }
 
@@ -169,7 +174,7 @@ public class GetIconUtil {
     @RequiredArgsConstructor
     private static class Task {
         final File path;
-        volatile boolean isDone;
+        volatile boolean isDone = false;
         volatile ImageIcon icon;
         final int width;
         final int height;
