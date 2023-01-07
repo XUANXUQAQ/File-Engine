@@ -455,7 +455,9 @@ public class DatabaseService {
      * @param isStopCreateCache 是否停止
      * @param tableNeedCache    需要缓存的表
      */
-    private void saveTableCacheForGPU(Supplier<Boolean> isStopCreateCache, LinkedHashMap<String, Integer> tableNeedCache, int createGpuCacheThreshold) {
+    private void saveTableCacheForGPU(Supplier<Boolean> isStopCreateCache,
+                                      LinkedHashMap<String, Integer> tableNeedCache,
+                                      int createGpuCacheThreshold) {
         for (Map.Entry<String, Cache> entry : tableCache.entrySet()) {
             String key = entry.getKey();
             if (tableNeedCache.containsKey(key)) {
@@ -621,7 +623,10 @@ public class DatabaseService {
      * @param path 文件路径
      * @return true如果匹配成功
      */
-    private boolean checkIsMatchedAndAddToList(String path, Set<String> tempResultsForEventRef, Queue<String> tempResultsRef, AtomicBoolean shouldStopSearchRef) {
+    private boolean checkIsMatchedAndAddToList(String path,
+                                               Set<String> tempResultsForEventRef,
+                                               Queue<String> tempResultsRef,
+                                               AtomicBoolean shouldStopSearchRef) {
         boolean ret = false;
         if (PathMatchUtil.check(path,
                 searchCase,
@@ -629,12 +634,12 @@ public class DatabaseService {
                 searchText,
                 keywords,
                 keywordsLowerCase,
-                isKeywordPath) && Files.exists(Path.of(path))) {
+                isKeywordPath)) {
             //字符串匹配通过
-            ret = true;
             if (!FileUtil.isFileExist(path)) {
                 removeFileFromDatabase(path);
             } else if (tempResultsForEventRef.add(path)) {
+                ret = true;
                 tempResultsRef.add(path);
                 if (tempResultsForEventRef.size() >= MAX_RESULTS) {
                     shouldStopSearchRef.set(true);
@@ -649,7 +654,11 @@ public class DatabaseService {
      *
      * @param sql sql
      */
-    private int searchAndAddToTempResults(String sql, Statement stmt, Set<String> tempResultsForEvent, Queue<String> tempResults, AtomicBoolean shouldStopSearchRef) {
+    private int searchAndAddToTempResults(String sql,
+                                          Statement stmt,
+                                          Set<String> tempResultsForEvent,
+                                          Queue<String> tempResults,
+                                          AtomicBoolean shouldStopSearchRef) {
         int matchedResultCount = 0;
         //结果太多则不再进行搜索
         if (shouldStopSearchRef.get()) {
@@ -671,14 +680,14 @@ public class DatabaseService {
                         break;
                     }
                 }
-                //结果太多则不再进行搜索
-                //用户重新输入了信息
-                if (shouldStopSearchRef.get()) {
-                    return matchedResultCount;
-                }
                 for (int j = 0; j < i; ++j) {
                     if (checkIsMatchedAndAddToList(tmpQueryResultsCache[j], tempResultsForEvent, tempResults, shouldStopSearchRef)) {
                         ++matchedResultCount;
+                        //结果太多则不再进行搜索
+                        //用户重新输入了信息
+                        if (shouldStopSearchRef.get()) {
+                            return matchedResultCount;
+                        }
                     }
                 }
             }
@@ -806,7 +815,7 @@ public class DatabaseService {
                 }
                 //每一个任务负责查询一个priority和list0-list40生成的41个SQL
                 addTaskForDatabase0(eachDisk, tasks, commandsMap, currentTaskNum, shouldStopSearchRef);
-                if (shouldStopSearch.get()) {
+                if (shouldStopSearchRef.get()) {
                     return;
                 }
             }
@@ -1810,7 +1819,8 @@ public class DatabaseService {
         final long startWaiting = System.currentTimeMillis();
         final long timeout = 3000;
         while (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL ||
-                PrepareSearchInfo.isPreparing.get()) {
+                PrepareSearchInfo.isPreparing.get() ||
+                databaseService.searchThreadCount.get() != 0) {
             if (System.currentTimeMillis() - startWaiting > timeout) {
                 System.out.println("等待上次搜索结束超时");
                 break;
