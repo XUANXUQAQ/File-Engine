@@ -198,7 +198,7 @@ public class SearchBar {
         searchBar.setUndecorated(true);
         searchBar.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
         searchBar.setBackground(transparentColor);
-        searchBar.setOpacity(AllConfigs.getInstance().getOpacity());
+        searchBar.setOpacity(AllConfigs.getInstance().getConfigEntity().getTransparency());
         searchBar.setContentPane(contentPanel);
         searchBar.setType(JFrame.Type.UTILITY);
         searchBar.setAlwaysOnTop(true);
@@ -217,12 +217,13 @@ public class SearchBar {
         JPanel panel = new JPanel();
         final Color transparentColor = new Color(0, 0, 0, 0);
         AllConfigs allConfigs = AllConfigs.getInstance();
-        searchBarColor = new Color(allConfigs.getSearchBarColor());
-        labelColor = new Color(allConfigs.getLabelColor());
-        fontColorWithCoverage = new Color(allConfigs.getLabelFontColorWithCoverage());
-        backgroundColor = new Color(allConfigs.getDefaultBackgroundColor());
-        labelFontColor = new Color(allConfigs.getLabelFontColor());
-        initBorder(allConfigs.getBorderType(), new Color(allConfigs.getBorderColor()), allConfigs.getBorderThickness());
+        var configs = allConfigs.getConfigEntity();
+        searchBarColor = new Color(configs.getSearchBarColor());
+        labelColor = new Color(configs.getLabelColor());
+        fontColorWithCoverage = new Color(configs.getFontColorWithCoverage());
+        backgroundColor = new Color(configs.getDefaultBackgroundColor());
+        labelFontColor = new Color(configs.getFontColor());
+        initBorder(allConfigs.getBorderType(), new Color(configs.getBorderColor()), configs.getBorderThickness());
 
         initFrame(positionX, positionY, searchBarWidth, searchBarHeight, transparentColor, panel);
 
@@ -413,7 +414,7 @@ public class SearchBar {
      * @param borderThickness 边框厚度
      */
     private void initBorder(Constants.Enums.BorderType borderType, Color borderColor, int borderThickness) {
-        double roundRadius = AllConfigs.getInstance().getRoundRadius();
+        double roundRadius = AllConfigs.getInstance().getConfigEntity().getRoundRadius();
         RoundBorder topRound = new RoundBorder(borderColor,
                 borderThickness,
                 (int) roundRadius,
@@ -502,7 +503,7 @@ public class SearchBar {
                     if (menu.isVisible()) {
                         return;
                     }
-                    if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING && allConfigs.isLoseFocusClose()) {
+                    if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING && allConfigs.getConfigEntity().isLoseFocusClose()) {
                         if (!isTutorialMode.get()) {
                             closeSearchBar();
                         }
@@ -594,7 +595,7 @@ public class SearchBar {
                                             if (isOpenLastFolderPressed.get()) {
                                                 //打开上级文件夹
                                                 openFolderByExplorer(res);
-                                            } else if (allConfigs.isDefaultAdmin() || isRunAsAdminPressed.get()) {
+                                            } else if (allConfigs.getConfigEntity().isDefaultAdmin() || isRunAsAdminPressed.get()) {
                                                 openWithAdmin(res);
                                             } else if (isCopyPathPressed.get()) {
                                                 copyToClipBoard(res, true);
@@ -613,7 +614,7 @@ public class SearchBar {
                                     if (isOpenLastFolderPressed.get()) {
                                         //打开上级文件夹
                                         openFolderByExplorer(open.getAbsolutePath());
-                                    } else if (allConfigs.isDefaultAdmin() || isRunAsAdminPressed.get()) {
+                                    } else if (allConfigs.getConfigEntity().isDefaultAdmin() || isRunAsAdminPressed.get()) {
                                         openWithAdmin(open.getAbsolutePath());
                                     } else if (isCopyPathPressed.get()) {
                                         copyToClipBoard(open.getAbsolutePath(), true);
@@ -740,6 +741,7 @@ public class SearchBar {
                     return;
                 }
                 if (!listResults.isEmpty()) {
+                    var configs = allConfigs.getConfigEntity();
                     if (38 == key) {
                         //上键被点击
                         if (isFirstPress || System.currentTimeMillis() - pressTime > timeLimit) {
@@ -820,7 +822,7 @@ public class SearchBar {
                                             if (isOpenLastFolderPressed.get()) {
                                                 //打开上级文件夹
                                                 openFolderByExplorer(res);
-                                            } else if (allConfigs.isDefaultAdmin() || isRunAsAdminPressed.get()) {
+                                            } else if (configs.isDefaultAdmin() || isRunAsAdminPressed.get()) {
                                                 openWithAdmin(res);
                                             } else if (isCopyPathPressed.get()) {
                                                 copyToClipBoard(res, true);
@@ -845,7 +847,7 @@ public class SearchBar {
                                     if (isOpenLastFolderPressed.get()) {
                                         //打开上级文件夹
                                         openFolderByExplorer(open.getAbsolutePath());
-                                    } else if (allConfigs.isDefaultAdmin() || isRunAsAdminPressed.get()) {
+                                    } else if (configs.isDefaultAdmin() || isRunAsAdminPressed.get()) {
                                         openWithAdmin(open.getAbsolutePath());
                                     } else if (isCopyPathPressed.get()) {
                                         copyToClipBoard(open.getAbsolutePath(), true);
@@ -856,13 +858,13 @@ public class SearchBar {
                             }
                             detectShowingModeAndClose();
                         }
-                    } else if (allConfigs.getOpenLastFolderKeyCode() == key) {
+                    } else if (configs.getOpenLastFolderKeyCode() == key) {
                         //打开上级文件夹热键被点击
                         isOpenLastFolderPressed.set(true);
-                    } else if (allConfigs.getRunAsAdminKeyCode() == key) {
+                    } else if (configs.getRunAsAdminKeyCode() == key) {
                         //以管理员方式运行热键被点击
                         isRunAsAdminPressed.set(true);
-                    } else if (allConfigs.getCopyPathKeyCode() == key) {
+                    } else if (configs.getCopyPathKeyCode() == key) {
                         isCopyPathPressed.set(true);
                     }
                     if (key != 38 && key != 40 && key != 10) {
@@ -899,6 +901,7 @@ public class SearchBar {
                 if (listResults.isEmpty()) {
                     return;
                 }
+                var configs = allConfigs.getConfigEntity();
                 String res = listResults.get(currentResultCount.get());
                 if (res.startsWith("plugin")) {
                     String[] split = splitPluginResult(res);
@@ -913,12 +916,12 @@ public class SearchBar {
                         }
                     });
                 }
-                if (allConfigs.getOpenLastFolderKeyCode() == key) {
+                if (configs.getOpenLastFolderKeyCode() == key) {
                     //复位按键状态
                     isOpenLastFolderPressed.set(false);
-                } else if (allConfigs.getRunAsAdminKeyCode() == key) {
+                } else if (configs.getRunAsAdminKeyCode() == key) {
                     isRunAsAdminPressed.set(false);
-                } else if (allConfigs.getCopyPathKeyCode() == key) {
+                } else if (configs.getCopyPathKeyCode() == key) {
                     isCopyPathPressed.set(false);
                 }
 
@@ -1291,7 +1294,7 @@ public class SearchBar {
                                         if (writePath != null && !writePath.isEmpty()) {
                                             ShortcutCreateUtil.createShortCut(finalF.getAbsolutePath(),
                                                     writePath + File.separator + finalF.getName(),
-                                                    AllConfigs.getInstance().isShowTipOnCreatingLnk());
+                                                    AllConfigs.getInstance().getConfigEntity().isShowTipCreatingLnk());
                                         }
                                     } catch (Exception exception) {
                                         exception.printStackTrace();
@@ -2602,7 +2605,7 @@ public class SearchBar {
         if (isRoundRadiusSet.get()) {
             return;
         }
-        double roundRadius = AllConfigs.getInstance().getRoundRadius();
+        double roundRadius = AllConfigs.getInstance().getConfigEntity().getRoundRadius();
         int length = Math.min(listResults.size() + 1, 9);
         if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
             if (listResults.isEmpty()) {
@@ -2881,7 +2884,7 @@ public class SearchBar {
                 }
 
                 boolean isChangeToAttach = GetHandle.INSTANCE.changeToAttach();
-                boolean attachExplorer = allConfigs.isAttachExplorer();
+                boolean attachExplorer = allConfigs.getConfigEntity().isAttachExplorer();
                 if (isChangeToAttach && attachExplorer && !isSwitchToNormalManual.get()) {
                     try {
                         switchToExplorerAttachMode();
@@ -3088,7 +3091,7 @@ public class SearchBar {
         label7.setFont(labelFont);
         label8.setFont(labelFont);
         showingMode = Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING;
-        searchBar.setOpacity(AllConfigs.getInstance().getOpacity());
+        searchBar.setOpacity(AllConfigs.getInstance().getConfigEntity().getTransparency());
         try {
             TimeUnit.MILLISECONDS.sleep(150);
         } catch (InterruptedException e) {
@@ -4253,7 +4256,7 @@ public class SearchBar {
     private void saveCache(String content) {
         AllConfigs allConfigs = AllConfigs.getInstance();
         EventManagement eventManagement = EventManagement.getInstance();
-        if (DatabaseService.getInstance().getDatabaseCacheNum() < allConfigs.getCacheNumLimit()) {
+        if (DatabaseService.getInstance().getDatabaseCacheNum() < allConfigs.getConfigEntity().getCacheNumLimit()) {
             //检查缓存是否已存在
             eventManagement.putEvent(new IsCacheExistEvent(content), event -> {
                 Optional<Boolean> ret = event.getReturnValue();

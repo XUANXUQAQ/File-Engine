@@ -56,10 +56,23 @@ import java.util.function.Supplier;
 import java.util.regex.Matcher;
 
 public class DatabaseService {
-    private final ConcurrentLinkedQueue<SQLWithTaskId> commandQueue = new ConcurrentLinkedQueue<>();
+    private static final AtomicBoolean isGpuThreadRunning = new AtomicBoolean();
+    private static boolean isEnableGPUAccelerate = false;
+    private static final AtomicBoolean isPreparing = new AtomicBoolean();
+    //taskMap任务队列，key为磁盘盘符，value为任务
+    private static ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskMap;
+    private static Bit taskStatus = new Bit(new byte[]{0});
+    private static Bit allTaskStatus = new Bit(new byte[]{0});
+    private static volatile String[] searchCase;
+    private static volatile boolean isIgnoreCase;
+    private static volatile String searchText;
+    private static volatile String[] keywords;
+    private static volatile String[] keywordsLowerCase;
+    private static volatile boolean[] isKeywordPath;
+    private final ConcurrentLinkedQueue<SQLWithTaskId> sqlCommandQueue = new ConcurrentLinkedQueue<>();
     private final ConcurrentHashMap<String, AtomicInteger> databaseResultsCount = new ConcurrentHashMap<>();
     private final AtomicReference<Constants.Enums.DatabaseStatus> status = new AtomicReference<>(Constants.Enums.DatabaseStatus.NORMAL);
-    private final AtomicBoolean isExecuteImmediately = new AtomicBoolean(false);
+    private final AtomicBoolean isExecuteSqlImmediately = new AtomicBoolean(false);
     private final AtomicInteger databaseCacheNum = new AtomicInteger(0);
     private final Set<TableNameWeightInfo> tableSet = ConcurrentHashMap.newKeySet();    //保存从0-40数据库的表，使用频率和名字对应，使经常使用的表最快被搜索到
     private final AtomicBoolean isDatabaseUpdated = new AtomicBoolean(false);
@@ -70,12 +83,6 @@ public class DatabaseService {
     //tableCache 数据表缓存，在初始化时将会放入所有的key和一个空的cache，后续需要缓存直接放入空的cache中，不再创建新的cache实例
     private final ConcurrentHashMap<String, Cache> tableCache = new ConcurrentHashMap<>();
     private final AtomicInteger tableCacheCount = new AtomicInteger();
-    private static volatile String[] searchCase;
-    private static volatile boolean isIgnoreCase;
-    private static volatile String searchText;
-    private static volatile String[] keywords;
-    private static volatile String[] keywordsLowerCase;
-    private static volatile boolean[] isKeywordPath;
     private final ConcurrentSkipListSet<String> databaseCacheSet = new ConcurrentSkipListSet<>();
     private final AtomicInteger searchThreadCount = new AtomicInteger(0);
     private final AtomicLong startSearchTimeMills = new AtomicLong(0);
@@ -85,6 +92,26 @@ public class DatabaseService {
     private static final int MAX_RESULTS = 200;
 
     private static volatile DatabaseService INSTANCE = null;
+
+    private static void prepareSearchTasks(AtomicBoolean shouldStopSearchRef) {
+        DatabaseService databaseService = DatabaseService.getInstance();
+        //每个priority用一个线程，每一个后缀名对应一个优先级
+        //按照优先级排列，key是sql和表名的对应，value是容器
+        var nonFormattedSql = databaseService.getNonFormattedSqlFromTableQueue();
+        taskStatus = new Bit(new byte[]{0});
+        allTaskStatus = new Bit(new byte[]{0});
+        //添加搜索任务到队列
+        databaseService.addSearchTasks(nonFormattedSql, shouldStopSearchRef);
+    }
+
+    private static boolean isTaskMapEmpty() {
+        for (var entry : DatabaseService.taskMap.values()) {
+            if (!entry.isEmpty()) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     private record Pair(String suffix, int priority) {
     }
@@ -177,9 +204,9 @@ public class DatabaseService {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             EventManagement eventManagement = EventManagement.getInstance();
             while (eventManagement.notMainExit()) {
-                if (isExecuteImmediately.get()) {
+                if (isExecuteSqlImmediately.get()) {
                     try {
-                        isExecuteImmediately.set(false);
+                        isExecuteSqlImmediately.set(false);
                         executeAllCommands();
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -296,7 +323,7 @@ public class DatabaseService {
      * 搜索优先文件夹
      */
     private void searchPriorityFolder(Set<String> tempResultsForEventRef, Queue<String> tempResultsRef, AtomicBoolean shouldStopSearchRef) {
-        searchFolder(AllConfigs.getInstance().getPriorityFolder(), tempResultsForEventRef, tempResultsRef, shouldStopSearchRef);
+        searchFolder(AllConfigs.getInstance().getConfigEntity().getPriorityFolder(), tempResultsForEventRef, tempResultsRef, shouldStopSearchRef);
     }
 
     /**
@@ -375,7 +402,6 @@ public class DatabaseService {
                             status.get() == Constants.Enums.DatabaseStatus.NORMAL &&
                             !GetHandle.INSTANCE.isForegroundFullscreen()) ||
                             (isDatabaseUpdated.get());
-            AllConfigs allConfigs = AllConfigs.getInstance();
             final int createMemoryThreshold = 70;
             final int createGPUCacheThreshold = 50;
             final int freeGPUCacheThreshold = 70;
@@ -385,7 +411,7 @@ public class DatabaseService {
                         isDatabaseUpdated.set(false);
                     }
                     startCheckInfo.startCheckTimeMills = System.currentTimeMillis();
-                    if (allConfigs.isGPUAcceleratorEnabled()) {
+                    if (isEnableGPUAccelerate) {
                         final int gpuMemUsage = GPUAccelerator.INSTANCE.getGPUMemUsage();
                         if (gpuMemUsage < createGPUCacheThreshold) {
                             createGpuCache(isStopCreateCache, createGPUCacheThreshold);
@@ -397,7 +423,7 @@ public class DatabaseService {
                         }
                     }
                 } else {
-                    if (allConfigs.isGPUAcceleratorEnabled()) {
+                    if (isEnableGPUAccelerate) {
                         final int gpuMemUsage = GPUAccelerator.INSTANCE.getGPUMemUsage();
                         if (gpuMemUsage >= freeGPUCacheThreshold) {
                             // 防止显存占用超过70%后仍然扫描数据库
@@ -749,7 +775,7 @@ public class DatabaseService {
     private void waitForTasks() {
         try {
             EventManagement eventManagement = EventManagement.getInstance();
-            while (!PrepareSearchInfo.taskStatus.equals(PrepareSearchInfo.allTaskStatus) && eventManagement.notMainExit()) {
+            while (!taskStatus.equals(allTaskStatus) && eventManagement.notMainExit()) {
                 TimeUnit.MILLISECONDS.sleep(10);
             }
         } catch (Exception e) {
@@ -762,7 +788,7 @@ public class DatabaseService {
     private void searchDone() {
         EventManagement eventManagement = EventManagement.getInstance();
         eventManagement.putEvent(new SearchDoneEvent(new ConcurrentLinkedQueue<>(tempResultsForEvent)));
-        if (AllConfigs.getInstance().isGPUAcceleratorEnabled() && eventManagement.notMainExit()) {
+        if (isEnableGPUAccelerate && eventManagement.notMainExit()) {
             GPUAccelerator.INSTANCE.stopCollectResults();
         }
         shouldStopSearch.set(true);
@@ -787,29 +813,29 @@ public class DatabaseService {
      * nonFormattedSql将会生成从list0-40，根据priority从高到低排序的SQL语句，第一个map中key保存未格式化的sql，value保存表名称
      * 生成任务顺序会根据list的权重和priority来生成
      * <p>
-     * PrepareSearchInfo.taskStatus      用于保存任务信息，这是一个通用变量，从第二个位开始，每一个位代表一个任务，当任务完成，该位将被置为1，否则为0，例如第一个和第三个任务完成，第二个未完成，则为1010
-     * PrepareSearchInfo.allTaskStatus   所有的任务信息，从第二位开始，只要有任务被创建，该位就为1，例如三个任务被创建，则为1110
-     * PrepareSearchInfo.taskMap         任务
+     * taskStatus      用于保存任务信息，这是一个通用变量，从第二个位开始，每一个位代表一个任务，当任务完成，该位将被置为1，否则为0，例如第一个和第三个任务完成，第二个未完成，则为1010
+     * allTaskStatus   所有的任务信息，从第二位开始，只要有任务被创建，该位就为1，例如三个任务被创建，则为1110
+     * taskMap         任务
      *
      * @param nonFormattedSql 未格式化搜索字段的SQL
      */
     private void addSearchTasks(ArrayList<LinkedHashMap<String, String>> nonFormattedSql, AtomicBoolean shouldStopSearchRef) {
-        Bit number = new Bit(new byte[]{1});
+        Bit taskNumber = new Bit(new byte[]{1});
         AllConfigs allConfigs = AllConfigs.getInstance();
         String availableDisks = allConfigs.getAvailableDisks();
         for (String eachDisk : RegexUtil.comma.split(availableDisks)) {
             ConcurrentLinkedQueue<Runnable> tasks = new ConcurrentLinkedQueue<>();
-            PrepareSearchInfo.taskMap.put(eachDisk, tasks);
+            taskMap.put(eachDisk, tasks);
             //向任务队列tasks添加任务
             for (var commandsMap : nonFormattedSql) {
                 //为每个任务分配的位，不断左移以不断进行分配
-                number.shiftLeft(1);
-                Bit currentTaskNum = new Bit(number);
+                taskNumber.shiftLeft(1);
+                Bit currentTaskNum = new Bit(taskNumber);
                 //记录当前任务信息到allTaskStatus
                 byte[] origin;
-                while ((origin = PrepareSearchInfo.allTaskStatus.getBytes()) != null) {
+                while ((origin = allTaskStatus.getBytes()) != null) {
                     Bit or = Bit.or(origin, currentTaskNum.getBytes());
-                    if (PrepareSearchInfo.allTaskStatus.compareAndSet(origin, or)) {
+                    if (allTaskStatus.compareAndSet(origin, or)) {
                         break;
                     }
                 }
@@ -827,7 +853,6 @@ public class DatabaseService {
                                      LinkedHashMap<String, String> sqlToExecute,
                                      Bit currentTaskNum,
                                      AtomicBoolean shouldStopSearchRef) {
-        AllConfigs allConfigs = AllConfigs.getInstance();
         tasks.add(() -> {
             Statement stmt = null;
             for (var sqlAndTableName : sqlToExecute.entrySet()) {
@@ -837,7 +862,7 @@ public class DatabaseService {
                 String priority = getPriorityFromSelectSql(eachSql);
                 String key = diskStr + "," + tableName + "," + priority;
                 final long matchedNum;
-                if (allConfigs.isGPUAcceleratorEnabled() && GPUAccelerator.INSTANCE.isMatchDone(key)) {
+                if (isEnableGPUAccelerate && GPUAccelerator.INSTANCE.isMatchDone(key)) {
                     //gpu搜索已经放入container，只需要获取matchedNum修改权重即可
                     matchedNum = GPUAccelerator.INSTANCE.matchedNumber(key);
                 } else {
@@ -870,9 +895,9 @@ public class DatabaseService {
             }
             //执行完后将对应的线程flag设为1
             byte[] originalBytes;
-            while ((originalBytes = PrepareSearchInfo.taskStatus.getBytes()) != null) {
+            while ((originalBytes = taskStatus.getBytes()) != null) {
                 Bit or = Bit.or(originalBytes, currentTaskNum.getBytes());
-                if (PrepareSearchInfo.taskStatus.compareAndSet(originalBytes, or)) {
+                if (taskStatus.compareAndSet(originalBytes, or)) {
                     break;
                 }
             }
@@ -975,9 +1000,8 @@ public class DatabaseService {
      */
     private void startSearch() {
         var cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
-        var taskMap = PrepareSearchInfo.taskMap;
         var eventManagement = EventManagement.getInstance();
-        final int threadNumberPerDisk = Math.max(1, AllConfigs.getInstance().getSearchThreadNumber() / taskMap.size());
+        final int threadNumberPerDisk = Math.max(1, AllConfigs.getInstance().getConfigEntity().getSearchThreadNumber() / taskMap.size());
         Consumer<ConcurrentLinkedQueue<Runnable>> taskHandler = (taskQueue) -> {
             while (!taskQueue.isEmpty() && eventManagement.notMainExit()) {
                 var runnable = taskQueue.poll();
@@ -1085,7 +1109,7 @@ public class DatabaseService {
      * @return true如果待删除文件已经在任务队列中
      */
     private boolean isRemoveFileInCommandQueue(String path, SQLWithTaskId[] sqlWithTaskId) {
-        for (SQLWithTaskId each : commandQueue) {
+        for (SQLWithTaskId each : sqlCommandQueue) {
             if (each.taskId == SqlTaskIds.INSERT_TO_LIST && each.sql.contains(path)) {
                 sqlWithTaskId[0] = each;
                 return true;
@@ -1106,7 +1130,7 @@ public class DatabaseService {
         int asciiSum = getAscIISum(getFileName(path));
         SQLWithTaskId[] sqlWithTaskId = new SQLWithTaskId[1];
         if (isRemoveFileInCommandQueue(path, sqlWithTaskId)) {
-            commandQueue.remove(sqlWithTaskId[0]);
+            sqlCommandQueue.remove(sqlWithTaskId[0]);
         } else {
             addDeleteSqlCommandByAscii(asciiSum, path);
             int priorityBySuffix = getPriorityBySuffix(getSuffixByPath(path));
@@ -1114,7 +1138,7 @@ public class DatabaseService {
             asciiGroup = Math.min(asciiGroup, Constants.ALL_TABLE_NUM);
             String tableName = "list" + asciiGroup;
             String key = path.charAt(0) + "," + tableName + "," + priorityBySuffix;
-            if (AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+            if (isEnableGPUAccelerate) {
                 EventManagement.getInstance().putEvent(new GPURemoveRecordEvent(key, path));
             }
             Cache cache = tableCache.get(key);
@@ -1196,7 +1220,7 @@ public class DatabaseService {
         asciiGroup = Math.min(asciiGroup, Constants.ALL_TABLE_NUM);
         String tableName = "list" + asciiGroup;
         String key = path.charAt(0) + "," + tableName + "," + priorityBySuffix;
-        if (AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+        if (isEnableGPUAccelerate) {
             EventManagement.getInstance().putEvent(new GPUAddRecordEvent(key, path));
         }
         Cache cache = tableCache.get(key);
@@ -1235,7 +1259,7 @@ public class DatabaseService {
      * 发送立即执行所有sql信号
      */
     private void sendExecuteSQLSignal() {
-        isExecuteImmediately.set(true);
+        isExecuteSqlImmediately.set(true);
     }
 
     /**
@@ -1244,8 +1268,8 @@ public class DatabaseService {
     @SuppressWarnings("SqlNoDataSourceInspection")
     private void executeAllCommands() {
         synchronized (this) {
-            if (!commandQueue.isEmpty()) {
-                LinkedHashSet<SQLWithTaskId> tempCommandSet = new LinkedHashSet<>(commandQueue);
+            if (!sqlCommandQueue.isEmpty()) {
+                LinkedHashSet<SQLWithTaskId> tempCommandSet = new LinkedHashSet<>(sqlCommandQueue);
                 HashMap<String, Statement> statementHashMap = new HashMap<>();
 
                 tempCommandSet.forEach(sqlWithTaskId -> {
@@ -1285,7 +1309,7 @@ public class DatabaseService {
                         e.printStackTrace();
                     }
                 });
-                commandQueue.removeAll(tempCommandSet);
+                sqlCommandQueue.removeAll(tempCommandSet);
             }
         }
     }
@@ -1296,11 +1320,11 @@ public class DatabaseService {
      * @param sql 任务
      */
     private void addToCommandQueue(SQLWithTaskId sql) {
-        if (commandQueue.size() < MAX_SQL_NUM) {
+        if (sqlCommandQueue.size() < MAX_SQL_NUM) {
             if (getStatus() == Constants.Enums.DatabaseStatus.MANUAL_UPDATE) {
                 return;
             }
-            commandQueue.add(sql);
+            sqlCommandQueue.add(sql);
         } else {
             if (IsDebug.isDebug()) {
                 System.err.println("添加sql语句" + sql + "失败，已达到最大上限");
@@ -1315,7 +1339,7 @@ public class DatabaseService {
      * @return boolean
      */
     private boolean isCommandNotRepeat(String sql) {
-        for (SQLWithTaskId each : commandQueue) {
+        for (SQLWithTaskId each : sqlCommandQueue) {
             if (each.sql.equals(sql)) {
                 return false;
             }
@@ -1353,11 +1377,11 @@ public class DatabaseService {
      * 创建索引
      */
     private void createAllIndex() {
-        commandQueue.add(new SQLWithTaskId("CREATE INDEX IF NOT EXISTS cache_index ON cache(PATH);", SqlTaskIds.CREATE_INDEX, "cache"));
+        sqlCommandQueue.add(new SQLWithTaskId("CREATE INDEX IF NOT EXISTS cache_index ON cache(PATH);", SqlTaskIds.CREATE_INDEX, "cache"));
         for (String each : RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks())) {
             for (int i = 0; i <= Constants.ALL_TABLE_NUM; ++i) {
                 String createIndex = "CREATE INDEX IF NOT EXISTS list" + i + "_index ON list" + i + "(PRIORITY);";
-                commandQueue.add(new SQLWithTaskId(createIndex, SqlTaskIds.CREATE_INDEX, String.valueOf(each.charAt(0))));
+                sqlCommandQueue.add(new SQLWithTaskId(createIndex, SqlTaskIds.CREATE_INDEX, String.valueOf(each.charAt(0))));
             }
         }
     }
@@ -1423,7 +1447,9 @@ public class DatabaseService {
             try {
                 Path diskDatabaseFile = Path.of("data/" + name);
                 long length = Files.size(diskDatabaseFile);
-                if (length > maxDatabaseSize || Period.between(LocalDate.parse(databaseCreateTimeMap.get(eachDisk)), now).getDays() > 5 || isDropPrevious) {
+                if (length > maxDatabaseSize ||
+                        Period.between(LocalDate.parse(databaseCreateTimeMap.get(eachDisk)), now).getDays() > 5 ||
+                        isDropPrevious) {
                     if (IsDebug.isDebug()) {
                         System.out.println("当前文件" + name + "已删除");
                     }
@@ -1458,7 +1484,7 @@ public class DatabaseService {
         final long time = System.currentTimeMillis();
         // 将在队列中的sql全部执行并等待搜索线程全部完成
         System.out.println("等待所有sql执行完成，并且退出搜索");
-        while (searchThreadCount.get() != 0 || !commandQueue.isEmpty()) {
+        while (searchThreadCount.get() != 0 || !sqlCommandQueue.isEmpty()) {
             sendExecuteSQLSignal();
             TimeUnit.MILLISECONDS.sleep(10);
             if (System.currentTimeMillis() - time > timeoutMills) {
@@ -1610,7 +1636,7 @@ public class DatabaseService {
     }
 
     private boolean isTaskExistInCommandSet(SqlTaskIds taskId) {
-        for (SQLWithTaskId tasks : commandQueue) {
+        for (SQLWithTaskId tasks : sqlCommandQueue) {
             if (tasks.taskId == taskId) {
                 return true;
             }
@@ -1641,11 +1667,11 @@ public class DatabaseService {
             EventManagement eventManagement = EventManagement.getInstance();
             long checkTime = System.currentTimeMillis();
             while (eventManagement.notMainExit()) {
-                final long updateTimeLimit = allConfigs.getUpdateTimeLimit() * 1000L;
+                final long updateTimeLimit = allConfigs.getConfigEntity().getUpdateTimeLimit() * 1000L;
                 if (System.currentTimeMillis() - checkTime >= updateTimeLimit) {
                     checkTime = System.currentTimeMillis();
                     if ((getStatus() == Constants.Enums.DatabaseStatus.NORMAL && System.currentTimeMillis() - startSearchTimeMills.get() < timeout) ||
-                            (getStatus() == Constants.Enums.DatabaseStatus.NORMAL && commandQueue.size() > 100)) {
+                            (getStatus() == Constants.Enums.DatabaseStatus.NORMAL && sqlCommandQueue.size() > 100)) {
                         sendExecuteSQLSignal();
                     }
                 }
@@ -1748,35 +1774,6 @@ public class DatabaseService {
         startMonitorDisk();
     }
 
-    private static class PrepareSearchInfo {
-        static final AtomicBoolean isGpuThreadRunning = new AtomicBoolean();
-        //taskMap任务队列，key为磁盘盘符，value为任务
-        static ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskMap;
-        static Bit taskStatus = new Bit(new byte[]{0});
-        static Bit allTaskStatus = new Bit(new byte[]{0});
-        static final AtomicBoolean isPreparing = new AtomicBoolean();
-
-        private static void prepareSearchTasks(AtomicBoolean shouldStopSearchRef) {
-            DatabaseService databaseService = DatabaseService.getInstance();
-            //每个priority用一个线程，每一个后缀名对应一个优先级
-            //按照优先级排列，key是sql和表名的对应，value是容器
-            var nonFormattedSql = databaseService.getNonFormattedSqlFromTableQueue();
-            taskStatus = new Bit(new byte[]{0});
-            allTaskStatus = new Bit(new byte[]{0});
-            //添加搜索任务到队列
-            databaseService.addSearchTasks(nonFormattedSql, shouldStopSearchRef);
-        }
-
-        private static boolean isTaskMapEmpty() {
-            for (var entry : PrepareSearchInfo.taskMap.values()) {
-                if (!entry.isEmpty()) {
-                    return false;
-                }
-            }
-            return true;
-        }
-    }
-
     @EventListener(listenClass = SetConfigsEvent.class)
     private static void setGpuDevice(Event event) {
         SetConfigsEvent setConfigsEvent = (SetConfigsEvent) event;
@@ -1790,7 +1787,7 @@ public class DatabaseService {
         DatabaseService databaseService = DatabaseService.getInstance();
         final long timeout = 3000;
         long startWaiting = System.currentTimeMillis();
-        while (!PrepareSearchInfo.isPreparing.compareAndSet(false, true)) {
+        while (!isPreparing.compareAndSet(false, true)) {
             if (System.currentTimeMillis() - startWaiting > timeout) {
                 System.err.println("prepareSearch，切换预搜索状态超时");
                 return;
@@ -1810,7 +1807,7 @@ public class DatabaseService {
         }
         prepareSearch((PrepareSearchEvent) event);
         event.setReturnValue(databaseService.tempResults);
-        PrepareSearchInfo.isPreparing.set(false);
+        isPreparing.set(false);
     }
 
     @EventRegister(registerClass = StartSearchEvent.class)
@@ -1819,7 +1816,7 @@ public class DatabaseService {
         final long startWaiting = System.currentTimeMillis();
         final long timeout = 3000;
         while (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL ||
-                PrepareSearchInfo.isPreparing.get() ||
+                isPreparing.get() ||
                 databaseService.searchThreadCount.get() != 0) {
             if (System.currentTimeMillis() - startWaiting > timeout) {
                 System.out.println("等待上次搜索结束超时");
@@ -1827,7 +1824,7 @@ public class DatabaseService {
             }
             Thread.onSpinWait();
         }
-        if (PrepareSearchInfo.taskMap == null || PrepareSearchInfo.isTaskMapEmpty()) {
+        if (taskMap == null || isTaskMapEmpty()) {
             prepareSearch((StartSearchEvent) event);
         }
         //启动搜索线程
@@ -1848,7 +1845,7 @@ public class DatabaseService {
         databaseService.shouldStopSearch.set(true);
         databaseService.shouldStopSearch = new AtomicBoolean();
 
-        PrepareSearchInfo.taskMap = new ConcurrentHashMap<>();
+        taskMap = new ConcurrentHashMap<>();
         databaseService.tempResults = new ConcurrentLinkedQueue<>();
         databaseService.tempResultsForEvent = new ConcurrentSkipListSet<>();
 
@@ -1875,14 +1872,14 @@ public class DatabaseService {
                 }
             } while (false);
         });
-        PrepareSearchInfo.prepareSearchTasks(databaseService.shouldStopSearch);
-        if (AllConfigs.getInstance().isGPUAcceleratorEnabled() && !shouldStopSearchRef.get()) {
+        prepareSearchTasks(databaseService.shouldStopSearch);
+        if (isEnableGPUAccelerate && !shouldStopSearchRef.get()) {
             cachedThreadPoolUtil.executeTask(() -> {
                 // 退出上一次搜索
                 final var timeout = 3000;
                 GPUAccelerator.INSTANCE.stopCollectResults();
                 final long start = System.currentTimeMillis();
-                while (!PrepareSearchInfo.isGpuThreadRunning.compareAndSet(false, true)) {
+                while (!isGpuThreadRunning.compareAndSet(false, true)) {
                     if (System.currentTimeMillis() - start > timeout) {
                         System.err.println("等待上一次gpu加速完成超时");
                         return;
@@ -1916,7 +1913,7 @@ public class DatabaseService {
                                 }
                             }
                         });
-                PrepareSearchInfo.isGpuThreadRunning.set(false);
+                isGpuThreadRunning.set(false);
             }, false);
         }
     }
@@ -1934,7 +1931,8 @@ public class DatabaseService {
         databaseService.initPriority();
         databaseService.initTableMap();
         databaseService.prepareDatabaseCache();
-        for (String diskPath : RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks())) {
+        var allConfigs = AllConfigs.getInstance();
+        for (String diskPath : RegexUtil.comma.split(allConfigs.getAvailableDisks())) {
             for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
                 for (Pair pair : databaseService.priorityMap) {
                     databaseService.tableCache.put(diskPath.charAt(0) + "," + "list" + i + "," + pair.priority, new Cache());
@@ -1945,6 +1943,7 @@ public class DatabaseService {
         databaseService.checkTimeAndSendExecuteSqlSignalThread();
         databaseService.executeSqlCommandsThread();
         databaseService.saveTableCacheThread();
+        isEnableGPUAccelerate = allConfigs.getConfigEntity().isEnableGpuAccelerate();
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
                 databaseService.closeSharedMemory();
@@ -1984,7 +1983,7 @@ public class DatabaseService {
         UpdateDatabaseEvent updateDatabaseEvent = (UpdateDatabaseEvent) event;
         // 在这里设置数据库状态为manual update
         try {
-            if (!databaseService.updateLists(AllConfigs.getInstance().getIgnorePath(), updateDatabaseEvent.isDropPrevious)) {
+            if (!databaseService.updateLists(AllConfigs.getInstance().getConfigEntity().getIgnorePath(), updateDatabaseEvent.isDropPrevious)) {
                 throw new RuntimeException("search failed");
             }
         } catch (IOException | InterruptedException e) {
@@ -2079,7 +2078,7 @@ public class DatabaseService {
         databaseService.executeAllCommands();
         databaseService.shouldStopSearch.set(true);
         SQLiteUtil.closeAll();
-        if (AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+        if (isEnableGPUAccelerate) {
             GPUAccelerator.INSTANCE.stopCollectResults();
             GPUAccelerator.INSTANCE.release();
         }
@@ -2204,7 +2203,7 @@ public class DatabaseService {
 
         @EventListener(listenClass = BootSystemEvent.class)
         private static void startThread(Event event) {
-            if (!AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+            if (!isEnableGPUAccelerate) {
                 return;
             }
             clearInvalidCacheThread();
@@ -2214,7 +2213,7 @@ public class DatabaseService {
 
         @EventRegister(registerClass = GPUAddRecordEvent.class)
         private static void addToGPUMemory(Event event) {
-            if (!AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+            if (!isEnableGPUAccelerate) {
                 return;
             }
             GPUAddRecordEvent gpuAddRecordEvent = (GPUAddRecordEvent) event;
@@ -2223,7 +2222,7 @@ public class DatabaseService {
 
         @EventRegister(registerClass = GPURemoveRecordEvent.class)
         private static void removeFromGPUMemory(Event event) {
-            if (!AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+            if (!isEnableGPUAccelerate) {
                 return;
             }
             GPURemoveRecordEvent gpuRemoveRecordEvent = (GPURemoveRecordEvent) event;
@@ -2238,7 +2237,7 @@ public class DatabaseService {
 
         @EventRegister(registerClass = GPUClearCacheEvent.class)
         private static void clearCacheGPU(Event event) {
-            if (!AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+            if (!isEnableGPUAccelerate) {
                 return;
             }
             GPUAccelerator.INSTANCE.clearAllCache();

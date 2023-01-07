@@ -2519,45 +2519,46 @@ public class SettingsFrame {
      * 初始化textField的显示
      */
     private void setTextFieldAndTextAreaGui() {
+        var configs = allConfigs.getConfigEntity();
         textFieldSearchCache.setText("");
-        textFieldBackgroundDefault.setText(toRGBHexString(allConfigs.getDefaultBackgroundColor()));
-        textFieldLabelColor.setText(toRGBHexString(allConfigs.getLabelColor()));
-        textFieldFontColorWithCoverage.setText(toRGBHexString(allConfigs.getLabelFontColorWithCoverage()));
-        textFieldTransparency.setText(String.valueOf(allConfigs.getOpacity()));
-        textFieldBorderColor.setText(toRGBHexString(allConfigs.getBorderColor()));
-        textFieldFontColor.setText(toRGBHexString(allConfigs.getLabelFontColor()));
-        textFieldSearchBarFontColor.setText(toRGBHexString(allConfigs.getSearchBarFontColor()));
-        textFieldCacheNum.setText(String.valueOf(allConfigs.getCacheNumLimit()));
-        textFieldHotkey.setText(allConfigs.getHotkey());
-        textFieldRoundRadius.setText(String.valueOf(allConfigs.getRoundRadius()));
-        textFieldPriorityFolder.setText(allConfigs.getPriorityFolder());
-        textFieldUpdateInterval.setText(String.valueOf(allConfigs.getUpdateTimeLimit()));
-        textFieldSearchBarColor.setText(toRGBHexString(allConfigs.getSearchBarColor()));
-        textFieldAddress.setText(allConfigs.getProxyAddress());
-        textFieldPort.setText(String.valueOf(allConfigs.getProxyPort()));
-        textFieldUserName.setText(allConfigs.getProxyUserName());
-        textFieldPassword.setText(allConfigs.getProxyPassword());
-        textFieldBorderThickness.setText(String.valueOf(allConfigs.getBorderThickness()));
-        textAreaIgnorePath.setText(RegexUtil.comma.matcher(allConfigs.getIgnorePath()).replaceAll(",\n"));
-        if (allConfigs.getRunAsAdminKeyCode() == 17) {
+        textFieldBackgroundDefault.setText(toRGBHexString(configs.getDefaultBackgroundColor()));
+        textFieldLabelColor.setText(toRGBHexString(configs.getLabelColor()));
+        textFieldFontColorWithCoverage.setText(toRGBHexString(configs.getFontColorWithCoverage()));
+        textFieldTransparency.setText(String.valueOf(configs.getTransparency()));
+        textFieldBorderColor.setText(toRGBHexString(configs.getBorderColor()));
+        textFieldFontColor.setText(toRGBHexString(configs.getFontColor()));
+        textFieldSearchBarFontColor.setText(toRGBHexString(configs.getSearchBarFontColor()));
+        textFieldCacheNum.setText(String.valueOf(configs.getCacheNumLimit()));
+        textFieldHotkey.setText(configs.getHotkey());
+        textFieldRoundRadius.setText(String.valueOf(configs.getRoundRadius()));
+        textFieldPriorityFolder.setText(configs.getPriorityFolder());
+        textFieldUpdateInterval.setText(String.valueOf(configs.getUpdateTimeLimit()));
+        textFieldSearchBarColor.setText(toRGBHexString(configs.getSearchBarColor()));
+        textFieldAddress.setText(configs.getProxyAddress());
+        textFieldPort.setText(String.valueOf(configs.getProxyPort()));
+        textFieldUserName.setText(configs.getProxyUserName());
+        textFieldPassword.setText(configs.getProxyPassword());
+        textFieldBorderThickness.setText(String.valueOf(configs.getBorderThickness()));
+        textAreaIgnorePath.setText(RegexUtil.comma.matcher(configs.getIgnorePath()).replaceAll(",\n"));
+        if (configs.getRunAsAdminKeyCode() == 17) {
             textFieldRunAsAdminHotKey.setText("Ctrl + Enter");
-        } else if (allConfigs.getRunAsAdminKeyCode() == 16) {
+        } else if (configs.getRunAsAdminKeyCode() == 16) {
             textFieldRunAsAdminHotKey.setText("Shift + Enter");
-        } else if (allConfigs.getRunAsAdminKeyCode() == 18) {
+        } else if (configs.getRunAsAdminKeyCode() == 18) {
             textFieldRunAsAdminHotKey.setText("Alt + Enter");
         }
-        if (allConfigs.getOpenLastFolderKeyCode() == 17) {
+        if (configs.getOpenLastFolderKeyCode() == 17) {
             textFieldOpenLastFolder.setText("Ctrl + Enter");
-        } else if (allConfigs.getOpenLastFolderKeyCode() == 16) {
+        } else if (configs.getOpenLastFolderKeyCode() == 16) {
             textFieldOpenLastFolder.setText("Shift + Enter");
-        } else if (allConfigs.getOpenLastFolderKeyCode() == 18) {
+        } else if (configs.getOpenLastFolderKeyCode() == 18) {
             textFieldOpenLastFolder.setText("Alt + Enter");
         }
-        if (allConfigs.getCopyPathKeyCode() == 17) {
+        if (configs.getCopyPathKeyCode() == 17) {
             textFieldCopyPath.setText("Ctrl + Enter");
-        } else if (allConfigs.getCopyPathKeyCode() == 16) {
+        } else if (configs.getCopyPathKeyCode() == 16) {
             textFieldCopyPath.setText("Shift + Enter");
-        } else if (allConfigs.getCopyPathKeyCode() == 18) {
+        } else if (configs.getCopyPathKeyCode() == 18) {
             textFieldCopyPath.setText("Alt + Enter");
         }
     }
@@ -2566,31 +2567,32 @@ public class SettingsFrame {
      * 初始化颜色选择器的显示
      */
     private void setColorChooserGui() {
-        Color tmp_searchBarColor = new Color(allConfigs.getSearchBarColor());
+        var configs = allConfigs.getConfigEntity();
+        Color tmp_searchBarColor = new Color(configs.getSearchBarColor());
         searchBarColorChooser.setBackground(tmp_searchBarColor);
         searchBarColorChooser.setForeground(tmp_searchBarColor);
 
-        Color tmp_defaultBackgroundColor = new Color(allConfigs.getDefaultBackgroundColor());
+        Color tmp_defaultBackgroundColor = new Color(configs.getDefaultBackgroundColor());
         defaultBackgroundChooser.setBackground(tmp_defaultBackgroundColor);
         defaultBackgroundChooser.setForeground(tmp_defaultBackgroundColor);
 
-        Color tmp_labelColor = new Color(allConfigs.getLabelColor());
+        Color tmp_labelColor = new Color(configs.getLabelColor());
         labelColorChooser.setBackground(tmp_labelColor);
         labelColorChooser.setForeground(tmp_labelColor);
 
-        Color tmp_fontColorWithCoverage = new Color(allConfigs.getLabelFontColorWithCoverage());
+        Color tmp_fontColorWithCoverage = new Color(configs.getFontColorWithCoverage());
         FontColorWithCoverageChooser.setBackground(tmp_fontColorWithCoverage);
         FontColorWithCoverageChooser.setForeground(tmp_fontColorWithCoverage);
 
-        Color tmp_fontColor = new Color(allConfigs.getLabelFontColor());
+        Color tmp_fontColor = new Color(configs.getFontColor());
         FontColorChooser.setBackground(tmp_fontColor);
         FontColorChooser.setForeground(tmp_fontColor);
 
-        Color tmp_searchBarFontColor = new Color(allConfigs.getSearchBarFontColor());
+        Color tmp_searchBarFontColor = new Color(configs.getSearchBarFontColor());
         SearchBarFontColorChooser.setBackground(tmp_searchBarFontColor);
         SearchBarFontColorChooser.setForeground(tmp_searchBarFontColor);
 
-        Color tmp_borderColor = new Color(allConfigs.getBorderColor());
+        Color tmp_borderColor = new Color(configs.getBorderColor());
         borderColorChooser.setBackground(tmp_borderColor);
         borderColorChooser.setForeground(tmp_borderColor);
     }
@@ -2639,14 +2641,15 @@ public class SettingsFrame {
         for (int i = 1; i <= availableProcessors; i++) {
             threads.add(i);
         }
+        var configs = allConfigs.getConfigEntity();
         comboBoxSearchThread.setModel(new DefaultComboBoxModel<>(new Vector<>(threads)));
-        comboBoxSearchThread.setSelectedItem(allConfigs.getSearchThreadNumber());
+        comboBoxSearchThread.setSelectedItem(configs.getSearchThreadNumber());
         boolean cudaAvailableOnSystem = GPUAccelerator.INSTANCE.isGPUAvailableOnSystem();
         comboBoxCudaDevice.setEnabled(cudaAvailableOnSystem);
         if (cudaAvailableOnSystem) {
             cudaDeviceMap = GPUAccelerator.INSTANCE.getDevices();
             comboBoxCudaDevice.setModel(new DefaultComboBoxModel<>(new Vector<>(cudaDeviceMap.keySet())));
-            String gpuDevice = allConfigs.getGpuDevice();
+            String gpuDevice = configs.getGpuDevice();
             if (gpuDevice == null || gpuDevice.isEmpty()) {
                 comboBoxCudaDevice.setSelectedIndex(0);
             } else {
@@ -2661,18 +2664,19 @@ public class SettingsFrame {
      * 初始化所有选择栏的显示
      */
     private void setCheckBoxGui() {
-        checkBoxLoseFocus.setSelected(allConfigs.isLoseFocusClose());
+        var configs = allConfigs.getConfigEntity();
+        checkBoxLoseFocus.setSelected(configs.isLoseFocusClose());
         int startup = hasStartup();
         if (startup == 1) {
             eventManagement.putEvent(new ShowTaskBarMessageEvent(TRANSLATE_SERVICE.getTranslation("Warning"), TRANSLATE_SERVICE.getTranslation("The startup path is invalid")));
         }
         checkBoxAddToStartup.setSelected(startup == 0);
-        checkBoxAdmin.setSelected(allConfigs.isDefaultAdmin());
-        checkBoxIsShowTipOnCreatingLnk.setSelected(allConfigs.isShowTipOnCreatingLnk());
-        checkBoxResponseCtrl.setSelected(allConfigs.isResponseCtrl());
-        checkBoxCheckUpdate.setSelected(allConfigs.isCheckUpdateStartup());
-        checkBoxIsAttachExplorer.setSelected(allConfigs.isAttachExplorer());
-        checkBoxEnableCuda.setSelected(allConfigs.isEnableGpuAccelerate());
+        checkBoxAdmin.setSelected(configs.isDefaultAdmin());
+        checkBoxIsShowTipOnCreatingLnk.setSelected(configs.isShowTipCreatingLnk());
+        checkBoxResponseCtrl.setSelected(configs.isDoubleClickCtrlOpen());
+        checkBoxCheckUpdate.setSelected(configs.isCheckUpdateStartup());
+        checkBoxIsAttachExplorer.setSelected(configs.isAttachExplorer());
+        checkBoxEnableCuda.setSelected(configs.isEnableGpuAccelerate());
         checkBoxEnableCuda.setEnabled(GPUAccelerator.INSTANCE.isGPUAvailableOnSystem());
     }
 
@@ -2691,7 +2695,7 @@ public class SettingsFrame {
             list.add(each.toString());
         }
         listSwingThemes.setListData(list.toArray());
-        listSwingThemes.setSelectedValue(allConfigs.getSwingTheme(), true);
+        listSwingThemes.setSelectedValue(allConfigs.getConfigEntity().getSwingTheme(), true);
         listDisks.setListData(diskSet.toArray());
     }
 
@@ -2756,8 +2760,8 @@ public class SettingsFrame {
         tabbedPane.setBackground(new Color(0, 0, 0, 0));
 
         buttonUpdatePlugin.setVisible(false);
-
-        if (allConfigs.getProxyType() == Constants.Enums.ProxyType.PROXY_DIRECT) {
+        var configs = allConfigs.getConfigEntity();
+        if (configs.getProxyType() == Constants.Enums.ProxyType.PROXY_DIRECT) {
             radioButtonNoProxy.setSelected(true);
             radioButtonUseProxy.setSelected(false);
             radioButtonProxyTypeHttp.setEnabled(false);
@@ -2777,7 +2781,7 @@ public class SettingsFrame {
             textFieldPassword.setEnabled(true);
             selectProxyType();
         }
-        chooseUpdateAddress.setSelectedItem(allConfigs.getUpdateAddress());
+        chooseUpdateAddress.setSelectedItem(configs.getUpdateAddress());
         comboBoxBorderType.setSelectedItem(allConfigs.getBorderType());
     }
 
@@ -2792,7 +2796,7 @@ public class SettingsFrame {
      * 初始化代理选择框
      */
     private void selectProxyType() {
-        if (allConfigs.getProxyType() == Constants.Enums.ProxyType.PROXY_SOCKS) {
+        if (allConfigs.getConfigEntity().getProxyType() == Constants.Enums.ProxyType.PROXY_SOCKS) {
             radioButtonProxyTypeSocks5.setSelected(true);
         } else {
             radioButtonProxyTypeHttp.setSelected(true);
@@ -2800,7 +2804,7 @@ public class SettingsFrame {
     }
 
     private void initDiskSet() {
-        String[] disks = RegexUtil.comma.split(allConfigs.getDisks());
+        String[] disks = RegexUtil.comma.split(allConfigs.getConfigEntity().getDisks());
         diskSet.addAll(Arrays.asList(disks));
     }
 
@@ -3168,9 +3172,10 @@ public class SettingsFrame {
             isFramePrepared = true;
             prepareFrame();
         }
-        tmp_openLastFolderKeyCode = allConfigs.getOpenLastFolderKeyCode();
-        tmp_runAsAdminKeyCode = allConfigs.getRunAsAdminKeyCode();
-        tmp_copyPathKeyCode = allConfigs.getCopyPathKeyCode();
+        var configs = allConfigs.getConfigEntity();
+        tmp_openLastFolderKeyCode = configs.getOpenLastFolderKeyCode();
+        tmp_runAsAdminKeyCode = configs.getRunAsAdminKeyCode();
+        tmp_copyPathKeyCode = configs.getCopyPathKeyCode();
         frame.setResizable(true);
         double dpi = DpiUtil.getDpi();
         int width, height;
@@ -3408,22 +3413,23 @@ public class SettingsFrame {
 
         eventManagement.putEvent(new SetConfigsEvent(configEntity));
 
-        Color tmp_color = new Color(allConfigs.getLabelColor());
+        var configs = allConfigs.getConfigEntity();
+        Color tmp_color = new Color(configs.getLabelColor());
         labelColorChooser.setBackground(tmp_color);
         labelColorChooser.setForeground(tmp_color);
-        tmp_color = new Color(allConfigs.getDefaultBackgroundColor());
+        tmp_color = new Color(configs.getDefaultBackgroundColor());
         defaultBackgroundChooser.setBackground(tmp_color);
         defaultBackgroundChooser.setForeground(tmp_color);
-        tmp_color = new Color(allConfigs.getLabelFontColorWithCoverage());
+        tmp_color = new Color(configs.getFontColorWithCoverage());
         FontColorWithCoverageChooser.setBackground(tmp_color);
         FontColorWithCoverageChooser.setForeground(tmp_color);
-        tmp_color = new Color(allConfigs.getLabelFontColor());
+        tmp_color = new Color(configs.getFontColor());
         FontColorChooser.setBackground(tmp_color);
         FontColorChooser.setForeground(tmp_color);
-        tmp_color = new Color(allConfigs.getSearchBarFontColor());
+        tmp_color = new Color(configs.getSearchBarFontColor());
         SearchBarFontColorChooser.setBackground(tmp_color);
         SearchBarFontColorChooser.setForeground(tmp_color);
-        tmp_color = new Color(allConfigs.getBorderColor());
+        tmp_color = new Color(configs.getBorderColor());
         borderColorChooser.setBackground(tmp_color);
         borderColorChooser.setForeground(tmp_color);
         return "";

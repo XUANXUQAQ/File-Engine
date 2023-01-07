@@ -156,7 +156,7 @@ public class MainClass {
      * 检查当前版本
      */
     private static void checkVersion() {
-        if (AllConfigs.getInstance().isCheckUpdateStartup()) {
+        if (AllConfigs.getInstance().getConfigEntity().isCheckUpdateStartup()) {
             EventManagement eventManagement = EventManagement.getInstance();
             TranslateService translateService = TranslateService.getInstance();
             if (!isLatest()) {

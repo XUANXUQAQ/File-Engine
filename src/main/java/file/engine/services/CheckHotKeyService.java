@@ -26,8 +26,8 @@ public class CheckHotKeyService {
     private final HashMap<String, Integer> map;
     private boolean isRegistered = false;
     private static volatile CheckHotKeyService INSTANCE = null;
-    private static @Getter
-    volatile String currentHotkey;
+    @Getter
+    private static volatile String currentHotkey;
     private static boolean isSearchBarVisible = false;
 
     private static CheckHotKeyService getInstance() {
@@ -149,7 +149,7 @@ public class CheckHotKeyService {
 
     private boolean shouldOpenSearchBar() {
         var allConfigs = AllConfigs.getInstance();
-        if (allConfigs.isResponseCtrl()) {
+        if (allConfigs.getConfigEntity().isDoubleClickCtrlOpen()) {
             return HotkeyListener.INSTANCE.getKeyStatus() || HotkeyListener.INSTANCE.isCtrlDoubleClicked();
         }
         return HotkeyListener.INSTANCE.getKeyStatus();

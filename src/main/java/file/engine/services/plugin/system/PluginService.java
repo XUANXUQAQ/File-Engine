@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
+import file.engine.configs.ConfigEntity;
 import file.engine.configs.Constants;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
@@ -288,7 +289,8 @@ public class PluginService {
         plugin.loadPlugin(); // 兼容以前版本
         plugin.loadPlugin(configs);
         AllConfigs allConfigs = AllConfigs.getInstance();
-        plugin.setCurrentTheme(allConfigs.getDefaultBackgroundColor(), allConfigs.getLabelColor(), allConfigs.getBorderColor());
+        ConfigEntity configEntity = allConfigs.getConfigEntity();
+        plugin.setCurrentTheme(configEntity.getDefaultBackgroundColor(), configEntity.getLabelColor(), configEntity.getBorderColor());
         if (Arrays.stream(Constants.COMPATIBLE_API_VERSIONS).noneMatch(each -> each == plugin.getApiVersion())) {
             throw new RuntimeException("api version incompatible");
         }
@@ -491,7 +493,7 @@ public class PluginService {
      * 检查插件的版本信息
      */
     private static void checkPluginVersion() {
-        if (AllConfigs.getInstance().isCheckUpdateStartup()) {
+        if (AllConfigs.getInstance().getConfigEntity().isCheckUpdateStartup()) {
             CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
             cachedThreadPoolUtil.executeTask(() -> {
                 StringBuilder notLatestPluginsBuilder = new StringBuilder();

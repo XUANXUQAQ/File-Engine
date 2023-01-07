@@ -14,6 +14,7 @@ public enum GPUAccelerator {
     private static IGPUAccelerator gpuAccelerator;
     private static final CudaAccelerator cudaAccelerator = CudaAccelerator.INSTANCE;
     private static final OpenclAccelerator openclAccelerator = OpenclAccelerator.INSTANCE;
+    private static boolean isEnableGpuAccelerate = false;
 
     enum Category {
         CUDA("cuda"), OPENCL("opencl");
@@ -29,19 +30,16 @@ public enum GPUAccelerator {
         }
 
         static Category categoryFromString(String c) {
-            switch (c) {
-                case "cuda":
-                    return CUDA;
-                case "opencl":
-                    return OPENCL;
-                default:
-                    return null;
-            }
+            return switch (c) {
+                case "cuda" -> CUDA;
+                case "opencl" -> OPENCL;
+                default -> null;
+            };
         }
     }
 
     public void resetAllResultStatus() {
-        if (gpuAccelerator != null && AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+        if (gpuAccelerator != null && isEnableGpuAccelerate) {
             gpuAccelerator.resetAllResultStatus();
         }
     }
@@ -54,27 +52,27 @@ public enum GPUAccelerator {
                       boolean[] isKeywordPath,
                       int maxResultNumber,
                       BiConsumer<String, String> resultCollector) {
-        if (gpuAccelerator != null && AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+        if (gpuAccelerator != null && isEnableGpuAccelerate) {
             gpuAccelerator.match(searchCase, isIgnoreCase, searchText, keywords, keywordsLowerCase, isKeywordPath, maxResultNumber, resultCollector);
         }
     }
 
     public boolean isMatchDone(String key) {
-        if (gpuAccelerator != null && AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+        if (gpuAccelerator != null && isEnableGpuAccelerate) {
             return gpuAccelerator.isMatchDone(key);
         }
         return false;
     }
 
     public int matchedNumber(String key) {
-        if (gpuAccelerator != null && AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+        if (gpuAccelerator != null && isEnableGpuAccelerate) {
             return gpuAccelerator.matchedNumber(key);
         }
         return 0;
     }
 
     public void stopCollectResults() {
-        if (gpuAccelerator != null && AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+        if (gpuAccelerator != null && isEnableGpuAccelerate) {
             gpuAccelerator.stopCollectResults();
         }
     }
@@ -84,65 +82,66 @@ public enum GPUAccelerator {
     }
 
     public boolean hasCache() {
-        if (gpuAccelerator != null && AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+        if (gpuAccelerator != null && isEnableGpuAccelerate) {
             return gpuAccelerator.hasCache();
         }
         return false;
     }
 
     public boolean isCacheExist(String key) {
-        if (gpuAccelerator != null && AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+        if (gpuAccelerator != null && isEnableGpuAccelerate) {
             return gpuAccelerator.isCacheExist(key);
         }
         return false;
     }
 
     public void initCache(String key, Supplier<String> recordSupplier) {
-        if (gpuAccelerator != null && AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+        if (gpuAccelerator != null && isEnableGpuAccelerate) {
             gpuAccelerator.initCache(key, recordSupplier);
         }
     }
 
     public void addRecordsToCache(String key, Object[] records) {
-        if (gpuAccelerator != null && AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+        if (gpuAccelerator != null && isEnableGpuAccelerate) {
             gpuAccelerator.addRecordsToCache(key, records);
         }
     }
 
     public void removeRecordsFromCache(String key, Object[] records) {
-        if (gpuAccelerator != null && AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+        if (gpuAccelerator != null && isEnableGpuAccelerate) {
             gpuAccelerator.removeRecordsFromCache(key, records);
         }
     }
 
     public void clearCache(String key) {
-        if (gpuAccelerator != null && AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+        if (gpuAccelerator != null && isEnableGpuAccelerate) {
             gpuAccelerator.clearCache(key);
         }
     }
 
     public void clearAllCache() {
-        if (gpuAccelerator != null && AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+        if (gpuAccelerator != null && isEnableGpuAccelerate) {
             gpuAccelerator.clearAllCache();
         }
     }
 
     public boolean isCacheValid(String key) {
-        if (gpuAccelerator != null && AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+        if (gpuAccelerator != null && isEnableGpuAccelerate) {
             return gpuAccelerator.isCacheValid(key);
         }
         return false;
     }
 
     public int getGPUMemUsage() {
-        if (gpuAccelerator != null && AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+        if (gpuAccelerator != null && isEnableGpuAccelerate) {
             return gpuAccelerator.getGPUMemUsage();
         }
         return 0;
     }
 
     public void initialize() {
-        if (AllConfigs.getInstance().isEnableGpuAccelerate()) {
+        isEnableGpuAccelerate = AllConfigs.getInstance().getConfigEntity().isEnableGpuAccelerate();
+        if (isEnableGpuAccelerate) {
             if (cudaAccelerator.isGPUAvailableOnSystem()) {
                 cudaAccelerator.initialize();
             }
@@ -153,7 +152,7 @@ public enum GPUAccelerator {
     }
 
     public void release() {
-        if (gpuAccelerator != null && AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+        if (gpuAccelerator != null && isEnableGpuAccelerate) {
             gpuAccelerator.release();
         }
     }
@@ -200,7 +199,7 @@ public enum GPUAccelerator {
     }
 
     public boolean setDevice(String deviceCategoryAndId) {
-        if (gpuAccelerator != null && AllConfigs.getInstance().isGPUAcceleratorEnabled()) {
+        if (gpuAccelerator != null && isEnableGpuAccelerate) {
             // 切换GPU设备重启生效，运行中不允许切换
             return true;
         }

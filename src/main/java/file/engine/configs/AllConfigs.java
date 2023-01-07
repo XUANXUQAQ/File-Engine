@@ -29,6 +29,7 @@ import file.engine.services.download.DownloadManager;
 import file.engine.utils.RegexUtil;
 import file.engine.utils.gson.GsonUtil;
 import file.engine.utils.system.properties.IsDebug;
+import lombok.Getter;
 
 import javax.swing.*;
 import java.awt.*;
@@ -48,11 +49,11 @@ import static file.engine.utils.StartupUtil.hasStartup;
  * 保存软件运行时的所有配置信息
  */
 public class AllConfigs {
+    @Getter
     private volatile ConfigEntity configEntity;
     private final LinkedHashMap<String, AddressUrl> updateAddressMap = new LinkedHashMap<>();
     private final LinkedHashSet<String> cmdSet = new LinkedHashSet<>();
     private static boolean isFirstRunApp = false;
-    private volatile boolean isEnableGPUAccelerator = false;
 
     private static volatile AllConfigs instance = null;
 
@@ -88,19 +89,6 @@ public class AllConfigs {
         return Constants.Enums.SwingThemes.MaterialLighter;
     }
 
-    public String getGpuDevice() {
-        return configEntity.getGpuDevice();
-    }
-
-    /**
-     * 是否在将文件拖出时提示已创建快捷方式
-     *
-     * @return boolean
-     */
-    public boolean isShowTipOnCreatingLnk() {
-        return configEntity.isShowTipCreatingLnk();
-    }
-
     /**
      * 检测是不是第一次运行
      *
@@ -111,244 +99,12 @@ public class AllConfigs {
     }
 
     /**
-     * 获取网络代理端口
-     *
-     * @return proxy port
-     */
-    public int getProxyPort() {
-        return configEntity.getProxyPort();
-    }
-
-    /**
-     * 获取网络代理用户名
-     *
-     * @return proxy username
-     */
-    public String getProxyUserName() {
-        return configEntity.getProxyUserName();
-    }
-
-    /**
-     * 获取网络代理密码
-     *
-     * @return proxy password
-     */
-    public String getProxyPassword() {
-        return configEntity.getProxyPassword();
-    }
-
-    /**
-     * 获取网络代理的类型
-     *
-     * @return proxyType int 返回值的类型由Enums.ProxyType中定义
-     * @see Constants.Enums.ProxyType
-     */
-    public int getProxyType() {
-        return configEntity.getProxyType();
-    }
-
-    /**
-     * 获取网络代理地址
-     *
-     * @return proxy address
-     */
-    public String getProxyAddress() {
-        return configEntity.getProxyAddress();
-    }
-
-    /**
-     * 获取搜索框默认字体颜色RGB值
-     *
-     * @return rgb hex
-     */
-    public int getSearchBarFontColor() {
-        return configEntity.getSearchBarFontColor();
-    }
-
-    /**
-     * 获取搜索框显示颜色
-     *
-     * @return rgb hex
-     */
-    public int getSearchBarColor() {
-        return configEntity.getSearchBarColor();
-    }
-
-    /**
-     * 获取热键
-     *
-     * @return hotkey 每个案件以 + 分开
-     */
-    public String getHotkey() {
-        return configEntity.getHotkey();
-    }
-
-    /**
-     * 获取最大cache数量
-     *
-     * @return cache max size
-     */
-    public int getCacheNumLimit() {
-        return configEntity.getCacheNumLimit();
-    }
-
-    /**
-     * 获取检测一次系统文件更改的时间
-     *
-     * @return int 单位 秒
-     */
-    public int getUpdateTimeLimit() {
-        return configEntity.getUpdateTimeLimit();
-    }
-
-    /**
-     * 获取忽略的文件夹
-     *
-     * @return ignored path 由 ,（逗号）分开
-     */
-    public String getIgnorePath() {
-        return configEntity.getIgnorePath();
-    }
-
-    /**
-     * 获取优先搜索文件夹
-     *
-     * @return priority dir
-     */
-    public String getPriorityFolder() {
-        return configEntity.getPriorityFolder();
-    }
-
-    /**
-     * 是否在打开文件时默认以管理员身份运行，绕过UAC（危险）
-     *
-     * @return boolean
-     */
-    public boolean isDefaultAdmin() {
-        return configEntity.isDefaultAdmin();
-    }
-
-    /**
-     * 是否在窗口失去焦点后自动关闭
-     *
-     * @return boolean
-     */
-    public boolean isLoseFocusClose() {
-        return configEntity.isLoseFocusClose();
-    }
-
-    /**
-     * 获取swing皮肤包名称，可由swingThemesMapper转换为Enums.SwingThemes
-     *
-     * @return swing name
-     * @see Constants.Enums.SwingThemes
-     * @see #swingThemesMapper(String)
-     */
-    public String getSwingTheme() {
-        return configEntity.getSwingTheme();
-    }
-
-    public double getRoundRadius() {
-        return configEntity.getRoundRadius();
-    }
-
-    /**
-     * 获取打开上级文件夹的键盘快捷键code
-     *
-     * @return keycode
-     */
-    public int getOpenLastFolderKeyCode() {
-        return configEntity.getOpenLastFolderKeyCode();
-    }
-
-    /**
-     * 获取以管理员身份运行程序快捷键code
-     *
-     * @return keycode
-     */
-    public int getRunAsAdminKeyCode() {
-        return configEntity.getRunAsAdminKeyCode();
-    }
-
-    /**
-     * 获取复制文件路径code
-     *
-     * @return keycode
-     */
-    public int getCopyPathKeyCode() {
-        return configEntity.getCopyPathKeyCode();
-    }
-
-    /**
-     * 获取不透明度
-     *
-     * @return opacity
-     */
-    public float getOpacity() {
-        return configEntity.getTransparency();
-    }
-
-    /**
      * 获取cmdSet的一个复制
      *
      * @return cmdSet clone
      */
     public LinkedHashSet<String> getCmdSet() {
         return new LinkedHashSet<>(cmdSet);
-    }
-
-    /**
-     * 获取搜索下拉框的默认颜色
-     *
-     * @return rgb hex
-     */
-    public int getLabelColor() {
-        return configEntity.getLabelColor();
-    }
-
-    /**
-     * 获取更新地址
-     *
-     * @return url
-     */
-    public String getUpdateAddress() {
-        return configEntity.getUpdateAddress();
-    }
-
-    /**
-     * 获取下拉框默认背景颜色
-     *
-     * @return rgb hex
-     */
-    public int getDefaultBackgroundColor() {
-        return configEntity.getDefaultBackgroundColor();
-    }
-
-    /**
-     * 获取下拉框被选中的背景颜色
-     *
-     * @return rgb hex
-     */
-    public int getLabelFontColorWithCoverage() {
-        return configEntity.getFontColorWithCoverage();
-    }
-
-    /**
-     * 获取下拉框被选中的字体颜色
-     *
-     * @return rgb hex
-     */
-    public int getLabelFontColor() {
-        return configEntity.getFontColor();
-    }
-
-    /**
-     * 获取边框颜色
-     *
-     * @return rgb hex
-     */
-    public int getBorderColor() {
-        return configEntity.getBorderColor();
     }
 
     /**
@@ -368,28 +124,6 @@ public class AllConfigs {
     }
 
     /**
-     * 是否贴靠在explorer窗口
-     *
-     * @return true or false
-     */
-    public boolean isAttachExplorer() {
-        return configEntity.isAttachExplorer();
-    }
-
-    /**
-     * 获取边框厚度
-     *
-     * @return 厚度
-     */
-    public int getBorderThickness() {
-        return configEntity.getBorderThickness();
-    }
-
-    public boolean isCheckUpdateStartup() {
-        return configEntity.isCheckUpdateStartup();
-    }
-
-    /**
      * 获取网络代理信息
      *
      * @return ProxyInfo
@@ -404,7 +138,7 @@ public class AllConfigs {
     }
 
     public String getAvailableDisks() {
-        String disks = AllConfigs.getInstance().getDisks();
+        String disks = configEntity.getDisks();
         String[] splitDisks = RegexUtil.comma.split(disks);
         StringBuilder stringBuilder = new StringBuilder();
         for (String root : splitDisks) {
@@ -413,38 +147,6 @@ public class AllConfigs {
             }
         }
         return stringBuilder.toString();
-    }
-
-    public String getDisks() {
-        return configEntity.getDisks();
-    }
-
-    public int getSearchThreadNumber() {
-        return configEntity.getSearchThreadNumber();
-    }
-
-    /**
-     * 是否响应双击Ctrl键
-     *
-     * @return boolean
-     */
-    public boolean isResponseCtrl() {
-        return configEntity.isDoubleClickCtrlOpen();
-    }
-
-    /**
-     * 是否启动GPU加速，仅在初始化时，显示设置界面时使用
-     * 当前启动GPU加速状态由isGPUAcceleratorEnabled()判断
-     *
-     * @return boolean
-     * @see #isGPUAcceleratorEnabled()
-     */
-    public boolean isEnableGpuAccelerate() {
-        return configEntity.isEnableGpuAccelerate();
-    }
-
-    public boolean isGPUAcceleratorEnabled() {
-        return isEnableGPUAccelerator;
     }
 
     /**
@@ -489,7 +191,7 @@ public class AllConfigs {
      * @return addressUrl
      */
     public AddressUrl getUpdateUrlFromMap() {
-        return getUpdateUrlFromMap(getUpdateAddress());
+        return getUpdateUrlFromMap(configEntity.getUpdateAddress());
     }
 
     /**
@@ -1092,8 +794,6 @@ public class AllConfigs {
         if (isFirstRunApp) {
             checkRunningDirAtDiskC();
         }
-        AllConfigs allConfigs = getInstance();
-        allConfigs.isEnableGPUAccelerator = allConfigs.isEnableGpuAccelerate();
     }
 
     @EventRegister(registerClass = SetConfigsEvent.class)
