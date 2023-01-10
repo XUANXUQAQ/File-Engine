@@ -731,6 +731,10 @@ public class DatabaseService {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
+            for (var eachPriority : priorityMap) {
+                var priorityContainer = searchTask.priorityContainers.get(String.valueOf(eachPriority.priority));
+                searchTask.tempResults.addAll(priorityContainer);
+            }
             searchDone(searchTask);
         }
     }
