@@ -605,10 +605,10 @@ public class DatabaseService {
             //字符串匹配通过
             if (!FileUtil.isFileExist(path)) {
                 removeFileFromDatabase(path);
-            } else if (searchTask.tempResultsForEvent.add(path)) {
+            } else if (searchTask.tempResultsSet.add(path)) {
                 ret = true;
-                searchTask.priorityContainer.get(priorityStr).add(path);
-                if (searchTask.tempResultsForEvent.size() >= MAX_RESULTS) {
+                searchTask.priorityContainers.get(priorityStr).add(path);
+                if (searchTask.tempResultsSet.size() >= MAX_RESULTS) {
                     searchTask.shouldStopSearch.set(true);
                 }
             }
@@ -714,11 +714,11 @@ public class DatabaseService {
      */
     private void waitForTasks(SearchTask searchTask) {
         try {
-            EventManagement eventManagement = EventManagement.getInstance();
+            var eventManagement = EventManagement.getInstance();
             var resultsAdded = new ArrayList<String>();
             while (!searchTask.taskStatus.equals(searchTask.allTaskStatus) && eventManagement.notMainExit()) {
                 for (var eachPriority : priorityMap) {
-                    var priorityContainer = searchTask.priorityContainer.get(String.valueOf(eachPriority.priority));
+                    var priorityContainer = searchTask.priorityContainers.get(String.valueOf(eachPriority.priority));
                     for (String searchResult : priorityContainer) {
                         searchTask.tempResults.add(searchResult);
                         resultsAdded.add(searchResult);
@@ -737,7 +737,7 @@ public class DatabaseService {
 
     private void searchDone(SearchTask searchTask) {
         EventManagement eventManagement = EventManagement.getInstance();
-        eventManagement.putEvent(new SearchDoneEvent(new ConcurrentLinkedQueue<>(searchTask.tempResultsForEvent)));
+        eventManagement.putEvent(new SearchDoneEvent(new ConcurrentLinkedQueue<>(searchTask.tempResults)));
         if (isEnableGPUAccelerate && eventManagement.notMainExit()) {
             GPUAccelerator.INSTANCE.stopCollectResults();
         }
@@ -1835,7 +1835,7 @@ public class DatabaseService {
         var databaseService = getInstance();
         var searchTask = new SearchTask(searchInfo);
         for (var eachPriority : databaseService.priorityMap) {
-            searchTask.priorityContainer.put(String.valueOf(eachPriority.priority), new ConcurrentLinkedQueue<>());
+            searchTask.priorityContainers.put(String.valueOf(eachPriority.priority), new ConcurrentLinkedQueue<>());
         }
 
         var cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
@@ -1892,10 +1892,10 @@ public class DatabaseService {
                                 databaseService.removeFileFromDatabase(path);
                                 return;
                             }
-                            if (searchTask.tempResultsForEvent.add(path)) {
+                            if (searchTask.tempResultsSet.add(path)) {
                                 var priorityStr = RegexUtil.comma.split(key)[2];
-                                searchTask.priorityContainer.get(priorityStr).add(path);
-                                if (searchTask.tempResultsForEvent.size() >= MAX_RESULTS) {
+                                searchTask.priorityContainers.get(priorityStr).add(path);
+                                if (searchTask.tempResultsSet.size() >= MAX_RESULTS) {
                                     searchTask.shouldStopSearch.set(true);
                                 }
                             }
@@ -2252,7 +2252,7 @@ public class DatabaseService {
      * 在收到startSearchEvent之后将会遍历taskMap执行搜索任务
      * @see #startSearch(SearchTask)
      *
-     * 搜索结果将会被暂存到priorityContainer中，key为后缀优先级，value为该后缀的文件路径，同时也会存入tempResultsForEvent中用于去重以及发送事件
+     * 搜索结果将会被暂存到priorityContainer中，key为后缀优先级，value为该后缀的文件路径，同时也会存入tempResultsSet中用于去重
      * 在等待搜索完成时，priorityContainer中的数据会被不断转存到tempResults中，按照后缀优先级降序排列，优先级高的文件将会先转存
      * <p>
      * taskStatus和allTaskStatus是每个任务的标志，每个任务分配一个位，当某一个任务完成，在taskStatus上该任务的位将会被设置为1
@@ -2267,10 +2267,10 @@ public class DatabaseService {
         private final Bit allTaskStatus = new Bit(new byte[]{0});
         private final SearchInfo searchInfo;
         private final ConcurrentLinkedQueue<String> tempResults = new ConcurrentLinkedQueue<>();
-        private final Set<String> tempResultsForEvent = new ConcurrentSkipListSet<>(); //在SearchDoneEvent中保存的容器
+        private final Set<String> tempResultsSet = ConcurrentHashMap.newKeySet();
         private final AtomicBoolean shouldStopSearch = new AtomicBoolean();
         private final long taskCreateTimeMills = System.currentTimeMillis();
-        private final ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> priorityContainer = new ConcurrentHashMap<>();
+        private final ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> priorityContainers = new ConcurrentHashMap<>();
 
         private static final AtomicBoolean isGpuThreadRunning = new AtomicBoolean();
     }
