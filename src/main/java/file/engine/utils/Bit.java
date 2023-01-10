@@ -165,8 +165,7 @@ public class Bit {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof Bit) {
-            Bit tmp = (Bit) obj;
+        if (obj instanceof Bit tmp) {
             return Arrays.equals(this.bytes.get(), tmp.bytes.get());
         }
         return false;
