@@ -1458,6 +1458,10 @@ public class DatabaseService {
         }
     }
 
+    /**
+     * 等待fileSearcherUSN进程并切换回数据库
+     * @param searchByUsn fileSearcherUSN进程
+     */
     private void waitForSearchAndSwitchDatabase(Process searchByUsn) {
         // 搜索完成并写入数据库后，重新建立数据库连接
         try {
@@ -1608,6 +1612,10 @@ public class DatabaseService {
         return false;
     }
 
+    /**
+     * 获取list0-40所有表的权重，使用越频繁权重越高
+     * @return map
+     */
     private HashMap<String, Integer> queryAllWeights() {
         HashMap<String, Integer> stringIntegerHashMap = new HashMap<>();
         try (Statement pStmt = SQLiteUtil.getStatement("weight");
@@ -1684,6 +1692,13 @@ public class DatabaseService {
         }
     }
 
+    /**
+     * 根据输入生成SearchInfo
+     * @param searchTextSupplier 全字匹配关键字
+     * @param searchCaseSupplier 搜索过滤类型
+     * @param keywordsSupplier 搜索关键字
+     * @return SearchInfo
+     */
     private static SearchInfo prepareSearchKeywords(Supplier<String> searchTextSupplier,
                                                     Supplier<String[]> searchCaseSupplier,
                                                     Supplier<String[]> keywordsSupplier) {
@@ -2206,6 +2221,11 @@ public class DatabaseService {
     private record SuffixPriorityPair(String suffix, int priority) {
     }
 
+    /**
+     * 内存缓存包装类
+     * 数据库缓存分为GPU加速缓存和内存缓存
+     * 当GPU加速不可用或者关闭时，将会启用内存缓存
+     */
     private static class Cache {
         private final AtomicBoolean isCached = new AtomicBoolean(false);
         private final AtomicBoolean isFileLost = new AtomicBoolean(false);
@@ -2226,6 +2246,19 @@ public class DatabaseService {
         }
     }
 
+    /**
+     * 搜索任务封装
+     * 根据list0-40，以及后缀优先级生成任务，放入taskMap中，key为磁盘盘符，value为搜索任务
+     * 在收到startSearchEvent之后将会遍历taskMap执行搜索任务
+     * @see #startSearch(SearchTask)
+     *
+     * 搜索结果将会被暂存到priorityContainer中，key为后缀优先级，value为该后缀的文件路径，同时也会存入tempResultsForEvent中用于去重以及发送事件
+     * 在等待搜索完成时，priorityContainer中的数据会被不断转存到tempResults中，按照后缀优先级降序排列，优先级高的文件将会先转存
+     * <p>
+     * taskStatus和allTaskStatus是每个任务的标志，每个任务分配一个位，当某一个任务完成，在taskStatus上该任务的位将会被设置为1
+     * 当taskstauts和allTaskStatus相等则表示任务全部完成
+     * @see #waitForTasks(SearchTask)
+     */
     @RequiredArgsConstructor
     private static class SearchTask {
         //taskMap任务队列，key为磁盘盘符，value为任务
@@ -2242,6 +2275,10 @@ public class DatabaseService {
         private static final AtomicBoolean isGpuThreadRunning = new AtomicBoolean();
     }
 
+    /**
+     * 因为拥有String[]以及boolean[]数组，所以转换成Record将会导致Equals和Hashcode出现问题
+     * 导致两个内容相同的SearchInfo不相等，不能转换成record
+     */
     @EqualsAndHashCode
     @RequiredArgsConstructor
     private static class SearchInfo {
