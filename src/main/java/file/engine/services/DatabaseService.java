@@ -1762,9 +1762,9 @@ public class DatabaseService {
 
     @EventListener(listenClass = SetConfigsEvent.class)
     private static void setGpuDevice(Event event) {
-        SetConfigsEvent setConfigsEvent = (SetConfigsEvent) event;
-        if (!GPUAccelerator.INSTANCE.setDevice(setConfigsEvent.getConfigs().getGpuDevice())) {
-            System.err.println("gpu设备" + setConfigsEvent.getConfigs().getGpuDevice() + "无效");
+        var device = AllConfigs.getInstance().getConfigEntity().getGpuDevice();
+        if (!GPUAccelerator.INSTANCE.setDevice(device)) {
+            System.err.println("gpu设备" + device + "无效");
         }
     }
 

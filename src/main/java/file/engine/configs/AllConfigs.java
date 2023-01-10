@@ -805,7 +805,7 @@ public class AllConfigs {
             setConfigsEvent.setConfigs(allConfigs.configEntity);
         } else {
             // 更新设置
-            ConfigEntity tempConfigEntity = ((SetConfigsEvent) event).getConfigs();
+            ConfigEntity tempConfigEntity = setConfigsEvent.getConfigs();
             if (allConfigs.noNullValue(tempConfigEntity)) {
                 allConfigs.setInvalidConfigs(tempConfigEntity, config -> {
                     if (config.isEnableGpuAccelerate()) {

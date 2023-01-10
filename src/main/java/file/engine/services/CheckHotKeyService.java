@@ -163,8 +163,7 @@ public class CheckHotKeyService {
 
     @EventListener(listenClass = SetConfigsEvent.class)
     private static void registerHotKeyEvent(Event event) {
-        SetConfigsEvent setConfigsEvent = (SetConfigsEvent) event;
-        getInstance().registerHotkey(setConfigsEvent.getConfigs().getHotkey());
+        getInstance().registerHotkey(AllConfigs.getInstance().getConfigEntity().getHotkey());
     }
 
     @EventListener(listenClass = {SearchBarCloseEvent.class, SearchBarReadyEvent.class})

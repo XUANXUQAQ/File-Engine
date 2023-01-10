@@ -2688,12 +2688,10 @@ public class SearchBar {
 
     @EventListener(listenClass = SetConfigsEvent.class)
     private static void setSearchBar(Event event) {
-        SetConfigsEvent task1 = (SetConfigsEvent) event;
-        var configs = task1.getConfigs();
-        setSearchBarLaf(configs);
+        setSearchBarTheme(AllConfigs.getInstance().getConfigEntity());
     }
 
-    private static void setSearchBarLaf(ConfigEntity configs) {
+    private static void setSearchBarTheme(ConfigEntity configs) {
         SearchBar searchBar = getInstance();
         searchBar.setTransparency(configs.getTransparency());
         searchBar.setBorderColor(AllConfigs.getInstance().getBorderType(), configs.getBorderColor(), configs.getBorderThickness());

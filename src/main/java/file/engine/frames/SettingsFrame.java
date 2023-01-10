@@ -3379,24 +3379,24 @@ public class SettingsFrame {
      * @return 出现的错误信息，若成功则为空
      */
     private String saveChanges(boolean isContinuousUpdate) {
-        StringBuilder errorsStrb = new StringBuilder();
+        StringBuilder errorsStrBuilder = new StringBuilder();
 
-        checkProxy(errorsStrb);
-        checkSearchBarColor(errorsStrb);
-        checkSearchBarFontColor(errorsStrb);
-        checkLabelColor(errorsStrb);
-        checkLabelFontColor(errorsStrb);
-        checkLabelFontColorWithCoverage(errorsStrb);
-        checkBorderColor(errorsStrb);
-        checkDefaultBackgroundColor(errorsStrb);
-        checkTransparency(errorsStrb);
-        checkHotKey(errorsStrb);
-        checkCacheNumLimit(errorsStrb);
-        checkUpdateTimeLimit(errorsStrb);
-        checkBorderThickness(errorsStrb);
-        checkRoundRadius(errorsStrb);
+        checkProxy(errorsStrBuilder);
+        checkSearchBarColor(errorsStrBuilder);
+        checkSearchBarFontColor(errorsStrBuilder);
+        checkLabelColor(errorsStrBuilder);
+        checkLabelFontColor(errorsStrBuilder);
+        checkLabelFontColorWithCoverage(errorsStrBuilder);
+        checkBorderColor(errorsStrBuilder);
+        checkDefaultBackgroundColor(errorsStrBuilder);
+        checkTransparency(errorsStrBuilder);
+        checkHotKey(errorsStrBuilder);
+        checkCacheNumLimit(errorsStrBuilder);
+        checkUpdateTimeLimit(errorsStrBuilder);
+        checkBorderThickness(errorsStrBuilder);
+        checkRoundRadius(errorsStrBuilder);
 
-        String errors = errorsStrb.toString();
+        String errors = errorsStrBuilder.toString();
         if (!errors.isEmpty()) {
             return errors;
         }
