@@ -607,7 +607,10 @@ public class DatabaseService {
                 removeFileFromDatabase(path);
             } else if (searchTask.tempResultsSet.add(path)) {
                 ret = true;
-                searchTask.priorityContainers.get(priorityStr).add(path);
+                var container = searchTask.priorityContainers.get(priorityStr);
+                if (container != null) {
+                    container.add(path);
+                }
                 if (searchTask.tempResultsSet.size() >= MAX_RESULTS) {
                     searchTask.shouldStopSearch.set(true);
                 }
@@ -716,15 +719,21 @@ public class DatabaseService {
         try {
             var eventManagement = EventManagement.getInstance();
             var resultsAdded = new ArrayList<String>();
-            while (!searchTask.taskStatus.equals(searchTask.allTaskStatus) && eventManagement.notMainExit()) {
+            final long startWaiting = System.currentTimeMillis();
+            final long timeout = 5 * 60 * 1000; // 线程最大存活时间为5分钟
+            while (!searchTask.taskStatus.equals(searchTask.allTaskStatus) &&
+                    eventManagement.notMainExit() &&
+                    System.currentTimeMillis() - startWaiting < timeout) {
                 for (var eachPriority : priorityMap) {
                     var priorityContainer = searchTask.priorityContainers.get(String.valueOf(eachPriority.priority));
-                    for (String searchResult : priorityContainer) {
-                        searchTask.tempResults.add(searchResult);
-                        resultsAdded.add(searchResult);
+                    if (priorityContainer != null) {
+                        for (String searchResult : priorityContainer) {
+                            searchTask.tempResults.add(searchResult);
+                            resultsAdded.add(searchResult);
+                        }
+                        priorityContainer.removeAll(resultsAdded);
+                        resultsAdded.clear();
                     }
-                    priorityContainer.removeAll(resultsAdded);
-                    resultsAdded.clear();
                 }
                 TimeUnit.MILLISECONDS.sleep(1);
             }
@@ -733,7 +742,9 @@ public class DatabaseService {
         } finally {
             for (var eachPriority : priorityMap) {
                 var priorityContainer = searchTask.priorityContainers.get(String.valueOf(eachPriority.priority));
-                searchTask.tempResults.addAll(priorityContainer);
+                if (priorityContainer != null) {
+                    searchTask.tempResults.addAll(priorityContainer);
+                }
             }
             searchDone(searchTask);
         }
@@ -945,24 +956,6 @@ public class DatabaseService {
             }
         }
         return sqlColumnMap;
-    }
-
-    private void startSearchThread() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            var eventManagement = EventManagement.getInstance();
-            while (eventManagement.notMainExit()) {
-                var searchTask = searchTasksQueue.poll();
-                if (searchTask == null) {
-                    try {
-                        TimeUnit.MILLISECONDS.sleep(1);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                    continue;
-                }
-                startSearch(searchTask);
-            }
-        });
     }
 
     /**
@@ -1464,6 +1457,7 @@ public class DatabaseService {
 
     /**
      * 等待fileSearcherUSN进程并切换回数据库
+     *
      * @param searchByUsn fileSearcherUSN进程
      */
     private void waitForSearchAndSwitchDatabase(Process searchByUsn) {
@@ -1618,6 +1612,7 @@ public class DatabaseService {
 
     /**
      * 获取list0-40所有表的权重，使用越频繁权重越高
+     *
      * @return map
      */
     private HashMap<String, Integer> queryAllWeights() {
@@ -1698,9 +1693,10 @@ public class DatabaseService {
 
     /**
      * 根据输入生成SearchInfo
+     *
      * @param searchTextSupplier 全字匹配关键字
      * @param searchCaseSupplier 搜索过滤类型
-     * @param keywordsSupplier 搜索关键字
+     * @param keywordsSupplier   搜索关键字
      * @return SearchInfo
      */
     private static SearchInfo prepareSearchKeywords(Supplier<String> searchTextSupplier,
@@ -1788,6 +1784,13 @@ public class DatabaseService {
             Thread.onSpinWait();
         }
 
+        // 检查prepareTaskMap中是否有过期任务
+        for (var eachTask : prepareTasksMap.entrySet()) {
+            if (System.currentTimeMillis() - eachTask.getValue().taskCreateTimeMills > SearchTask.maxTaskValidThreshold) {
+                prepareTasksMap.remove(eachTask.getKey());
+            }
+        }
+
         var prepareSearchEvent = (PrepareSearchEvent) event;
         var searchInfo = prepareSearchKeywords(prepareSearchEvent.searchText, prepareSearchEvent.searchCase, prepareSearchEvent.keywords);
         var searchTask = prepareSearch(searchInfo);
@@ -1801,14 +1804,15 @@ public class DatabaseService {
         databaseService.stopAllSearch();
         final long startWaiting = System.currentTimeMillis();
         final long timeout = 3000;
-        while (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL ||
-                databaseService.searchThreadCount.get() != 0) {
+        while (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL) {
             if (System.currentTimeMillis() - startWaiting > timeout) {
-                System.out.println("等待上次搜索结束超时");
-                break;
+                System.out.println("等待数据库状态为NORMAL超时");
+                return;
             }
             Thread.onSpinWait();
         }
+
+        searchTasksQueue.removeIf(eachTask -> eachTask.shouldStopSearch.get());
 
         var startSearchEvent = (StartSearchEvent) event;
         var searchInfo = prepareSearchKeywords(startSearchEvent.searchText, startSearchEvent.searchCase, startSearchEvent.keywords);
@@ -1820,13 +1824,7 @@ public class DatabaseService {
             searchTask = prepareSearch(searchInfo);
         }
         searchTasksQueue.add(searchTask);
-        // 检查prepareTaskMap中是否有过期任务
-        final long maxTaskValidThreshold = 5000;
-        for (var eachTask : prepareTasksMap.entrySet()) {
-            if (System.currentTimeMillis() - eachTask.getValue().taskCreateTimeMills > maxTaskValidThreshold) {
-                prepareTasksMap.remove(eachTask.getKey());
-            }
-        }
+        databaseService.startSearch(searchTask);
         event.setReturnValue(searchTask.tempResults);
     }
 
@@ -1898,7 +1896,10 @@ public class DatabaseService {
                             }
                             if (searchTask.tempResultsSet.add(path)) {
                                 var priorityStr = RegexUtil.comma.split(key)[2];
-                                searchTask.priorityContainers.get(priorityStr).add(path);
+                                var container = searchTask.priorityContainers.get(priorityStr);
+                                if (container != null) {
+                                    container.add(path);
+                                }
                                 if (searchTask.tempResultsSet.size() >= MAX_RESULTS) {
                                     searchTask.shouldStopSearch.set(true);
                                 }
@@ -1934,7 +1935,6 @@ public class DatabaseService {
         databaseService.checkTimeAndSendExecuteSqlSignalThread();
         databaseService.executeSqlCommandsThread();
         databaseService.saveTableCacheThread();
-        databaseService.startSearchThread();
         isEnableGPUAccelerate = allConfigs.getConfigEntity().isEnableGpuAccelerate();
     }
 
@@ -2254,8 +2254,9 @@ public class DatabaseService {
      * 搜索任务封装
      * 根据list0-40，以及后缀优先级生成任务，放入taskMap中，key为磁盘盘符，value为搜索任务
      * 在收到startSearchEvent之后将会遍历taskMap执行搜索任务
-     * @see #startSearch(SearchTask)
      *
+     * @see #startSearch(SearchTask)
+     * <p>
      * 搜索结果将会被暂存到priorityContainer中，key为后缀优先级，value为该后缀的文件路径，同时也会存入tempResultsSet中用于去重
      * 在等待搜索完成时，priorityContainer中的数据会被不断转存到tempResults中，按照后缀优先级降序排列，优先级高的文件将会先转存
      * <p>
@@ -2277,6 +2278,7 @@ public class DatabaseService {
         private final ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> priorityContainers = new ConcurrentHashMap<>();
 
         private static final AtomicBoolean isGpuThreadRunning = new AtomicBoolean();
+        private static final long maxTaskValidThreshold = 5000;
     }
 
     /**
