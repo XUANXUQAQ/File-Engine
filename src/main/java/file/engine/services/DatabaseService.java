@@ -925,7 +925,7 @@ public class DatabaseService {
         int asciiSum = 0;
         if (searchInfo.keywords != null) {
             for (String keyword : searchInfo.keywords) {
-                int ascII = StringUtf8SumUtil.getAscIISum(keyword); //其实是utf8编码的值
+                int ascII = StringUtf8SumUtil.getStringSum(keyword); //其实是utf8编码的值
                 asciiSum += Math.max(ascII, 0);
             }
         }
@@ -1075,7 +1075,7 @@ public class DatabaseService {
         if (path == null || path.isEmpty()) {
             return;
         }
-        int asciiSum = StringUtf8SumUtil.getAscIISum(FileUtil.getFileName(path));
+        int asciiSum = StringUtf8SumUtil.getStringSum(FileUtil.getFileName(path));
         SQLWithTaskId[] sqlWithTaskId = new SQLWithTaskId[1];
         if (isRemoveFileInCommandQueue(path, sqlWithTaskId)) {
             sqlCommandQueue.remove(sqlWithTaskId[0]);
@@ -1161,7 +1161,7 @@ public class DatabaseService {
         if (path == null || path.isEmpty()) {
             return;
         }
-        int asciiSum = StringUtf8SumUtil.getAscIISum(FileUtil.getFileName(path));
+        int asciiSum = StringUtf8SumUtil.getStringSum(FileUtil.getFileName(path));
         int priorityBySuffix = getPriorityBySuffix(getSuffixByPath(path));
         addAddSqlCommandByAscii(asciiSum, path, priorityBySuffix);
         int asciiGroup = asciiSum / 100;

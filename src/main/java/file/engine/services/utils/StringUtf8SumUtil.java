@@ -4,7 +4,7 @@ import java.nio.charset.StandardCharsets;
 
 public class StringUtf8SumUtil {
 
-    public static int getAscIISum(String fileName) {
+    public static int getStringSum(String fileName) {
         if (fileName == null || fileName.isEmpty()) {
             return 0;
         }
