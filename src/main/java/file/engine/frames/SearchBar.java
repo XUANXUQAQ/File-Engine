@@ -3241,17 +3241,20 @@ public class SearchBar {
         }
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             long time = System.currentTimeMillis();
-            SwingUtilities.invokeLater(() ->
-                    searchInfoLabel.setIcon(GetIconUtil.getInstance().getBigIcon("loadingIcon", iconSideLength, iconSideLength)));
-            while (!"done".equals(searchInfoLabel.getName()) && isVisible() && startTime < time) {
-                SwingUtilities.invokeLater(() -> searchInfoLabel.setText(TranslateService.INSTANCE.getTranslation("Searching") + "    " +
-                        TranslateService.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
-                        TranslateService.INSTANCE.getTranslation("Number of current results") + ": " + listResults.size()));
+            var searchInfoLabelName = searchInfoLabel.getName();
+            var isUserInputChanged = startTime < time;
+            while (!"done".equals(searchInfoLabelName) && isVisible() && isUserInputChanged) {
+                SwingUtilities.invokeLater(() -> {
+                    searchInfoLabel.setIcon(GetIconUtil.getInstance().getBigIcon("loadingIcon", iconSideLength, iconSideLength));
+                    searchInfoLabel.setText(TranslateService.INSTANCE.getTranslation("Searching") + "    " +
+                            TranslateService.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
+                            TranslateService.INSTANCE.getTranslation("Number of current results") + ": " + listResults.size());
+                });
                 repaint();
                 try {
                     TimeUnit.MILLISECONDS.sleep(250);
                 } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    e.printStackTrace();
                 }
             }
             SwingUtilities.invokeLater(() -> {
@@ -3261,14 +3264,14 @@ public class SearchBar {
                 searchInfoLabel.setIcon(
                         GetIconUtil.getInstance().getBigIcon("completeIcon", iconSideLength, iconSideLength));
             });
-            long _time = System.currentTimeMillis();
+            time = System.currentTimeMillis();
             int count = 0;
             try {
-                while (startTime < _time && count <= 60) {
+                while (startTime < time && count <= 60) {
                     count++;
                     TimeUnit.MILLISECONDS.sleep(50);
                 }
-                if (startTime > _time) {
+                if (startTime > time) {
                     return;
                 }
             } catch (InterruptedException e) {
