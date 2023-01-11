@@ -8,7 +8,6 @@ public class RegexUtil {
     public static final Pattern blank = Pattern.compile(" ");
     public static final Pattern semicolon = Pattern.compile(";");
     public static final Pattern colon = Pattern.compile(":");
-    public static final Pattern plus = Pattern.compile(" \\+ ");
     public static final Pattern comma = Pattern.compile(",");
     private static final int MAX_PATTERN_CACHE_NUM = 20;
 

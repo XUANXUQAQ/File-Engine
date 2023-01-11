@@ -50,7 +50,7 @@ public class CheckHotKeyService {
         int[] hotkeys = new int[]{
                 -1, -1, -1, -1, -1
         };
-        String[] hotkeyString = RegexUtil.plus.split(hotkey);
+        String[] hotkeyString = RegexUtil.getPattern(" \\+ ", 0).split(hotkey);
         for (int i = 0; i < hotkeyString.length; ++i) {
             String eachHotkey = hotkeyString[i].trim();
             hotkeys[i] = map.get(eachHotkey);
@@ -75,7 +75,7 @@ public class CheckHotKeyService {
 
     //检查快捷键是否有效
     private boolean isHotkeyAvailable(String hotkey) {
-        String[] hotkeys = RegexUtil.plus.split(hotkey);
+        String[] hotkeys = RegexUtil.getPattern(" \\+ ", 0).split(hotkey);
         final int length = hotkeys.length;
         if (length > 5) {
             return false;

@@ -89,11 +89,6 @@ public enum TranslateService {
             case "zh-CN" -> "简体中文";
             case "ja-JP", "ja-JP-u-ca-japanese", "ja-JP-x-lvariant-JP" -> "日本語";
             case "zh-HK", "zh-TW" -> "繁體中文";
-            case "ru-RU" -> "русский";
-            case "it-IT", "it-CH" -> "italiano";
-            case "de-AT", "de-DE", "de-LU", "de-CH" -> "German";
-            case "ko-KR" -> "한국어";
-            case "fr-BE", "fr-CA", "fr-FR", "fr-LU", "fr-CH" -> "français";
             default -> "English(US)";
         };
     }
@@ -103,11 +98,6 @@ public enum TranslateService {
         fileMap.put("简体中文", "/language/Chinese(Simplified).txt");
         fileMap.put("日本語", "/language/Japanese.txt");
         fileMap.put("繁體中文", "/language/Chinese(Traditional).txt");
-        fileMap.put("русский", "/language/Russian.txt");
-        fileMap.put("italiano", "/language/Italian.txt");
-        fileMap.put("Deutsche", "/language/German.txt");
-        fileMap.put("한국어", "/language/Korean.txt");
-        fileMap.put("français", "/language/French.txt");
         fileMap.put("English(US)", "");
     }
 

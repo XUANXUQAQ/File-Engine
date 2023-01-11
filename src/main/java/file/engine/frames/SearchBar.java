@@ -1125,29 +1125,29 @@ public class SearchBar {
                         translateService.getTranslation("the file containing \"test\" in the path will be displayed below the search bar"));
         SwingUtilities.invokeLater(() -> textField.setText(""));
         JOptionPane.showMessageDialog(searchBar,
-                translateService.getTranslation("Add \":\" + suffix after the keyword to achieve a more precise search") + "\n" +
+                translateService.getTranslation("Add \"|\" + suffix after the keyword to achieve a more precise search") + "\n" +
                         translateService.getTranslation("The program has the following four suffixes") + "\n" +
-                        ":d     :f     :full     :case" + "\n" +
+                        "|d     |f     |full     |case" + "\n" +
                         translateService.getTranslation("not case sensitive"));
-        SwingUtilities.invokeLater(() -> textField.setText("test:d"));
+        SwingUtilities.invokeLater(() -> textField.setText("test|d"));
         JOptionPane.showMessageDialog(searchBar,
-                translateService.getTranslation("\":d\" is the suffix for searching only folders"));
-        SwingUtilities.invokeLater(() -> textField.setText("test:f"));
+                translateService.getTranslation("\"|d\" is the suffix for searching only folders"));
+        SwingUtilities.invokeLater(() -> textField.setText("test|f"));
         JOptionPane.showMessageDialog(searchBar,
-                translateService.getTranslation("\":f\" is the suffix to search only for files"));
-        SwingUtilities.invokeLater(() -> textField.setText("test:full"));
+                translateService.getTranslation("\"|f\" is the suffix to search only for files"));
+        SwingUtilities.invokeLater(() -> textField.setText("test|full"));
         JOptionPane.showMessageDialog(searchBar,
-                translateService.getTranslation("\":full\" means full word matching, but case insensitive"));
-        SwingUtilities.invokeLater(() -> textField.setText("test:case"));
+                translateService.getTranslation("\"|full\" means full word matching, but case insensitive"));
+        SwingUtilities.invokeLater(() -> textField.setText("test|case"));
         JOptionPane.showMessageDialog(searchBar,
-                translateService.getTranslation("\":case\" means case sensitive"));
-        SwingUtilities.invokeLater(() -> textField.setText("test:d;full"));
+                translateService.getTranslation("\"|case\" means case sensitive"));
+        SwingUtilities.invokeLater(() -> textField.setText("test|d;full"));
         JOptionPane.showMessageDialog(searchBar,
                 translateService.getTranslation("You can also combine different suffixes to use") + "\n" +
                         translateService.getTranslation("you can separate them with \";\" (semicolon) to search together as keywords."));
-        SwingUtilities.invokeLater(() -> textField.setText("test;/file:d;case"));
+        SwingUtilities.invokeLater(() -> textField.setText("test;/file|d;case"));
         JOptionPane.showMessageDialog(searchBar,
-                translateService.getTranslation("Different keywords are separated by \";\" (semicolon), suffix and keywords are separated by \":\" (colon)"));
+                translateService.getTranslation("Different keywords are separated by \";\" (semicolon), suffix and keywords are separated by \"|\" (vertical bar)"));
         JOptionPane.showMessageDialog(searchBar,
                 translateService.getTranslation("You can drag any search result out to create a shortcut on the desktop or any folder"));
         //判断是否为中文
@@ -3544,32 +3544,53 @@ public class SearchBar {
     private void setSearchKeywordsAndSearchCase() {
         String searchBarText = getSearchBarText();
         if (!searchBarText.isEmpty()) {
-            final int i = searchBarText.lastIndexOf(':');
+            final int i = searchBarText.lastIndexOf('|');
             if (i == -1) {
                 searchText = searchBarText;
                 searchCase = null;
             } else {
-                if (searchBarText.length() - 1 > i) {
-                    final char c = searchBarText.charAt(i + 1);
-                    // 如 test;/C:/  test;/C:\  test;/D:  test;/D:;  则判断为搜索磁盘内的文件
-                    if (c == '/' || c == File.separatorChar || c == ' ' || c == ';') {
-                        searchText = searchBarText;
-                        searchCase = null;
-                    } else {
-                        searchText = searchBarText.substring(0, i);
-                        String[] tmpSearchCase = RegexUtil.semicolon.split(searchBarText.substring(i + 1));
-                        searchCase = new String[tmpSearchCase.length];
-                        for (int j = 0; j < tmpSearchCase.length; j++) {
-                            searchCase[j] = tmpSearchCase[j].trim();
-                        }
-                    }
-                } else {
-                    searchText = searchBarText;
+                searchText = searchBarText.substring(0, i);
+                var searchCaseStr = searchBarText.substring(i + 1);
+                if (searchCaseStr.isEmpty()) {
                     searchCase = null;
+                } else {
+                    String[] tmpSearchCase = RegexUtil.semicolon.split(searchCaseStr);
+                    searchCase = new String[tmpSearchCase.length];
+                    for (int j = 0; j < tmpSearchCase.length; j++) {
+                        searchCase[j] = tmpSearchCase[j].trim();
+                    }
                 }
             }
             keywords = RegexUtil.semicolon.split(searchText);
         }
+//        String searchBarText = getSearchBarText();
+//        if (!searchBarText.isEmpty()) {
+//            final int i = searchBarText.lastIndexOf(':');
+//            if (i == -1) {
+//                searchText = searchBarText;
+//                searchCase = null;
+//            } else {
+//                if (searchBarText.length() - 1 > i) {
+//                    final char c = searchBarText.charAt(i + 1);
+//                    // 如 test;/C:/  test;/C:\  test;/D:  test;/D:;  则判断为搜索磁盘内的文件
+//                    if (c == '/' || c == File.separatorChar || c == ' ' || c == ';') {
+//                        searchText = searchBarText;
+//                        searchCase = null;
+//                    } else {
+//                        searchText = searchBarText.substring(0, i);
+//                        String[] tmpSearchCase = RegexUtil.semicolon.split(searchBarText.substring(i + 1));
+//                        searchCase = new String[tmpSearchCase.length];
+//                        for (int j = 0; j < tmpSearchCase.length; j++) {
+//                            searchCase[j] = tmpSearchCase[j].trim();
+//                        }
+//                    }
+//                } else {
+//                    searchText = searchBarText;
+//                    searchCase = null;
+//                }
+//            }
+//            keywords = RegexUtil.semicolon.split(searchText);
+//        }
     }
 
     private Optional<ConcurrentLinkedQueue<String>> sendPrepareSearchEvent() {

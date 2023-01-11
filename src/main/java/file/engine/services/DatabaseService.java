@@ -1678,9 +1678,9 @@ public class DatabaseService {
                 if (eachKeyword.contains(":")) {
                     eachKeyword = eachKeyword.substring(1);
                 }
-                // 将 / 以及 \ 替换为空字符串，以便模糊匹配文件夹路径
-                Matcher matcher = RegexUtil.getPattern("/|\\\\", 0).matcher(eachKeyword);
-                eachKeyword = matcher.replaceAll(Matcher.quoteReplacement(""));
+                // 将 / 替换为 \ ，以便模糊匹配文件夹路径
+                Matcher matcher = RegexUtil.getPattern("/", 0).matcher(eachKeyword);
+                eachKeyword = matcher.replaceAll(Matcher.quoteReplacement(File.separator));
             }
             isKeywordPath[i] = isPath;
             keywords[i] = eachKeyword;
