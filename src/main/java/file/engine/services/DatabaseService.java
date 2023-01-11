@@ -1675,9 +1675,7 @@ public class DatabaseService {
             final boolean isPath = _firstChar == '/' || _firstChar == File.separatorChar;
             if (isPath) {
                 // 当关键字为"test;/C:/test"时，分割出来为["test", "/C:/test"]，所以需要去掉 /C:/test 前面的 "/"
-                if (eachKeyword.contains(":")) {
-                    eachKeyword = eachKeyword.substring(1);
-                }
+                eachKeyword = eachKeyword.substring(1);
                 // 将 / 替换为 \ ，以便模糊匹配文件夹路径
                 Matcher matcher = RegexUtil.getPattern("/", 0).matcher(eachKeyword);
                 eachKeyword = matcher.replaceAll(Matcher.quoteReplacement(File.separator));
@@ -1777,11 +1775,11 @@ public class DatabaseService {
     }
 
     /**
-     * 防止PrepareSearchEvent未完成正在创建taskMap时，StartSearchEvent开始，导致两个线程同时添加任务（极端情况，一般不会出现）
+     * 预搜索任务
      *
      * @param searchInfo searchInfo
      */
-    private static synchronized SearchTask prepareSearch(SearchInfo searchInfo) {
+    private static SearchTask prepareSearch(SearchInfo searchInfo) {
         var databaseService = getInstance();
         var searchTask = new SearchTask(searchInfo);
         for (var eachPriority : databaseService.priorityMap) {
