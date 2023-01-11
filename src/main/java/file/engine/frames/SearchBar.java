@@ -3235,53 +3235,49 @@ public class SearchBar {
         SwingUtilities.invokeLater(searchBar::repaint);
     }
 
-//    private void addShowSearchStatusThread(AtomicBoolean isShowSearchStatusThreadNotExist) {
-//        if (!isShowSearchStatusThreadNotExist.get()) {
-//            return;
-//        }
-//        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-//            long time = System.currentTimeMillis();
-//            SwingUtilities.invokeLater(() -> searchInfoLabel.setIcon(
-//                    GetIconUtil.getInstance().getBigIcon("loadingIcon", iconSideLength, iconSideLength)));
-//            while (!"done".equals(searchInfoLabel.getName()) && isVisible() && startTime < time) {
-//                SwingUtilities.invokeLater(() -> searchInfoLabel.setText(TranslateService.INSTANCE.getTranslation("Searching") + "    " +
-//                        TranslateService.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
-//                        TranslateService.INSTANCE.getTranslation("Number of current results") + ": " + listResults.size()));
-//                repaint();
-//                try {
-//                    TimeUnit.MILLISECONDS.sleep(250);
-//                } catch (InterruptedException ignored) {
-//                    // ignored
-//                }
-//            }
-//            if ("done".equals(searchInfoLabel.getName())) {
-//                SwingUtilities.invokeLater(() -> {
-//                    searchInfoLabel.setText(TranslateService.INSTANCE.getTranslation("Search Done") + "    " +
-//                            TranslateService.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
-//                            TranslateService.INSTANCE.getTranslation("Number of current results") + ": " + listResults.size());
-//                    searchInfoLabel.setIcon(
-//                            GetIconUtil.getInstance().getBigIcon("completeIcon", iconSideLength, iconSideLength));
-//                    CachedThreadPoolUtil.getInstance().executeTask(() -> {
-//                        long _time = System.currentTimeMillis();
-//                        int count = 0;
-//                        try {
-//                            while (startTime < _time && count <= 60) {
-//                                count++;
-//                                TimeUnit.MILLISECONDS.sleep(50);
-//                            }
-//                            if (startTime > _time) {
-//                                return;
-//                            }
-//                        } catch (InterruptedException e) {
-//                            e.printStackTrace();
-//                        }
-//                        showSelectInfoOnLabel();
-//                    });
-//                });
-//            }
-//            isShowSearchStatusThreadNotExist.set(true);
-//        });
-//    }
+    private void addShowSearchStatusThread(AtomicBoolean isShowSearchStatusThreadNotExist) {
+        if (!isShowSearchStatusThreadNotExist.get()) {
+            return;
+        }
+        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            long time = System.currentTimeMillis();
+            SwingUtilities.invokeLater(() ->
+                    searchInfoLabel.setIcon(GetIconUtil.getInstance().getBigIcon("loadingIcon", iconSideLength, iconSideLength)));
+            while (!"done".equals(searchInfoLabel.getName()) && isVisible() && startTime < time) {
+                SwingUtilities.invokeLater(() -> searchInfoLabel.setText(TranslateService.INSTANCE.getTranslation("Searching") + "    " +
+                        TranslateService.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
+                        TranslateService.INSTANCE.getTranslation("Number of current results") + ": " + listResults.size()));
+                repaint();
+                try {
+                    TimeUnit.MILLISECONDS.sleep(250);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            SwingUtilities.invokeLater(() -> {
+                searchInfoLabel.setText(TranslateService.INSTANCE.getTranslation("Search Done") + "    " +
+                        TranslateService.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
+                        TranslateService.INSTANCE.getTranslation("Number of current results") + ": " + listResults.size());
+                searchInfoLabel.setIcon(
+                        GetIconUtil.getInstance().getBigIcon("completeIcon", iconSideLength, iconSideLength));
+            });
+            long _time = System.currentTimeMillis();
+            int count = 0;
+            try {
+                while (startTime < _time && count <= 60) {
+                    count++;
+                    TimeUnit.MILLISECONDS.sleep(50);
+                }
+                if (startTime > _time) {
+                    return;
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            showSelectInfoOnLabel();
+            isShowSearchStatusThreadNotExist.set(true);
+        });
+    }
 
     /**
      * 显示一共有多少个结果，当前选中哪个
@@ -3640,7 +3636,7 @@ public class SearchBar {
             if (AllConfigs.isFirstRun()) {
                 runInternalCommand("help");
             }
-//            final AtomicBoolean isShowSearchStatusThreadNotExist = new AtomicBoolean(true);
+            final AtomicBoolean isShowSearchStatusThreadNotExist = new AtomicBoolean(true);
             final AtomicBoolean isWaiting = new AtomicBoolean(false);
             while (eventManagement.notMainExit()) {
                 final long endTime = System.currentTimeMillis();
@@ -3713,7 +3709,7 @@ public class SearchBar {
                             DatabaseService databaseService = DatabaseService.getInstance();
                             if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
                                 setLabelChosen(label1);
-//                                    addShowSearchStatusThread(isShowSearchStatusThreadNotExist);
+                                addShowSearchStatusThread(isShowSearchStatusThreadNotExist);
                             } else if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.MANUAL_UPDATE) {
                                 setLabelChosen(label1);
                                 eventManagement.putEvent(new ShowTaskBarMessageEvent(translateService.getTranslation("Info"),
