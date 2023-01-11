@@ -6,7 +6,6 @@ import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.Constants;
 import file.engine.dllInterface.FileMonitor;
-import file.engine.dllInterface.GetAscII;
 import file.engine.dllInterface.GetHandle;
 import file.engine.dllInterface.GetWindowsKnownFolder;
 import file.engine.dllInterface.gpu.GPUAccelerator;
@@ -22,7 +21,9 @@ import file.engine.event.handler.impl.frame.searchBar.SearchBarReadyEvent;
 import file.engine.event.handler.impl.monitor.disk.StartMonitorDiskEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
+import file.engine.services.utils.AdminUtil;
 import file.engine.services.utils.PathMatchUtil;
+import file.engine.services.utils.StringUtf8SumUtil;
 import file.engine.services.utils.SystemInfoUtil;
 import file.engine.services.utils.connection.SQLiteUtil;
 import file.engine.utils.Bit;
@@ -32,7 +33,10 @@ import file.engine.utils.RegexUtil;
 import file.engine.utils.file.FileUtil;
 import file.engine.utils.gson.GsonUtil;
 import file.engine.utils.system.properties.IsDebug;
-import lombok.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -184,7 +188,7 @@ public class DatabaseService {
         TranslateService translateService = TranslateService.getInstance();
         String disks = AllConfigs.getInstance().getAvailableDisks();
         String[] splitDisks = RegexUtil.comma.split(disks);
-        if (isAdmin()) {
+        if (AdminUtil.isAdmin()) {
             for (String root : splitDisks) {
                 cachedThreadPoolUtil.executeTask(() -> FileMonitor.INSTANCE.monitor(root), false);
             }
@@ -921,7 +925,7 @@ public class DatabaseService {
         int asciiSum = 0;
         if (searchInfo.keywords != null) {
             for (String keyword : searchInfo.keywords) {
-                int ascII = GetAscII.INSTANCE.getAscII(keyword); //其实是utf8编码的值
+                int ascII = StringUtf8SumUtil.getAscIISum(keyword); //其实是utf8编码的值
                 asciiSum += Math.max(ascII, 0);
             }
         }
@@ -1046,27 +1050,6 @@ public class DatabaseService {
     }
 
     /**
-     * 获得文件名
-     *
-     * @param path 文件路径
-     * @return 文件名
-     */
-    private String getFileName(String path) {
-        if (path != null) {
-            int index = path.lastIndexOf(File.separator);
-            return path.substring(index + 1);
-        }
-        return "";
-    }
-
-    private int getAscIISum(String path) {
-        if (path == null || path.isEmpty()) {
-            return 0;
-        }
-        return GetAscII.INSTANCE.getAscII(path);
-    }
-
-    /**
      * 检查要删除的文件是否还未添加
      * 防止文件刚添加就被删除
      *
@@ -1092,7 +1075,7 @@ public class DatabaseService {
         if (path == null || path.isEmpty()) {
             return;
         }
-        int asciiSum = getAscIISum(getFileName(path));
+        int asciiSum = StringUtf8SumUtil.getAscIISum(FileUtil.getFileName(path));
         SQLWithTaskId[] sqlWithTaskId = new SQLWithTaskId[1];
         if (isRemoveFileInCommandQueue(path, sqlWithTaskId)) {
             sqlCommandQueue.remove(sqlWithTaskId[0]);
@@ -1178,7 +1161,7 @@ public class DatabaseService {
         if (path == null || path.isEmpty()) {
             return;
         }
-        int asciiSum = getAscIISum(getFileName(path));
+        int asciiSum = StringUtf8SumUtil.getAscIISum(FileUtil.getFileName(path));
         int priorityBySuffix = getPriorityBySuffix(getSuffixByPath(path));
         addAddSqlCommandByAscii(asciiSum, path, priorityBySuffix);
         int asciiGroup = asciiSum / 100;
@@ -1325,7 +1308,7 @@ public class DatabaseService {
         };
     }
 
-    public boolean casSetStatus(Constants.Enums.DatabaseStatus expect, Constants.Enums.DatabaseStatus newVal) {
+    private boolean casSetStatus(Constants.Enums.DatabaseStatus expect, Constants.Enums.DatabaseStatus newVal) {
         final long start = System.currentTimeMillis();
         final long timeout = 1000;
         try {
@@ -1660,38 +1643,6 @@ public class DatabaseService {
     }
 
     /**
-     * 检查是否拥有管理员权限
-     *
-     * @return boolean
-     */
-    private static boolean isAdmin() {
-        try {
-            ProcessBuilder processBuilder = new ProcessBuilder("cmd.exe");
-            Process process = processBuilder.start();
-            try (PrintStream printStream = new PrintStream(process.getOutputStream(), true)) {
-                try (Scanner scanner = new Scanner(process.getInputStream())) {
-                    printStream.println("@echo off");
-                    printStream.println(">nul 2>&1 \"%SYSTEMROOT%\\system32\\cacls.exe\" \"%SYSTEMROOT%\\system32\\config\\system\"");
-                    printStream.println("echo %errorlevel%");
-                    boolean printedErrorLevel = false;
-                    while (true) {
-                        String nextLine = scanner.nextLine();
-                        if (printedErrorLevel) {
-                            int errorLevel = Integer.parseInt(nextLine);
-                            scanner.close();
-                            return errorLevel == 0;
-                        } else if ("echo %errorlevel%".equals(nextLine)) {
-                            printedErrorLevel = true;
-                        }
-                    }
-                }
-            }
-        } catch (IOException e) {
-            return false;
-        }
-    }
-
-    /**
      * 根据输入生成SearchInfo
      *
      * @param searchTextSupplier 全字匹配关键字
@@ -1816,10 +1767,7 @@ public class DatabaseService {
 
         var startSearchEvent = (StartSearchEvent) event;
         var searchInfo = prepareSearchKeywords(startSearchEvent.searchText, startSearchEvent.searchCase, startSearchEvent.keywords);
-        SearchTask searchTask = null;
-        if (prepareTasksMap.containsKey(searchInfo)) {
-            searchTask = prepareTasksMap.get(searchInfo);
-        }
+        var searchTask = prepareTasksMap.get(searchInfo);
         if (searchTask == null) {
             searchTask = prepareSearch(searchInfo);
         }

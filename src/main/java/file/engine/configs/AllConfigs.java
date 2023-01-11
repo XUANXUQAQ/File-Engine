@@ -159,7 +159,8 @@ public class AllConfigs {
             while ((each = br.readLine()) != null) {
                 cmdSet.add(each);
             }
-        } catch (IOException ignored) {
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

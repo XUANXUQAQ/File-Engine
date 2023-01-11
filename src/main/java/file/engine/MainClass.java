@@ -89,7 +89,6 @@ public class MainClass {
         Class.forName("file.engine.dllInterface.FileMonitor");
         Class.forName("file.engine.dllInterface.IsLocalDisk");
         Class.forName("file.engine.dllInterface.HotkeyListener");
-        Class.forName("file.engine.dllInterface.GetAscII");
         Class.forName("file.engine.dllInterface.GetHandle");
         Class.forName("file.engine.dllInterface.EmptyRecycleBin");
         Class.forName("file.engine.dllInterface.gpu.GPUAccelerator");
@@ -366,7 +365,6 @@ public class MainClass {
 
     private static void releaseAllDependence() throws IOException {
         copyOrIgnoreFile("user/fileMonitor.dll", "/win32-native/fileMonitor.dll");
-        copyOrIgnoreFile("user/getAscII.dll", "/win32-native/getAscII.dll");
         copyOrIgnoreFile("user/hotkeyListener.dll", "/win32-native/hotkeyListener.dll");
         copyOrIgnoreFile("user/isLocalDisk.dll", "/win32-native/isLocalDisk.dll");
         copyOrIgnoreFile("user/fileSearcherUSN.exe", "/win32-native/fileSearcherUSN.exe");
