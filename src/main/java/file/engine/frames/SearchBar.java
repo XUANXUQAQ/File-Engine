@@ -4050,6 +4050,7 @@ public class SearchBar {
             Optional<PluginService.PluginInfo> pluginInfoOptional = getPluginByIdentifierEvent.getReturnValue();
             pluginInfoOptional.ifPresent(pluginInfo -> pluginInfo.plugin.showResultOnLabel(resultWithPluginInfo[2], label, isChosen));
         }
+        label.setName(RESULT_LABEL_NAME_HOLDER);
     }
 
     /**
