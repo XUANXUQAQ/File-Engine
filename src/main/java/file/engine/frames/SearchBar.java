@@ -796,12 +796,12 @@ public class SearchBar {
                         if (runningMode != RunningMode.PLUGIN_MODE) {
                             //enter被点击
                             clearAllLabels();
-                            if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                                String searchBarText = getSearchBarText();
-                                if (isVisible() && searchBarText.charAt(0) != '>') {
-                                    setVisible(false);
-                                }
-                            }
+//                            if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+//                                String searchBarText = getSearchBarText();
+//                                if (isVisible() && searchBarText.charAt(0) != '>') {
+//                                    setVisible(false);
+//                                }
+//                            }
                             String res = listResults.get(currentResultCount.get());
                             if (res != null && res.startsWith("plugin")) {
                                 String[] split = splitPluginResult(res);
@@ -856,7 +856,7 @@ public class SearchBar {
                                     }
                                 }
                             }
-                            detectShowingModeAndClose();
+//                            detectShowingModeAndClose();
                         }
                     } else if (configs.getOpenLastFolderKeyCode() == key) {
                         //打开上级文件夹热键被点击
@@ -887,9 +887,9 @@ public class SearchBar {
                                 String[] split = splitPluginResult(listResults.get(currentResultCount.get()));
                                 currentUsingPlugin.keyPressed(arg0, split[2]);
                             }
-                            if (key == 10) {
-                                closeSearchBar();
-                            }
+//                            if (key == 10) {
+//                                closeSearchBar();
+//                            }
                         }
                     }
                 }
