@@ -13,7 +13,6 @@ import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.configs.SetConfigsEvent;
 import file.engine.event.handler.impl.database.*;
 import file.engine.event.handler.impl.frame.searchBar.*;
-import file.engine.event.handler.impl.database.IsCacheExistEvent;
 import file.engine.event.handler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import file.engine.event.handler.impl.open.file.OpenFileEvent;
 import file.engine.event.handler.impl.plugin.GetPluginByIdentifierEvent;
@@ -853,8 +852,8 @@ public class SearchBar {
                                         } else {
                                             openWithoutAdmin(open.getAbsolutePath());
                                         }
+                                        detectShowingModeAndClose();
                                     }
-                                    detectShowingModeAndClose();
                                 }
                             }
                         }
@@ -868,15 +867,17 @@ public class SearchBar {
                         isCopyPathPressed.set(true);
                     }
                     if (key != 38 && key != 40) {
-                        String res = listResults.get(currentResultCount.get());
-                        if (res != null && res.startsWith("plugin")) {
-                            String[] split = splitPluginResult(res);
-                            var getPluginByIdentifierEvent = new GetPluginByIdentifierEvent(split[1]);
-                            var eventManagement = EventManagement.getInstance();
-                            eventManagement.putEvent(getPluginByIdentifierEvent);
-                            eventManagement.waitForEvent(getPluginByIdentifierEvent);
-                            Optional<PluginService.PluginInfo> pluginInfoOptional = getPluginByIdentifierEvent.getReturnValue();
-                            pluginInfoOptional.ifPresent((pluginInfo -> pluginInfo.plugin.keyPressed(arg0, split[2])));
+                        if (!listResults.isEmpty()) {
+                            String res = listResults.get(currentResultCount.get());
+                            if (res != null && res.startsWith("plugin")) {
+                                String[] split = splitPluginResult(res);
+                                var getPluginByIdentifierEvent = new GetPluginByIdentifierEvent(split[1]);
+                                var eventManagement = EventManagement.getInstance();
+                                eventManagement.putEvent(getPluginByIdentifierEvent);
+                                eventManagement.waitForEvent(getPluginByIdentifierEvent);
+                                Optional<PluginService.PluginInfo> pluginInfoOptional = getPluginByIdentifierEvent.getReturnValue();
+                                pluginInfoOptional.ifPresent((pluginInfo -> pluginInfo.plugin.keyPressed(arg0, split[2])));
+                            }
                         }
                     }
                 }
@@ -987,6 +988,14 @@ public class SearchBar {
 //                                "Failed to empty the recycle bin"));
 //                    }
 //                }
+                while (isVisible()) {
+                    closeSearchBar();
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(250);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
                 EmptyRecycleBin.INSTANCE.emptyRecycleBin();
                 return true;
             }
@@ -4324,31 +4333,27 @@ public class SearchBar {
     /**
      * 重置所有状态并关闭窗口
      */
-    private void closeSearchBar() {
-        SwingUtilities.invokeLater(() -> {
-            if (!isPreviewMode.get()) {
-                if (isVisible()) {
-                    setVisible(false);
-                }
-                clearAllLabels();
-                clearTextFieldText();
-                resetAllStatus();
+    private synchronized void closeSearchBar() {
+        if (!isPreviewMode.get()) {
+            if (isVisible()) {
+                setVisible(false);
             }
-            menu.setVisible(false);
-            isSwitchToNormalManual.set(false);
-        });
+            clearAllLabels();
+            clearTextFieldText();
+            resetAllStatus();
+        }
+        menu.setVisible(false);
+        isSwitchToNormalManual.set(false);
     }
 
     /**
      * 重置所有状态但不关闭窗口
      */
-    private void closeWithoutHideSearchBar() {
-        SwingUtilities.invokeLater(() -> {
-            clearAllLabels();
-            clearTextFieldText();
-            resetAllStatus();
-            menu.setVisible(false);
-        });
+    private synchronized void closeWithoutHideSearchBar() {
+        clearAllLabels();
+        clearTextFieldText();
+        resetAllStatus();
+        menu.setVisible(false);
     }
 
     private void resetAllStatus() {
