@@ -2392,22 +2392,26 @@ public class SettingsFrame {
      * @return true如果检查成功
      */
     private boolean waitForCheckUpdateResult(Thread checkUpdateThread, AtomicBoolean isCheckDone) {
-        try {
-            final long timeout = 5000L;
-            final long startCheck = System.currentTimeMillis();
-            while (!isCheckDone.get()) {
-                if ((System.currentTimeMillis() - startCheck > timeout)) {
-                    checkUpdateThread.interrupt();
-                    JOptionPane.showMessageDialog(frame, TRANSLATE_SERVICE.getTranslation("Check update failed"));
-                    return false;
-                }
-                if (!eventManagement.notMainExit()) {
-                    return false;
-                }
-                TimeUnit.MILLISECONDS.sleep(200);
+        final long timeout = 5000L;
+        final long startCheck = System.currentTimeMillis();
+        while (!isCheckDone.get()) {
+            if (System.currentTimeMillis() - startCheck > timeout) {
+                checkUpdateThread.interrupt();
+                JOptionPane.showMessageDialog(frame, TRANSLATE_SERVICE.getTranslation("Check update failed"));
+                return false;
             }
-        } catch (InterruptedException e1) {
-            e1.printStackTrace();
+            if (!checkUpdateThread.isAlive() && !isCheckDone.get()) {
+                JOptionPane.showMessageDialog(frame, TRANSLATE_SERVICE.getTranslation("Check update failed"));
+                return false;
+            }
+            if (!eventManagement.notMainExit()) {
+                return false;
+            }
+            try {
+                TimeUnit.MILLISECONDS.sleep(200);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
         return true;
     }
@@ -2424,10 +2428,11 @@ public class SettingsFrame {
             var downloadManagerContainer = new Object() {
                 DownloadManager downloadManager = pluginInfoMap.get(pluginName);
             };
-            if (downloadManagerContainer.downloadManager != null && downloadManagerContainer.downloadManager.getDownloadStatus() == Constants.Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
+            if (downloadManagerContainer.downloadManager != null &&
+                    downloadManagerContainer.downloadManager.getDownloadStatus() == Constants.Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                 eventManagement.putEvent(new StopDownloadEvent(downloadManagerContainer.downloadManager));
             } else {
-                GetPluginByNameEvent getPluginByNameEvent = new GetPluginByNameEvent(pluginName);
+                var getPluginByNameEvent = new GetPluginByNameEvent(pluginName);
                 eventManagement.putEvent(getPluginByNameEvent);
                 eventManagement.waitForEvent(getPluginByNameEvent);
                 Optional<PluginService.PluginInfo> pluginInfoOptional = getPluginByNameEvent.getReturnValue();
@@ -2440,6 +2445,7 @@ public class SettingsFrame {
                         //已经检查过
                         isVersionLatest.set(false);
                         isSkipConfirm.set(true);
+                        isCheckDone.set(true);
                     } else {
                         Thread checkUpdateThread = new Thread(() -> {
                             try {
@@ -2447,8 +2453,8 @@ public class SettingsFrame {
                                 if (!Thread.interrupted()) {
                                     isCheckDone.set(true); //表示检查成功
                                 }
-                            } catch (Exception exception) {
-                                exception.printStackTrace();
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
                             }
                         });
                         checkUpdateThread.start();
