@@ -11,6 +11,7 @@ import file.engine.services.utils.DaemonUtil;
 import file.engine.utils.CachedThreadPoolUtil;
 import file.engine.utils.clazz.scan.ClassScannerUtil;
 import file.engine.utils.system.properties.IsDebug;
+import lombok.NonNull;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -36,16 +37,13 @@ public class EventManagement {
     private static volatile EventManagement instance = null;
     private final AtomicBoolean exit = new AtomicBoolean(false);
     private final ConcurrentLinkedQueue<Event> blockEventQueue = new ConcurrentLinkedQueue<>();
-    private final ConcurrentLinkedQueue<Event> asyncEventQueue = new ConcurrentLinkedQueue<>();
     private final ConcurrentHashMap<String, Method> EVENT_HANDLER_MAP = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, ConcurrentLinkedQueue<Method>> EVENT_LISTENER_MAP = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, BiConsumer<Class<?>, Object>> PLUGIN_EVENT_HANDLER_MAP = new ConcurrentHashMap<>();
     private HashSet<String> classesList = new HashSet<>();
-    private static final int ASYNC_THREAD_NUM = Math.max(Runtime.getRuntime().availableProcessors(), 2);
 
     private EventManagement() {
         startBlockEventHandler();
-        startAsyncEventHandler();
     }
 
     public static EventManagement getInstance() {
@@ -75,19 +73,19 @@ public class EventManagement {
      * @return true如果任务执行失败， false如果执行正常完成
      */
     public boolean waitForEvent(Event event, int timeout) {
-        try {
-            long startTime = System.currentTimeMillis();
-            while (!event.isFailed() && !event.isFinished()) {
-                if (System.currentTimeMillis() - startTime > timeout) {
-                    System.err.println("等待" + event + "超时");
-                    break;
-                }
-                TimeUnit.MILLISECONDS.sleep(5);
+        long startTime = System.currentTimeMillis();
+        while (!event.allRetryFailed() && !event.isFinished()) {
+            if (System.currentTimeMillis() - startTime > timeout) {
+                System.err.println("等待" + event + "超时");
+                break;
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            try {
+                TimeUnit.MILLISECONDS.sleep(5);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
-        return event.isFailed();
+        return event.allRetryFailed();
     }
 
     /**
@@ -111,7 +109,7 @@ public class EventManagement {
         if (event instanceof CloseEvent) {
             DaemonUtil.stopDaemon();
         }
-        event.setFinished();
+        event.setFinishedAndExecCallback();
         CachedThreadPoolUtil.getInstance().shutdown();
     }
 
@@ -125,7 +123,7 @@ public class EventManagement {
         Object[] eventInfo = buildEventRequestEvent.eventInfo;
         String eventClassName = (String) eventInfo[0];
         Object[] eventParams = (Object[]) eventInfo[1];
-        buildEventRequestEvent.setFinished();
+        buildEventRequestEvent.setFinishedAndExecCallback();
         // 构建任务
         if (eventClassName == null || eventClassName.isEmpty()) {
             return true;
@@ -150,7 +148,7 @@ public class EventManagement {
             try {
                 pluginHandler.accept(event.getClass(), event);
                 doAllMethod(eventClassName, event);
-                event.setFinished();
+                event.setFinishedAndExecCallback();
                 return false;
             } catch (Exception e) {
                 e.printStackTrace();
@@ -162,7 +160,7 @@ public class EventManagement {
                 try {
                     eventHandler.invoke(null, event);
                     doAllMethod(eventClassName, event);
-                    event.setFinished();
+                    event.setFinishedAndExecCallback();
                     return false;
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -170,7 +168,7 @@ public class EventManagement {
                 }
             } else {
                 doAllMethod(eventClassName, event);
-                event.setFinished();
+                event.setFinishedAndExecCallback();
             }
         }
         return false;
@@ -310,7 +308,7 @@ public class EventManagement {
             if (event.isBlock()) {
                 blockEventQueue.add(event);
             } else {
-                asyncEventQueue.add(event);
+                CachedThreadPoolUtil.getInstance().executeTask(() -> eventHandle(event));
             }
         } else {
             if (isDebug) {
@@ -481,22 +479,12 @@ public class EventManagement {
     }
 
     /**
-     * 开启异步任务处理中心
-     */
-    private void startAsyncEventHandler() {
-        CachedThreadPoolUtil threadPoolUtil = CachedThreadPoolUtil.getInstance();
-        for (int i = 0; i < ASYNC_THREAD_NUM; i++) {
-            threadPoolUtil.executeTask(() -> eventHandle(asyncEventQueue));
-        }
-    }
-
-    /**
      * 检查是否所有任务执行完毕再推出
      *
      * @return boolean
      */
     private boolean isEventHandlerNotExit() {
-        return !(exit.get() && blockEventQueue.isEmpty() && asyncEventQueue.isEmpty());
+        return !(exit.get() && blockEventQueue.isEmpty());
     }
 
     /**
@@ -526,12 +514,12 @@ public class EventManagement {
                 continue;
             }
             //判断任务是否执行完成或者失败
-            if (event.isFinished() || event.isFailed()) {
+            if (event.isFinished() || event.allRetryFailed()) {
                 continue;
             }
             if (event.allRetryFailed()) {
                 //判断是否超过最大次数
-                event.setFailed();
+                event.execErrorHandler();
                 if (isDebug) {
                     System.err.println("任务超时---" + event);
                 }
@@ -547,6 +535,31 @@ public class EventManagement {
                 }
             }
         }
+    }
 
+    private void eventHandle(@NonNull Event event) {
+        final boolean isDebug = IsDebug.isDebug();
+        while (true) {
+            //判断任务是否执行完成或者失败
+            if (event.isFinished() || event.allRetryFailed()) {
+                return;
+            }
+            if (event.allRetryFailed()) {
+                //判断是否超过最大次数
+                event.execErrorHandler();
+                if (isDebug) {
+                    System.err.println("任务超时---" + event);
+                }
+            } else {
+                if (executeTaskFailed(event)) {
+                    System.err.println("任务执行失败---" + event);
+                } else {
+                    // 任务执行成功
+                    if (!(event instanceof EventProcessedBroadcastEvent)) {
+                        putEvent(new EventProcessedBroadcastEvent(event.getClass(), event));
+                    }
+                }
+            }
+        }
     }
 }

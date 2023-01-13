@@ -7,7 +7,6 @@ import java.util.function.Consumer;
 
 public class Event {
     private final AtomicBoolean isFinished = new AtomicBoolean(false);
-    private final AtomicBoolean isFailed = new AtomicBoolean(false);
     private final AtomicInteger executeTimes = new AtomicInteger(0);
     private final AtomicBoolean isBlock = new AtomicBoolean(false);
     private int maxRetryTimes = 5;
@@ -35,18 +34,13 @@ public class Event {
         return isBlock.get();
     }
 
-    public boolean isFailed() {
-        return isFailed.get();
-    }
-
-    protected void setFailed() {
+    protected void execErrorHandler() {
         if (this.errorHandler != null) {
             this.errorHandler.accept(this);
         }
-        isFailed.set(true);
     }
 
-    protected void setFinished() {
+    protected void setFinishedAndExecCallback() {
         if (this.callback != null) {
             this.callback.accept(this);
         }

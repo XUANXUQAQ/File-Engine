@@ -8,6 +8,7 @@ public class SetConfigsEvent extends Event {
     private ConfigEntity configs;
     public SetConfigsEvent(ConfigEntity configEntity) {
         super();
+        this.setBlock();
         this.configs = configEntity;
     }
 
