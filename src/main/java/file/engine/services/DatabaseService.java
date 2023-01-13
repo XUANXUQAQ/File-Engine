@@ -8,6 +8,7 @@ import file.engine.configs.Constants;
 import file.engine.dllInterface.FileMonitor;
 import file.engine.dllInterface.GetHandle;
 import file.engine.dllInterface.GetWindowsKnownFolder;
+import file.engine.dllInterface.IsLocalDisk;
 import file.engine.dllInterface.gpu.GPUAccelerator;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
@@ -190,8 +191,32 @@ public class DatabaseService {
         String[] splitDisks = RegexUtil.comma.split(disks);
         if (AdminUtil.isAdmin()) {
             for (String root : splitDisks) {
-                cachedThreadPoolUtil.executeTask(() -> FileMonitor.INSTANCE.monitor(root), false);
+                cachedThreadPoolUtil.executeTask(() -> {
+                    FileMonitor.INSTANCE.monitor(root);
+                    System.out.println("停止监听 " + root + " 的文件变化");
+                }, false);
             }
+            cachedThreadPoolUtil.executeTask(() -> {
+                Set<String> unAvailableDiskSet = AllConfigs.getInstance().getUnAvailableDiskSet();
+                while (eventManagement.notMainExit()) {
+                    if (!unAvailableDiskSet.isEmpty()) {
+                        for (String unAvailableDisk : unAvailableDiskSet) {
+                            if (Files.exists(Path.of(unAvailableDisk)) && IsLocalDisk.INSTANCE.isDiskNTFS(unAvailableDisk)) {
+                                cachedThreadPoolUtil.executeTask(() -> {
+                                    FileMonitor.INSTANCE.monitor(unAvailableDisk);
+                                    System.out.println("停止监听 " + unAvailableDisk + " 的文件变化");
+                                }, false);
+                                unAvailableDiskSet.remove(unAvailableDisk);
+                            }
+                        }
+                    }
+                    try {
+                        TimeUnit.SECONDS.sleep(1);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            });
         } else {
             eventManagement.putEvent(new ShowTaskBarMessageEvent(
                     translateService.getTranslation("Warning"),
@@ -2002,7 +2027,11 @@ public class DatabaseService {
 
     @EventListener(listenClass = RestartEvent.class)
     private static void restartEvent(Event event) {
-        FileMonitor.INSTANCE.stop_monitor();
+        String availableDisks = AllConfigs.getInstance().getAvailableDisks();
+        String[] disks = RegexUtil.comma.split(availableDisks);
+        for (String disk : disks) {
+            FileMonitor.INSTANCE.stop_monitor(disk);
+        }
         DatabaseService databaseService = getInstance();
         databaseService.executeAllCommands();
         databaseService.stopAllSearch();

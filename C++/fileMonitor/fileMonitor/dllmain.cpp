@@ -9,6 +9,7 @@
 #include <string>
 #include <thread>
 #include <concurrent_queue.h>
+#include <concurrent_unordered_map.h>
 #include <io.h>
 #include "string_wstring_converter.h"
 #include "dir_changes_reader.h"
@@ -18,10 +19,10 @@
 
 using namespace concurrency;
 
-typedef concurrent_queue<std::wstring> file_record_queue;
+using file_record_queue = concurrent_queue<std::wstring>;
 
 void monitor(const char* path);
-void stop_monitor();
+void stop_monitor(const std::string path);
 void monitor_path(const std::string& path);
 void add_record(const std::wstring& record);
 void delete_record(const std::wstring& record);
@@ -29,9 +30,9 @@ inline bool is_dir(const wchar_t* path);
 bool pop_del_file(std::wstring& record);
 bool pop_add_file(std::wstring& record);
 
-static std::atomic_bool is_running = true;
 file_record_queue file_added_queue;
 file_record_queue file_del_queue;
+concurrent_unordered_map<std::string, std::atomic_bool> stop_flag;
 
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_monitor
 (JNIEnv* env, jobject, jstring path)
@@ -42,9 +43,11 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_monitor
 }
 
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_stop_1monitor
-(JNIEnv*, jobject)
+(JNIEnv* env, jobject, jstring path)
 {
-	stop_monitor();
+	const char* str = env->GetStringUTFChars(path, nullptr);
+	stop_monitor(str);
+	env->ReleaseStringUTFChars(path, str);
 }
 
 JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_FileMonitor_pop_1add_1file
@@ -164,15 +167,28 @@ bool pop_add_file(std::wstring& record)
 
 void monitor(const char* path)
 {
-	is_running = true;
 	std::string _path(path);
+	auto&& flag = stop_flag.find(_path);
+	if (flag == stop_flag.end())
+	{
+		stop_flag.insert(std::make_pair(_path, true));
+	}
+	else
+	{
+		flag->second.store(true);
+	}
 	std::thread t(monitor_path, _path);
 	t.join();
 }
 
-void stop_monitor()
+void stop_monitor(const std::string path)
 {
-	is_running = false;
+	auto&& flag = stop_flag.find(path);
+	if (flag == stop_flag.end()) 
+	{
+		return;
+	}
+	flag->second.store(false);
 }
 
 /**
@@ -183,7 +199,8 @@ void monitor_path(const std::string& path)
 	const auto wPath = string2wstring(path);
 	DirectoryChangesReader dcr(wPath);
 	std::wstring dir_to_search;
-	while (is_running.load())
+	auto&& flag = stop_flag.at(path);
+	while (flag.load())
 	{
 		dcr.EnqueueReadDirectoryChanges();
 		if (const DWORD rv = dcr.WaitForHandles(); rv == WAIT_OBJECT_0)

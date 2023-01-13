@@ -39,6 +39,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 import static file.engine.configs.Constants.DEFAULT_SWING_THEME;
@@ -53,6 +54,8 @@ public class AllConfigs {
     private volatile ConfigEntity configEntity;
     private final LinkedHashMap<String, AddressUrl> updateAddressMap = new LinkedHashMap<>();
     private final LinkedHashSet<String> cmdSet = new LinkedHashSet<>();
+    @Getter
+    private final Set<String> unAvailableDiskSet = ConcurrentHashMap.newKeySet();
     private static boolean isFirstRunApp = false;
 
     private static volatile AllConfigs instance = null;
@@ -144,6 +147,8 @@ public class AllConfigs {
         for (String root : splitDisks) {
             if (Files.exists(Path.of(root)) && IsLocalDisk.INSTANCE.isDiskNTFS(root)) {
                 stringBuilder.append(root).append(",");
+            } else {
+                unAvailableDiskSet.add(root);
             }
         }
         return stringBuilder.toString();
