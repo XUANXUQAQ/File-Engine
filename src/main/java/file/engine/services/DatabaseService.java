@@ -122,10 +122,6 @@ public class DatabaseService {
         tableCacheCount.set(0);
     }
 
-    public boolean isSearching() {
-        return searchThreadCount.get() != 0;
-    }
-
     /**
      * 通过表名获得表的权重信息
      *
@@ -991,6 +987,10 @@ public class DatabaseService {
         return sqlColumnMap;
     }
 
+    private void startSearchInThreadPool(SearchTask searchTask) {
+        CachedThreadPoolUtil.getInstance().executeTask(() -> startSearch(searchTask));
+    }
+
     /**
      * 添加sql语句，并开始搜索
      */
@@ -1799,7 +1799,7 @@ public class DatabaseService {
             searchTask = prepareSearch(searchInfo);
         }
         searchTasksQueue.add(searchTask);
-        databaseService.startSearch(searchTask);
+        databaseService.startSearchInThreadPool(searchTask);
         event.setReturnValue(searchTask.tempResults);
     }
 
