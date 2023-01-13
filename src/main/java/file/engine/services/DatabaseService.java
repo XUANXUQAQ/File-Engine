@@ -122,6 +122,10 @@ public class DatabaseService {
         tableCacheCount.set(0);
     }
 
+    public boolean isSearching() {
+        return searchThreadCount.get() != 0;
+    }
+
     /**
      * 通过表名获得表的权重信息
      *

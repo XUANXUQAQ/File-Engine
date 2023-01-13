@@ -492,7 +492,7 @@ public class SearchBar {
             @Override
             public void focusGained(FocusEvent e) {
                 if (!IsDebug.isDebug()) {
-                    SwingUtilities.invokeLater(() -> resetAllStatus());
+                    resetAllStatus();
                 }
             }
 
@@ -2411,7 +2411,6 @@ public class SearchBar {
         currentLabelSelectedPosition.set(0);
         isRoundRadiusSet.set(false);
         searchInfoLabel.setText("");
-        searchInfoLabel.setName("");
         searchInfoLabel.setIcon(null);
         tempResultsFromDatabase = null;
     }
@@ -2673,11 +2672,6 @@ public class SearchBar {
         ShowSearchBarEvent showSearchBarTask = (ShowSearchBarEvent) event;
         SearchBar searchBarInstance = getInstance();
         searchBarInstance.showSearchbar(showSearchBarTask.isGrabFocus, showSearchBarTask.isSwitchToNormal);
-    }
-
-    @EventRegister(registerClass = SearchDoneEvent.class)
-    private static void showSearchDone(Event event) {
-        SwingUtilities.invokeLater(() -> getInstance().searchInfoLabel.setName("done"));
     }
 
     @EventRegister(registerClass = HideSearchBarEvent.class)
@@ -3197,7 +3191,7 @@ public class SearchBar {
                     setLabelChosenOrNotChosenMouseMode(6, label7);
                     setLabelChosenOrNotChosenMouseMode(7, label8);
 
-                    if (!listResults.isEmpty() && firstResultStartShowingTime == 0) {
+                    if (firstResultStartShowingTime == 0) {
                         firstResultStartShowingTime = System.currentTimeMillis();
                     }
                 } else {
@@ -3217,7 +3211,6 @@ public class SearchBar {
                     autoSetSearchBarRadius();
                     if (getSearchBarText().isEmpty() && showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
                         searchInfoLabel.setText("");
-                        searchInfoLabel.setName("");
                         searchInfoLabel.setIcon(null);
                     }
                 });
@@ -3247,9 +3240,9 @@ public class SearchBar {
         }
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             long time = System.currentTimeMillis();
-            var searchInfoLabelName = searchInfoLabel.getName();
-            var isUserInputChanged = startTime < time;
-            while (!"done".equals(searchInfoLabelName) && isVisible() && isUserInputChanged) {
+            var isUserInputNotChanged = startTime < time;
+            var databaseService = DatabaseService.getInstance();
+            while (isVisible() && isUserInputNotChanged && databaseService.isSearching()) {
                 SwingUtilities.invokeLater(() -> {
                     searchInfoLabel.setIcon(GetIconUtil.getInstance().getBigIcon("loadingIcon", iconSideLength, iconSideLength));
                     searchInfoLabel.setText(TranslateService.INSTANCE.getTranslation("Searching") + "    " +
@@ -3272,16 +3265,16 @@ public class SearchBar {
             });
             time = System.currentTimeMillis();
             int count = 0;
-            try {
-                while (startTime < time && count <= 60) {
-                    count++;
+            while (startTime < time && count <= 60) {
+                count++;
+                try {
                     TimeUnit.MILLISECONDS.sleep(50);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
-                if (startTime > time) {
-                    return;
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            }
+            if (startTime > time) {
+                return;
             }
             showSelectInfoOnLabel();
             isShowSearchStatusThreadNotExist.set(true);
@@ -3292,8 +3285,7 @@ public class SearchBar {
      * 显示一共有多少个结果，当前选中哪个
      */
     private void showSelectInfoOnLabel() {
-        String name = searchInfoLabel.getName();
-        if (!"done".equals(name)) {
+        if (DatabaseService.getInstance().isSearching()) {
             return;
         }
         SwingUtilities.invokeLater(() -> {
@@ -3673,12 +3665,6 @@ public class SearchBar {
 
                 if ((endTime - startTime > SHOW_RESULTS_TIMEOUT) && startSearchSignal.get()) {
                     startSearchSignal.set(false); //开始搜索 计时停止
-                    currentResultCount.set(0);
-                    currentLabelSelectedPosition.set(0);
-                    clearAllLabels();
-                    if (!getSearchBarText().isEmpty()) {
-                        setLabelChosen(label1);
-                    }
                     if (runningMode == RunningMode.COMMAND_MODE) {
                         //去掉冒号
                         String text = getSearchBarText();
@@ -3830,7 +3816,6 @@ public class SearchBar {
                     textField.requestFocusInWindow();
                     textField.setCaretPosition(0);
                     searchInfoLabel.setText("");
-                    searchInfoLabel.setName("");
                     searchInfoLabel.setIcon(null);
                     startTime = System.currentTimeMillis();
                     visibleStartTime = startTime;
@@ -4371,7 +4356,6 @@ public class SearchBar {
         currentUsingPlugin = null;
         isRoundRadiusSet.set(false);
         searchInfoLabel.setText("");
-        searchInfoLabel.setName("");
         searchInfoLabel.setIcon(null);
     }
 
