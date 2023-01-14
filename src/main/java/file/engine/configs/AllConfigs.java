@@ -54,8 +54,6 @@ public class AllConfigs {
     private volatile ConfigEntity configEntity;
     private final LinkedHashMap<String, AddressUrl> updateAddressMap = new LinkedHashMap<>();
     private final LinkedHashSet<String> cmdSet = new LinkedHashSet<>();
-    @Getter
-    private final Set<String> unAvailableDiskSet = ConcurrentHashMap.newKeySet();
     private static boolean isFirstRunApp = false;
 
     private static volatile AllConfigs instance = null;
@@ -140,18 +138,32 @@ public class AllConfigs {
                 configEntity.getProxyType());
     }
 
+    public Set<String> getUnAvailableDiskSet() {
+        String disks = configEntity.getDisks();
+        String[] splitDisks = RegexUtil.comma.split(disks);
+        Set<String> set = ConcurrentHashMap.newKeySet();
+        for (String root : splitDisks) {
+            if (!isDiskAvailable(root)) {
+                set.add(root);
+            }
+        }
+        return set;
+    }
+
     public String getAvailableDisks() {
         String disks = configEntity.getDisks();
         String[] splitDisks = RegexUtil.comma.split(disks);
         StringBuilder stringBuilder = new StringBuilder();
         for (String root : splitDisks) {
-            if (Files.exists(Path.of(root)) && IsLocalDisk.INSTANCE.isDiskNTFS(root)) {
+            if (isDiskAvailable(root)) {
                 stringBuilder.append(root).append(",");
-            } else {
-                unAvailableDiskSet.add(root);
             }
         }
         return stringBuilder.toString();
+    }
+
+    private boolean isDiskAvailable(String root) {
+        return Files.exists(Path.of(root)) && IsLocalDisk.INSTANCE.isDiskNTFS(root);
     }
 
     /**
