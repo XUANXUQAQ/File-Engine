@@ -502,8 +502,9 @@ public class DatabaseService {
             String key = entry.getKey();
             Cache cache = entry.getValue();
             if (tableNeedCache.containsKey(key)) {
+                final int vacancy = 1000;
                 //当前表可以被缓存
-                if (tableCacheCount.get() + tableNeedCache.get(key) < MAX_CACHED_RECORD_NUM - 1000 && !cache.isCacheValid()) {
+                if (tableCacheCount.get() + tableNeedCache.get(key) < MAX_CACHED_RECORD_NUM - vacancy && !cache.isCacheValid()) {
                     cache.data = new ConcurrentLinkedQueue<>();
                     String[] info = RegexUtil.comma.split(key);
                     try (Statement stmt = SQLiteUtil.getStatement(info[0]);
@@ -998,7 +999,7 @@ public class DatabaseService {
         startSearchTimeMills = System.currentTimeMillis();
         var cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         var eventManagement = EventManagement.getInstance();
-        final int threadNumberPerDisk = Math.max(1, AllConfigs.getInstance().getConfigEntity().getSearchThreadNumber() / searchTask.taskMap.size()) * 2;
+        final int threadNumberPerDisk = Math.max(1, AllConfigs.getInstance().getConfigEntity().getSearchThreadNumber() / searchTask.taskMap.size());
         Consumer<ConcurrentLinkedQueue<Runnable>> taskHandler = (taskQueue) -> {
             while (!taskQueue.isEmpty() && eventManagement.notMainExit()) {
                 var runnable = taskQueue.poll();
@@ -1119,7 +1120,7 @@ public class DatabaseService {
                 EventManagement.getInstance().putEvent(new GPURemoveRecordEvent(key, path));
             }
             Cache cache = tableCache.get(key);
-            if (cache.isCached.get()) {
+            if (cache != null && cache.isCached.get()) {
                 if (cache.data.remove(path)) {
                     tableCacheCount.decrementAndGet();
                 }
@@ -1201,7 +1202,7 @@ public class DatabaseService {
             EventManagement.getInstance().putEvent(new GPUAddRecordEvent(key, path));
         }
         Cache cache = tableCache.get(key);
-        if (cache.isCacheValid()) {
+        if (cache != null && cache.isCacheValid()) {
             if (tableCacheCount.get() < MAX_CACHED_RECORD_NUM) {
                 if (cache.data.add(path)) {
                     tableCacheCount.incrementAndGet();
@@ -1818,21 +1819,15 @@ public class DatabaseService {
         var cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         databaseService.searchCache(searchTask);
         cachedThreadPoolUtil.executeTask(() -> {
-            //noinspection ConstantConditions
-            do {
-                databaseService.searchPriorityFolder(searchTask);
-                if (searchTask.shouldStopSearch.get()) {
-                    break;
-                }
-                databaseService.searchStartMenu(searchTask);
-                if (searchTask.shouldStopSearch.get()) {
-                    break;
-                }
-                databaseService.searchDesktop(searchTask);
-                if (searchTask.shouldStopSearch.get()) {
-                    break;
-                }
-            } while (false);
+            databaseService.searchPriorityFolder(searchTask);
+            if (searchTask.shouldStopSearch.get()) {
+                return;
+            }
+            databaseService.searchStartMenu(searchTask);
+            if (searchTask.shouldStopSearch.get()) {
+                return;
+            }
+            databaseService.searchDesktop(searchTask);
         });
         databaseService.prepareSearchTasks(searchTask);
         if (isEnableGPUAccelerate && !searchTask.shouldStopSearch.get()) {
@@ -1901,7 +1896,7 @@ public class DatabaseService {
         var allConfigs = AllConfigs.getInstance();
         for (String diskPath : RegexUtil.comma.split(allConfigs.getAvailableDisks())) {
             for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
-                for (SuffixPriorityPair suffixPriorityPair : databaseService.priorityMap) {
+                for (var suffixPriorityPair : databaseService.priorityMap) {
                     databaseService.tableCache.put(diskPath.charAt(0) + "," + "list" + i + "," + suffixPriorityPair.priority, new Cache());
                 }
             }
@@ -2087,7 +2082,6 @@ public class DatabaseService {
                         throw new RuntimeException(e);
                     }
                 }
-
             });
         }
 
