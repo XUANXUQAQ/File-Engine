@@ -34,10 +34,7 @@ import file.engine.utils.RegexUtil;
 import file.engine.utils.file.FileUtil;
 import file.engine.utils.gson.GsonUtil;
 import file.engine.utils.system.properties.IsDebug;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
+import lombok.*;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -254,7 +251,9 @@ public class DatabaseService {
             } else {
                 var pathToCheck = remain.getAbsolutePath();
                 String priorityStr = String.valueOf(getPriorityBySuffix(getSuffixByPath(pathToCheck)));
-                checkIsMatchedAndAddToList(pathToCheck, priorityStr, searchTask);
+                if (checkIsMatchedAndAddToList(pathToCheck, priorityStr, searchTask)) {
+                    searchTask.cacheAndPriorityResults.add(pathToCheck);
+                }
             }
         } while (!listRemainDir.isEmpty() && !searchTask.shouldStopSearch.get());
         for (File eachDir : dirsToSearch) {
@@ -263,7 +262,9 @@ public class DatabaseService {
             }
             var pathToCheck = eachDir.getAbsolutePath();
             String priorityStr = String.valueOf(getPriorityBySuffix(getSuffixByPath(pathToCheck)));
-            checkIsMatchedAndAddToList(pathToCheck, priorityStr, searchTask);
+            if (checkIsMatchedAndAddToList(pathToCheck, priorityStr, searchTask)) {
+                searchTask.cacheAndPriorityResults.add(pathToCheck);
+            }
         }
     }
 
@@ -605,7 +606,9 @@ public class DatabaseService {
         for (String each : databaseCacheSet) {
             if (Files.exists(Path.of(each))) {
                 var priorityStr = String.valueOf(getPriorityBySuffix(getSuffixByPath(each)));
-                checkIsMatchedAndAddToList(each, priorityStr, searchTask);
+                if (checkIsMatchedAndAddToList(each, priorityStr, searchTask)) {
+                    searchTask.cacheAndPriorityResults.add(each);
+                }
             } else {
                 EventManagement.getInstance().putEvent(new DeleteFromCacheEvent(each));
             }
@@ -1784,7 +1787,7 @@ public class DatabaseService {
         var searchInfo = prepareSearchKeywords(prepareSearchEvent.searchText, prepareSearchEvent.searchCase, prepareSearchEvent.keywords);
         var searchTask = prepareSearch(searchInfo);
         prepareTasksMap.put(searchInfo, searchTask);
-        event.setReturnValue(searchTask.tempResults);
+        event.setReturnValue(searchTask);
     }
 
     @EventRegister(registerClass = StartSearchEvent.class)
@@ -1811,7 +1814,7 @@ public class DatabaseService {
         }
         searchTasksQueue.add(searchTask);
         databaseService.startSearchInThreadPool(searchTask);
-        event.setReturnValue(searchTask.tempResults);
+        event.setReturnValue(searchTask);
     }
 
     /**
@@ -2248,13 +2251,16 @@ public class DatabaseService {
      * @see #waitForTasks(SearchTask)
      */
     @RequiredArgsConstructor
-    private static class SearchTask {
+    public static class SearchTask {
         //taskMap任务队列，key为磁盘盘符，value为任务
         private final ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskMap = new ConcurrentHashMap<>();
         private final Bit taskStatus = new Bit(new byte[]{0});
         private final Bit allTaskStatus = new Bit(new byte[]{0});
         private final SearchInfo searchInfo;
+        @Getter
         private final ConcurrentLinkedQueue<String> tempResults = new ConcurrentLinkedQueue<>();
+        @Getter
+        private final ConcurrentLinkedQueue<String> cacheAndPriorityResults = new ConcurrentLinkedQueue<>();
         private final Set<String> tempResultsSet = ConcurrentHashMap.newKeySet();
         private final AtomicBoolean shouldStopSearch = new AtomicBoolean();
         private final long taskCreateTimeMills = System.currentTimeMillis();

@@ -51,7 +51,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -117,7 +116,7 @@ public class SearchBar {
     private volatile long visibleStartTime = 0;  //记录窗口开始可见的事件，窗口默认最短可见时间0.5秒，防止窗口快速闪烁
     private volatile long firstResultStartShowingTime = 0;  //记录开始显示结果的时间，用于防止刚开始移动到鼠标导致误触
     private volatile ArrayList<String> listResults;  //保存从数据库中找出符合条件的记录（文件路径）
-    private volatile ConcurrentLinkedQueue<String> tempResultsFromDatabase;
+    private volatile DatabaseService.SearchTask currentSearchTask;
     private volatile String[] searchCase;
     private volatile String searchText = "";
     private volatile String[] keywords;
@@ -2375,7 +2374,7 @@ public class SearchBar {
         isRoundRadiusSet.set(false);
         searchInfoLabel.setText("");
         searchInfoLabel.setIcon(null);
-        tempResultsFromDatabase = null;
+        currentSearchTask = null;
     }
 
     /**
@@ -3293,23 +3292,35 @@ public class SearchBar {
             if (System.currentTimeMillis() - visibleStartTime > 10_000 && !isVisible()) {
                 break;
             }
-            for (var eachPlugin : allPlugins) {
-                String each;
-                while ((each = eachPlugin.plugin.pollFromResultQueue()) != null) {
-                    each = "plugin" + PLUGIN_RESULT_SPLITTER_STR + eachPlugin.plugin.identifier + PLUGIN_RESULT_SPLITTER_STR + each;
-                    if (listResultsSet.add(each)) {
-                        listResultsTemp.add(each);
-                    }
-                }
-            }
-            if (tempResultsFromDatabase != null) {
-                for (String each : tempResultsFromDatabase) {
-                    if (listResultsSet.add(each)) {
-                        listResultsTemp.add(each);
-                    }
-                }
-            }
+            mergeResultMethod(listResultsTemp, listResultsSet, allPlugins);
             TimeUnit.MILLISECONDS.sleep(1);
+        }
+    }
+
+    private void mergeResultMethod(ArrayList<String> listResultsTemp, HashSet<String> listResultsSet, Set<PluginService.PluginInfo> allPlugins) {
+        var tempSearchTask = currentSearchTask;
+        if (tempSearchTask != null) {
+            for (String each : tempSearchTask.getCacheAndPriorityResults()) {
+                if (listResultsSet.add(each)) {
+                    listResultsTemp.add(each);
+                }
+            }
+        }
+        for (var eachPlugin : allPlugins) {
+            String each;
+            while ((each = eachPlugin.plugin.pollFromResultQueue()) != null) {
+                each = "plugin" + PLUGIN_RESULT_SPLITTER_STR + eachPlugin.plugin.identifier + PLUGIN_RESULT_SPLITTER_STR + each;
+                if (listResultsSet.add(each)) {
+                    listResultsTemp.add(each);
+                }
+            }
+        }
+        if (tempSearchTask != null) {
+            for (String each : tempSearchTask.getTempResults()) {
+                if (listResultsSet.add(each)) {
+                    listResultsTemp.add(each);
+                }
+            }
         }
     }
 
@@ -3570,7 +3581,7 @@ public class SearchBar {
 //        }
     }
 
-    private Optional<ConcurrentLinkedQueue<String>> sendPrepareSearchEvent() {
+    private Optional<DatabaseService.SearchTask> sendPrepareSearchEvent() {
         EventManagement eventManagement = EventManagement.getInstance();
         if (!getSearchBarText().isEmpty()) {
             isCudaSearchNotStarted.set(false);
@@ -3590,7 +3601,7 @@ public class SearchBar {
     /**
      * 发送开始搜索事件
      */
-    private Optional<ConcurrentLinkedQueue<String>> sendSearchEvent() {
+    private Optional<DatabaseService.SearchTask> sendSearchEvent() {
         EventManagement eventManagement = EventManagement.getInstance();
         if (!getSearchBarText().isEmpty()) {
             isSearchNotStarted.set(false);
@@ -3627,7 +3638,7 @@ public class SearchBar {
                         var resultsOptional = sendPrepareSearchEvent();
                         resultsOptional.ifPresent(res -> {
                             listResults = new ArrayList<>();
-                            tempResultsFromDatabase = res;
+                            currentSearchTask = res;
                         });
                     });
                 }
@@ -3647,11 +3658,11 @@ public class SearchBar {
                         addShowSearchStatusThread();
                         var resultsOptional = sendSearchEvent();
                         resultsOptional.ifPresent(res -> {
-                            if (tempResultsFromDatabase == res) {
+                            if (currentSearchTask == res) {
                                 return;
                             }
                             listResults = new ArrayList<>();
-                            tempResultsFromDatabase = res;
+                            currentSearchTask = res;
                         });
                     });
                 }
