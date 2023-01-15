@@ -1,7 +1,5 @@
 package file.engine;
 
-import com.github.promeg.pinyinhelper.Pinyin;
-import com.github.promeg.tinypinyin.lexicons.java.cncity.CnCityDict;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.Constants;
 import file.engine.dllInterface.GetHandle;
@@ -9,8 +7,8 @@ import file.engine.dllInterface.gpu.GPUAccelerator;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.BootSystemEvent;
-import file.engine.event.handler.impl.configs.ReadConfigsEvent;
 import file.engine.event.handler.impl.configs.CheckConfigsEvent;
+import file.engine.event.handler.impl.configs.ReadConfigsEvent;
 import file.engine.event.handler.impl.configs.SetConfigsEvent;
 import file.engine.event.handler.impl.daemon.StartDaemonEvent;
 import file.engine.event.handler.impl.daemon.StopDaemonEvent;
@@ -63,7 +61,6 @@ public class MainClass {
             readAllConfigs();
             GPUAccelerator.INSTANCE.initialize();
             initDatabase();
-            initPinyin();
             checkConfigs();
             setAllConfigs();
             // 初始化全部完成，发出启动系统事件
@@ -220,12 +217,10 @@ public class MainClass {
         // 初始化事件注册中心，注册所有事件
         EventManagement eventManagement = EventManagement.getInstance();
         eventManagement.readClassList();
-        {
-            eventManagement.registerAllHandler();
-            eventManagement.registerAllListener();
-            if (IsDebug.isDebug()) {
-                ClassScannerUtil.saveToClassListFile();
-            }
+        eventManagement.registerAllHandler();
+        eventManagement.registerAllListener();
+        if (IsDebug.isDebug()) {
+            ClassScannerUtil.saveToClassListFile();
         }
         eventManagement.releaseClassesList();
     }
@@ -241,10 +236,6 @@ public class MainClass {
                 }
             });
         }, null);
-    }
-
-    private static void initPinyin() {
-        Pinyin.init(Pinyin.newConfig().with(CnCityDict.getInstance()));
     }
 
     /**
@@ -397,7 +388,6 @@ public class MainClass {
 
     /**
      * 释放所有文件
-     *
      */
     private static void initFoldersAndFiles() {
         boolean isSucceeded;

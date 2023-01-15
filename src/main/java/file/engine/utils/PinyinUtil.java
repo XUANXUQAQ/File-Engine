@@ -1,10 +1,15 @@
 package file.engine.utils;
 
 import com.github.promeg.pinyinhelper.Pinyin;
+import com.github.promeg.tinypinyin.lexicons.java.cncity.CnCityDict;
 
 import java.util.HashMap;
 
 public class PinyinUtil {
+
+    static {
+        initPinyin();
+    }
 
     /**
      * 判断字符串是否存在汉字
@@ -49,5 +54,10 @@ public class PinyinUtil {
      */
     public static String toPinyin(String str, String separator) {
         return Pinyin.toPinyin(str, separator).toLowerCase();
+    }
+
+    private static void initPinyin() {
+        CnCityDict cnCityDict = CnCityDict.getInstance();
+        Pinyin.init(Pinyin.newConfig().with(cnCityDict));
     }
 }
