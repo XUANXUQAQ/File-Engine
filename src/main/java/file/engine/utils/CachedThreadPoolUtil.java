@@ -15,7 +15,9 @@ public enum CachedThreadPoolUtil {
                 100,
                 60,
                 TimeUnit.SECONDS,
-                new SynchronousQueue<>()
+                new SynchronousQueue<>(),
+                Executors.defaultThreadFactory(),
+                new ThreadPoolExecutor.CallerRunsPolicy()
         );
     }
 

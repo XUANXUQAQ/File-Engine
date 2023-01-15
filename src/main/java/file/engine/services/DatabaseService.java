@@ -81,7 +81,7 @@ public class DatabaseService {
     private final ConcurrentSkipListSet<String> databaseCacheSet = new ConcurrentSkipListSet<>();
     private final AtomicInteger searchThreadCount = new AtomicInteger(0);
     private long startSearchTimeMills = 0;
-    private static final int MAX_TEMP_QUERY_RESULT_CACHE = 128;
+    private static final int MAX_TEMP_QUERY_RESULT_CACHE = 512;
     private static final int MAX_CACHED_RECORD_NUM = 10240 * 5;
     private static final int MAX_SQL_NUM = 5000;
     private static final int MAX_RESULTS = 200;
@@ -658,19 +658,20 @@ public class DatabaseService {
                                           Statement stmt,
                                           String priorityStr,
                                           SearchTask searchTask) {
-        int matchedResultCount = 0;
         //结果太多则不再进行搜索
         if (searchTask.shouldStopSearch.get()) {
-            return matchedResultCount;
+            return 0;
         }
-        String[] tmpQueryResultsCache = new String[MAX_TEMP_QUERY_RESULT_CACHE];
+        AtomicInteger matchedResultCount = new AtomicInteger();
         EventManagement eventManagement = EventManagement.getInstance();
+        AtomicInteger submitCount = new AtomicInteger();
         try (ResultSet resultSet = stmt.executeQuery(sql)) {
             boolean isExit = false;
-            while (!isExit && eventManagement.notMainExit()) {
+            while (!isExit && !searchTask.shouldStopSearch.get() && eventManagement.notMainExit()) {
                 int i = 0;
+                String[] tmpQueryResultsCache = new String[MAX_TEMP_QUERY_RESULT_CACHE];
                 // 先将结果查询出来，再进行字符串匹配，提高吞吐量
-                while (i < MAX_TEMP_QUERY_RESULT_CACHE && eventManagement.notMainExit()) {
+                while (i < MAX_TEMP_QUERY_RESULT_CACHE && !searchTask.shouldStopSearch.get() && eventManagement.notMainExit()) {
                     if (resultSet.next()) {
                         tmpQueryResultsCache[i] = resultSet.getString("PATH");
                         ++i;
@@ -679,22 +680,37 @@ public class DatabaseService {
                         break;
                     }
                 }
-                for (int j = 0; j < i; ++j) {
-                    if (checkIsMatchedAndAddToList(tmpQueryResultsCache[j], priorityStr, searchTask)) {
-                        ++matchedResultCount;
-                        //结果太多则不再进行搜索
-                        //用户重新输入了信息
-                        if (searchTask.shouldStopSearch.get()) {
-                            return matchedResultCount;
+                int finalI = i;
+                submitCount.getAndIncrement();
+                CachedThreadPoolUtil.getInstance().executeTask(() -> {
+                    try {
+                        for (int j = 0; j < finalI; ++j) {
+                            if (checkIsMatchedAndAddToList(tmpQueryResultsCache[j], priorityStr, searchTask)) {
+                                matchedResultCount.getAndIncrement();
+                                //结果太多则不再进行搜索
+                                //用户重新输入了信息
+                                if (searchTask.shouldStopSearch.get()) {
+                                    return;
+                                }
+                            }
                         }
+                    } finally {
+                        submitCount.getAndDecrement();
                     }
-                }
+                });
             }
         } catch (SQLException e) {
             System.err.println("error sql : " + sql);
             e.printStackTrace();
         }
-        return matchedResultCount;
+        while (submitCount.get() > 0) {
+            try {
+                TimeUnit.MILLISECONDS.sleep(1);
+            } catch (InterruptedException e) {
+                break;
+            }
+        }
+        return matchedResultCount.get();
     }
 
     /**
@@ -856,30 +872,24 @@ public class DatabaseService {
                 String tableName = sqlAndTableName.getValue();
                 String priority = getPriorityFromSelectSql(eachSql);
                 String key = diskStr + "," + tableName + "," + priority;
-                final long matchedNum;
+                long matchedNum = 0;
                 if (isEnableGPUAccelerate && GPUAccelerator.INSTANCE.isMatchDone(key)) {
                     //gpu搜索已经放入container，只需要获取matchedNum修改权重即可
                     matchedNum = GPUAccelerator.INSTANCE.matchedNumber(key);
-                } else {
-                    if (!searchTask.shouldStopSearch.get()) {
-                        int recordsNum = 1;
-                        if (databaseResultsCount.containsKey(key)) {
-                            recordsNum = databaseResultsCount.get(key).get();
-                        }
-                        if (recordsNum != 0) {
-                            if (stmt == null) {
-                                try {
-                                    stmt = SQLiteUtil.getStatement(diskStr);
-                                } catch (SQLException e) {
-                                    throw new RuntimeException(e);
-                                }
+                } else if (!searchTask.shouldStopSearch.get()) {
+                    int recordsNum = 1;
+                    if (databaseResultsCount.containsKey(key)) {
+                        recordsNum = databaseResultsCount.get(key).get();
+                    }
+                    if (recordsNum != 0) {
+                        if (stmt == null) {
+                            try {
+                                stmt = SQLiteUtil.getStatement(diskStr);
+                            } catch (SQLException e) {
+                                throw new RuntimeException(e);
                             }
-                            matchedNum = searchFromDatabaseOrCache(stmt, eachSql, key, priority, searchTask);
-                        } else {
-                            matchedNum = 0;
                         }
-                    } else {
-                        matchedNum = 0;
+                        matchedNum = searchFromDatabaseOrCache(stmt, eachSql, key, priority, searchTask);
                     }
                 }
                 final long weight = Math.min(matchedNum, 5);
