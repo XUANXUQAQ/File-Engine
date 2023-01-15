@@ -3889,8 +3889,14 @@ public class SearchBar {
             // 转换成拼音后和keywords匹配，如果发现匹配出成功，则添加到正则表达式中
             chinesePinyinMap.entrySet()
                     .stream()
-                    .filter(pair -> Arrays.stream(keywords)
-                            .anyMatch(each -> each.toLowerCase(Locale.ROOT).indexOf(pair.getValue().toLowerCase(Locale.ROOT)) != -1))
+                    .filter(pair -> {
+                        for (String each : keywords) {
+                            if (each.toLowerCase().indexOf(pair.getValue().toLowerCase()) != -1) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    })
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
                     .forEach((k, v) -> regexPatternBuilder.append(k).append("|"));
         }
