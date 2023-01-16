@@ -54,7 +54,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicStampedReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -79,8 +78,6 @@ public class SearchBar {
     private static final AtomicBoolean isPreviewMode = new AtomicBoolean();
     private final AtomicBoolean isTutorialMode = new AtomicBoolean();
     private final AtomicBoolean isSwitchToNormalManual = new AtomicBoolean();
-    private final AtomicInteger sendStartSearchEventCount = new AtomicInteger();
-    private final AtomicStampedReference<Boolean> isSearching = new AtomicStampedReference<>(false, sendStartSearchEventCount.get());
     private Border fullBorder;
     private Border topBorder;
     private Border middleBorder;
@@ -837,6 +834,7 @@ public class SearchBar {
                     isCopyPathPressed.set(true);
                 }
 
+                if (!listResults.isEmpty()) {
                 if (key != 38 && key != 40) {
                     String res = listResults.get(currentResultCount.get());
                     if (runningMode == RunningMode.NORMAL_MODE) {
@@ -855,6 +853,7 @@ public class SearchBar {
                             currentUsingPlugin.keyPressed(arg0, split[2]);
                         }
                     }
+                }
                 }
             }
 
@@ -2680,15 +2679,6 @@ public class SearchBar {
         static final AtomicBoolean isStartTimeSet = new AtomicBoolean(false);
     }
 
-    @EventListener(listenClass = SearchDoneEvent.class)
-    private static void setSearchDoneFlag(Event event) {
-        SearchBar searchBarInst = getInstance();
-        int i = searchBarInst.sendStartSearchEventCount.get();
-        if (!searchBarInst.isSearching.compareAndSet(searchBarInst.isSearching.getReference(), false, i, i)) {
-            System.err.println("设置搜索停止标志失败");
-        }
-    }
-
     @EventRegister(registerClass = PreviewSearchBarEvent.class)
     private static void previewSearchBarEvent(Event event) {
         if (isPreviewMode.get()) {
@@ -3208,10 +3198,14 @@ public class SearchBar {
     private void addShowSearchStatusThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             ArrayList<String> listResultsTemp = listResults;
+            var currentTaskRef = currentSearchTask;
+            if (currentTaskRef == null) {
+                return;
+            }
             var isIconSetObj = new Object() {
                 boolean isIconSet = false;
             };
-            while (isVisible() && isSearching.getReference() && listResultsTemp == listResults) {
+            while (isVisible() && !currentTaskRef.isSearchDone() && listResultsTemp == listResults) {
                 if (runningMode != RunningMode.NORMAL_MODE) {
                     return;
                 }
@@ -3646,23 +3640,13 @@ public class SearchBar {
                         startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
                     setSearchKeywordsAndSearchCase();
                     CachedThreadPoolUtil.getInstance().executeTask(() -> {
-                        int i = sendStartSearchEventCount.getAndIncrement();
-                        final long startSpinTime = System.currentTimeMillis();
-                        while (!isSearching.compareAndSet(isSearching.getReference(), true, i, sendStartSearchEventCount.get())) {
-                            if (System.currentTimeMillis() - startSpinTime > 1000) {
-                                System.err.println("设置搜索状态失败");
-                                return;
-                            }
-                            Thread.onSpinWait();
-                        }
-                        addShowSearchStatusThread();
                         var resultsOptional = sendSearchEvent();
                         resultsOptional.ifPresent(res -> {
-                            if (currentSearchTask == res) {
-                                return;
+                            if (currentSearchTask != res) {
+                                listResults = new ArrayList<>();
+                                currentSearchTask = res;
                             }
-                            listResults = new ArrayList<>();
-                            currentSearchTask = res;
+                            addShowSearchStatusThread();
                         });
                     });
                 }

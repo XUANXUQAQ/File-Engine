@@ -805,6 +805,7 @@ public class DatabaseService {
         if (isEnableGPUAccelerate && eventManagement.notMainExit()) {
             GPUAccelerator.INSTANCE.stopCollectResults();
         }
+        searchTask.searchDoneFlag.set(true);
         searchTask.shouldStopSearch.set(true);
     }
 
@@ -2263,11 +2264,16 @@ public class DatabaseService {
         private final ConcurrentLinkedQueue<String> cacheAndPriorityResults = new ConcurrentLinkedQueue<>();
         private final Set<String> tempResultsSet = ConcurrentHashMap.newKeySet();
         private final AtomicBoolean shouldStopSearch = new AtomicBoolean();
+        private final AtomicBoolean searchDoneFlag = new AtomicBoolean();
         private final long taskCreateTimeMills = System.currentTimeMillis();
         private final ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> priorityContainers = new ConcurrentHashMap<>();
 
         private static final AtomicBoolean isGpuThreadRunning = new AtomicBoolean();
         private static final long maxTaskValidThreshold = 5000;
+
+        public boolean isSearchDone() {
+            return searchDoneFlag.get();
+        }
     }
 
     /**
