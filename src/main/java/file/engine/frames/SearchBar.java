@@ -724,105 +724,12 @@ public class SearchBar {
                 }
                 var configs = allConfigs.getConfigEntity();
                 if (38 == key) {
-                    //上键被点击
-                    if (isFirstPress || System.currentTimeMillis() - pressTime > timeLimit) {
-                        pressTime = System.currentTimeMillis();
-                        isFirstPress = false;
-                        if (isLabelNotEmpty(label1) && isLabelNotEmpty(label2) && isLabelNotEmpty(label3) && isLabelNotEmpty(label4)
-                                && isLabelNotEmpty(label5) && isLabelNotEmpty(label6) && isLabelNotEmpty(label7) && isLabelNotEmpty(label8)) {
-                            isUserPressed.set(true);
-                        }
-
-                        if (!getSearchBarText().isEmpty()) {
-                            currentResultCount.decrementAndGet();
-                            int size = listResults.size();
-                            if (currentResultCount.get() >= size) {
-                                currentResultCount.set(size - 1);
-                            }
-                            if (currentResultCount.get() <= 0) {
-                                currentResultCount.set(0);
-                            }
-                            moveUpward(getCurrentLabelPos());
-                        }
-                    }
+                    handleUpKey();
                 } else if (40 == key) {
-                    //下键被点击
-                    if (isFirstPress || System.currentTimeMillis() - pressTime > timeLimit) {
-                        pressTime = System.currentTimeMillis();
-                        isFirstPress = false;
-                        if (isLabelNotEmpty(label1) && isLabelNotEmpty(label2) && isLabelNotEmpty(label3) && isLabelNotEmpty(label4)
-                                && isLabelNotEmpty(label5) && isLabelNotEmpty(label6) && isLabelNotEmpty(label7) && isLabelNotEmpty(label8)) {
-                            isUserPressed.set(true);
-                        }
-                        boolean isNextLabelValid = isNextLabelValid();
-                        //当下一个label有数据时才移动到下一个
-                        if (isNextLabelValid) {
-                            if (!getSearchBarText().isEmpty()) {
-                                currentResultCount.incrementAndGet();
-                                int size = listResults.size();
-                                if (currentResultCount.get() >= size) {
-                                    currentResultCount.set(size - 1);
-                                }
-                                if (currentResultCount.get() <= 0) {
-                                    currentResultCount.set(0);
-                                }
-                                moveDownward(getCurrentLabelPos());
-                            }
-                        }
-                    }
+                    handleDownKey();
                 } else if (10 == key) {
-                    //enter被点击
-                    if (isPreviewMode.get() || isTutorialMode.get()) {
+                    if (handleEnterKey(configs)) {
                         return;
-                    }
-                    clearAllLabels();
-                    String res = listResults.get(currentResultCount.get());
-                    if (runningMode == RunningMode.NORMAL_MODE) {
-                        String searchBarText = getSearchBarText();
-                        if (searchBarText.charAt(0) == '>') {
-                            SwingUtilities.invokeLater(() -> textField.setText(">" + res + " "));
-                            return;
-                        } else {
-                            if (res.startsWith("plugin")) {
-                                return;
-                            }
-                            if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                                if (isOpenLastFolderPressed.get()) {
-                                    //打开上级文件夹
-                                    openFolderByExplorer(res);
-                                } else if (configs.isDefaultAdmin() || isRunAsAdminPressed.get()) {
-                                    openWithAdmin(res);
-                                } else if (isCopyPathPressed.get()) {
-                                    copyToClipBoard(res, true);
-                                } else {
-                                    openWithoutAdmin(res);
-                                }
-                                detectShowingModeAndClose();
-                            } else if (showingMode == Constants.Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
-                                if (isCopyPathPressed.get()) {
-                                    copyToClipBoard(res, true);
-                                } else {
-                                    quickJump(res);
-                                }
-                            }
-                        }
-                    } else if (runningMode == RunningMode.COMMAND_MODE) {
-                        String[] commandInfo = RegexUtil.semicolon.split(res);
-                        boolean isExecuted = runInternalCommand(RegexUtil.colon.split(commandInfo[0])[1]);
-                        if (!isExecuted) {
-                            File open = new File(commandInfo[1]);
-                            if (isOpenLastFolderPressed.get()) {
-                                //打开上级文件夹
-                                openFolderByExplorer(open.getAbsolutePath());
-                            } else if (configs.isDefaultAdmin() || isRunAsAdminPressed.get()) {
-                                openWithAdmin(open.getAbsolutePath());
-                            } else if (isCopyPathPressed.get()) {
-                                copyToClipBoard(open.getAbsolutePath(), true);
-                            } else {
-                                openWithoutAdmin(open.getAbsolutePath());
-                            }
-                            detectShowingModeAndClose();
-                        }
                     }
                 } else if (configs.getOpenLastFolderKeyCode() == key) {
                     //打开上级文件夹热键被点击
@@ -835,25 +742,133 @@ public class SearchBar {
                 }
 
                 if (!listResults.isEmpty()) {
-                if (key != 38 && key != 40) {
-                    String res = listResults.get(currentResultCount.get());
-                    if (runningMode == RunningMode.NORMAL_MODE) {
-                        if (res.startsWith("plugin")) {
-                            String[] split = splitPluginResult(res);
-                            var getPluginByIdentifierEvent = new GetPluginByIdentifierEvent(split[1]);
-                            var eventManagement = EventManagement.getInstance();
-                            eventManagement.putEvent(getPluginByIdentifierEvent);
-                            eventManagement.waitForEvent(getPluginByIdentifierEvent);
-                            Optional<PluginService.PluginInfo> pluginInfoOptional = getPluginByIdentifierEvent.getReturnValue();
-                            pluginInfoOptional.ifPresent((pluginInfo -> pluginInfo.plugin.keyPressed(arg0, split[2])));
-                        }
-                    } else if (runningMode == RunningMode.PLUGIN_MODE) {
-                        if (currentUsingPlugin != null) {
-                            String[] split = splitPluginResult(res);
-                            currentUsingPlugin.keyPressed(arg0, split[2]);
+                    if (key != 38 && key != 40) {
+                        String res = listResults.get(currentResultCount.get());
+                        if (runningMode == RunningMode.NORMAL_MODE) {
+                            if (res.startsWith("plugin")) {
+                                String[] split = splitPluginResult(res);
+                                var getPluginByIdentifierEvent = new GetPluginByIdentifierEvent(split[1]);
+                                var eventManagement = EventManagement.getInstance();
+                                eventManagement.putEvent(getPluginByIdentifierEvent);
+                                eventManagement.waitForEvent(getPluginByIdentifierEvent);
+                                Optional<PluginService.PluginInfo> pluginInfoOptional = getPluginByIdentifierEvent.getReturnValue();
+                                pluginInfoOptional.ifPresent((pluginInfo -> pluginInfo.plugin.keyPressed(arg0, split[2])));
+                            }
+                        } else if (runningMode == RunningMode.PLUGIN_MODE) {
+                            if (currentUsingPlugin != null) {
+                                String[] split = splitPluginResult(res);
+                                currentUsingPlugin.keyPressed(arg0, split[2]);
+                            }
                         }
                     }
                 }
+            }
+
+            private boolean handleEnterKey(ConfigEntity configs) {
+                //enter被点击
+                if (isPreviewMode.get() || isTutorialMode.get()) {
+                    return true;
+                }
+                clearAllLabels();
+                String res = listResults.get(currentResultCount.get());
+                if (runningMode == RunningMode.NORMAL_MODE) {
+                    String searchBarText = getSearchBarText();
+                    if (searchBarText.charAt(0) == '>') {
+                        SwingUtilities.invokeLater(() -> textField.setText(">" + res + " "));
+                        return true;
+                    } else {
+                        if (res.startsWith("plugin")) {
+                            return true;
+                        }
+                        if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                            if (isOpenLastFolderPressed.get()) {
+                                //打开上级文件夹
+                                openFolderByExplorer(res);
+                            } else if (configs.isDefaultAdmin() || isRunAsAdminPressed.get()) {
+                                openWithAdmin(res);
+                            } else if (isCopyPathPressed.get()) {
+                                copyToClipBoard(res, true);
+                            } else {
+                                openWithoutAdmin(res);
+                            }
+                            detectShowingModeAndClose();
+                        } else if (showingMode == Constants.Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
+                            if (isCopyPathPressed.get()) {
+                                copyToClipBoard(res, true);
+                            } else {
+                                quickJump(res);
+                            }
+                        }
+                    }
+                } else if (runningMode == RunningMode.COMMAND_MODE) {
+                    String[] commandInfo = RegexUtil.semicolon.split(res);
+                    boolean isExecuted = runInternalCommand(RegexUtil.colon.split(commandInfo[0])[1]);
+                    if (!isExecuted) {
+                        File open = new File(commandInfo[1]);
+                        if (isOpenLastFolderPressed.get()) {
+                            //打开上级文件夹
+                            openFolderByExplorer(open.getAbsolutePath());
+                        } else if (configs.isDefaultAdmin() || isRunAsAdminPressed.get()) {
+                            openWithAdmin(open.getAbsolutePath());
+                        } else if (isCopyPathPressed.get()) {
+                            copyToClipBoard(open.getAbsolutePath(), true);
+                        } else {
+                            openWithoutAdmin(open.getAbsolutePath());
+                        }
+                        detectShowingModeAndClose();
+                    }
+                }
+                return false;
+            }
+
+            private void handleDownKey() {
+                //下键被点击
+                if (isFirstPress || System.currentTimeMillis() - pressTime > timeLimit) {
+                    pressTime = System.currentTimeMillis();
+                    isFirstPress = false;
+                    if (isLabelNotEmpty(label1) && isLabelNotEmpty(label2) && isLabelNotEmpty(label3) && isLabelNotEmpty(label4)
+                            && isLabelNotEmpty(label5) && isLabelNotEmpty(label6) && isLabelNotEmpty(label7) && isLabelNotEmpty(label8)) {
+                        isUserPressed.set(true);
+                    }
+                    boolean isNextLabelValid = isNextLabelValid();
+                    //当下一个label有数据时才移动到下一个
+                    if (isNextLabelValid) {
+                        if (!getSearchBarText().isEmpty()) {
+                            currentResultCount.incrementAndGet();
+                            int size = listResults.size();
+                            if (currentResultCount.get() >= size) {
+                                currentResultCount.set(size - 1);
+                            }
+                            if (currentResultCount.get() <= 0) {
+                                currentResultCount.set(0);
+                            }
+                            moveDownward(getCurrentLabelPos());
+                        }
+                    }
+                }
+            }
+
+            private void handleUpKey() {
+                //上键被点击
+                if (isFirstPress || System.currentTimeMillis() - pressTime > timeLimit) {
+                    pressTime = System.currentTimeMillis();
+                    isFirstPress = false;
+                    if (isLabelNotEmpty(label1) && isLabelNotEmpty(label2) && isLabelNotEmpty(label3) && isLabelNotEmpty(label4)
+                            && isLabelNotEmpty(label5) && isLabelNotEmpty(label6) && isLabelNotEmpty(label7) && isLabelNotEmpty(label8)) {
+                        isUserPressed.set(true);
+                    }
+
+                    if (!getSearchBarText().isEmpty()) {
+                        currentResultCount.decrementAndGet();
+                        int size = listResults.size();
+                        if (currentResultCount.get() >= size) {
+                            currentResultCount.set(size - 1);
+                        }
+                        if (currentResultCount.get() <= 0) {
+                            currentResultCount.set(0);
+                        }
+                        moveUpward(getCurrentLabelPos());
+                    }
                 }
             }
 
