@@ -88,7 +88,7 @@ public class SettingsFrame {
     private static volatile int tmp_openLastFolderKeyCode;
     private static final ImageIcon frameIcon = new ImageIcon(Objects.requireNonNull(SettingsFrame.class.getResource("/icons/frame.png")));
     private static final JFrame frame = new JFrame("Settings");
-    private static final TranslateService TRANSLATE_SERVICE = TranslateService.getInstance();
+    private static final TranslateService translateService = TranslateService.getInstance();
     private static final EventManagement eventManagement = EventManagement.getInstance();
     private static final AllConfigs allConfigs = AllConfigs.getInstance();
     private static final CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
@@ -332,7 +332,7 @@ public class SettingsFrame {
             public void windowClosing(WindowEvent e) {
                 String errors = saveChanges(false);
                 if (!errors.isEmpty()) {
-                    int ret = JOptionPane.showConfirmDialog(null, TRANSLATE_SERVICE.getTranslation("Errors") + ":\n" + errors + "\n" + TRANSLATE_SERVICE.getTranslation("Failed to save settings, do you still close the window"));
+                    int ret = JOptionPane.showConfirmDialog(null, translateService.getTranslation("Errors") + ":\n" + errors + "\n" + translateService.getTranslation("Failed to save settings, do you still close the window"));
                     if (ret == JOptionPane.YES_OPTION) {
                         hideFrame();
                     }
@@ -375,10 +375,10 @@ public class SettingsFrame {
         buttonSaveAndRemoveDesktop.addActionListener(e -> {
             String currentFolder = new File("").getAbsolutePath();
             if (currentFolder.equals(FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath()) || "C:\\Users\\Public\\Desktop".equals(currentFolder)) {
-                JOptionPane.showMessageDialog(frame, TRANSLATE_SERVICE.getTranslation("The program is detected on the desktop and cannot be moved"));
+                JOptionPane.showMessageDialog(frame, translateService.getTranslation("The program is detected on the desktop and cannot be moved"));
                 return;
             }
-            int isConfirmed = JOptionPane.showConfirmDialog(frame, TRANSLATE_SERVICE.getTranslation("Whether to remove and backup all files on the desktop," + "they will be in the program's Files folder, which may take a few minutes"));
+            int isConfirmed = JOptionPane.showConfirmDialog(frame, translateService.getTranslation("Whether to remove and backup all files on the desktop," + "they will be in the program's Files folder, which may take a few minutes"));
             if (isConfirmed == JOptionPane.YES_OPTION) {
                 Future<Boolean> future = cachedThreadPoolUtil.executeTask(MoveDesktopFilesUtil::start, true);
                 try {
@@ -386,7 +386,7 @@ public class SettingsFrame {
                         return;
                     }
                     if (!future.get()) {
-                        JOptionPane.showMessageDialog(null, TRANSLATE_SERVICE.getTranslation("Files with the same name are detected, please move them by yourself"));
+                        JOptionPane.showMessageDialog(null, translateService.getTranslation("Files with the same name are detected, please move them by yourself"));
                     }
                 } catch (InterruptedException | ExecutionException exception) {
                     exception.printStackTrace();
@@ -399,7 +399,7 @@ public class SettingsFrame {
         buttonChooseFile.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            int returnValue = fileChooser.showDialog(new JLabel(), TRANSLATE_SERVICE.getTranslation("Choose"));
+            int returnValue = fileChooser.showDialog(new JLabel(), translateService.getTranslation("Choose"));
             File file = fileChooser.getSelectedFile();
             if (file != null && returnValue == JFileChooser.APPROVE_OPTION) {
                 textAreaIgnorePath.append(file.getAbsolutePath() + ",\n");
@@ -493,7 +493,7 @@ public class SettingsFrame {
         ButtonPriorityFolder.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            int returnValue = fileChooser.showDialog(new JLabel(), TRANSLATE_SERVICE.getTranslation("Choose"));
+            int returnValue = fileChooser.showDialog(new JLabel(), translateService.getTranslation("Choose"));
             File file = fileChooser.getSelectedFile();
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 textFieldPriorityFolder.setText(file.getAbsolutePath());
@@ -542,26 +542,26 @@ public class SettingsFrame {
      */
     private void addButtonCMDListener() {
         buttonAddCMD.addActionListener(e -> {
-            String name = JOptionPane.showInputDialog(TRANSLATE_SERVICE.getTranslation("Please enter the ID of the command, then you can enter \": identifier\" in the search box to execute the command directly"));
+            String name = JOptionPane.showInputDialog(translateService.getTranslation("Please enter the ID of the command, then you can enter \": identifier\" in the search box to execute the command directly"));
             if (name == null || name.isEmpty()) {
                 //未输入
                 return;
             }
             if ("update".equalsIgnoreCase(name) || "clearbin".equalsIgnoreCase(name) || "help".equalsIgnoreCase(name) || "version".equalsIgnoreCase(name) || isRepeatCommand(name)) {
-                JOptionPane.showMessageDialog(frame, TRANSLATE_SERVICE.getTranslation("Conflict with existing commands"));
+                JOptionPane.showMessageDialog(frame, translateService.getTranslation("Conflict with existing commands"));
                 return;
             }
             if (name.length() == 1) {
-                int ret = JOptionPane.showConfirmDialog(frame, TRANSLATE_SERVICE.getTranslation("The identifier you entered is too short, continue") + "?");
+                int ret = JOptionPane.showConfirmDialog(frame, translateService.getTranslation("The identifier you entered is too short, continue") + "?");
                 if (ret != JOptionPane.OK_OPTION) {
                     return;
                 }
             }
             String cmd;
-            JOptionPane.showMessageDialog(frame, TRANSLATE_SERVICE.getTranslation("Please select the location of the executable file (a folder is also acceptable)"));
+            JOptionPane.showMessageDialog(frame, translateService.getTranslation("Please select the location of the executable file (a folder is also acceptable)"));
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-            int returnValue = fileChooser.showDialog(new Label(), TRANSLATE_SERVICE.getTranslation("Choose"));
+            int returnValue = fileChooser.showDialog(new Label(), translateService.getTranslation("Choose"));
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 cmd = fileChooser.getSelectedFile().getAbsolutePath();
                 eventManagement.putEvent(new AddCmdEvent(":" + name + ";" + cmd), event -> listCmds.setListData(allConfigs.getCmdSet().toArray()), event -> listCmds.setListData(allConfigs.getCmdSet().toArray()));
@@ -627,13 +627,13 @@ public class SettingsFrame {
                         throw new IOException("failed");
                     }
                 } catch (IOException e1) {
-                    JOptionPane.showMessageDialog(frame, TRANSLATE_SERVICE.getTranslation("Check update failed"));
+                    JOptionPane.showMessageDialog(frame, translateService.getTranslation("Check update failed"));
                     showManualDownloadDialog();
                     return;
                 }
                 if (Double.parseDouble(latestVersion) > Double.parseDouble(Constants.version) || IsPreview.isPreview() || IsDebug.isDebug()) {
                     String description = (String) updateInfo.get("description");
-                    int result = JOptionPane.showConfirmDialog(frame, TRANSLATE_SERVICE.getTranslation("New Version available") + latestVersion + "," + TRANSLATE_SERVICE.getTranslation("Whether to update") + "\n" + TRANSLATE_SERVICE.getTranslation("update content") + "\n" + description);
+                    int result = JOptionPane.showConfirmDialog(frame, translateService.getTranslation("New Version available") + latestVersion + "," + translateService.getTranslation("Whether to update") + "\n" + translateService.getTranslation("update content") + "\n" + description);
                     if (result == JOptionPane.YES_OPTION) {
                         //开始更新,下载更新文件到tmp
                         downloadManager.newJar = new DownloadManager((String) updateInfo.get("url64"), Constants.FILE_NAME, new File("tmp").getAbsolutePath());
@@ -675,8 +675,8 @@ public class SettingsFrame {
                         });
                     }
                 } else {
-                    JOptionPane.showMessageDialog(frame, TRANSLATE_SERVICE.getTranslation("Latest version:") + latestVersion + "\n" +
-                            TRANSLATE_SERVICE.getTranslation("The current version is the latest"));
+                    JOptionPane.showMessageDialog(frame, translateService.getTranslation("Latest version:") + latestVersion + "\n" +
+                            translateService.getTranslation("The current version is the latest"));
                 }
             }
         });
@@ -686,7 +686,7 @@ public class SettingsFrame {
      * 显示手动下载弹窗
      */
     private void showManualDownloadDialog() {
-        int ret = JOptionPane.showConfirmDialog(frame, TRANSLATE_SERVICE.getTranslation("Do you want to download it manually") + "?");
+        int ret = JOptionPane.showConfirmDialog(frame, translateService.getTranslation("Do you want to download it manually") + "?");
         if (ret == JOptionPane.YES_OPTION) {
             Desktop desktop;
             if (Desktop.isDesktopSupported()) {
@@ -830,7 +830,7 @@ public class SettingsFrame {
         labelColorChooser.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                Color color = JColorChooser.showDialog(frame, TRANSLATE_SERVICE.getTranslation("Choose Color"), null);
+                Color color = JColorChooser.showDialog(frame, translateService.getTranslation("Choose Color"), null);
                 if (color == null) {
                     return;
                 }
@@ -840,7 +840,7 @@ public class SettingsFrame {
         FontColorWithCoverageChooser.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                Color color = JColorChooser.showDialog(frame, TRANSLATE_SERVICE.getTranslation("Choose Color"), null);
+                Color color = JColorChooser.showDialog(frame, translateService.getTranslation("Choose Color"), null);
                 if (color == null) {
                     return;
                 }
@@ -850,7 +850,7 @@ public class SettingsFrame {
         defaultBackgroundChooser.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                Color color = JColorChooser.showDialog(frame, TRANSLATE_SERVICE.getTranslation("Choose Color"), null);
+                Color color = JColorChooser.showDialog(frame, translateService.getTranslation("Choose Color"), null);
                 if (color == null) {
                     return;
                 }
@@ -860,7 +860,7 @@ public class SettingsFrame {
         FontColorChooser.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                Color color = JColorChooser.showDialog(frame, TRANSLATE_SERVICE.getTranslation("Choose Color"), null);
+                Color color = JColorChooser.showDialog(frame, translateService.getTranslation("Choose Color"), null);
                 if (color == null) {
                     return;
                 }
@@ -871,7 +871,7 @@ public class SettingsFrame {
         SearchBarFontColorChooser.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                Color color = JColorChooser.showDialog(frame, TRANSLATE_SERVICE.getTranslation("Choose Color"), null);
+                Color color = JColorChooser.showDialog(frame, translateService.getTranslation("Choose Color"), null);
                 if (color == null) {
                     return;
                 }
@@ -882,7 +882,7 @@ public class SettingsFrame {
         borderColorChooser.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                Color color = JColorChooser.showDialog(frame, TRANSLATE_SERVICE.getTranslation("Choose Color"), null);
+                Color color = JColorChooser.showDialog(frame, translateService.getTranslation("Choose Color"), null);
                 if (color == null) {
                     return;
                 }
@@ -893,7 +893,7 @@ public class SettingsFrame {
         searchBarColorChooser.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                Color color = JColorChooser.showDialog(frame, TRANSLATE_SERVICE.getTranslation("Choose Color"), null);
+                Color color = JColorChooser.showDialog(frame, translateService.getTranslation("Choose Color"), null);
                 if (color == null) {
                     return;
                 }
@@ -924,12 +924,12 @@ public class SettingsFrame {
                         String version = plugin.getVersion();
                         String author = plugin.getAuthor();
                         apiVersion = plugin.getApiVersion();
-                        labelPluginVersion.setText(TRANSLATE_SERVICE.getTranslation("Version") + ":" + version);
-                        labelApiVersion.setText("API " + TRANSLATE_SERVICE.getTranslation("Version") + ":" + apiVersion);
+                        labelPluginVersion.setText(translateService.getTranslation("Version") + ":" + version);
+                        labelApiVersion.setText("API " + translateService.getTranslation("Version") + ":" + apiVersion);
                         PluginIconLabel.setIcon(icon);
                         PluginNamelabel.setText("<html><body><font size=\"+1\">" + pluginName + "</body></html>");
                         textAreaDescription.setText(description);
-                        labelAuthor.setText(TRANSLATE_SERVICE.getTranslation("Author") + ":" + author);
+                        labelAuthor.setText(translateService.getTranslation("Author") + ":" + author);
                         labelOfficialSite.setText("<html><a href='" + officialSite + "'><font size=\"4\">" + pluginName + "</font></a></html>");
                         labelProgress.setText("");
                         buttonUpdatePlugin.setVisible(true);
@@ -938,15 +938,15 @@ public class SettingsFrame {
                         boolean isTaskDone = downloadedPlugins.contains(pluginName);
                         if (isTaskDone) {
                             buttonUpdatePlugin.setEnabled(false);
-                            buttonUpdatePlugin.setText(TRANSLATE_SERVICE.getTranslation("Downloaded"));
+                            buttonUpdatePlugin.setText(translateService.getTranslation("Downloaded"));
                         } else {
                             Color color = new Color(51, 122, 183);
-                            buttonUpdatePlugin.setText(TRANSLATE_SERVICE.getTranslation("Update"));
+                            buttonUpdatePlugin.setText(translateService.getTranslation("Update"));
                             buttonUpdatePlugin.setBackground(color);
                             buttonUpdatePlugin.setEnabled(true);
                         }
                     } else {
-                        buttonUpdatePlugin.setText(TRANSLATE_SERVICE.getTranslation("Check for update"));
+                        buttonUpdatePlugin.setText(translateService.getTranslation("Check for update"));
                         buttonUpdatePlugin.setEnabled(true);
                     }
                 }
@@ -986,7 +986,7 @@ public class SettingsFrame {
      */
     private void addButtonChangeThemeListener() {
         //移除显示theme框，改为弹出窗口
-        buttonChangeTheme.addActionListener(e -> JOptionPane.showMessageDialog(frame, paneSwingThemes, TRANSLATE_SERVICE.getTranslation("Change Theme"), JOptionPane.PLAIN_MESSAGE));
+        buttonChangeTheme.addActionListener(e -> JOptionPane.showMessageDialog(frame, paneSwingThemes, translateService.getTranslation("Change Theme"), JOptionPane.PLAIN_MESSAGE));
     }
 
     private Object[] queryListData(String keyword) {
@@ -1051,7 +1051,7 @@ public class SettingsFrame {
      */
     private void addButtonVacuumListener() {
         buttonVacuum.addActionListener(e -> {
-            int ret = JOptionPane.showConfirmDialog(frame, TRANSLATE_SERVICE.getTranslation("Confirm whether to start optimizing the database?"));
+            int ret = JOptionPane.showConfirmDialog(frame, translateService.getTranslation("Confirm whether to start optimizing the database?"));
             if (JOptionPane.YES_OPTION == ret) {
                 Constants.Enums.DatabaseStatus status = DatabaseService.getInstance().getStatus();
                 if (status == Constants.Enums.DatabaseStatus.NORMAL) {
@@ -1064,19 +1064,19 @@ public class SettingsFrame {
                         try {
                             DatabaseService instance = DatabaseService.getInstance();
                             while (instance.getStatus() == Constants.Enums.DatabaseStatus.VACUUM) {
-                                labelVacuumStatus.setText(TRANSLATE_SERVICE.getTranslation("Optimizing..."));
+                                labelVacuumStatus.setText(translateService.getTranslation("Optimizing..."));
                                 TimeUnit.MILLISECONDS.sleep(50);
                             }
-                            labelVacuumStatus.setText(TRANSLATE_SERVICE.getTranslation("Optimized"));
+                            labelVacuumStatus.setText(translateService.getTranslation("Optimized"));
                             TimeUnit.SECONDS.sleep(3);
                             labelVacuumStatus.setText("");
                         } catch (InterruptedException ignored) {
                         }
                     });
                 } else if (status == Constants.Enums.DatabaseStatus.MANUAL_UPDATE) {
-                    JOptionPane.showMessageDialog(frame, TRANSLATE_SERVICE.getTranslation("Database is not usable yet, please wait..."));
+                    JOptionPane.showMessageDialog(frame, translateService.getTranslation("Database is not usable yet, please wait..."));
                 } else if (status == Constants.Enums.DatabaseStatus.VACUUM) {
-                    JOptionPane.showMessageDialog(frame, TRANSLATE_SERVICE.getTranslation("Task is still running."));
+                    JOptionPane.showMessageDialog(frame, translateService.getTranslation("Task is still running."));
                 }
             }
         });
@@ -2011,7 +2011,7 @@ public class SettingsFrame {
      */
     private void addButtonDeleteAllCacheListener() {
         buttonDeleteAllCache.addActionListener(e -> {
-            int ret = JOptionPane.showConfirmDialog(frame, TRANSLATE_SERVICE.getTranslation("The operation is irreversible. Are you sure you want to clear the cache?"));
+            int ret = JOptionPane.showConfirmDialog(frame, translateService.getTranslation("The operation is irreversible. Are you sure you want to clear the cache?"));
             if (JOptionPane.YES_OPTION == ret) {
                 for (String each : cacheSet) {
                     eventManagement.putEvent(new DeleteFromCacheEvent(each));
@@ -2051,7 +2051,7 @@ public class SettingsFrame {
      */
     private void addButtonRebuildListener() {
         buttonRebuildIndex.addActionListener(e -> {
-            eventManagement.putEvent(new ShowTaskBarMessageEvent(TRANSLATE_SERVICE.getTranslation("Info"), TRANSLATE_SERVICE.getTranslation("Updating file index")));
+            eventManagement.putEvent(new ShowTaskBarMessageEvent(translateService.getTranslation("Info"), translateService.getTranslation("Updating file index")));
             eventManagement.putEvent(new UpdateDatabaseEvent(false), event -> eventManagement.putEvent(new ShowTaskBarMessageEvent(TranslateService.getInstance().getTranslation("Info"), TranslateService.getInstance().getTranslation("Search Done"))), event -> eventManagement.putEvent(new ShowTaskBarMessageEvent(TranslateService.getInstance().getTranslation("Warning"), TranslateService.getInstance().getTranslation("Search Failed"))));
         });
     }
@@ -2073,7 +2073,7 @@ public class SettingsFrame {
             JScrollPane pane = new JScrollPane(listDisksTmp);
             Dimension dimension = new Dimension(400, 200);
             pane.setPreferredSize(dimension);
-            if (JOptionPane.showConfirmDialog(frame, pane, TRANSLATE_SERVICE.getTranslation("Select disk"), JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+            if (JOptionPane.showConfirmDialog(frame, pane, translateService.getTranslation("Select disk"), JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
                 List<Object> selectedValuesList = listDisksTmp.getSelectedValuesList();
                 for (Object obj : selectedValuesList) {
                     diskSet.add((String) obj);
@@ -2095,7 +2095,7 @@ public class SettingsFrame {
 
     private void addButtonDeleteAllSuffixListener() {
         buttonDeleteAllSuffix.addActionListener(e -> {
-            int ret = JOptionPane.showConfirmDialog(frame, TRANSLATE_SERVICE.getTranslation("Are you sure to delete all the suffixes") + "?");
+            int ret = JOptionPane.showConfirmDialog(frame, translateService.getTranslation("Are you sure to delete all the suffixes") + "?");
             if (ret == JOptionPane.YES_OPTION) {
                 suffixMap.clear();
                 isSuffixChanged = true;
@@ -2108,7 +2108,7 @@ public class SettingsFrame {
     }
 
     private void showOnTabbedPane(String tabName) {
-        String title = TRANSLATE_SERVICE.getTranslation(getTabTitle(tabName));
+        String title = translateService.getTranslation(getTabTitle(tabName));
         showOnTabbedPane(tabName, title);
     }
 
@@ -2133,35 +2133,33 @@ public class SettingsFrame {
             DefaultMutableTreeNode note = (DefaultMutableTreeNode) treeSettings.getLastSelectedPathComponent();
             if (note != null) {
                 String name = note.toString();
-                if (TRANSLATE_SERVICE.getTranslation("General").equals(name)) {
+                if (translateService.getTranslation("General").equals(name)) {
                     showOnTabbedPane("tabGeneral");
-                } else if (TRANSLATE_SERVICE.getTranslation("Interface").equals(name)) {
+                } else if (translateService.getTranslation("Interface").equals(name)) {
                     showOnTabbedPane("tabSearchBarSettings");
-                } else if (TRANSLATE_SERVICE.getTranslation("Language").equals(name)) {
+                } else if (translateService.getTranslation("Language").equals(name)) {
                     showOnTabbedPane("tabLanguage");
-                } else if (TRANSLATE_SERVICE.getTranslation("Suffix priority").equals(name)) {
+                } else if (translateService.getTranslation("Suffix priority").equals(name)) {
                     showOnTabbedPane("tabModifyPriority");
-                } else if (TRANSLATE_SERVICE.getTranslation("Search settings").equals(name)) {
+                } else if (translateService.getTranslation("Search settings").equals(name)) {
                     showOnTabbedPane("tabSearchSettings");
-                } else if (TRANSLATE_SERVICE.getTranslation("Proxy settings").equals(name)) {
+                } else if (translateService.getTranslation("Proxy settings").equals(name)) {
                     showOnTabbedPane("tabProxy");
-                } else if (TRANSLATE_SERVICE.getTranslation("Hotkey settings").equals(name)) {
+                } else if (translateService.getTranslation("Hotkey settings").equals(name)) {
                     showOnTabbedPane("tabHotKey");
-                } else if (TRANSLATE_SERVICE.getTranslation("Cache").equals(name)) {
+                } else if (translateService.getTranslation("Cache").equals(name)) {
                     showOnTabbedPane("tabCache");
-                } else if (TRANSLATE_SERVICE.getTranslation("My commands").equals(name)) {
+                } else if (translateService.getTranslation("My commands").equals(name)) {
                     showOnTabbedPane("tabCommands");
-                } else if (TRANSLATE_SERVICE.getTranslation("Plugins").equals(name)) {
+                } else if (translateService.getTranslation("Plugins").equals(name)) {
                     showOnTabbedPane("tabPlugin");
-                } else if (TRANSLATE_SERVICE.getTranslation("About").equals(name)) {
+                } else if (translateService.getTranslation("About").equals(name)) {
                     showOnTabbedPane("tabAbout");
-                } else if (TRANSLATE_SERVICE.getTranslation("Index").equals(name)) {
+                } else if (translateService.getTranslation("Index").equals(name)) {
                     showOnTabbedPane("tabIndex");
-                } else {
-                    showOnTabbedPane("tabGeneral");
                 }
             } else {
-                showOnTabbedPane("tabGeneral", TRANSLATE_SERVICE.getTranslation("General"));
+                showOnTabbedPane("tabGeneral", translateService.getTranslation("General"));
             }
         });
     }
@@ -2199,20 +2197,20 @@ public class SettingsFrame {
     private boolean checkSuffixAndPriority(String suffix, String priority, StringBuilder errMsg, boolean isSuffixChanged, boolean isPriorityChanged) {
         if (isSuffixChanged) {
             if (isSuffixRepeat(suffix)) {
-                errMsg.append(TRANSLATE_SERVICE.getTranslation("Duplicate suffix, please check")).append("\n");
+                errMsg.append(translateService.getTranslation("Duplicate suffix, please check")).append("\n");
             }
         }
         if (isPriorityChanged) {
             try {
                 int _p = Integer.parseInt(priority);
                 if (_p <= 0) {
-                    errMsg.append(TRANSLATE_SERVICE.getTranslation("Priority num must be positive")).append("\n");
+                    errMsg.append(translateService.getTranslation("Priority num must be positive")).append("\n");
                 }
                 if (isPriorityRepeat(_p)) {
-                    errMsg.append(TRANSLATE_SERVICE.getTranslation("Duplicate priority num, please check")).append("\n");
+                    errMsg.append(translateService.getTranslation("Duplicate priority num, please check")).append("\n");
                 }
             } catch (NumberFormatException e) {
-                errMsg.append(TRANSLATE_SERVICE.getTranslation("What you entered is not a number, please try again")).append("\n");
+                errMsg.append(translateService.getTranslation("What you entered is not a number, please try again")).append("\n");
             }
         }
         return errMsg.toString().isEmpty();
@@ -2332,7 +2330,7 @@ public class SettingsFrame {
             if (current.isEmpty() || "defaultPriority".equals(current) || "dirPriority".equals(current)) {
                 return;
             }
-            int ret = JOptionPane.showConfirmDialog(frame, TRANSLATE_SERVICE.getTranslation("Do you sure want to delete this suffix") + "  --  " + current + "?");
+            int ret = JOptionPane.showConfirmDialog(frame, translateService.getTranslation("Do you sure want to delete this suffix") + "  --  " + current + "?");
             if (ret == JOptionPane.YES_OPTION) {
                 int rowNum = tableSuffix.getSelectedRow();
                 if (rowNum != -1) {
@@ -2348,8 +2346,8 @@ public class SettingsFrame {
 
     private void addButtonAddSuffixListener() {
         JPanel panel = new JPanel();
-        JLabel labelSuffix = new JLabel(TRANSLATE_SERVICE.getTranslation("Suffix") + ":");
-        JLabel labelNum = new JLabel(TRANSLATE_SERVICE.getTranslation("Priority num") + ":");
+        JLabel labelSuffix = new JLabel(translateService.getTranslation("Suffix") + ":");
+        JLabel labelNum = new JLabel(translateService.getTranslation("Priority num") + ":");
         JTextField suffixName = new JTextField();
         JTextField priorityNum = new JTextField();
 
@@ -2365,7 +2363,7 @@ public class SettingsFrame {
         panel.add(numBox);
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         buttonAddSuffix.addActionListener(e -> {
-            int ret = JOptionPane.showConfirmDialog(frame, panel, TRANSLATE_SERVICE.getTranslation("Add"), JOptionPane.YES_NO_OPTION);
+            int ret = JOptionPane.showConfirmDialog(frame, panel, translateService.getTranslation("Add"), JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 String suffix = suffixName.getText();
                 String priorityNumTmp = priorityNum.getText();
@@ -2397,11 +2395,11 @@ public class SettingsFrame {
         while (!isCheckDone.get()) {
             if (System.currentTimeMillis() - startCheck > timeout) {
                 checkUpdateThread.interrupt();
-                JOptionPane.showMessageDialog(frame, TRANSLATE_SERVICE.getTranslation("Check update failed"));
+                JOptionPane.showMessageDialog(frame, translateService.getTranslation("Check update failed"));
                 return false;
             }
             if (!checkUpdateThread.isAlive() && !isCheckDone.get()) {
-                JOptionPane.showMessageDialog(frame, TRANSLATE_SERVICE.getTranslation("Check update failed"));
+                JOptionPane.showMessageDialog(frame, translateService.getTranslation("Check update failed"));
                 return false;
             }
             if (!eventManagement.notMainExit()) {
@@ -2467,12 +2465,12 @@ public class SettingsFrame {
                         return;
                     }
                     if (isVersionLatest.get()) {
-                        JOptionPane.showMessageDialog(frame, TRANSLATE_SERVICE.getTranslation("Latest version:") + plugin.getVersion() + "\n" + TRANSLATE_SERVICE.getTranslation("The current version is the latest"));
+                        JOptionPane.showMessageDialog(frame, translateService.getTranslation("Latest version:") + plugin.getVersion() + "\n" + translateService.getTranslation("The current version is the latest"));
                         return;
                     }
                     if (!isSkipConfirm.get()) {
                         eventManagement.putEvent(new AddPluginsCanUpdateEvent(pluginName));
-                        int ret = JOptionPane.showConfirmDialog(frame, TRANSLATE_SERVICE.getTranslation("New version available, do you want to update?"));
+                        int ret = JOptionPane.showConfirmDialog(frame, translateService.getTranslation("New version available, do you want to update?"));
                         if (ret != JOptionPane.YES_OPTION) {
                             return;
                         }
@@ -2517,8 +2515,8 @@ public class SettingsFrame {
         labelPluginNum.setText(String.valueOf(PluginService.getInstance().getInstalledPluginNum()));
         ImageIcon imageIcon = new ImageIcon(Objects.requireNonNull(SettingsFrame.class.getResource("/icons/frame.png")));
         labelIcon.setIcon(imageIcon);
-        labelVersion.setText(TRANSLATE_SERVICE.getTranslation("Current Version:") + Constants.version);
-        labelCurrentCacheNum.setText(TRANSLATE_SERVICE.getTranslation("Current Caches Num:") + DatabaseService.getInstance().getDatabaseCacheNum());
+        labelVersion.setText(translateService.getTranslation("Current Version:") + Constants.version);
+        labelCurrentCacheNum.setText(translateService.getTranslation("Current Caches Num:") + DatabaseService.getInstance().getDatabaseCacheNum());
     }
 
     /**
@@ -2626,7 +2624,7 @@ public class SettingsFrame {
         tableSuffix.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         DefaultTableModel tableModel = (DefaultTableModel) tableSuffix.getModel();    //获得表格模型
         tableModel.setRowCount(0);
-        tableModel.setColumnIdentifiers(new String[]{TRANSLATE_SERVICE.getTranslation("suffix"), TRANSLATE_SERVICE.getTranslation("priority")});
+        tableModel.setColumnIdentifiers(new String[]{translateService.getTranslation("suffix"), translateService.getTranslation("priority")});
         LinkedList<Integer> tmpKeySet = new LinkedList<>(suffixMap.values());
         tmpKeySet.sort(Integer::compare);
         for (int each : tmpKeySet) {
@@ -2674,7 +2672,7 @@ public class SettingsFrame {
         checkBoxLoseFocus.setSelected(configs.isLoseFocusClose());
         int startup = hasStartup();
         if (startup == 1) {
-            eventManagement.putEvent(new ShowTaskBarMessageEvent(TRANSLATE_SERVICE.getTranslation("Warning"), TRANSLATE_SERVICE.getTranslation("The startup path is invalid")));
+            eventManagement.putEvent(new ShowTaskBarMessageEvent(translateService.getTranslation("Warning"), translateService.getTranslation("The startup path is invalid")));
         }
         checkBoxAddToStartup.setSelected(startup == 0);
         checkBoxAdmin.setSelected(configs.isDefaultAdmin());
@@ -2691,8 +2689,8 @@ public class SettingsFrame {
      */
     private void setListGui() {
         listCmds.setListData(allConfigs.getCmdSet().toArray());
-        listLanguage.setListData(TRANSLATE_SERVICE.getLanguageArray());
-        listLanguage.setSelectedValue(TRANSLATE_SERVICE.getLanguage(), true);
+        listLanguage.setListData(translateService.getLanguageArray());
+        listLanguage.setSelectedValue(translateService.getLanguage(), true);
         Object[] plugins = PluginService.getInstance().getPluginNameArray();
         listPlugins.setListData(plugins);
         listCache.setListData(cacheSet.toArray());
@@ -2721,7 +2719,7 @@ public class SettingsFrame {
         String longest = "";
         String realTitle;
         for (TabNameAndTitle each : tabComponentNameMap.keySet()) {
-            realTitle = TRANSLATE_SERVICE.getTranslation(each.title);
+            realTitle = translateService.getTranslation(each.title);
             if (longest.length() < realTitle.length()) {
                 longest = realTitle;
             }
@@ -2741,7 +2739,7 @@ public class SettingsFrame {
         treeSettings.setMaximumSize(treeSize);
         treeSettings.setMinimumSize(treeSize);
         treeSettings.setPreferredSize(treeSize);
-        Dimension tabbedPaneSize = new Dimension(Integer.parseInt(TRANSLATE_SERVICE.getFrameWidth()) - width, -1);
+        Dimension tabbedPaneSize = new Dimension(Integer.parseInt(translateService.getFrameWidth()) - width, -1);
         tabbedPane.setMaximumSize(tabbedPaneSize);
         tabbedPane.setMinimumSize(tabbedPaneSize);
         tabbedPane.setPreferredSize(tabbedPaneSize);
@@ -2832,26 +2830,26 @@ public class SettingsFrame {
 
     private void initTreeSettings() {
         //todo 添加新tab后在这里注册
-        DefaultMutableTreeNode groupGeneral = new DefaultMutableTreeNode(TRANSLATE_SERVICE.getTranslation("General"));
-        groupGeneral.add(new DefaultMutableTreeNode(TRANSLATE_SERVICE.getTranslation("Interface")));
-        groupGeneral.add(new DefaultMutableTreeNode(TRANSLATE_SERVICE.getTranslation("Language")));
-        groupGeneral.add(new DefaultMutableTreeNode(TRANSLATE_SERVICE.getTranslation("Cache")));
+        DefaultMutableTreeNode groupGeneral = new DefaultMutableTreeNode(translateService.getTranslation("General"));
+        DefaultMutableTreeNode groupGuiSettings = new DefaultMutableTreeNode(translateService.getTranslation("GUI related settings"));
+        groupGuiSettings.add(new DefaultMutableTreeNode(translateService.getTranslation("Interface")));
+        groupGuiSettings.add(new DefaultMutableTreeNode(translateService.getTranslation("Language")));
 
-        DefaultMutableTreeNode groupSearchSettings = new DefaultMutableTreeNode(TRANSLATE_SERVICE.getTranslation("Search settings"));
-        groupSearchSettings.add(new DefaultMutableTreeNode(TRANSLATE_SERVICE.getTranslation("Suffix priority")));
-        groupSearchSettings.add(new DefaultMutableTreeNode(TRANSLATE_SERVICE.getTranslation("My commands")));
-        groupSearchSettings.add(new DefaultMutableTreeNode(TRANSLATE_SERVICE.getTranslation("Index")));
+        DefaultMutableTreeNode groupSearchSettings = new DefaultMutableTreeNode(translateService.getTranslation("Search related settings"));
+        groupSearchSettings.add(new DefaultMutableTreeNode(translateService.getTranslation("Search settings")));
+        groupSearchSettings.add(new DefaultMutableTreeNode(translateService.getTranslation("Cache")));
+        groupSearchSettings.add(new DefaultMutableTreeNode(translateService.getTranslation("Suffix priority")));
+        groupSearchSettings.add(new DefaultMutableTreeNode(translateService.getTranslation("My commands")));
+        groupSearchSettings.add(new DefaultMutableTreeNode(translateService.getTranslation("Index")));
 
-        DefaultMutableTreeNode groupProxy = new DefaultMutableTreeNode(TRANSLATE_SERVICE.getTranslation("Proxy settings"));
-
-        DefaultMutableTreeNode groupHotkey = new DefaultMutableTreeNode(TRANSLATE_SERVICE.getTranslation("Hotkey settings"));
-
-        DefaultMutableTreeNode groupPlugin = new DefaultMutableTreeNode(TRANSLATE_SERVICE.getTranslation("Plugins"));
-
-        DefaultMutableTreeNode groupAbout = new DefaultMutableTreeNode(TRANSLATE_SERVICE.getTranslation("About"));
+        DefaultMutableTreeNode groupProxy = new DefaultMutableTreeNode(translateService.getTranslation("Proxy settings"));
+        DefaultMutableTreeNode groupHotkey = new DefaultMutableTreeNode(translateService.getTranslation("Hotkey settings"));
+        DefaultMutableTreeNode groupPlugin = new DefaultMutableTreeNode(translateService.getTranslation("Plugins"));
+        DefaultMutableTreeNode groupAbout = new DefaultMutableTreeNode(translateService.getTranslation("About"));
 
         DefaultMutableTreeNode root = new DefaultMutableTreeNode();
         root.add(groupGeneral);
+        root.add(groupGuiSettings);
         root.add(groupSearchSettings);
         root.add(groupProxy);
         root.add(groupHotkey);
@@ -2995,98 +2993,98 @@ public class SettingsFrame {
     }
 
     private void translateLabels() {
-        labelMaxCacheNum.setText(TRANSLATE_SERVICE.getTranslation("Set the maximum number of caches:"));
-        labelUpdateInterval.setText(TRANSLATE_SERVICE.getTranslation("File update detection interval:"));
-        labelSecond.setText(TRANSLATE_SERVICE.getTranslation("Seconds"));
-        labeltipPriorityFolder.setText(TRANSLATE_SERVICE.getTranslation("Priority search folder location (double-click to clear):"));
-        labelConstIgnorePathTip.setText(TRANSLATE_SERVICE.getTranslation("Separate different paths with commas, and ignore C:\\Windows by default"));
-        labelSetIgnorePathTip.setText(TRANSLATE_SERVICE.getTranslation("Set ignore folder:"));
-        labelTransparency.setText(TRANSLATE_SERVICE.getTranslation("Search bar opacity:"));
-        labelOpenSearchBarHotKey.setText(TRANSLATE_SERVICE.getTranslation("Open search bar:"));
-        labelRunAsAdminHotKey.setText(TRANSLATE_SERVICE.getTranslation("Run as administrator:"));
-        labelOpenFolderHotKey.setText(TRANSLATE_SERVICE.getTranslation("Open the parent folder:"));
-        labelCopyPathHotKey.setText(TRANSLATE_SERVICE.getTranslation("Copy path:"));
-        labelCmdTip2.setText(TRANSLATE_SERVICE.getTranslation("You can add custom commands here. After adding, " + "you can enter \": + your set identifier\" in the search box to quickly open"));
-        labelColorTip.setText(TRANSLATE_SERVICE.getTranslation("Please enter the hexadecimal value of RGB color"));
-        labelSearchBarColor.setText(TRANSLATE_SERVICE.getTranslation("Search bar Color:"));
-        labelLabelColor.setText(TRANSLATE_SERVICE.getTranslation("Chosen label color:"));
-        labelFontColor.setText(TRANSLATE_SERVICE.getTranslation("Chosen label font Color:"));
-        labelDefaultColor.setText(TRANSLATE_SERVICE.getTranslation("Default background Color:"));
-        labelNotChosenFontColor.setText(TRANSLATE_SERVICE.getTranslation("Unchosen label font Color:"));
-        labelGitHubTip.setText(TRANSLATE_SERVICE.getTranslation("This is an open source software,GitHub:"));
-        labelGithubIssue.setText(TRANSLATE_SERVICE.getTranslation("If you find a bug or have some suggestions, welcome to GitHub for feedback"));
-        labelDescription.setText(TRANSLATE_SERVICE.getTranslation("Thanks for the following project"));
-        labelTranslationTip.setText(TRANSLATE_SERVICE.getTranslation("The translation might not be 100% accurate"));
-        labelLanguageChooseTip.setText(TRANSLATE_SERVICE.getTranslation("Choose a language"));
-        labelVersion.setText(TRANSLATE_SERVICE.getTranslation("Current Version:") + Constants.version);
-        labelInstalledPluginNum.setText(TRANSLATE_SERVICE.getTranslation("Installed plugins num:"));
-        labelVacuumTip.setText(TRANSLATE_SERVICE.getTranslation("Click to organize the database and reduce the size of the database"));
-        labelVacuumTip2.setText(TRANSLATE_SERVICE.getTranslation("but it will consume a lot of time."));
-        labelAddress.setText(TRANSLATE_SERVICE.getTranslation("Address"));
-        labelPort.setText(TRANSLATE_SERVICE.getTranslation("Port"));
-        labelUserName.setText(TRANSLATE_SERVICE.getTranslation("User name"));
-        labelPassword.setText(TRANSLATE_SERVICE.getTranslation("Password"));
-        labelProxyTip.setText(TRANSLATE_SERVICE.getTranslation("If you need a proxy to access the Internet, You can add a proxy here."));
-        labelCacheSettings.setText(TRANSLATE_SERVICE.getTranslation("Cache Settings"));
-        labelCacheTip.setText(TRANSLATE_SERVICE.getTranslation("You can edit the saved caches here"));
-        labelCacheTip2.setText(TRANSLATE_SERVICE.getTranslation("The cache is automatically generated " + "by the software and will be displayed first when searching."));
-        labelSearchBarFontColor.setText(TRANSLATE_SERVICE.getTranslation("SearchBar Font Color:"));
-        labelBorderColor.setText(TRANSLATE_SERVICE.getTranslation("Border Color:"));
-        labelCurrentCacheNum.setText(TRANSLATE_SERVICE.getTranslation("Current Caches Num:") + DatabaseService.getInstance().getDatabaseCacheNum());
-        labelUninstallPluginTip.setText(TRANSLATE_SERVICE.getTranslation("If you need to delete a plug-in, just delete it under the \"plugins\" folder in the software directory."));
-        labelUninstallPluginTip2.setText(TRANSLATE_SERVICE.getTranslation("Tip:"));
-        chooseUpdateAddressLabel.setText(TRANSLATE_SERVICE.getTranslation("Choose update address"));
-        labelSearchCommand.setText(TRANSLATE_SERVICE.getTranslation("Search"));
-        labelSuffixTip.setText(TRANSLATE_SERVICE.getTranslation("Modifying the suffix priority requires rebuilding the index (input \":update\") to take effect"));
-        labelIndexTip.setText(TRANSLATE_SERVICE.getTranslation("You can rebuild the disk index here"));
-        labelIndexChooseDisk.setText(TRANSLATE_SERVICE.getTranslation("The disks listed below will be indexed"));
-        labelTipNTFSTip.setText(TRANSLATE_SERVICE.getTranslation("Only supports NTFS format disks"));
-        labelLocalDiskTip.setText(TRANSLATE_SERVICE.getTranslation("Only the disks on this machine are listed below, click \"Add\" button to add a removable disk"));
-        labelBorderThickness.setText(TRANSLATE_SERVICE.getTranslation("Border Thickness"));
-        labelBorderType.setText(TRANSLATE_SERVICE.getTranslation("Border Type"));
-        labelRoundRadius.setText(TRANSLATE_SERVICE.getTranslation("Round rectangle radius"));
-        labelSearchThread.setText(TRANSLATE_SERVICE.getTranslation("Number of search threads"));
+        labelMaxCacheNum.setText(translateService.getTranslation("Set the maximum number of caches:"));
+        labelUpdateInterval.setText(translateService.getTranslation("File update detection interval:"));
+        labelSecond.setText(translateService.getTranslation("Seconds"));
+        labeltipPriorityFolder.setText(translateService.getTranslation("Priority search folder location (double-click to clear):"));
+        labelConstIgnorePathTip.setText(translateService.getTranslation("Separate different paths with commas, and ignore C:\\Windows by default"));
+        labelSetIgnorePathTip.setText(translateService.getTranslation("Set ignore folder:"));
+        labelTransparency.setText(translateService.getTranslation("Search bar opacity:"));
+        labelOpenSearchBarHotKey.setText(translateService.getTranslation("Open search bar:"));
+        labelRunAsAdminHotKey.setText(translateService.getTranslation("Run as administrator:"));
+        labelOpenFolderHotKey.setText(translateService.getTranslation("Open the parent folder:"));
+        labelCopyPathHotKey.setText(translateService.getTranslation("Copy path:"));
+        labelCmdTip2.setText(translateService.getTranslation("You can add custom commands here. After adding, " + "you can enter \": + your set identifier\" in the search box to quickly open"));
+        labelColorTip.setText(translateService.getTranslation("Please enter the hexadecimal value of RGB color"));
+        labelSearchBarColor.setText(translateService.getTranslation("Search bar Color:"));
+        labelLabelColor.setText(translateService.getTranslation("Chosen label color:"));
+        labelFontColor.setText(translateService.getTranslation("Chosen label font Color:"));
+        labelDefaultColor.setText(translateService.getTranslation("Default background Color:"));
+        labelNotChosenFontColor.setText(translateService.getTranslation("Unchosen label font Color:"));
+        labelGitHubTip.setText(translateService.getTranslation("This is an open source software,GitHub:"));
+        labelGithubIssue.setText(translateService.getTranslation("If you find a bug or have some suggestions, welcome to GitHub for feedback"));
+        labelDescription.setText(translateService.getTranslation("Thanks for the following project"));
+        labelTranslationTip.setText(translateService.getTranslation("The translation might not be 100% accurate"));
+        labelLanguageChooseTip.setText(translateService.getTranslation("Choose a language"));
+        labelVersion.setText(translateService.getTranslation("Current Version:") + Constants.version);
+        labelInstalledPluginNum.setText(translateService.getTranslation("Installed plugins num:"));
+        labelVacuumTip.setText(translateService.getTranslation("Click to organize the database and reduce the size of the database"));
+        labelVacuumTip2.setText(translateService.getTranslation("but it will consume a lot of time."));
+        labelAddress.setText(translateService.getTranslation("Address"));
+        labelPort.setText(translateService.getTranslation("Port"));
+        labelUserName.setText(translateService.getTranslation("User name"));
+        labelPassword.setText(translateService.getTranslation("Password"));
+        labelProxyTip.setText(translateService.getTranslation("If you need a proxy to access the Internet, You can add a proxy here."));
+        labelCacheSettings.setText(translateService.getTranslation("Cache Settings"));
+        labelCacheTip.setText(translateService.getTranslation("You can edit the saved caches here"));
+        labelCacheTip2.setText(translateService.getTranslation("The cache is automatically generated " + "by the software and will be displayed first when searching."));
+        labelSearchBarFontColor.setText(translateService.getTranslation("SearchBar Font Color:"));
+        labelBorderColor.setText(translateService.getTranslation("Border Color:"));
+        labelCurrentCacheNum.setText(translateService.getTranslation("Current Caches Num:") + DatabaseService.getInstance().getDatabaseCacheNum());
+        labelUninstallPluginTip.setText(translateService.getTranslation("If you need to delete a plug-in, just delete it under the \"plugins\" folder in the software directory."));
+        labelUninstallPluginTip2.setText(translateService.getTranslation("Tip:"));
+        chooseUpdateAddressLabel.setText(translateService.getTranslation("Choose update address"));
+        labelSearchCommand.setText(translateService.getTranslation("Search"));
+        labelSuffixTip.setText(translateService.getTranslation("Modifying the suffix priority requires rebuilding the index (input \":update\") to take effect"));
+        labelIndexTip.setText(translateService.getTranslation("You can rebuild the disk index here"));
+        labelIndexChooseDisk.setText(translateService.getTranslation("The disks listed below will be indexed"));
+        labelTipNTFSTip.setText(translateService.getTranslation("Only supports NTFS format disks"));
+        labelLocalDiskTip.setText(translateService.getTranslation("Only the disks on this machine are listed below, click \"Add\" button to add a removable disk"));
+        labelBorderThickness.setText(translateService.getTranslation("Border Thickness"));
+        labelBorderType.setText(translateService.getTranslation("Border Type"));
+        labelRoundRadius.setText(translateService.getTranslation("Round rectangle radius"));
+        labelSearchThread.setText(translateService.getTranslation("Number of search threads"));
     }
 
     private void translateCheckbox() {
-        checkBoxAddToStartup.setText(TRANSLATE_SERVICE.getTranslation("Add to startup"));
-        checkBoxLoseFocus.setText(TRANSLATE_SERVICE.getTranslation("Close search bar when focus lost"));
-        checkBoxAdmin.setText(TRANSLATE_SERVICE.getTranslation("Open other programs as an administrator " + "(provided that the software has privileges)"));
-        checkBoxIsShowTipOnCreatingLnk.setText(TRANSLATE_SERVICE.getTranslation("Show tip on creating shortcut"));
-        checkBoxResponseCtrl.setText(TRANSLATE_SERVICE.getTranslation("Double-click \"Ctrl\" to open the search bar"));
-        checkBoxCheckUpdate.setText(TRANSLATE_SERVICE.getTranslation("Check for update at startup"));
-        checkBoxIsAttachExplorer.setText(TRANSLATE_SERVICE.getTranslation("Attach to explorer"));
-        checkBoxEnableCuda.setText(TRANSLATE_SERVICE.getTranslation("Enable GPU acceleration"));
+        checkBoxAddToStartup.setText(translateService.getTranslation("Add to startup"));
+        checkBoxLoseFocus.setText(translateService.getTranslation("Close search bar when focus lost"));
+        checkBoxAdmin.setText(translateService.getTranslation("Open other programs as an administrator " + "(provided that the software has privileges)"));
+        checkBoxIsShowTipOnCreatingLnk.setText(translateService.getTranslation("Show tip on creating shortcut"));
+        checkBoxResponseCtrl.setText(translateService.getTranslation("Double-click \"Ctrl\" to open the search bar"));
+        checkBoxCheckUpdate.setText(translateService.getTranslation("Check for update at startup"));
+        checkBoxIsAttachExplorer.setText(translateService.getTranslation("Attach to explorer"));
+        checkBoxEnableCuda.setText(translateService.getTranslation("Enable GPU acceleration"));
     }
 
     private void translateButtons() {
-        buttonSaveAndRemoveDesktop.setText(TRANSLATE_SERVICE.getTranslation("Clear desktop"));
-        buttonSaveAndRemoveDesktop.setToolTipText(TRANSLATE_SERVICE.getTranslation("Backup and remove all desktop files"));
-        ButtonPriorityFolder.setText(TRANSLATE_SERVICE.getTranslation("Choose"));
-        buttonChooseFile.setText(TRANSLATE_SERVICE.getTranslation("Choose"));
-        buttonAddCMD.setText(TRANSLATE_SERVICE.getTranslation("Add"));
-        buttonDelCmd.setText(TRANSLATE_SERVICE.getTranslation("Delete"));
-        buttonResetColor.setText(TRANSLATE_SERVICE.getTranslation("Reset to default"));
-        buttonCheckUpdate.setText(TRANSLATE_SERVICE.getTranslation("Check for update"));
-        buttonUpdatePlugin.setText(TRANSLATE_SERVICE.getTranslation("Check for update"));
-        buttonPluginMarket.setText(TRANSLATE_SERVICE.getTranslation("Plugin Market"));
-        buttonDeleteCache.setText(TRANSLATE_SERVICE.getTranslation("Delete cache"));
-        buttonDeleteAllCache.setText(TRANSLATE_SERVICE.getTranslation("Delete all"));
-        buttonChangeTheme.setText(TRANSLATE_SERVICE.getTranslation("change theme"));
-        buttonVacuum.setText(TRANSLATE_SERVICE.getTranslation("Optimize database"));
-        buttonPreviewColor.setText(TRANSLATE_SERVICE.getTranslation("Preview"));
-        buttonClosePreview.setText(TRANSLATE_SERVICE.getTranslation("Close preview window"));
-        buttonAddSuffix.setText(TRANSLATE_SERVICE.getTranslation("Add"));
-        buttonDeleteSuffix.setText(TRANSLATE_SERVICE.getTranslation("Delete"));
-        buttonDeleteAllSuffix.setText(TRANSLATE_SERVICE.getTranslation("Delete all"));
-        buttonRebuildIndex.setText(TRANSLATE_SERVICE.getTranslation("Rebuild"));
-        buttonAddNewDisk.setText(TRANSLATE_SERVICE.getTranslation("Add"));
-        buttonDeleteDisk.setText(TRANSLATE_SERVICE.getTranslation("Delete"));
+        buttonSaveAndRemoveDesktop.setText(translateService.getTranslation("Clear desktop"));
+        buttonSaveAndRemoveDesktop.setToolTipText(translateService.getTranslation("Backup and remove all desktop files"));
+        ButtonPriorityFolder.setText(translateService.getTranslation("Choose"));
+        buttonChooseFile.setText(translateService.getTranslation("Choose"));
+        buttonAddCMD.setText(translateService.getTranslation("Add"));
+        buttonDelCmd.setText(translateService.getTranslation("Delete"));
+        buttonResetColor.setText(translateService.getTranslation("Reset to default"));
+        buttonCheckUpdate.setText(translateService.getTranslation("Check for update"));
+        buttonUpdatePlugin.setText(translateService.getTranslation("Check for update"));
+        buttonPluginMarket.setText(translateService.getTranslation("Plugin Market"));
+        buttonDeleteCache.setText(translateService.getTranslation("Delete cache"));
+        buttonDeleteAllCache.setText(translateService.getTranslation("Delete all"));
+        buttonChangeTheme.setText(translateService.getTranslation("change theme"));
+        buttonVacuum.setText(translateService.getTranslation("Optimize database"));
+        buttonPreviewColor.setText(translateService.getTranslation("Preview"));
+        buttonClosePreview.setText(translateService.getTranslation("Close preview window"));
+        buttonAddSuffix.setText(translateService.getTranslation("Add"));
+        buttonDeleteSuffix.setText(translateService.getTranslation("Delete"));
+        buttonDeleteAllSuffix.setText(translateService.getTranslation("Delete all"));
+        buttonRebuildIndex.setText(translateService.getTranslation("Rebuild"));
+        buttonAddNewDisk.setText(translateService.getTranslation("Add"));
+        buttonDeleteDisk.setText(translateService.getTranslation("Delete"));
     }
 
     private void translateRadioButtons() {
-        radioButtonNoProxy.setText(TRANSLATE_SERVICE.getTranslation("No proxy"));
-        radioButtonUseProxy.setText(TRANSLATE_SERVICE.getTranslation("Configure proxy"));
+        radioButtonNoProxy.setText(translateService.getTranslation("No proxy"));
+        radioButtonUseProxy.setText(translateService.getTranslation("Configure proxy"));
     }
 
     private void translate() {
@@ -3095,7 +3093,7 @@ public class SettingsFrame {
         translateCheckbox();
         translateButtons();
         translateRadioButtons();
-        frame.setTitle(TRANSLATE_SERVICE.getTranslation("Settings"));
+        frame.setTitle(translateService.getTranslation("Settings"));
     }
 
     private boolean isRepeatCommand(String name) {
@@ -3186,8 +3184,8 @@ public class SettingsFrame {
         double dpi = DpiUtil.getDpi();
         int width, height;
         try {
-            width = Integer.parseInt(TRANSLATE_SERVICE.getFrameWidth());
-            height = Integer.parseInt(TRANSLATE_SERVICE.getFrameHeight());
+            width = Integer.parseInt(translateService.getFrameWidth());
+            height = Integer.parseInt(translateService.getFrameHeight());
         } catch (NumberFormatException e) {
             e.printStackTrace();
             width = (int) (1000 / dpi);
@@ -3208,32 +3206,32 @@ public class SettingsFrame {
 
     private void checkRoundRadius(StringBuilder stringBuilder) {
         if (!canParseDouble(textFieldRoundRadius.getText(), 0, 100)) {
-            stringBuilder.append(TRANSLATE_SERVICE.getTranslation("Round rectangle radius is wrong, please change"));
+            stringBuilder.append(translateService.getTranslation("Round rectangle radius is wrong, please change"));
         }
     }
 
     private void checkBorderThickness(StringBuilder stringBuilder) {
         if (!canParseInteger(textFieldBorderThickness.getText(), 1, 4)) {
-            stringBuilder.append(TRANSLATE_SERVICE.getTranslation("Border thickness is too large, please change"));
+            stringBuilder.append(translateService.getTranslation("Border thickness is too large, please change"));
         }
     }
 
     private void checkUpdateTimeLimit(StringBuilder strBuilder) {
         if (!canParseInteger(textFieldUpdateInterval.getText(), 1, 3600)) {
-            strBuilder.append(TRANSLATE_SERVICE.getTranslation("The file index update setting is wrong, please change")).append("\n");
+            strBuilder.append(translateService.getTranslation("The file index update setting is wrong, please change")).append("\n");
         }
     }
 
     private void checkCacheNumLimit(StringBuilder strBuilder) {
         if (!canParseInteger(textFieldCacheNum.getText(), 1, 3600)) {
-            strBuilder.append(TRANSLATE_SERVICE.getTranslation("The cache capacity is set incorrectly, please change")).append("\n");
+            strBuilder.append(translateService.getTranslation("The cache capacity is set incorrectly, please change")).append("\n");
         }
     }
 
     private void checkHotKey(StringBuilder strBuilder) {
         String tmp_hotkey = textFieldHotkey.getText();
         if (tmp_hotkey.length() < 5) {
-            strBuilder.append(TRANSLATE_SERVICE.getTranslation("Hotkey setting is wrong, please change")).append("\n");
+            strBuilder.append(translateService.getTranslation("Hotkey setting is wrong, please change")).append("\n");
         } else {
             CheckHotKeyAvailableEvent checkHotKeyAvailableEvent = new CheckHotKeyAvailableEvent(tmp_hotkey);
             eventManagement.putEvent(checkHotKeyAvailableEvent);
@@ -3241,12 +3239,12 @@ public class SettingsFrame {
             Optional<Boolean> isAvailable = checkHotKeyAvailableEvent.getReturnValue();
             isAvailable.ifPresent(ret -> {
                 if (!ret) {
-                    strBuilder.append(TRANSLATE_SERVICE.getTranslation("Hotkey setting is wrong, please change")).append("\n");
+                    strBuilder.append(translateService.getTranslation("Hotkey setting is wrong, please change")).append("\n");
                 }
             });
         }
         if (tmp_openLastFolderKeyCode == tmp_runAsAdminKeyCode || tmp_openLastFolderKeyCode == tmp_copyPathKeyCode || tmp_runAsAdminKeyCode == tmp_copyPathKeyCode) {
-            strBuilder.append(TRANSLATE_SERVICE.getTranslation("HotKey conflict")).append("\n");
+            strBuilder.append(translateService.getTranslation("HotKey conflict")).append("\n");
         }
     }
 
@@ -3258,55 +3256,55 @@ public class SettingsFrame {
             transparencyTemp = -1f;
         }
         if (transparencyTemp > 1 || transparencyTemp <= 0) {
-            strBuilder.append(TRANSLATE_SERVICE.getTranslation("Transparency setting error")).append("\n");
+            strBuilder.append(translateService.getTranslation("Transparency setting error")).append("\n");
         }
     }
 
     private void checkLabelColor(StringBuilder strBuilder) {
         if (!canParseToRGB(textFieldLabelColor.getText())) {
-            strBuilder.append(TRANSLATE_SERVICE.getTranslation("Chosen label color is set incorrectly")).append("\n");
+            strBuilder.append(translateService.getTranslation("Chosen label color is set incorrectly")).append("\n");
         }
     }
 
     private void checkLabelFontColorWithCoverage(StringBuilder strBuilder) {
         if (!canParseToRGB(textFieldFontColorWithCoverage.getText())) {
-            strBuilder.append(TRANSLATE_SERVICE.getTranslation("Chosen label font color is set incorrectly")).append("\n");
+            strBuilder.append(translateService.getTranslation("Chosen label font color is set incorrectly")).append("\n");
         }
     }
 
     private void checkDefaultBackgroundColor(StringBuilder strBuilder) {
         if (!canParseToRGB(textFieldBackgroundDefault.getText())) {
-            strBuilder.append(TRANSLATE_SERVICE.getTranslation("Incorrect default background color setting")).append("\n");
+            strBuilder.append(translateService.getTranslation("Incorrect default background color setting")).append("\n");
         }
     }
 
     private void checkBorderColor(StringBuilder stringBuilder) {
         if (!canParseToRGB(textFieldBorderColor.getText())) {
-            stringBuilder.append(TRANSLATE_SERVICE.getTranslation("Border color is set incorrectly")).append("\n");
+            stringBuilder.append(translateService.getTranslation("Border color is set incorrectly")).append("\n");
         }
     }
 
     private void checkLabelFontColor(StringBuilder strBuilder) {
         if (!canParseToRGB(textFieldFontColor.getText())) {
-            strBuilder.append(TRANSLATE_SERVICE.getTranslation("Unchosen label font color is set incorrectly")).append("\n");
+            strBuilder.append(translateService.getTranslation("Unchosen label font color is set incorrectly")).append("\n");
         }
     }
 
     private void checkSearchBarColor(StringBuilder strBuilder) {
         if (!canParseToRGB(textFieldSearchBarColor.getText())) {
-            strBuilder.append(TRANSLATE_SERVICE.getTranslation("The color of the search bar is set incorrectly")).append("\n");
+            strBuilder.append(translateService.getTranslation("The color of the search bar is set incorrectly")).append("\n");
         }
     }
 
     private void checkSearchBarFontColor(StringBuilder strBuilder) {
         if (!canParseToRGB(textFieldSearchBarFontColor.getText())) {
-            strBuilder.append(TRANSLATE_SERVICE.getTranslation("The font color of the search bar is set incorrectly")).append("\n");
+            strBuilder.append(translateService.getTranslation("The font color of the search bar is set incorrectly")).append("\n");
         }
     }
 
     private void checkProxy(StringBuilder strBuilder) {
         if (!canParseInteger(textFieldPort.getText(), 0, 65535)) {
-            strBuilder.append(TRANSLATE_SERVICE.getTranslation("Proxy port is set incorrectly.")).append("\n");
+            strBuilder.append(translateService.getTranslation("Proxy port is set incorrectly.")).append("\n");
         }
     }
 
@@ -3366,7 +3364,7 @@ public class SettingsFrame {
         configEntity.setRunAsAdminKeyCode(tmp_runAsAdminKeyCode);
         configEntity.setCopyPathKeyCode(tmp_copyPathKeyCode);
         configEntity.setSwingTheme(swingTheme);
-        configEntity.setLanguage(TRANSLATE_SERVICE.getLanguage());
+        configEntity.setLanguage(translateService.getLanguage());
         configEntity.setDoubleClickCtrlOpen(checkBoxResponseCtrl.isSelected());
         configEntity.setCheckUpdateStartup(checkBoxCheckUpdate.isSelected());
         configEntity.setDisks(parseDisk());
@@ -3408,8 +3406,8 @@ public class SettingsFrame {
         }
 
         //重新显示翻译GUI，采用等号比对内存地址，不是用equals
-        if (!(listLanguage.getSelectedValue() == TRANSLATE_SERVICE.getLanguage())) {
-            TRANSLATE_SERVICE.setLanguage((String) listLanguage.getSelectedValue());
+        if (!(listLanguage.getSelectedValue() == translateService.getLanguage())) {
+            translateService.setLanguage((String) listLanguage.getSelectedValue());
             translate();
         }
 
@@ -3455,7 +3453,7 @@ public class SettingsFrame {
                 outPut.close();
                 if (!result.toString().isEmpty()) {
                     checkBoxAddToStartup.setSelected(false);
-                    JOptionPane.showMessageDialog(frame, TRANSLATE_SERVICE.getTranslation("Add to startup failed, please try to run as administrator") + "\n" + result);
+                    JOptionPane.showMessageDialog(frame, translateService.getTranslation("Add to startup failed, please try to run as administrator") + "\n" + result);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -3473,7 +3471,7 @@ public class SettingsFrame {
                     }
                     if (!result.toString().isEmpty()) {
                         checkBoxAddToStartup.setSelected(true);
-                        JOptionPane.showMessageDialog(frame, TRANSLATE_SERVICE.getTranslation("Delete startup failed, please try to run as administrator"));
+                        JOptionPane.showMessageDialog(frame, translateService.getTranslation("Delete startup failed, please try to run as administrator"));
                     }
                 } catch (Exception e) {
                     e.printStackTrace();

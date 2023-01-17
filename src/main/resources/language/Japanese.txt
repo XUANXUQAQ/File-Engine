@@ -242,3 +242,5 @@ Currently selected=現在選択中
 Enable GPU acceleration=GPU アクセラレーションを有効にする
 Number of search threads=検索スレッド数
 Double-click shift to switch here=ここで切り替えるにはシフトをダブルクリックします
+GUI related settings=GUI関連の設定
+Search related settings=検索関連の設定

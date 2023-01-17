@@ -241,3 +241,5 @@ Number of current results=
 Currently selected=
 Enable GPU acceleration=
 Double-click shift to switch here=
+GUI related settings=
+Search related settings=
