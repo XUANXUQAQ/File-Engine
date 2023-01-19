@@ -877,24 +877,37 @@ public class DatabaseService {
                 String priority = getPriorityFromSelectSql(eachSql);
                 String key = diskStr + "," + tableName + "," + priority;
                 long matchedNum = 0;
-                if (isEnableGPUAccelerate && GPUAccelerator.INSTANCE.isMatchDone(key)) {
-                    //gpu搜索已经放入container，只需要获取matchedNum修改权重即可
-                    matchedNum = GPUAccelerator.INSTANCE.matchedNumber(key);
-                } else if (!searchTask.shouldStopSearch.get()) {
-                    int recordsNum = 1;
-                    if (databaseResultsCount.containsKey(key)) {
-                        recordsNum = databaseResultsCount.get(key).get();
-                    }
-                    if (recordsNum != 0) {
-                        if (stmt == null) {
+                boolean fallbackFlag = !isEnableGPUAccelerate;
+                if (isEnableGPUAccelerate) {
+                    if (GPUAccelerator.INSTANCE.isCacheExist(key)) {
+                        final long startWaiting = System.currentTimeMillis();
+                        while (!GPUAccelerator.INSTANCE.isMatchDone(key)) {
+                            if (System.currentTimeMillis() - startWaiting > 1000) {
+                                System.out.println("等待GPU搜索超时");
+                                fallbackFlag = true;
+                                break;
+                            }
                             try {
-                                stmt = SQLiteUtil.getStatement(diskStr);
-                            } catch (SQLException e) {
+                                TimeUnit.MILLISECONDS.sleep(1);
+                            } catch (InterruptedException e) {
                                 throw new RuntimeException(e);
                             }
                         }
-                        matchedNum = searchFromDatabaseOrCache(stmt, eachSql, key, priority, searchTask);
+                        //gpu搜索已经放入container，只需要获取matchedNum修改权重即可
+                        matchedNum = GPUAccelerator.INSTANCE.matchedNumber(key);
+                    } else {
+                        fallbackFlag = true;
                     }
+                }
+                if (fallbackFlag) {
+                    if (stmt == null) {
+                        try {
+                            stmt = SQLiteUtil.getStatement(diskStr);
+                        } catch (SQLException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                    matchedNum = fallbackSearchDatabase(searchTask, stmt, eachSql, priority, key);
                 }
                 final long weight = Math.min(matchedNum, 5);
                 if (weight != 0L) {
@@ -918,6 +931,18 @@ public class DatabaseService {
                 }
             }
         });
+    }
+
+    private long fallbackSearchDatabase(SearchTask searchTask, Statement stmt, String eachSql, String priority, String key) {
+        int recordsNum = 1;
+        long matchedNum = 0;
+        if (databaseResultsCount.containsKey(key)) {
+            recordsNum = databaseResultsCount.get(key).get();
+        }
+        if (recordsNum != 0) {
+            matchedNum = searchFromDatabaseOrCache(stmt, eachSql, key, priority, searchTask);
+        }
+        return matchedNum;
     }
 
     /**
