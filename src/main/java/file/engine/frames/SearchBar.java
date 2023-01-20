@@ -1019,7 +1019,7 @@ public class SearchBar {
                 if (JOptionPane.showConfirmDialog(null, translateService.getTranslation("Whether to view help"))
                         == JOptionPane.OK_OPTION) {
                     isTutorialMode.set(true);
-                    CachedThreadPoolUtil.getInstance().executeTask(() -> {
+                    ThreadPoolUtil.getInstance().executeTask(() -> {
                         showTutorial();
                         isTutorialMode.set(false);
                     });
@@ -1231,7 +1231,7 @@ public class SearchBar {
         AtomicBoolean shouldSaveMousePos = new AtomicBoolean(false);
         final int minMouseMoveDistance = label1.getHeight() / 3;
         //添加一个线程不断更新鼠标保存时间
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        ThreadPoolUtil.getInstance().executeTask(() -> {
             try {
                 EventManagement eventManagement = EventManagement.getInstance();
                 while (eventManagement.notMainExit()) {
@@ -2551,7 +2551,7 @@ public class SearchBar {
     private void addSearchWaiter(AtomicBoolean isWaiting) {
         if (!isWaiting.get()) {
             isWaiting.set(true);
-            CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            ThreadPoolUtil.getInstance().executeTask(() -> {
                 try {
                     DatabaseService databaseService = DatabaseService.getInstance();
                     while (isWaiting.get()) {
@@ -2717,7 +2717,7 @@ public class SearchBar {
             }
             eventManagement.putEvent(new ShowSearchBarEvent(false));
             if (searchBar.getSearchBarText() == null || searchBar.getSearchBarText().isEmpty()) {
-                CachedThreadPoolUtil.getInstance().executeTask(() -> {
+                ThreadPoolUtil.getInstance().executeTask(() -> {
                     try {
                         TimeUnit.MILLISECONDS.sleep(50);
                     } catch (InterruptedException e) {
@@ -2754,7 +2754,7 @@ public class SearchBar {
     }
 
     private void sendGetIconTaskThread() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        ThreadPoolUtil.getInstance().executeTask(() -> {
             final int labelNumber = 8;
             EventManagement eventManagement = EventManagement.getInstance();
             SearchBar searchBarInstance = getInstance();
@@ -2818,7 +2818,7 @@ public class SearchBar {
      * 自动切换显示模式线程
      */
     private void switchSearchBarShowingMode() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        ThreadPoolUtil.getInstance().executeTask(() -> {
             EventManagement eventManagement = EventManagement.getInstance();
             GetHandle.INSTANCE.start();
             AllConfigs allConfigs = AllConfigs.getInstance();
@@ -3079,7 +3079,7 @@ public class SearchBar {
      * 在鼠标滚轮往下滑的过程中，不检测鼠标指针的移动事件
      */
     private void lockMouseMotionThread() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        ThreadPoolUtil.getInstance().executeTask(() -> {
             //锁住MouseMotion检测，阻止同时发出两个动作
             try {
                 while (isVisible()) {
@@ -3150,7 +3150,7 @@ public class SearchBar {
      * 不断尝试显示结果
      */
     private void tryToShowRecordsThread() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        ThreadPoolUtil.getInstance().executeTask(() -> {
             //显示结果线程
             try {
                 clearAllLabels();
@@ -3217,7 +3217,7 @@ public class SearchBar {
     }
 
     private void addShowSearchStatusThread() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        ThreadPoolUtil.getInstance().executeTask(() -> {
             ArrayList<String> listResultsTemp = listResults;
             var currentTaskRef = currentSearchTask;
             if (currentTaskRef == null) {
@@ -3632,7 +3632,7 @@ public class SearchBar {
     }
 
     private void sendSignalAndShowCommandThread() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        ThreadPoolUtil.getInstance().executeTask(() -> {
             //缓存和常用文件夹搜索线程
             //每一次输入会更新一次startTime，该线程记录endTime
             EventManagement eventManagement = EventManagement.getInstance();
@@ -3646,18 +3646,16 @@ public class SearchBar {
                 if ((endTime - startTime > SEND_PREPARE_SEARCH_TIMEOUT) && isCudaSearchNotStarted.get() &&
                         startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
                     setSearchKeywordsAndSearchCase();
-                    CachedThreadPoolUtil.getInstance().executeTask(() -> {
-                        var resultsOptional = sendPrepareSearchEvent();
-                        resultsOptional.ifPresent(res -> {
-                            listResults = new ArrayList<>();
-                            currentSearchTask = res;
-                        });
+                    var resultsOptional = sendPrepareSearchEvent();
+                    resultsOptional.ifPresent(res -> {
+                        listResults = new ArrayList<>();
+                        currentSearchTask = res;
                     });
                 }
                 if ((endTime - startTime > SEND_START_SEARCH_TIMEOUT) && isSearchNotStarted.get() &&
                         startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
                     setSearchKeywordsAndSearchCase();
-                    CachedThreadPoolUtil.getInstance().executeTask(() -> {
+                    ThreadPoolUtil.getInstance().executeTask(() -> {
                         var resultsOptional = sendSearchEvent();
                         resultsOptional.ifPresent(res -> {
                             if (currentSearchTask != res) {
@@ -3830,7 +3828,7 @@ public class SearchBar {
         } catch (InterruptedException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        ThreadPoolUtil.getInstance().executeTask(() -> {
             if (isGrabFocus && !isSwitchToNormal) {
                 try {
                     TimeUnit.MILLISECONDS.sleep(250);
@@ -3841,7 +3839,7 @@ public class SearchBar {
             }
         });
         if (isBorderThreadNotExist.compareAndSet(true, false)) {
-            CachedThreadPoolUtil.getInstance().executeTask(this::setBorderOnVisible);
+            ThreadPoolUtil.getInstance().executeTask(this::setBorderOnVisible);
         }
         if (isTryToShowResultThreadNotExist.compareAndSet(true, false)) {
             tryToShowRecordsThread();
@@ -3850,7 +3848,7 @@ public class SearchBar {
             lockMouseMotionThread();
         }
         if (isMergeThreadExist.compareAndSet(false, true)) {
-            CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            ThreadPoolUtil.getInstance().executeTask(() -> {
                 try {
                     mergeResults();
                 } finally {

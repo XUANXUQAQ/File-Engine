@@ -16,7 +16,7 @@ import file.engine.event.handler.impl.plugin.*;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.services.TranslateService;
-import file.engine.utils.CachedThreadPoolUtil;
+import file.engine.utils.ThreadPoolUtil;
 import file.engine.utils.gson.GsonUtil;
 import file.engine.utils.system.properties.IsDebug;
 
@@ -57,7 +57,7 @@ public class PluginService {
      * 检查所有的插件，若有任务栏信息则显示
      */
     private void checkPluginThread() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        ThreadPoolUtil.getInstance().executeTask(() -> {
             String[] message;
             Plugin plugin;
             EventManagement eventManagement = EventManagement.getInstance();
@@ -494,8 +494,8 @@ public class PluginService {
      */
     private static void checkPluginVersion() {
         if (AllConfigs.getInstance().getConfigEntity().isCheckUpdateStartup()) {
-            CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
-            cachedThreadPoolUtil.executeTask(() -> {
+            ThreadPoolUtil threadPoolUtil = ThreadPoolUtil.getInstance();
+            threadPoolUtil.executeTask(() -> {
                 StringBuilder notLatestPluginsBuilder = new StringBuilder();
                 PluginService pluginService = PluginService.getInstance();
                 pluginService.checkAllPluginsVersion(notLatestPluginsBuilder);

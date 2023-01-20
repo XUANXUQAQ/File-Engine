@@ -4,7 +4,7 @@ import file.engine.annotation.EventRegister;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.impl.download.StartDownloadEvent;
 import file.engine.event.handler.impl.download.StopDownloadEvent;
-import file.engine.utils.CachedThreadPoolUtil;
+import file.engine.utils.ThreadPoolUtil;
 
 public class DownloadService {
     private static volatile DownloadService INSTANCE = null;
@@ -39,7 +39,7 @@ public class DownloadService {
      * 从网络Url中下载文件
      */
     private void downLoadFromUrl(DownloadManager downloadManager) {
-        CachedThreadPoolUtil.getInstance().executeTask(downloadManager::download);
+        ThreadPoolUtil.getInstance().executeTask(downloadManager::download);
     }
 
     /**

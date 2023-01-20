@@ -38,7 +38,7 @@ import file.engine.services.TranslateService;
 import file.engine.services.download.DownloadManager;
 import file.engine.services.plugin.system.Plugin;
 import file.engine.services.plugin.system.PluginService;
-import file.engine.utils.CachedThreadPoolUtil;
+import file.engine.utils.ThreadPoolUtil;
 import file.engine.utils.DpiUtil;
 import file.engine.utils.RegexUtil;
 import file.engine.utils.StartupUtil;
@@ -91,7 +91,7 @@ public class SettingsFrame {
     private static final TranslateService translateService = TranslateService.getInstance();
     private static final EventManagement eventManagement = EventManagement.getInstance();
     private static final AllConfigs allConfigs = AllConfigs.getInstance();
-    private static final CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+    private static final ThreadPoolUtil THREAD_POOL_UTIL = ThreadPoolUtil.getInstance();
     private final HashMap<TabNameAndTitle, Component> tabComponentNameMap = new HashMap<>();
     private Map<String, String> cudaDeviceMap = new HashMap<>();
     private HashMap<String, Integer> suffixMap;
@@ -380,7 +380,7 @@ public class SettingsFrame {
             }
             int isConfirmed = JOptionPane.showConfirmDialog(frame, translateService.getTranslation("Whether to remove and backup all files on the desktop," + "they will be in the program's Files folder, which may take a few minutes"));
             if (isConfirmed == JOptionPane.YES_OPTION) {
-                Future<Boolean> future = cachedThreadPoolUtil.executeTask(MoveDesktopFilesUtil::start, true);
+                Future<Boolean> future = THREAD_POOL_UTIL.executeTask(MoveDesktopFilesUtil::start, true);
                 try {
                     if (future == null) {
                         return;
@@ -639,7 +639,7 @@ public class SettingsFrame {
                         downloadManager.newJar = new DownloadManager((String) updateInfo.get("url64"), Constants.FILE_NAME, new File("tmp").getAbsolutePath());
                         downloadManager.newLauncher = new DownloadManager((String) updateInfo.get("urlLauncher"), Constants.LAUNCH_WRAPPER_NAME, new File("tmp").getAbsolutePath());
                         eventManagement.putEvent(new StartDownloadEvent(downloadManager.newLauncher));
-                        cachedThreadPoolUtil.executeTask(() -> {
+                        THREAD_POOL_UTIL.executeTask(() -> {
                             try {
                                 if (!downloadManager.newLauncher.waitFor(10 * 60 * 1000)) {
                                     return;
@@ -652,7 +652,7 @@ public class SettingsFrame {
                             }
                         });
                         eventManagement.putEvent(new StartDownloadEvent(downloadManager.newJar));
-                        cachedThreadPoolUtil.executeTask(() -> {
+                        THREAD_POOL_UTIL.executeTask(() -> {
                             boolean isDownloadSuccess = SetDownloadProgress.setProgress(labelDownloadProgress,
                                     buttonCheckUpdate,
                                     downloadManager.newLauncher,
@@ -797,7 +797,7 @@ public class SettingsFrame {
      * 实时监测textField中保存的颜色信息，并尝试更新label
      */
     private void addColorChooserLabelListener() {
-        cachedThreadPoolUtil.executeTask(() -> {
+        THREAD_POOL_UTIL.executeTask(() -> {
             try {
                 Color labelColor;
                 Color fontColorWithCoverage;
@@ -1059,7 +1059,7 @@ public class SettingsFrame {
                         System.out.println("开始优化");
                     }
                     eventManagement.putEvent(new OptimiseDatabaseEvent());
-                    cachedThreadPoolUtil.executeTask(() -> {
+                    THREAD_POOL_UTIL.executeTask(() -> {
                         //实时显示VACUUM状态
                         try {
                             DatabaseService instance = DatabaseService.getInstance();
@@ -1088,7 +1088,7 @@ public class SettingsFrame {
     private void addTextFieldSearchCommandsListener() {
         class search {
             final String searchText;
-            final CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+            final ThreadPoolUtil threadPoolUtil = ThreadPoolUtil.getInstance();
             final HashSet<String> cmdSetTmp = new HashSet<>();
 
             search(String searchText) {
@@ -1096,7 +1096,7 @@ public class SettingsFrame {
             }
 
             void doSearch() {
-                cachedThreadPoolUtil.executeTask(() -> {
+                threadPoolUtil.executeTask(() -> {
                     String tmp;
                     if ((tmp = searchText) == null || tmp.isEmpty()) {
                         listCmds.setListData(allConfigs.getCmdSet().toArray());
@@ -1974,7 +1974,7 @@ public class SettingsFrame {
         buttonPreviewColor.addActionListener(e -> {
             PreviewStatus.isPreview = true;
             eventManagement.putEvent(new StartPreviewEvent());
-            cachedThreadPoolUtil.executeTask(() -> {
+            THREAD_POOL_UTIL.executeTask(() -> {
                 try {
                     String borderColor;
                     String searchBarColor;
@@ -2481,7 +2481,7 @@ public class SettingsFrame {
                     eventManagement.putEvent(new StartDownloadEvent(downloadManagerContainer.downloadManager));
                     pluginInfoMap.put(pluginName, downloadManagerContainer.downloadManager);
                     DownloadManager finalDownloadManager = downloadManagerContainer.downloadManager;
-                    cachedThreadPoolUtil.executeTask(() ->
+                    THREAD_POOL_UTIL.executeTask(() ->
                             SetDownloadProgress.setProgress(labelProgress,
                                     buttonUpdatePlugin,
                                     finalDownloadManager,
@@ -3126,7 +3126,7 @@ public class SettingsFrame {
         } else {
             settingsFrame.showWindow(showSettingsFrameEvent.showTabName);
         }
-        cachedThreadPoolUtil.executeTask(() -> {
+        THREAD_POOL_UTIL.executeTask(() -> {
             try {
                 final long startVisible = System.currentTimeMillis();
                 while (SettingsFrame.frame.isVisible() || System.currentTimeMillis() - startVisible < 3000) {

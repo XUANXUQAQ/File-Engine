@@ -1,6 +1,6 @@
 package file.engine.frames.components;
 
-import file.engine.utils.CachedThreadPoolUtil;
+import file.engine.utils.ThreadPoolUtil;
 import file.engine.utils.DpiUtil;
 import file.engine.utils.GetIconUtil;
 
@@ -48,7 +48,7 @@ public class MouseDragInfo extends JFrame {
         iconLabel.setBounds(offset, offset, iconLength, iconLength);
         this.setShape(new RoundRectangle2D.Double(0, 0, length, length, 15, 15));
         this.setVisible(true);
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        ThreadPoolUtil.getInstance().executeTask(() -> {
             try {
                 Point _point;
                 while (!isFinished.get()) {

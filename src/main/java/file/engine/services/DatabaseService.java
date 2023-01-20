@@ -28,7 +28,7 @@ import file.engine.services.utils.StringUtf8SumUtil;
 import file.engine.services.utils.SystemInfoUtil;
 import file.engine.services.utils.connection.SQLiteUtil;
 import file.engine.utils.Bit;
-import file.engine.utils.CachedThreadPoolUtil;
+import file.engine.utils.ThreadPoolUtil;
 import file.engine.utils.ProcessUtil;
 import file.engine.utils.RegexUtil;
 import file.engine.utils.file.FileUtil;
@@ -157,7 +157,7 @@ public class DatabaseService {
      * 处理所有sql线程
      */
     private void executeSqlCommandsThread() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        ThreadPoolUtil.getInstance().executeTask(() -> {
             EventManagement eventManagement = EventManagement.getInstance();
             while (eventManagement.notMainExit()) {
                 if (isExecuteSqlImmediately.get()) {
@@ -181,25 +181,25 @@ public class DatabaseService {
      * 开始监控磁盘文件变化
      */
     private static void startMonitorDisk() {
-        CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+        ThreadPoolUtil threadPoolUtil = ThreadPoolUtil.getInstance();
         EventManagement eventManagement = EventManagement.getInstance();
         TranslateService translateService = TranslateService.getInstance();
         String disks = AllConfigs.getInstance().getAvailableDisks();
         String[] splitDisks = RegexUtil.comma.split(disks);
         if (AdminUtil.isAdmin()) {
             for (String root : splitDisks) {
-                cachedThreadPoolUtil.executeTask(() -> {
+                threadPoolUtil.executeTask(() -> {
                     FileMonitor.INSTANCE.monitor(root);
                     System.out.println("停止监听 " + root + " 的文件变化");
                 }, false);
             }
-            cachedThreadPoolUtil.executeTask(() -> {
+            threadPoolUtil.executeTask(() -> {
                 Set<String> unAvailableDiskSet = AllConfigs.getInstance().getUnAvailableDiskSet();
                 while (eventManagement.notMainExit()) {
                     if (!unAvailableDiskSet.isEmpty()) {
                         for (String unAvailableDisk : unAvailableDiskSet) {
                             if (Files.exists(Path.of(unAvailableDisk)) && IsLocalDisk.INSTANCE.isDiskNTFS(unAvailableDisk)) {
-                                cachedThreadPoolUtil.executeTask(() -> {
+                                threadPoolUtil.executeTask(() -> {
                                     FileMonitor.INSTANCE.monitor(unAvailableDisk);
                                     System.out.println("停止监听 " + unAvailableDisk + " 的文件变化");
                                 }, false);
@@ -357,7 +357,7 @@ public class DatabaseService {
      * 扫描数据库并添加缓存
      */
     private void saveTableCacheThread() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        ThreadPoolUtil.getInstance().executeTask(() -> {
             EventManagement eventManagement = EventManagement.getInstance();
             final int checkTimeInterval = 10 * 60 * 1000; // 10 min
             final int startUpLatency = 10 * 1000; // 10s
@@ -539,11 +539,11 @@ public class DatabaseService {
     }
 
     private void syncFileChangesThread() {
-        CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+        ThreadPoolUtil threadPoolUtil = ThreadPoolUtil.getInstance();
         EventManagement eventManagement = EventManagement.getInstance();
         var fileChanges = new SynchronousQueue<Runnable>();
-        cachedThreadPoolUtil.executeTask(() -> addFileChangesRecords(fileChanges));
-        cachedThreadPoolUtil.executeTask(() -> {
+        threadPoolUtil.executeTask(() -> addFileChangesRecords(fileChanges));
+        threadPoolUtil.executeTask(() -> {
             while (eventManagement.notMainExit()) {
                 try {
                     fileChanges.take().run();
@@ -685,7 +685,7 @@ public class DatabaseService {
                 }
                 int finalI = i;
                 submitCount.getAndIncrement();
-                CachedThreadPoolUtil.getInstance().executeTask(() -> {
+                ThreadPoolUtil.getInstance().executeTask(() -> {
                     try {
                         for (int j = 0; j < finalI; ++j) {
                             if (checkIsMatchedAndAddToList(tmpQueryResultsCache[j], priorityStr, searchTask)) {
@@ -1025,7 +1025,7 @@ public class DatabaseService {
     }
 
     private void startSearchInThreadPool(SearchTask searchTask) {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> startSearch(searchTask));
+        ThreadPoolUtil.getInstance().executeTask(() -> startSearch(searchTask));
     }
 
     /**
@@ -1033,7 +1033,7 @@ public class DatabaseService {
      */
     private void startSearch(SearchTask searchTask) {
         startSearchTimeMills = System.currentTimeMillis();
-        var cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+        var threadPoolUtil = ThreadPoolUtil.getInstance();
         var eventManagement = EventManagement.getInstance();
         final int threadNumberPerDisk = Math.max(1, AllConfigs.getInstance().getConfigEntity().getSearchThreadNumber() / searchTask.taskMap.size());
         Consumer<ConcurrentLinkedQueue<Runnable>> taskHandler = (taskQueue) -> {
@@ -1047,7 +1047,7 @@ public class DatabaseService {
         };
         for (var entry : searchTask.taskMap.entrySet()) {
             for (int i = 0; i < threadNumberPerDisk; i++) {
-                cachedThreadPoolUtil.executeTask(() -> {
+                threadPoolUtil.executeTaskInFixedThreadPool(() -> {
                     searchThreadCount.incrementAndGet();
                     var taskQueue = entry.getValue();
                     taskHandler.accept(taskQueue);
@@ -1680,7 +1680,7 @@ public class DatabaseService {
     }
 
     private void checkTimeAndSendExecuteSqlSignalThread() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        ThreadPoolUtil.getInstance().executeTask(() -> {
             // 时间检测线程
             AllConfigs allConfigs = AllConfigs.getInstance();
             final long timeout = Constants.CLOSE_DATABASE_TIMEOUT_MILLS - 30 * 1000;
@@ -1852,7 +1852,7 @@ public class DatabaseService {
             searchTask.priorityContainers.put(String.valueOf(eachPriority.priority), new ConcurrentLinkedQueue<>());
         }
 
-        var cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+        var cachedThreadPoolUtil = ThreadPoolUtil.getInstance();
         databaseService.searchCache(searchTask);
         cachedThreadPoolUtil.executeTask(() -> {
             databaseService.searchPriorityFolder(searchTask);
@@ -2099,7 +2099,7 @@ public class DatabaseService {
 
         private static void clearInvalidCacheThread() {
             //检测缓存是否有效并删除缓存
-            CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            ThreadPoolUtil.getInstance().executeTask(() -> {
                 EventManagement eventManagement = EventManagement.getInstance();
                 DatabaseService databaseService = DatabaseService.getInstance();
                 long startCheckInvalidCacheTime = System.currentTimeMillis();
@@ -2122,7 +2122,7 @@ public class DatabaseService {
         }
 
         private static void execWorkQueueThread() {
-            CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            ThreadPoolUtil.getInstance().executeTask(() -> {
                 EventManagement eventManagement = EventManagement.getInstance();
                 DatabaseService databaseService = DatabaseService.getInstance();
                 final int removeRecordsThreshold = 20;

@@ -11,7 +11,7 @@ import file.engine.event.handler.impl.configs.SetConfigsEvent;
 import file.engine.event.handler.impl.frame.searchBar.*;
 import file.engine.event.handler.impl.hotkey.CheckHotKeyAvailableEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
-import file.engine.utils.CachedThreadPoolUtil;
+import file.engine.utils.ThreadPoolUtil;
 import file.engine.utils.RegexUtil;
 import lombok.Getter;
 
@@ -64,7 +64,7 @@ public class CheckHotKeyService {
         if (!isRegistered) {
             isRegistered = true;
             int[] hotkeyIds = parseHotkey(hotkey);
-            CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            ThreadPoolUtil.getInstance().executeTask(() -> {
                 HotkeyListener.INSTANCE.registerHotKey(hotkeyIds[0], hotkeyIds[1], hotkeyIds[2], hotkeyIds[3], hotkeyIds[4]);
                 HotkeyListener.INSTANCE.startListen();
             });
@@ -99,7 +99,7 @@ public class CheckHotKeyService {
     }
 
     private void startListenHotkeyThread() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        ThreadPoolUtil.getInstance().executeTask(() -> {
             EventManagement eventManagement = EventManagement.getInstance();
             AtomicLong startVisibleTime = new AtomicLong();
             AtomicLong endVisibleTime = new AtomicLong();

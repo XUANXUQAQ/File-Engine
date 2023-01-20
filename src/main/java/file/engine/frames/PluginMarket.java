@@ -18,7 +18,7 @@ import file.engine.frames.components.SetDownloadProgress;
 import file.engine.services.TranslateService;
 import file.engine.services.download.DownloadManager;
 import file.engine.services.plugin.system.PluginService;
-import file.engine.utils.CachedThreadPoolUtil;
+import file.engine.utils.ThreadPoolUtil;
 import file.engine.utils.DpiUtil;
 import file.engine.utils.gson.GsonUtil;
 
@@ -74,7 +74,7 @@ public class PluginMarket {
         addButtonInstallListener();
         addOpenPluginOfficialSiteListener();
         frame.dispose();
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        ThreadPoolUtil.getInstance().executeTask(() -> {
             try {
                 String pluginName;
                 EventManagement eventManagement = EventManagement.getInstance();
@@ -184,7 +184,7 @@ public class PluginMarket {
                     downloadManagerConcurrentHashMap.put(pluginName, downloadManager);
                     eventManagement.putEvent(new StartDownloadEvent(downloadManager));
                     DownloadManager finalDownloadManager = downloadManager;
-                    CachedThreadPoolUtil.getInstance().executeTask(
+                    ThreadPoolUtil.getInstance().executeTask(
                             () -> SetDownloadProgress.setProgress(labelProgress,
                                     buttonInstall,
                                     finalDownloadManager,
@@ -214,7 +214,7 @@ public class PluginMarket {
     private void addSearchPluginListener() {
         class search {
             final String searchKeywords;
-            final CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+            final ThreadPoolUtil cachedThreadPoolUtil = ThreadPoolUtil.getInstance();
 
             search(String searchKeywords) {
                 this.searchKeywords = searchKeywords;
@@ -288,7 +288,7 @@ public class PluginMarket {
     private void addSelectPluginOnListListener() {
         final AtomicReference<String> currentShowingPluginName = new AtomicReference<>();
         final TranslateService translateUtil = TranslateService.getInstance();
-        final CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+        final ThreadPoolUtil threadPoolUtil = ThreadPoolUtil.getInstance();
         final HashMap<String, Map<String, Object>> pluginsInfo = new HashMap<>();
         final HashMap<String, ImageIcon> pluginsIcon = new HashMap<>();
 
@@ -300,7 +300,7 @@ public class PluginMarket {
             }
 
             void doGet() {
-                cachedThreadPoolUtil.executeTask(() -> {
+                threadPoolUtil.executeTask(() -> {
                     if (!pluginsInfo.containsKey(pluginName)) {
                         pluginsInfo.put(pluginName, getPluginDetailInfo(pluginName));
                     }

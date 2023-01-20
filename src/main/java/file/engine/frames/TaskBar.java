@@ -11,7 +11,7 @@ import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.event.handler.impl.taskbar.ShowTrayIconEvent;
 import file.engine.services.TranslateService;
-import file.engine.utils.CachedThreadPoolUtil;
+import file.engine.utils.ThreadPoolUtil;
 import file.engine.utils.DpiUtil;
 import file.engine.utils.system.properties.IsDebug;
 
@@ -44,7 +44,7 @@ public class TaskBar {
         showTaskBar();
         addActionListener();
 
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        ThreadPoolUtil.getInstance().executeTask(() -> {
             EventManagement instance = EventManagement.getInstance();
             while (instance.notMainExit()) {
                 if (popupMenu != null && popupMenu.isVisible() && (GetHandle.INSTANCE.isKeyPressed(L_BUTTON) || GetHandle.INSTANCE.isKeyPressed(R_BUTTON))) {
@@ -71,7 +71,7 @@ public class TaskBar {
      * 显示托盘消息线程
      */
     private void startShowMessageThread() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        ThreadPoolUtil.getInstance().executeTask(() -> {
             EventManagement eventManagement = EventManagement.getInstance();
             MessageStruct message;
             int count = 0;

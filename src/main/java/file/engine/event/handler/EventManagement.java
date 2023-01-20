@@ -8,7 +8,7 @@ import file.engine.event.handler.impl.plugin.PluginRegisterEvent;
 import file.engine.event.handler.impl.stop.CloseEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.services.utils.DaemonUtil;
-import file.engine.utils.CachedThreadPoolUtil;
+import file.engine.utils.ThreadPoolUtil;
 import file.engine.utils.clazz.scan.ClassScannerUtil;
 import file.engine.utils.system.properties.IsDebug;
 import lombok.NonNull;
@@ -110,7 +110,7 @@ public class EventManagement {
             DaemonUtil.stopDaemon();
         }
         event.setFinishedAndExecCallback();
-        CachedThreadPoolUtil.getInstance().shutdown();
+        ThreadPoolUtil.getInstance().shutdown();
     }
 
     /**
@@ -308,7 +308,7 @@ public class EventManagement {
             if (event.isBlock()) {
                 blockEventQueue.add(event);
             } else {
-                CachedThreadPoolUtil.getInstance().executeTask(() -> eventHandle(event));
+                ThreadPoolUtil.getInstance().executeTask(() -> eventHandle(event));
             }
         } else {
             if (isDebug) {

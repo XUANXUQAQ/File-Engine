@@ -3,14 +3,15 @@ package file.engine.utils;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public enum CachedThreadPoolUtil {
+public enum ThreadPoolUtil {
     INSTANCE;
     private static final int THREAD_POOL_AWAIT_TIMEOUT = 10;
-    private final ExecutorService platformThreadPool;
+    private final ExecutorService cachedThreadPool;
+    private final ExecutorService fixedThreadPool;
     private final AtomicBoolean isShutdown = new AtomicBoolean(false);
 
-    CachedThreadPoolUtil() {
-        platformThreadPool = new ThreadPoolExecutor(
+    ThreadPoolUtil() {
+        cachedThreadPool = new ThreadPoolExecutor(
                 0,
                 100,
                 60,
@@ -19,9 +20,10 @@ public enum CachedThreadPoolUtil {
                 Executors.defaultThreadFactory(),
                 new ThreadPoolExecutor.CallerRunsPolicy()
         );
+        fixedThreadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     }
 
-    public static CachedThreadPoolUtil getInstance() {
+    public static ThreadPoolUtil getInstance() {
         return INSTANCE;
     }
 
@@ -30,11 +32,11 @@ public enum CachedThreadPoolUtil {
     }
 
     private <T> Future<T> executeTaskPlatform(Callable<T> task) {
-        return platformThreadPool.submit(task);
+        return cachedThreadPool.submit(task);
     }
 
     private void executeTaskPlatform(Runnable task) {
-        platformThreadPool.submit(task);
+        cachedThreadPool.submit(task);
     }
 
     /**
@@ -78,13 +80,30 @@ public enum CachedThreadPoolUtil {
         executeTaskPlatform(task);
     }
 
+    public void executeTaskInFixedThreadPool(Runnable task) {
+        if (isShutdown.get()) {
+            return;
+        }
+        fixedThreadPool.submit(task);
+    }
+
+    @SuppressWarnings("unused")
+    public <V> Future<V> executeTaskInFixedThreadPool(Callable<V> task) {
+        if (isShutdown.get()) {
+            return null;
+        }
+        return fixedThreadPool.submit(task);
+    }
+
     /**
      * 关闭线程池病等待
      */
     public void shutdown() {
         isShutdown.set(true);
-        platformThreadPool.shutdown();
-        printInfo((ThreadPoolExecutor) platformThreadPool);
+        cachedThreadPool.shutdown();
+        fixedThreadPool.shutdown();
+        printInfo((ThreadPoolExecutor) fixedThreadPool);
+        printInfo((ThreadPoolExecutor) cachedThreadPool);
     }
 
     /**

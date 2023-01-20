@@ -4,7 +4,7 @@ import file.engine.configs.AllConfigs;
 import file.engine.configs.Constants;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.stop.RestartEvent;
-import file.engine.utils.CachedThreadPoolUtil;
+import file.engine.utils.ThreadPoolUtil;
 import file.engine.utils.RegexUtil;
 import file.engine.utils.file.FileUtil;
 import file.engine.utils.system.properties.IsDebug;
@@ -52,12 +52,12 @@ public class SQLiteUtil {
                 }
             }
         };
-        CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
-        cachedThreadPoolUtil.executeTask(() -> {
+        ThreadPoolUtil threadPoolUtil = ThreadPoolUtil.getInstance();
+        threadPoolUtil.executeTask(() -> {
             long checkTimeMills = 0;
             final long threshold = 10_000; // 10s
             try {
-                while (!cachedThreadPoolUtil.isShutdown()) {
+                while (!threadPoolUtil.isShutdown()) {
                     if (System.currentTimeMillis() - checkTimeMills > threshold) {
                         checkTimeMills = System.currentTimeMillis();
                         for (ConnectionWrapper conn : connectionPool.values()) {
@@ -81,7 +81,7 @@ public class SQLiteUtil {
     }
 
     public static void openAllConnection() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        ThreadPoolUtil.getInstance().executeTask(() -> {
             for (ConnectionWrapper conn : connectionPool.values()) {
                 try {
                     conn.lock.lock();
