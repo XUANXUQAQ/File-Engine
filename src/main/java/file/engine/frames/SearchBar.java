@@ -89,6 +89,7 @@ public class SearchBar {
     private Border pluginMiddleBorder;
     private Border pluginBottomBorder;
     private final JFrame searchBar = new JFrame();
+    private final JPanel searchBarContentPane = new JPanel();
     private final JLabel label1 = new JLabel();
     private final JLabel label2 = new JLabel();
     private final JLabel label3 = new JLabel();
@@ -214,7 +215,6 @@ public class SearchBar {
         int searchBarHeight = (int) (height * SEARCH_BAR_HEIGHT_RATIO);
         final int positionX = width / 2 - searchBarWidth / 2;
         final int positionY = height / 2 - searchBarHeight / 3;
-        JPanel panel = new JPanel();
         final Color transparentColor = new Color(0, 0, 0, 0);
         AllConfigs allConfigs = AllConfigs.getInstance();
         var configs = allConfigs.getConfigEntity();
@@ -225,7 +225,7 @@ public class SearchBar {
         labelFontColor = new Color(configs.getFontColor());
         initBorder(allConfigs.getBorderType(), new Color(configs.getBorderColor()), configs.getBorderThickness());
 
-        initFrame(positionX, positionY, searchBarWidth, searchBarHeight, transparentColor, panel);
+        initFrame(positionX, positionY, searchBarWidth, searchBarHeight, transparentColor, searchBarContentPane);
 
         int labelHeight = searchBarHeight / 9;
         int textFieldHeight = (int) (labelHeight * TEXT_FIELD_HEIGHT_RATIO);
@@ -264,19 +264,19 @@ public class SearchBar {
             searchBar.setIconImage(image);
         }
         //panel
-        panel.setBounds(0, 0, searchBarWidth, searchBarHeight);
-        panel.setLayout(null);
-        panel.setBackground(transparentColor);
-        panel.add(textField);
-        panel.add(searchInfoLabel);
-        panel.add(label1);
-        panel.add(label2);
-        panel.add(label3);
-        panel.add(label4);
-        panel.add(label5);
-        panel.add(label6);
-        panel.add(label7);
-        panel.add(label8);
+        searchBarContentPane.setBounds(0, 0, searchBarWidth, searchBarHeight);
+        searchBarContentPane.setLayout(null);
+        searchBarContentPane.setBackground(transparentColor);
+        searchBarContentPane.add(textField);
+        searchBarContentPane.add(searchInfoLabel);
+        searchBarContentPane.add(label1);
+        searchBarContentPane.add(label2);
+        searchBarContentPane.add(label3);
+        searchBarContentPane.add(label4);
+        searchBarContentPane.add(label5);
+        searchBarContentPane.add(label6);
+        searchBarContentPane.add(label7);
+        searchBarContentPane.add(label8);
     }
 
     /**
@@ -3788,10 +3788,11 @@ public class SearchBar {
         int labelHeight = searchBarHeight / 9;
         long start = System.currentTimeMillis();
         try {
-            while (!(isVisible() || searchBar.isValid()) && System.currentTimeMillis() - start < 3000) {
+            while (!isVisible() && System.currentTimeMillis() - start < 3000) {
                 TimeUnit.MILLISECONDS.sleep(5);
             }
         } catch (InterruptedException ignored) {
+            // ignored
         }
         if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
             x = searchBar.getX() + textField.getWidth() / 2;
@@ -3826,13 +3827,19 @@ public class SearchBar {
                     isSwitchToNormalManual.set(true);
                 }
             });
-            if (isGrabFocus && !isSwitchToNormal) {
-                TimeUnit.MILLISECONDS.sleep(150);
-                grabFocus();
-            }
         } catch (InterruptedException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
+        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            if (isGrabFocus && !isSwitchToNormal) {
+                try {
+                    TimeUnit.MILLISECONDS.sleep(250);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                grabFocus();
+            }
+        });
         if (isBorderThreadNotExist.compareAndSet(true, false)) {
             CachedThreadPoolUtil.getInstance().executeTask(this::setBorderOnVisible);
         }
@@ -3842,18 +3849,15 @@ public class SearchBar {
         if (isLockMouseMotionThreadNotExist.compareAndSet(true, false)) {
             lockMouseMotionThread();
         }
-        long startWaiting = System.currentTimeMillis();
-        while (!isMergeThreadExist.compareAndSet(false, true)) {
-            if (System.currentTimeMillis() - startWaiting > 1000) {
-                System.err.println("等待合并结果线程结束超时");
-                break;
-            }
-            Thread.onSpinWait();
+        if (isMergeThreadExist.compareAndSet(false, true)) {
+            CachedThreadPoolUtil.getInstance().executeTask(() -> {
+                try {
+                    mergeResults();
+                } finally {
+                    isMergeThreadExist.set(false);
+                }
+            });
         }
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            mergeResults();
-            isMergeThreadExist.set(false);
-        });
     }
 
     /**
@@ -4376,7 +4380,7 @@ public class SearchBar {
      * @return true如果可见 否则false
      */
     private boolean isVisible() {
-        return searchBar.isVisible();
+        return searchBarContentPane.isShowing();
     }
 
     private void setFontColorWithCoverage(int colorNum) {
