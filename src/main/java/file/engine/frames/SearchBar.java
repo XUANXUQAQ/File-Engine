@@ -74,7 +74,9 @@ public class SearchBar {
     private final AtomicBoolean isBorderThreadNotExist = new AtomicBoolean(true);
     private final AtomicBoolean isLockMouseMotionThreadNotExist = new AtomicBoolean(true);
     private final AtomicBoolean isTryToShowResultThreadNotExist = new AtomicBoolean(true);
+    private final AtomicBoolean isMergeThreadExist = new AtomicBoolean(false);
     private final AtomicBoolean isRoundRadiusSet = new AtomicBoolean();
+    private volatile boolean isRefreshDisplay = false;
     private static final AtomicBoolean isPreviewMode = new AtomicBoolean();
     private final AtomicBoolean isTutorialMode = new AtomicBoolean();
     private final AtomicBoolean isSwitchToNormalManual = new AtomicBoolean();
@@ -3104,7 +3106,8 @@ public class SearchBar {
                     isLabelEmpty(label6) ||
                     isLabelEmpty(label7) ||
                     isLabelEmpty(label8);
-            if (hasLabelEmpty) {
+            if (hasLabelEmpty || isRefreshDisplay) {
+                isRefreshDisplay = false;
                 //设置窗口上的文字和图片显示，键盘模式
                 int pos = getCurrentLabelPos();
                 var ref = new Object() {
@@ -3149,54 +3152,57 @@ public class SearchBar {
     private void tryToShowRecordsThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             //显示结果线程
-            clearAllLabels();
-            while (isVisible()) {
-                String text = getSearchBarText();
-                if (text.isEmpty()) {
-                    clearAllLabels();
-                } else if (!listResults.isEmpty()) {
-                    //在结果不足8个的时候不断尝试显示
-                    tryToShowRecordsWhenHasLabelEmpty();
-                    //设置窗口是被选中还是未被选中，鼠标模式
-                    setLabelChosenOrNotChosenMouseMode(0, label1);
-                    setLabelChosenOrNotChosenMouseMode(1, label2);
-                    setLabelChosenOrNotChosenMouseMode(2, label3);
-                    setLabelChosenOrNotChosenMouseMode(3, label4);
-                    setLabelChosenOrNotChosenMouseMode(4, label5);
-                    setLabelChosenOrNotChosenMouseMode(5, label6);
-                    setLabelChosenOrNotChosenMouseMode(6, label7);
-                    setLabelChosenOrNotChosenMouseMode(7, label8);
+            try {
+                clearAllLabels();
+                while (isVisible()) {
+                    String text = getSearchBarText();
+                    if (text.isEmpty()) {
+                        clearAllLabels();
+                    } else if (!listResults.isEmpty()) {
+                        //在结果不足8个的时候不断尝试显示
+                        tryToShowRecordsWhenHasLabelEmpty();
+                        //设置窗口是被选中还是未被选中，鼠标模式
+                        setLabelChosenOrNotChosenMouseMode(0, label1);
+                        setLabelChosenOrNotChosenMouseMode(1, label2);
+                        setLabelChosenOrNotChosenMouseMode(2, label3);
+                        setLabelChosenOrNotChosenMouseMode(3, label4);
+                        setLabelChosenOrNotChosenMouseMode(4, label5);
+                        setLabelChosenOrNotChosenMouseMode(5, label6);
+                        setLabelChosenOrNotChosenMouseMode(6, label7);
+                        setLabelChosenOrNotChosenMouseMode(7, label8);
 
-                    if (firstResultStartShowingTime == 0) {
-                        firstResultStartShowingTime = System.currentTimeMillis();
+                        if (firstResultStartShowingTime == 0) {
+                            firstResultStartShowingTime = System.currentTimeMillis();
+                        }
+                    } else {
+                        label1.setText(null);
+                        label1.setName(null);
+                        label1.setIcon(null);
+                        clearALabel(label2);
+                        clearALabel(label3);
+                        clearALabel(label4);
+                        clearALabel(label5);
+                        clearALabel(label6);
+                        clearALabel(label7);
+                        clearALabel(label8);
+                        repaint();
                     }
-                } else {
-                    label1.setText(null);
-                    label1.setName(null);
-                    label1.setIcon(null);
-                    clearALabel(label2);
-                    clearALabel(label3);
-                    clearALabel(label4);
-                    clearALabel(label5);
-                    clearALabel(label6);
-                    clearALabel(label7);
-                    clearALabel(label8);
-                    repaint();
-                }
-                SwingUtilities.invokeLater(() -> {
-                    autoSetSearchBarRadius();
-                    if (getSearchBarText().isEmpty() && showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                        searchInfoLabel.setText("");
-                        searchInfoLabel.setIcon(null);
+                    SwingUtilities.invokeLater(() -> {
+                        autoSetSearchBarRadius();
+                        if (getSearchBarText().isEmpty() && showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                            searchInfoLabel.setText("");
+                            searchInfoLabel.setIcon(null);
+                        }
+                    });
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(200);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
                     }
-                });
-                try {
-                    TimeUnit.MILLISECONDS.sleep(200);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
                 }
+            } finally {
+                isTryToShowResultThreadNotExist.set(true);
             }
-            isTryToShowResultThreadNotExist.set(true);
         });
     }
 
@@ -3292,14 +3298,11 @@ public class SearchBar {
         ArrayList<String> listResultsTemp = listResults;
         HashSet<String> listResultsSet = new HashSet<>();
         var allPlugins = pluginService.getAllPlugins();
-        while (true) {
+        while (isVisible()) {
             //用户重新输入关键字
             if (listResultsTemp != listResults) {
                 listResultsTemp = listResults;
                 listResultsSet = new HashSet<>();
-            }
-            if (System.currentTimeMillis() - visibleStartTime > 10_000 && !isVisible()) {
-                break;
             }
             mergeResultMethod(listResultsTemp, listResultsSet, allPlugins);
             TimeUnit.MILLISECONDS.sleep(1);
@@ -3662,6 +3665,7 @@ public class SearchBar {
                                 currentSearchTask = res;
                             }
                             addShowSearchStatusThread();
+                            isRefreshDisplay = true;
                         });
                     });
                 }
@@ -3799,10 +3803,6 @@ public class SearchBar {
         RobotUtil.INSTANCE.mouseClicked(x, y, 1, InputEvent.BUTTON1_DOWN_MASK);
     }
 
-    static class IsMergeThreadExist {
-        static AtomicBoolean isMergeThreadExist = new AtomicBoolean(false);
-    }
-
     /**
      * 显示窗口
      *
@@ -3825,18 +3825,6 @@ public class SearchBar {
                 } else if (isSwitchToNormal) {
                     isSwitchToNormalManual.set(true);
                 }
-                if (isBorderThreadNotExist.get()) {
-                    isBorderThreadNotExist.set(false);
-                    CachedThreadPoolUtil.getInstance().executeTask(this::setBorderOnVisible);
-                }
-                if (isTryToShowResultThreadNotExist.get()) {
-                    isTryToShowResultThreadNotExist.set(false);
-                    tryToShowRecordsThread();
-                }
-                if (isLockMouseMotionThreadNotExist.get()) {
-                    isLockMouseMotionThreadNotExist.set(false);
-                    lockMouseMotionThread();
-                }
             });
             if (isGrabFocus && !isSwitchToNormal) {
                 TimeUnit.MILLISECONDS.sleep(150);
@@ -3845,12 +3833,27 @@ public class SearchBar {
         } catch (InterruptedException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
-        if (IsMergeThreadExist.isMergeThreadExist.compareAndSet(false, true)) {
-            CachedThreadPoolUtil.getInstance().executeTask(() -> {
-                mergeResults();
-                IsMergeThreadExist.isMergeThreadExist.set(false);
-            });
+        if (isBorderThreadNotExist.compareAndSet(true, false)) {
+            CachedThreadPoolUtil.getInstance().executeTask(this::setBorderOnVisible);
         }
+        if (isTryToShowResultThreadNotExist.compareAndSet(true, false)) {
+            tryToShowRecordsThread();
+        }
+        if (isLockMouseMotionThreadNotExist.compareAndSet(true, false)) {
+            lockMouseMotionThread();
+        }
+        long startWaiting = System.currentTimeMillis();
+        while (!isMergeThreadExist.compareAndSet(false, true)) {
+            if (System.currentTimeMillis() - startWaiting > 1000) {
+                System.err.println("等待合并结果线程结束超时");
+                break;
+            }
+            Thread.onSpinWait();
+        }
+        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            mergeResults();
+            isMergeThreadExist.set(false);
+        });
     }
 
     /**

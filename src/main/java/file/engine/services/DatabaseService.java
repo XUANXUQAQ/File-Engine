@@ -767,7 +767,6 @@ public class DatabaseService {
     private void waitForTasks(SearchTask searchTask) {
         try {
             var eventManagement = EventManagement.getInstance();
-            var resultsAdded = new ArrayList<String>();
             final long startWaiting = System.currentTimeMillis();
             final long timeout = 5 * 60 * 1000; // 线程最大存活时间为5分钟
             while (!searchTask.taskStatus.equals(searchTask.allTaskStatus) &&
@@ -776,12 +775,10 @@ public class DatabaseService {
                 for (var eachPriority : priorityMap) {
                     var priorityContainer = searchTask.priorityContainers.get(String.valueOf(eachPriority.priority));
                     if (priorityContainer != null) {
-                        for (String searchResult : priorityContainer) {
-                            searchTask.tempResults.add(searchResult);
-                            resultsAdded.add(searchResult);
+                        String eachResult;
+                        while ((eachResult = priorityContainer.poll()) != null) {
+                            searchTask.tempResults.add(eachResult);
                         }
-                        priorityContainer.removeAll(resultsAdded);
-                        resultsAdded.clear();
                     }
                 }
                 TimeUnit.MILLISECONDS.sleep(1);
