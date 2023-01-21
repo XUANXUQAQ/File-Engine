@@ -12,25 +12,29 @@ A tool can make you work more efficiently.
 
 ## [项目结构](https://github.com/XUANXUQAQ/File-Engine/blob/master/README_PROJECT.md)
 
-### 可以使用插件[File-Engine-UDisk-Plugin](https://github.com/XUANXUQAQ/File-Engine-UDisk-Plugin) 使File-Engine支持U盘。
-
 ### 制作自己的插件[File-Engine-Plugin-Template](https://github.com/XUANXUQAQ/File-Engine-Plugin-Template)
 
 目前已经可以使用的插件：
 
-[File-Engine-Remote-Plugin](https://github.com/XUANXUQAQ/File-Engine-Remote-Plugin)
+[File-Engine-UDisk-Plugin](https://github.com/XUANXUQAQ/File-Engine-UDisk-Plugin) 使File-Engine支持搜索U盘
 
-[File-Engine-Cmd-Plugin](https://github.com/XUANXUQAQ/File-Engine-Cmd-Plugin)
+[File-Engine-UWP-Plugin](https://github.com/XUANXUQAQ/File-Engine-UWP-Plugin) 使File-Engine支持搜索UWP应用程序
 
-[File-Engine-Translate-Plugin](https://github.com/XUANXUQAQ/File-Engine-Translate-Plugin)
+[File-Engine-Remote-Plugin](https://github.com/XUANXUQAQ/File-Engine-Remote-Plugin) 通过远程搜索本机软件并下载
 
-[File-Engine-NoUAC-Plugin](https://github.com/XUANXUQAQ/File-Engine-NoUAC-Plugin)
+[File-Engine-Cmd-Plugin](https://github.com/XUANXUQAQ/File-Engine-Cmd-Plugin) 使用搜索框快速输入cmd命令并执行
 
-[File-Engine-Web-Plugin](https://github.com/XUANXUQAQ/File-Engine-Web-Plugin)
+[File-Engine-Translate-Plugin](https://github.com/XUANXUQAQ/File-Engine-Translate-Plugin) 在输入框中输入单词并进行翻译
+
+[File-Engine-NoUAC-Plugin](https://github.com/XUANXUQAQ/File-Engine-NoUAC-Plugin) 利用File-Engine的管理员权限实现开机启动而不出现UAC弹窗
+
+[File-Engine-Web-Plugin](https://github.com/XUANXUQAQ/File-Engine-Web-Plugin) 将搜索框作为网络搜索框进行搜索，支持百度，Google以及自定义搜索url
 
 ## 如何手动更新
 
 进入File-Engine目录，用新版本覆盖File-Engine.exe，然后打开File-Engine.exe即可。
+
+4.0以前版本还需删除data目录下的File-Engine.jar
 
 ## 使用
 
@@ -68,3 +72,4 @@ A tool can make you work more efficiently.
 6. zip (https://github.com/kuba--/zip)
 7. OpenCLWrapper (https://github.com/ProjectPhysX/OpenCL-Wrapper)
 8. oshi (https://github.com/oshi/oshi)
+9. jna (https://github.com/java-native-access/jna)

@@ -310,6 +310,8 @@ public class SettingsFrame {
     private JComboBox<Object> comboBoxCudaDevice;
     private JLabel labelSearchThread;
     private JComboBox<Object> comboBoxSearchThread;
+    private JLabel labelOpenclWrapper;
+    private JLabel labelOshi;
 
 
     private static volatile SettingsFrame instance = null;
@@ -1830,7 +1832,7 @@ public class SettingsFrame {
         labelHolder4.setText("   ");
         tabCommands.add(labelHolder4, new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         tabAbout = new JPanel();
-        tabAbout.setLayout(new GridLayoutManager(17, 10, new Insets(0, 0, 0, 0), -1, -1));
+        tabAbout.setLayout(new GridLayoutManager(19, 10, new Insets(0, 0, 0, 0), -1, -1));
         tabAbout.setMaximumSize(new Dimension(1000, 600));
         tabAbout.setMinimumSize(new Dimension(850, 500));
         tabAbout.setOpaque(false);
@@ -1839,7 +1841,7 @@ public class SettingsFrame {
         final Spacer spacer14 = new Spacer();
         tabAbout.add(spacer14, new GridConstraints(0, 9, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
         final Spacer spacer15 = new Spacer();
-        tabAbout.add(spacer15, new GridConstraints(16, 0, 1, 3, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        tabAbout.add(spacer15, new GridConstraints(18, 0, 1, 3, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         labelIcon = new JLabel();
         labelIcon.setText("");
         tabAbout.add(labelIcon, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -1904,6 +1906,12 @@ public class SettingsFrame {
         labelZip = new JLabel();
         labelZip.setText("Label");
         tabAbout.add(labelZip, new GridConstraints(15, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        labelOpenclWrapper = new JLabel();
+        labelOpenclWrapper.setText("Label");
+        tabAbout.add(labelOpenclWrapper, new GridConstraints(16, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        labelOshi = new JLabel();
+        labelOshi.setText("Label");
+        tabAbout.add(labelOshi, new GridConstraints(17, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         tabIndex = new JPanel();
         tabIndex.setLayout(new GridLayoutManager(9, 3, new Insets(0, 0, 0, 0), -1, -1));
         tabbedPane.addTab("Index", tabIndex);
@@ -2512,6 +2520,8 @@ public class SettingsFrame {
         labelTinyPinyin.setText("5.promeG/TinyPinyin");
         labelLombok.setText("6.projectlombok/Lombok");
         labelZip.setText("7.kuba--/zip");
+        labelOpenclWrapper.setText("8.ProjectPhysX/OpenCL-Wrapper");
+        labelOshi.setText("9.oshi/oshi");
         labelPluginNum.setText(String.valueOf(PluginService.getInstance().getInstalledPluginNum()));
         ImageIcon imageIcon = new ImageIcon(Objects.requireNonNull(SettingsFrame.class.getResource("/icons/frame.png")));
         labelIcon.setIcon(imageIcon);
