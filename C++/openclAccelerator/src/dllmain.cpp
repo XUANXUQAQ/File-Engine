@@ -97,9 +97,7 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_s
 (JNIEnv*, jobject, jint device_number_jint)
 {
     release_all();
-    if (set_using_device(device_number_jint))
-        return JNI_TRUE;
-    return JNI_FALSE;
+    return set_using_device(device_number_jint);
 }
 
 /*
@@ -290,17 +288,13 @@ JNIEXPORT jint JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_match
 (JNIEnv* env, jobject, jstring key_jstring)
 {
     const auto key = env->GetStringUTFChars(key_jstring, nullptr);
-    unsigned matched_number;
-    try
-    {
-        matched_number = matched_result_number_map.at(key);
-    }
-    catch (std::out_of_range&)
-    {
-        matched_number = 0;
-    }
+    auto&& matched_number_iter = matched_result_number_map.find(key);
     env->ReleaseStringUTFChars(key_jstring, key);
-    return matched_number;
+    if (matched_number_iter == matched_result_number_map.end())
+    {
+        return 0;
+    }
+    return matched_number_iter->second;
 }
 
 /*
@@ -311,9 +305,7 @@ JNIEXPORT jint JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_match
 JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_hasCache
 (JNIEnv*, jobject)
 {
-    if (cache_map.empty())
-        return JNI_FALSE;
-    return JNI_TRUE;
+    return !cache_map.empty();
 }
 
 /*
@@ -327,9 +319,7 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_i
     const auto _key = env->GetStringUTFChars(key_jstring, nullptr);
     const std::string key(_key);
     env->ReleaseStringUTFChars(key_jstring, _key);
-    if (has_cache(key))
-        return JNI_TRUE;
-    return JNI_FALSE;
+    return has_cache(key);
 }
 
 /*

@@ -283,17 +283,13 @@ JNIEXPORT jint JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_matched
 (JNIEnv* env, jobject, jstring key_jstring)
 {
     const auto key = env->GetStringUTFChars(key_jstring, nullptr);
-    unsigned matched_number;
-    try
-    {
-        matched_number = matched_result_number_map.at(key);
-    }
-    catch (std::out_of_range&)
-    {
-        matched_number = 0;
-    }
+    auto&& matched_number_iter = matched_result_number_map.find(key);
     env->ReleaseStringUTFChars(key_jstring, key);
-    return matched_number;
+    if (matched_number_iter == matched_result_number_map.end()) 
+    {
+        return 0;
+    }
+    return matched_number_iter->second;
 }
 
 /*
