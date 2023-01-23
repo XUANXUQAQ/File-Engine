@@ -76,7 +76,6 @@ public class SearchBar {
     private final AtomicBoolean isTryToShowResultThreadNotExist = new AtomicBoolean(true);
     private final AtomicBoolean isMergeThreadExist = new AtomicBoolean(false);
     private final AtomicBoolean isRoundRadiusSet = new AtomicBoolean();
-    private volatile boolean isRefreshDisplay = false;
     private static final AtomicBoolean isPreviewMode = new AtomicBoolean();
     private final AtomicBoolean isTutorialMode = new AtomicBoolean();
     private final AtomicBoolean isSwitchToNormalManual = new AtomicBoolean();
@@ -3106,35 +3105,14 @@ public class SearchBar {
                     isLabelEmpty(label6) ||
                     isLabelEmpty(label7) ||
                     isLabelEmpty(label8);
-            if (hasLabelEmpty || isRefreshDisplay) {
-                isRefreshDisplay = false;
+            if (hasLabelEmpty || currentResultCount.get() < 8) {
                 //设置窗口上的文字和图片显示，键盘模式
                 int pos = getCurrentLabelPos();
-                var ref = new Object() {
-                    boolean isLabel1Chosen = false;
-                    boolean isLabel2Chosen = false;
-                    boolean isLabel3Chosen = false;
-                    boolean isLabel4Chosen = false;
-                    boolean isLabel5Chosen = false;
-                    boolean isLabel6Chosen = false;
-                    boolean isLabel7Chosen = false;
-                    boolean isLabel8Chosen = false;
-                };
-                switch (pos) {
-                    case 0 -> ref.isLabel1Chosen = true;
-                    case 1 -> ref.isLabel2Chosen = true;
-                    case 2 -> ref.isLabel3Chosen = true;
-                    case 3 -> ref.isLabel4Chosen = true;
-                    case 4 -> ref.isLabel5Chosen = true;
-                    case 5 -> ref.isLabel6Chosen = true;
-                    case 6 -> ref.isLabel7Chosen = true;
-                    case 7 -> ref.isLabel8Chosen = true;
-                }
                 SwingUtilities.invokeLater(() -> {
                     try {
-                        showResults(
-                                ref.isLabel1Chosen, ref.isLabel2Chosen, ref.isLabel3Chosen, ref.isLabel4Chosen,
-                                ref.isLabel5Chosen, ref.isLabel6Chosen, ref.isLabel7Chosen, ref.isLabel8Chosen
+                        showFirst8Results(
+                                pos == 0, pos == 1, pos == 2, pos == 3,
+                                pos == 4, pos == 5, pos == 6, pos == 7
                         );
                     } catch (IndexOutOfBoundsException ignored) {
                         // ignored
@@ -3663,7 +3641,6 @@ public class SearchBar {
                                 currentSearchTask = res;
                             }
                             addShowSearchStatusThread();
-                            isRefreshDisplay = true;
                         });
                     });
                 }
@@ -4111,8 +4088,8 @@ public class SearchBar {
      * @param isLabel7Chosen label7是否被选中
      * @param isLabel8Chosen label8是否被选中
      */
-    private void showResults(boolean isLabel1Chosen, boolean isLabel2Chosen, boolean isLabel3Chosen, boolean isLabel4Chosen,
-                             boolean isLabel5Chosen, boolean isLabel6Chosen, boolean isLabel7Chosen, boolean isLabel8Chosen) {
+    private void showFirst8Results(boolean isLabel1Chosen, boolean isLabel2Chosen, boolean isLabel3Chosen, boolean isLabel4Chosen,
+                                   boolean isLabel5Chosen, boolean isLabel6Chosen, boolean isLabel7Chosen, boolean isLabel8Chosen) {
         int size;
         if (runningMode == RunningMode.NORMAL_MODE) {
             String path;
