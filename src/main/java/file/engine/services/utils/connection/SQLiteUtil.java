@@ -208,7 +208,7 @@ public class SQLiteUtil {
         }
     }
 
-    private static String initialize() {
+    private static String initializeAndGetDiskPath() {
         Path data = Path.of("data");
         if (!Files.exists(data)) {
             try {
@@ -235,7 +235,7 @@ public class SQLiteUtil {
         FileUtil.copyFile(cache, new File(toDir, "cache.db"));
         File weight = new File(fromDir, "weight.db");
         FileUtil.copyFile(weight, new File(toDir, "weight.db"));
-        String[] split = RegexUtil.comma.split(initialize());
+        String[] split = RegexUtil.comma.split(initializeAndGetDiskPath());
         for (String eachDisk : split) {
             String dbName = eachDisk.charAt(0) + ".db";
             File data = new File(fromDir, dbName);
@@ -295,7 +295,7 @@ public class SQLiteUtil {
     public static void initAllConnections(String dir) {
         currentDatabaseDir = dir;
         deleteMalFormedFile();
-        String[] split = RegexUtil.comma.split(initialize());
+        String[] split = RegexUtil.comma.split(initializeAndGetDiskPath());
         ArrayList<File> malformedFiles = new ArrayList<>();
         for (String eachDisk : split) {
             File data = new File(dir, eachDisk.charAt(0) + ".db");

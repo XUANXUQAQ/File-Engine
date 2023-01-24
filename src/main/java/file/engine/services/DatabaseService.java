@@ -1311,8 +1311,8 @@ public class DatabaseService {
                                 }
                             }
                         }
-                    } catch (SQLException exception) {
-                        exception.printStackTrace();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
                     }
                 });
                 statementHashMap.forEach((k, v) -> {
