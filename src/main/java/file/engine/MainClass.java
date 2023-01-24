@@ -165,11 +165,6 @@ public class MainClass {
     }
 
     /**
-     * -Dfile.encoding=UTF-8
-     * -Dsun.java2d.noddraw=true
-     * -Djna.library.path=user
-     * -Dswing.aatext=true
-     * -Djna.debug_load=false
      * -DFile_Engine_Debug=true  todo Debug设置为true
      * -DFile_Engine_Preview=true
      */
@@ -355,24 +350,24 @@ public class MainClass {
     }
 
     private static void releaseAllDependence() throws IOException {
-        copyOrIgnoreFile("user/fileMonitor.dll", "/win32-native/fileMonitor.dll");
-        copyOrIgnoreFile("user/hotkeyListener.dll", "/win32-native/hotkeyListener.dll");
-        copyOrIgnoreFile("user/isLocalDisk.dll", "/win32-native/isLocalDisk.dll");
-        copyOrIgnoreFile("user/fileSearcherUSN.exe", "/win32-native/fileSearcherUSN.exe");
-        copyOrIgnoreFile("user/sqlite3.dll", "/win32-native/sqlite3.dll");
-        copyOrIgnoreFile("user/getHandle.dll", "/win32-native/getHandle.dll");
-        copyOrIgnoreFile("user/shortcutGenerator.vbs", "/shortcutGenerator.vbs");
-        copyOrIgnoreFile("user/getDpi.exe", "/win32-native/getDpi.exe");
-        copyOrIgnoreFile("user/getWindowsKnownFolder.dll", "/win32-native/getWindowsKnownFolder.dll");
-        copyOrIgnoreFile("user/sqliteJDBC.dll", "/win32-native/sqliteJDBC.dll");
-        copyOrIgnoreFile("user/emptyRecycleBin.dll", "/win32-native/emptyRecycleBin.dll");
-        copyOrIgnoreFile("user/cudaAccelerator.dll", "/win32-native/cudaAccelerator.dll");
-        copyOrIgnoreFile("cudart64_110.dll", "/win32-native/cudart64_110.dll");
-        copyOrIgnoreFile("user/openclAccelerator.dll", "/win32-native/openclAccelerator.dll");
-        copyOrIgnoreFile("user/systemThemeInfo.dll", "/win32-native/systemThemeInfo.dll");
+        checkMd5AndReplace("user/fileMonitor.dll", "/win32-native/fileMonitor.dll");
+        checkMd5AndReplace("user/hotkeyListener.dll", "/win32-native/hotkeyListener.dll");
+        checkMd5AndReplace("user/isLocalDisk.dll", "/win32-native/isLocalDisk.dll");
+        checkMd5AndReplace("user/fileSearcherUSN.exe", "/win32-native/fileSearcherUSN.exe");
+        checkMd5AndReplace("user/sqlite3.dll", "/win32-native/sqlite3.dll");
+        checkMd5AndReplace("user/getHandle.dll", "/win32-native/getHandle.dll");
+        checkMd5AndReplace("user/shortcutGenerator.vbs", "/shortcutGenerator.vbs");
+        checkMd5AndReplace("user/getDpi.exe", "/win32-native/getDpi.exe");
+        checkMd5AndReplace("user/getWindowsKnownFolder.dll", "/win32-native/getWindowsKnownFolder.dll");
+        checkMd5AndReplace("user/sqliteJDBC.dll", "/win32-native/sqliteJDBC.dll");
+        checkMd5AndReplace("user/emptyRecycleBin.dll", "/win32-native/emptyRecycleBin.dll");
+        checkMd5AndReplace("user/cudaAccelerator.dll", "/win32-native/cudaAccelerator.dll");
+        checkMd5AndReplace("cudart64_110.dll", "/win32-native/cudart64_110.dll");
+        checkMd5AndReplace("user/openclAccelerator.dll", "/win32-native/openclAccelerator.dll");
+        checkMd5AndReplace("user/systemThemeInfo.dll", "/win32-native/systemThemeInfo.dll");
     }
 
-    private static void copyOrIgnoreFile(String path, String rootPath) throws IOException {
+    private static void checkMd5AndReplace(String path, String rootPath) throws IOException {
         try (InputStream insideJar = Objects.requireNonNull(MainClass.class.getResourceAsStream(rootPath))) {
             File target = new File(path);
             String fileMd5 = Md5Util.getMD5(target.getAbsolutePath());
