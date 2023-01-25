@@ -48,6 +48,7 @@ std::mutex modify_cache_lock;
 std::hash<std::string> hasher;
 std::atomic_bool exit_flag = false;
 static int current_using_device = 0;
+std::atomic_bool is_results_number_exceed = false;
 JavaVM* jvm;
 
 /*
@@ -146,6 +147,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_resetAl
                       val->str_data.record_num + val->str_data.remain_blank_num), true, nullptr);
     }
     matched_result_number_map.clear();
+    is_results_number_exceed = false;
 }
 
 /*
@@ -248,10 +250,10 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_match
     }
     for (auto& [_, cache_val] : cache_map)
     {
-        if (cache_val->is_output_done != 2)
-     	{
-     		cache_val->is_output_done = 2;
-     	}
+        if (cache_val->is_output_done.load() != 2)
+        {
+            cache_val->is_output_done = 2;
+        }
     }
     env->ReleaseStringUTFChars(search_text, search_text_chars);
 }
@@ -264,6 +266,10 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_match
 JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_isMatchDone
 (JNIEnv* env, jobject, jstring key_jstring)
 {
+    if (is_results_number_exceed.load())
+    {
+        return true;
+    }
     const auto _key = env->GetStringUTFChars(key_jstring, nullptr);
     auto iter = cache_map.find(_key);
     env->ReleaseStringUTFChars(key_jstring, _key);
@@ -285,7 +291,7 @@ JNIEXPORT jint JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_matched
     const auto key = env->GetStringUTFChars(key_jstring, nullptr);
     auto&& matched_number_iter = matched_result_number_map.find(key);
     env->ReleaseStringUTFChars(key_jstring, key);
-    if (matched_number_iter == matched_result_number_map.end()) 
+    if (matched_number_iter == matched_result_number_map.end())
     {
         return 0;
     }
@@ -558,7 +564,10 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
     auto _collect_func = [&](const std::string& _key, char _matched_record_str[MAX_PATH_LENGTH],
                              unsigned* matched_number)
     {
-        ++result_counter;
+        if (++result_counter >= max_results)
+        {
+            is_results_number_exceed = true;
+        }
         auto record_jstring = thread_env->NewStringUTF(_matched_record_str);
         auto key_jstring = thread_env->NewStringUTF(_key.c_str());
         thread_env->CallVoidMethod(result_collector, collector, key_jstring, record_jstring);

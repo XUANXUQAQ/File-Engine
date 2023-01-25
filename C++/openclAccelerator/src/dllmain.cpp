@@ -57,6 +57,7 @@ std::atomic_bool exit_flag = false;
 Device current_device;
 Memory<char> p_stop_signal;
 JavaVM* jvm;
+std::atomic_bool is_results_number_exceed = false;
 
 constexpr auto bytes2G = 2147483648;
 
@@ -150,6 +151,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_reset
         val->dev_output->reset();
     }
     matched_result_number_map.clear();
+    is_results_number_exceed = false;
 }
 
 /*
@@ -253,7 +255,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_match
     }
     for (auto& [_, cache_val] : cache_map)
     {
-        if (cache_val->is_output_done != 2)
+        if (cache_val->is_output_done.load() != 2)
         {
             cache_val->is_output_done = 2;
         }
@@ -269,6 +271,10 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_match
 JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_isMatchDone
 (JNIEnv* env, jobject, jstring key_jstring)
 {
+    if (is_results_number_exceed.load())
+    {
+        return true;
+    }
     const auto _key = env->GetStringUTFChars(key_jstring, nullptr);
     auto iter = cache_map.find(_key);
     env->ReleaseStringUTFChars(key_jstring, _key);
@@ -540,7 +546,10 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
     auto _collect_func = [&](const std::string& _key, char _matched_record_str[MAX_PATH_LENGTH],
                              unsigned* matched_number)
     {
-        ++result_counter;
+        if (++result_counter >= max_results)
+        {
+            is_results_number_exceed = true;
+        }
         auto record_jstring = thread_env->NewStringUTF(_matched_record_str);
         auto key_jstring = thread_env->NewStringUTF(_key.c_str());
         thread_env->CallVoidMethod(result_collector, collector, key_jstring, record_jstring);
