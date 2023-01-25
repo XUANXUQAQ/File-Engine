@@ -3571,27 +3571,24 @@ public class SearchBar {
 //        }
     }
 
-    private Optional<DatabaseService.SearchTask> sendPrepareSearchEvent() {
+    private void sendPrepareSearchEvent() {
         EventManagement eventManagement = EventManagement.getInstance();
         if (!getSearchBarText().isEmpty()) {
             isCudaSearchNotStarted.set(false);
             if (DatabaseService.getInstance().getStatus() == Constants.Enums.DatabaseStatus.NORMAL && runningMode == RunningMode.NORMAL_MODE) {
                 searchCaseToLowerAndRemoveConflict();
                 PrepareSearchEvent prepareSearchEvent = new PrepareSearchEvent(() -> searchText, () -> searchCase, () -> keywords);
-                eventManagement.putEvent(prepareSearchEvent);
-                if (eventManagement.waitForEvent(prepareSearchEvent)) {
-                    throw new RuntimeException("prepare search failed.");
-                }
-                return prepareSearchEvent.getReturnValue();
+                eventManagement.putEvent(prepareSearchEvent,
+                        event -> event.getReturnValue().ifPresent(res -> currentSearchTask = (DatabaseService.SearchTask) res),
+                        event -> System.err.println("prepare search event failed."));
             }
         }
-        return Optional.empty();
     }
 
     /**
      * 发送开始搜索事件
      */
-    private Optional<DatabaseService.SearchTask> sendSearchEvent() {
+    private void sendSearchEvent() {
         EventManagement eventManagement = EventManagement.getInstance();
         if (!getSearchBarText().isEmpty()) {
             isSearchNotStarted.set(false);
@@ -3599,14 +3596,14 @@ public class SearchBar {
                     runningMode == RunningMode.NORMAL_MODE) {
                 searchCaseToLowerAndRemoveConflict();
                 var startSearchEvent = new StartSearchEvent(() -> searchText, () -> searchCase, () -> keywords);
-                eventManagement.putEvent(startSearchEvent);
-                if (eventManagement.waitForEvent(startSearchEvent)) {
-                    throw new RuntimeException("wait for event failed.");
-                }
-                return startSearchEvent.getReturnValue();
+                eventManagement.putEvent(startSearchEvent, event -> event.getReturnValue().ifPresent(res -> {
+                    if (currentSearchTask != res) {
+                        currentSearchTask = (DatabaseService.SearchTask) res;
+                    }
+                    addShowSearchStatusThread();
+                }), event -> System.err.println("send search event failed."));
             }
         }
-        return Optional.empty();
     }
 
     private void sendSignalAndShowCommandThread() {
@@ -3624,25 +3621,12 @@ public class SearchBar {
                 if ((endTime - startTime > SEND_PREPARE_SEARCH_TIMEOUT) && isCudaSearchNotStarted.get() &&
                         startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
                     setSearchKeywordsAndSearchCase();
-                    var resultsOptional = sendPrepareSearchEvent();
-                    resultsOptional.ifPresent(res -> {
-                        listResults = new ArrayList<>();
-                        currentSearchTask = res;
-                    });
+                    sendPrepareSearchEvent();
                 }
                 if ((endTime - startTime > SEND_START_SEARCH_TIMEOUT) && isSearchNotStarted.get() &&
                         startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
                     setSearchKeywordsAndSearchCase();
-                    ThreadPoolUtil.getInstance().executeTask(() -> {
-                        var resultsOptional = sendSearchEvent();
-                        resultsOptional.ifPresent(res -> {
-                            if (currentSearchTask != res) {
-                                listResults = new ArrayList<>();
-                                currentSearchTask = res;
-                            }
-                            addShowSearchStatusThread();
-                        });
-                    });
+                    sendSearchEvent();
                 }
 
                 if ((endTime - startTime > SHOW_RESULTS_TIMEOUT) && startSearchSignal.get()) {
