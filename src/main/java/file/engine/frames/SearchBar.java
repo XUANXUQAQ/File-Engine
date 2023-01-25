@@ -114,7 +114,7 @@ public class SearchBar {
     private int iconSideLength;
     private volatile long visibleStartTime = 0;  //记录窗口开始可见的事件，窗口默认最短可见时间0.5秒，防止窗口快速闪烁
     private volatile long firstResultStartShowingTime = 0;  //记录开始显示结果的时间，用于防止刚开始移动到鼠标导致误触
-    private volatile ArrayList<String> listResults;  //保存从数据库中找出符合条件的记录（文件路径）
+    private volatile ArrayList<String> listResults = new ArrayList<>();  //保存从数据库中找出符合条件的记录（文件路径）
     private volatile DatabaseService.SearchTask currentSearchTask;
     private volatile String[] searchCase;
     private volatile String searchText = "";
@@ -140,7 +140,6 @@ public class SearchBar {
     private static volatile SearchBar instance = null;
 
     private SearchBar() {
-        listResults = new ArrayList<>();
         currentResultCount = new AtomicInteger(0);
         TranslateService translateService = TranslateService.getInstance();
         open = new JMenuItem(translateService.getTranslation("Open"));
@@ -3294,8 +3293,12 @@ public class SearchBar {
                 if (listResultsSet.add(each)) {
                     listResultsTemp.add(each);
                 }
+                if (listResultsTemp != listResults) {
+                    break;
+                }
             }
         }
+        out:
         for (var eachPlugin : allPlugins) {
             String each;
             while ((each = eachPlugin.plugin.pollFromResultQueue()) != null) {
@@ -3303,12 +3306,18 @@ public class SearchBar {
                 if (listResultsSet.add(each)) {
                     listResultsTemp.add(each);
                 }
+                if (listResultsTemp != listResults) {
+                    break out;
+                }
             }
         }
         if (tempSearchTask != null) {
             for (String each : tempSearchTask.getTempResults()) {
                 if (listResultsSet.add(each)) {
                     listResultsTemp.add(each);
+                }
+                if (listResultsTemp != listResults) {
+                    break;
                 }
             }
         }

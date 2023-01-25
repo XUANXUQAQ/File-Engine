@@ -880,7 +880,9 @@ public class DatabaseService {
                         final long startWaiting = System.currentTimeMillis();
                         while (!GPUAccelerator.INSTANCE.isMatchDone(key)) {
                             if (System.currentTimeMillis() - startWaiting > 1000) {
-                                System.out.println("等待GPU搜索超时");
+                                if (IsDebug.isDebug()) {
+                                    System.out.println("等待GPU搜索超时");
+                                }
                                 fallbackFlag = true;
                                 break;
                             }
