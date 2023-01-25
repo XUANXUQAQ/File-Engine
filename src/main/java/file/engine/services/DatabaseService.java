@@ -1037,7 +1037,12 @@ public class DatabaseService {
         startSearchTimeMills = System.currentTimeMillis();
         var threadPoolUtil = ThreadPoolUtil.getInstance();
         var eventManagement = EventManagement.getInstance();
-        final int threadNumberPerDisk = Math.max(1, AllConfigs.getInstance().getConfigEntity().getSearchThreadNumber() / searchTask.taskMap.size());
+
+        var diskNumber = searchTask.taskMap.size();
+        var searchThreadNumber = AllConfigs.getInstance().getConfigEntity().getSearchThreadNumber();
+        final int threadNumberPerDisk = Math.max(1, searchThreadNumber / diskNumber);
+        final int remainThreads = searchThreadNumber - diskNumber * threadNumberPerDisk;
+
         Consumer<ConcurrentLinkedQueue<Runnable>> taskHandler = (taskQueue) -> {
             while (!taskQueue.isEmpty() && eventManagement.notMainExit()) {
                 var runnable = taskQueue.poll();
@@ -1047,31 +1052,27 @@ public class DatabaseService {
                 runnable.run();
             }
         };
-        for (var entry : searchTask.taskMap.entrySet()) {
+        for (var taskQueue : searchTask.taskMap.values()) {
             for (int i = 0; i < threadNumberPerDisk; i++) {
                 threadPoolUtil.executeTaskInFixedThreadPool(() -> {
                     searchThreadCount.incrementAndGet();
-                    var taskQueue = entry.getValue();
                     taskHandler.accept(taskQueue);
-                    searchTask.taskMap.remove(entry.getKey());
                     //自身任务已经完成，开始扫描其他线程的任务
-                    boolean hasTask;
-                    do {
-                        hasTask = false;
-                        for (var e : searchTask.taskMap.entrySet()) {
-                            var otherTaskQueue = e.getValue();
-                            // 如果hasTask为false，则检查otherTaskQueue是否为空
-                            if (!hasTask) {
-                                // 不为空则设置hasTask为true
-                                hasTask = !otherTaskQueue.isEmpty();
-                            }
-                            taskHandler.accept(otherTaskQueue);
-                            searchTask.taskMap.remove(e.getKey());
-                        }
-                    } while (hasTask && eventManagement.notMainExit());
+                    for (var otherTaskQueue : searchTask.taskMap.values()) {
+                        taskHandler.accept(otherTaskQueue);
+                    }
                     searchThreadCount.decrementAndGet();
                 });
             }
+        }
+        for (int i = 0; i < remainThreads; i++) {
+            threadPoolUtil.executeTaskInFixedThreadPool(() -> {
+                searchThreadCount.incrementAndGet();
+                for (var otherTaskQueue : searchTask.taskMap.values()) {
+                    taskHandler.accept(otherTaskQueue);
+                }
+                searchThreadCount.decrementAndGet();
+            });
         }
         waitForTasks(searchTask);
     }

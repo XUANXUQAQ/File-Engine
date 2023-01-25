@@ -17,8 +17,7 @@ public enum ThreadPoolUtil {
                 60,
                 TimeUnit.SECONDS,
                 new SynchronousQueue<>(),
-                Executors.defaultThreadFactory(),
-                new ThreadPoolExecutor.CallerRunsPolicy()
+                Executors.defaultThreadFactory()
         );
         fixedThreadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     }
