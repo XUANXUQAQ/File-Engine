@@ -899,14 +899,20 @@ public class DatabaseService {
                     }
                 }
                 if (fallbackFlag) {
-                    if (stmt == null) {
-                        try {
-                            stmt = SQLiteUtil.getStatement(diskStr);
-                        } catch (SQLException e) {
-                            throw new RuntimeException(e);
-                        }
+                    int recordsNum = 1;
+                    if (databaseResultsCount.containsKey(key)) {
+                        recordsNum = databaseResultsCount.get(key).get();
                     }
-                    matchedNum = fallbackSearchDatabase(searchTask, stmt, eachSql, priority, key);
+                    if (recordsNum != 0) {
+                        if (stmt == null) {
+                            try {
+                                stmt = SQLiteUtil.getStatement(diskStr);
+                            } catch (SQLException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                        matchedNum = fallbackToSearchDatabase(searchTask, stmt, eachSql, priority, key);
+                    }
                 }
                 final long weight = Math.min(matchedNum, 5);
                 if (weight != 0L) {
@@ -932,16 +938,8 @@ public class DatabaseService {
         });
     }
 
-    private long fallbackSearchDatabase(SearchTask searchTask, Statement stmt, String eachSql, String priority, String key) {
-        int recordsNum = 1;
-        long matchedNum = 0;
-        if (databaseResultsCount.containsKey(key)) {
-            recordsNum = databaseResultsCount.get(key).get();
-        }
-        if (recordsNum != 0) {
-            matchedNum = searchFromDatabaseOrCache(stmt, eachSql, key, priority, searchTask);
-        }
-        return matchedNum;
+    private long fallbackToSearchDatabase(SearchTask searchTask, Statement stmt, String eachSql, String priority, String key) {
+        return searchFromDatabaseOrCache(stmt, eachSql, key, priority, searchTask);
     }
 
     /**
