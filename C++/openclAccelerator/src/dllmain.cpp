@@ -273,7 +273,7 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_i
 {
     if (is_results_number_exceed.load())
     {
-        return true;
+        return JNI_TRUE;
     }
     const auto _key = env->GetStringUTFChars(key_jstring, nullptr);
     auto iter = cache_map.find(_key);
@@ -637,7 +637,7 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
             val->is_output_done = 2;
         }
     }
-    while (!all_complete && !p_stop_signal[0] && result_counter.load() < max_results);
+    while (!all_complete && !stop_func());
     thread_env->DeleteLocalRef(biconsumer_class);
 }
 
