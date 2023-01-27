@@ -284,7 +284,20 @@ public class SearchBar {
      * @return 以pluginResultSplitStr分开的字符串
      */
     private String[] splitPluginResult(String res) {
-        return RegexUtil.getPattern(PLUGIN_RESULT_SPLITTER_STR, 0).split(res);
+        String[] ret = new String[3];
+        String[] resultWithPluginInfo = RegexUtil.getPattern(PLUGIN_RESULT_SPLITTER_STR, 0).split(res);
+        StringBuilder pluginResultBuilder = new StringBuilder();
+        for (int i = 2; i < resultWithPluginInfo.length; i++) {
+            pluginResultBuilder.append(resultWithPluginInfo[2]).append(PLUGIN_RESULT_SPLITTER_STR);
+        }
+        String pluginResult = "";
+        if (!pluginResultBuilder.isEmpty()) {
+            pluginResult = pluginResultBuilder.substring(0, pluginResultBuilder.length() - PLUGIN_RESULT_SPLITTER_STR.length());
+        }
+        ret[0] = resultWithPluginInfo[0];
+        ret[1] = resultWithPluginInfo[1];
+        ret[2] = pluginResult;
+        return ret;
     }
 
     /**
@@ -4012,11 +4025,7 @@ public class SearchBar {
      * @param isChosen 是否当前被选中
      */
     private void showPluginResultOnLabel(String result, JLabel label, boolean isChosen) {
-        Pattern pattern = RegexUtil.getPattern(PLUGIN_RESULT_SPLITTER_STR, 0);
-        String[] resultWithPluginInfo = pattern.split(result);
-        if (resultWithPluginInfo.length != 3) {
-            throw new RuntimeException("plugin result error: " + result);
-        }
+        String[] resultWithPluginInfo = splitPluginResult(result);
         if (runningMode == RunningMode.PLUGIN_MODE) {
             currentUsingPlugin.showResultOnLabel(resultWithPluginInfo[2], label, isChosen);
         } else {
