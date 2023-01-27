@@ -3302,12 +3302,15 @@ public class SearchBar {
         for (var eachPlugin : allPlugins) {
             String each;
             while ((each = eachPlugin.plugin.pollFromResultQueue()) != null) {
+                if (listResultsTemp != listResults) {
+                    for (var allPlugin : allPlugins) {
+                        allPlugin.plugin.clearResultQueue();
+                    }
+                    break out;
+                }
                 each = "plugin" + PLUGIN_RESULT_SPLITTER_STR + eachPlugin.plugin.identifier + PLUGIN_RESULT_SPLITTER_STR + each;
                 if (listResultsSet.add(each)) {
                     listResultsTemp.add(each);
-                }
-                if (listResultsTemp != listResults) {
-                    break out;
                 }
             }
         }
