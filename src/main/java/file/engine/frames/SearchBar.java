@@ -4304,6 +4304,7 @@ public class SearchBar {
             if (!isPreviewMode.get()) {
                 searchBar.setVisible(false);
                 EventManagement.getInstance().putEvent(new SearchBarCloseEvent());
+                GetIconUtil.getInstance().clearIconCache();
             }
         } else {
             searchBar.setVisible(true);

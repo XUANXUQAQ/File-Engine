@@ -18,9 +18,10 @@ import java.util.function.Consumer;
 public class GetIconUtil {
     private static final int MAX_CONSUMER_THREAD_NUM = 4;
     private static final FileSystemView FILE_SYSTEM_VIEW = FileSystemView.getFileSystemView();
-    private final ConcurrentHashMap<String, ImageIcon> iconMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, ImageIcon> constantIconMap = new ConcurrentHashMap<>();
     private final ConcurrentLinkedQueue<Task> workingQueue = new ConcurrentLinkedQueue<>();
     private final ExecutorService iconTaskConsumer = Executors.newFixedThreadPool(MAX_CONSUMER_THREAD_NUM);
+    private final ConcurrentHashMap<String, ImageIcon> cacheIconMap = new ConcurrentHashMap<>();
 
     private static volatile GetIconUtil INSTANCE = null;
 
@@ -49,15 +50,15 @@ public class GetIconUtil {
     }
 
     private void initIconCache() {
-        iconMap.put("dllImageIcon", Objects.requireNonNull((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("user", "fileMonitor.dll"))));
-        iconMap.put("folderImageIcon", Objects.requireNonNull((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("user"))));
-        iconMap.put("txtImageIcon", Objects.requireNonNull((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("user\\cmds.txt"))));
-        iconMap.put("blankIcon", new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/blank.png"))));
-        iconMap.put("recycleBin", new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/recyclebin.png"))));
-        iconMap.put("updateIcon", new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/update.png"))));
-        iconMap.put("helpIcon", new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/help.png"))));
-        iconMap.put("completeIcon", new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/complete.png"))));
-        iconMap.put("loadingIcon", new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/loading.gif"))));
+        constantIconMap.put("dllImageIcon", Objects.requireNonNull((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("user", "fileMonitor.dll"))));
+        constantIconMap.put("folderImageIcon", Objects.requireNonNull((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("user"))));
+        constantIconMap.put("txtImageIcon", Objects.requireNonNull((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("user\\cmds.txt"))));
+        constantIconMap.put("blankIcon", new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/blank.png"))));
+        constantIconMap.put("recycleBin", new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/recyclebin.png"))));
+        constantIconMap.put("updateIcon", new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/update.png"))));
+        constantIconMap.put("helpIcon", new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/help.png"))));
+        constantIconMap.put("completeIcon", new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/complete.png"))));
+        constantIconMap.put("loadingIcon", new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/loading.gif"))));
     }
 
     public ImageIcon getCommandIcon(String commandName, int width, int height) {
@@ -68,10 +69,10 @@ public class GetIconUtil {
             return null;
         }
         return switch (commandName) {
-            case "clearbin" -> changeIcon(iconMap.get("recycleBin"), width, height);
-            case "update", "clearUpdate" -> changeIcon(iconMap.get("updateIcon"), width, height);
-            case "help" -> changeIcon(iconMap.get("helpIcon"), width, height);
-            case "version" -> changeIcon(iconMap.get("blankIcon"), width, height);
+            case "clearbin" -> changeIcon(constantIconMap.get("recycleBin"), width, height);
+            case "update", "clearUpdate" -> changeIcon(constantIconMap.get("updateIcon"), width, height);
+            case "help" -> changeIcon(constantIconMap.get("helpIcon"), width, height);
+            case "version" -> changeIcon(constantIconMap.get("blankIcon"), width, height);
             default -> null;
         };
     }
@@ -82,37 +83,46 @@ public class GetIconUtil {
         return image[0];
     }
 
+    public void clearIconCache() {
+        cacheIconMap.clear();
+    }
+
     public void getBigIcon(String pathOrKey,
                            int width,
                            int height,
                            Consumer<ImageIcon> timeoutCallback,
                            @NonNull BiConsumer<ImageIcon, Boolean> normalCallback) {
         if (pathOrKey == null || pathOrKey.isEmpty()) {
-            normalCallback.accept(changeIcon(iconMap.get("blankIcon"), width, height), false);
+            normalCallback.accept(changeIcon(constantIconMap.get("blankIcon"), width, height), false);
             return;
         }
-        if (iconMap.containsKey(pathOrKey)) {
-            normalCallback.accept(changeIcon(iconMap.get(pathOrKey), width, height), false);
+        if (constantIconMap.containsKey(pathOrKey)) {
+            normalCallback.accept(changeIcon(constantIconMap.get(pathOrKey), width, height), false);
             return;
         }
         File f = new File(pathOrKey);
         if (!f.exists()) {
-            normalCallback.accept(changeIcon(iconMap.get("blankIcon"), width, height), false);
+            normalCallback.accept(changeIcon(constantIconMap.get("blankIcon"), width, height), false);
             return;
         }
-        pathOrKey = pathOrKey.toLowerCase();
         //已保存的常量图标
-        if (pathOrKey.endsWith(".dll") || pathOrKey.endsWith(".sys")) {
-            normalCallback.accept(changeIcon(iconMap.get("dllImageIcon"), width, height), false);
+        var toLower = pathOrKey.toLowerCase();
+        if (toLower.endsWith(".dll") || toLower.endsWith(".sys")) {
+            normalCallback.accept(changeIcon(constantIconMap.get("dllImageIcon"), width, height), false);
             return;
         }
-        if (pathOrKey.endsWith(".txt")) {
-            normalCallback.accept(changeIcon(iconMap.get("txtImageIcon"), width, height), false);
+        if (toLower.endsWith(".txt")) {
+            normalCallback.accept(changeIcon(constantIconMap.get("txtImageIcon"), width, height), false);
             return;
         }
         //检测是否为文件夹
         if (f.isDirectory()) {
-            normalCallback.accept(changeIcon(iconMap.get("folderImageIcon"), width, height), false);
+            normalCallback.accept(changeIcon(constantIconMap.get("folderImageIcon"), width, height), false);
+            return;
+        }
+        ImageIcon cachedIcon = cacheIconMap.get(pathOrKey);
+        if (cachedIcon != null) {
+            normalCallback.accept(changeIcon(cachedIcon, width, height), false);
             return;
         }
         Task task = new Task(f, width, height);
@@ -120,17 +130,22 @@ public class GetIconUtil {
             throw new RuntimeException("add to working queue failed");
         }
         final long startMills = System.currentTimeMillis();
-        final long timeoutThreshold = timeoutCallback == null ? 10_000 : 50; // 最长等待时间
+        final long timeoutThreshold = timeoutCallback == null ? 10_000 : 200; // 最长等待时间
         while (!task.isDone) {
             if (System.currentTimeMillis() - startMills > timeoutThreshold) {
-                normalCallback.accept(changeIcon(iconMap.get("blankIcon"), width, height), true);
+                // 超时，添加timeoutCallback后退出
+                normalCallback.accept(changeIcon(constantIconMap.get("blankIcon"), width, height), true);
                 if (timeoutCallback != null) {
                     task.timeoutCallBack = timeoutCallback;
                     workingQueue.add(task);
                 }
                 return;
             }
-            Thread.onSpinWait();
+            try {
+                TimeUnit.MILLISECONDS.sleep(1);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
         //图标获取完成
         normalCallback.accept(task.icon, false);
@@ -157,11 +172,13 @@ public class GetIconUtil {
                     icon = task.icon;
                 } else {
                     icon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(task.path), task.width, task.height);
+                    cacheIconMap.put(task.path.getAbsolutePath(), icon);
                 }
                 task.timeoutCallBack.accept(icon);
             } else {
                 task.icon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(task.path), task.width, task.height);
                 task.isDone = true;
+                cacheIconMap.put(task.path.getAbsolutePath(), task.icon);
             }
             TimeUnit.MILLISECONDS.sleep(1);
         }
