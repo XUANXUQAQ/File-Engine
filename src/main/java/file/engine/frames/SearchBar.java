@@ -74,7 +74,8 @@ public class SearchBar {
     private final AtomicBoolean isBorderThreadNotExist = new AtomicBoolean(true);
     private final AtomicBoolean isLockMouseMotionThreadNotExist = new AtomicBoolean(true);
     private final AtomicBoolean isTryToShowResultThreadNotExist = new AtomicBoolean(true);
-    private final AtomicBoolean isMergeThreadExist = new AtomicBoolean(false);
+    private final AtomicBoolean isMergeThreadExist = new AtomicBoolean();
+    private volatile boolean isStartMerge = false;
     private final AtomicBoolean isRoundRadiusSet = new AtomicBoolean();
     private static final AtomicBoolean isPreviewMode = new AtomicBoolean();
     private final AtomicBoolean isTutorialMode = new AtomicBoolean();
@@ -2392,8 +2393,8 @@ public class SearchBar {
     /**
      * 只在重新输入需要初始化所有设置时使用
      */
-    private void clearAllAndResetAll() {
-        clearAllLabels();
+    private void resetStatusOnTextChanged() {
+        isStartMerge = false;
         listResults = new ArrayList<>();
         firstResultStartShowingTime = 0;
         currentResultCount.set(0);
@@ -2401,7 +2402,6 @@ public class SearchBar {
         isRoundRadiusSet.set(false);
         searchInfoLabel.setText("");
         searchInfoLabel.setIcon(null);
-        currentSearchTask = null;
     }
 
     /**
@@ -2488,7 +2488,8 @@ public class SearchBar {
                     isPluginSearchBarClearReady.compareAndSet(isPluginSearchBarClearReady.get(), false);
                 }
                 changeFontOnDisplayFailed();
-                clearAllAndResetAll();
+                clearAllLabels();
+                resetStatusOnTextChanged();
                 if (runningMode == RunningMode.PLUGIN_MODE && currentUsingPlugin != null && isPluginSearchBarClearReady.get()) {
                     currentUsingPlugin.clearResultQueue();
                     currentUsingPlugin.textChanged(getSearchBarText());
@@ -2509,7 +2510,8 @@ public class SearchBar {
                     isPluginSearchBarClearReady.compareAndSet(isPluginSearchBarClearReady.get(), false);
                 }
                 changeFontOnDisplayFailed();
-                clearAllAndResetAll();
+                clearAllLabels();
+                resetStatusOnTextChanged();
                 if (getSearchBarText().isEmpty()) {
                     lastMousePositionX = 0;
                     lastMousePositionY = 0;
@@ -2536,7 +2538,8 @@ public class SearchBar {
 
             @Override
             public void changedUpdate(DocumentEvent e) {
-                clearAllAndResetAll();
+                clearAllLabels();
+                resetStatusOnTextChanged();
                 startTime = System.currentTimeMillis();
                 startSearchSignal.set(false);
                 isSearchNotStarted.set(false);
@@ -3294,13 +3297,17 @@ public class SearchBar {
                 listResultsTemp = listResults;
                 listResultsSet = new HashSet<>();
             }
-            mergeResultMethod(listResultsTemp, listResultsSet, allPlugins);
+            if (isStartMerge) {
+                mergeResultMethod(currentSearchTask, listResultsTemp, listResultsSet, allPlugins);
+            }
             TimeUnit.MILLISECONDS.sleep(1);
         }
     }
 
-    private void mergeResultMethod(ArrayList<String> listResultsTemp, HashSet<String> listResultsSet, Set<PluginService.PluginInfo> allPlugins) {
-        var tempSearchTask = currentSearchTask;
+    private void mergeResultMethod(DatabaseService.SearchTask tempSearchTask,
+                                   ArrayList<String> listResultsTemp,
+                                   HashSet<String> listResultsSet,
+                                   Set<PluginService.PluginInfo> allPlugins) {
         if (tempSearchTask != null) {
             for (String each : tempSearchTask.getCacheAndPriorityResults()) {
                 if (listResultsSet.add(each)) {
@@ -3626,6 +3633,7 @@ public class SearchBar {
                         currentSearchTask = (DatabaseService.SearchTask) res;
                     }
                     addShowSearchStatusThread();
+                    isStartMerge = true;
                 }), event -> System.err.println("send search event failed."));
             }
         }
@@ -4341,6 +4349,7 @@ public class SearchBar {
         startTime = System.currentTimeMillis();//结束搜索
         currentResultCount.set(0);
         currentLabelSelectedPosition.set(0);
+        isStartMerge = false;
         listResults = new ArrayList<>();
         isUserPressed.set(false);
         isLockMouseMotion.set(false);
