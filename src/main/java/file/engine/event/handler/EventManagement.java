@@ -138,16 +138,28 @@ public class EventManagement {
 
     private boolean handleNormalEvent(Event event) {
         String eventClassName;
-        if (event instanceof PluginRegisterEvent) {
-            eventClassName = ((PluginRegisterEvent) event).getClassFullName();
+        boolean isPluginEvent = false;
+        if (event instanceof PluginRegisterEvent pluginRegisterEvent) {
+            isPluginEvent = true;
+            eventClassName = pluginRegisterEvent.getClassFullName();
         } else {
             eventClassName = event.getClass().getName();
         }
         BiConsumer<Class<?>, Object> pluginHandler = PLUGIN_EVENT_HANDLER_MAP.get(eventClassName);
         if (pluginHandler != null) {
             try {
-                pluginHandler.accept(event.getClass(), event);
-                doAllMethod(eventClassName, event);
+                if (isPluginEvent) {
+                    PluginRegisterEvent pluginRegisterEvent = (PluginRegisterEvent) event;
+                    if (pluginRegisterEvent.getEventObjFromPlugin() == null) {
+                        // 兼容以前版本
+                        pluginHandler.accept(event.getClass(), event);
+                    } else {
+                        pluginHandler.accept(pluginRegisterEvent.getEventClass(), pluginRegisterEvent.getEventObjFromPlugin());
+                    }
+                } else {
+                    pluginHandler.accept(event.getClass(), event);
+                    doAllMethod(eventClassName, event);
+                }
                 event.setFinishedAndExecCallback();
                 return false;
             } catch (Exception e) {
@@ -248,7 +260,11 @@ public class EventManagement {
                     }
                     registerEvent.setCallback((Consumer) eventParams[1]);
                     registerEvent.setErrorHandler((Consumer) eventParams[2]);
-                    if (eventParams.length == 4) {
+                    if (eventParams.length > 4) {
+                        // 老版本传入的参数为paramsMap，在该版本中已弃用，因此需要判断，否则会导致数组越界
+                        registerEvent.setEventObjFromPlugin(eventParams[3]);
+                        registerEvent.setEventClass((Class<?>) eventParams[4]);
+                    } else if (eventParams.length == 4) {
                         registerEvent.setParams((LinkedHashMap<String, Object>) eventParams[3]);
                     }
                     return registerEvent;

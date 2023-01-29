@@ -14,6 +14,10 @@ public class PluginRegisterEvent extends Event {
 
     private String classFullName;
 
-    private LinkedHashMap<String, Object> params = new LinkedHashMap<>();
+    private LinkedHashMap<String, Object> params;
+
+    private Object eventObjFromPlugin;
+
+    private Class<?> eventClass;
 
 }
