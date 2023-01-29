@@ -131,9 +131,9 @@ public class SearchBar {
     private int lastMousePositionX = 0;
     private int lastMousePositionY = 0;
     private final String PLUGIN_RESULT_SPLITTER_STR = "-@-@-";
-    private static final int SEND_PREPARE_SEARCH_TIMEOUT = 100;  //毫秒(ms)
-    private static final int SEND_START_SEARCH_TIMEOUT = 350;  //ms
-    private static final int SHOW_RESULTS_TIMEOUT = 350; //ms
+    private static final int SEND_PREPARE_SEARCH_TIMEOUT = 350;  //毫秒(ms)
+    private static final int SEND_START_SEARCH_TIMEOUT = 500;  //ms
+    private static final int SHOW_RESULTS_TIMEOUT = 500; //ms
     private static final float SEARCH_BAR_WIDTH_RATIO = 0.3f;
     private static final float SEARCH_BAR_HEIGHT_RATIO = 0.4f;
     private final float TEXT_FIELD_HEIGHT_RATIO = 0.7f;
