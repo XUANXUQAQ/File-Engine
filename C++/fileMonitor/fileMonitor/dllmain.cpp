@@ -26,7 +26,6 @@ void stop_monitor(const std::string path);
 void monitor_path(const std::string& path);
 void add_record(const std::wstring& record);
 void delete_record(const std::wstring& record);
-inline bool is_dir(const wchar_t* path);
 bool pop_del_file(std::wstring& record);
 bool pop_add_file(std::wstring& record);
 
@@ -72,65 +71,6 @@ JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_FileMonitor_pop_1del_1fi
 		return env->NewStringUTF(str.c_str());
 	}
 	return nullptr;
-}
-
-/**
- * 检查路径是否是文件夹
- */
-inline bool is_dir(const wchar_t* path)
-{
-	struct _stat64i32 s{};
-	if (_wstat(path, &s) == 0)
-	{
-		if (s.st_mode & S_IFDIR)
-		{
-			return true;
-		}
-	}
-	return false;
-}
-
-/**
- * 搜索文件夹
- */
-void search_dir(const std::wstring& path)
-{
-	//文件句柄
-	intptr_t hFile;
-	//文件信息
-	_wfinddata_t file_info{};
-	std::wstring pathName;
-	const std::wstring exdName = L"\\*";
-
-	if ((hFile = _wfindfirst(pathName.assign(path).append(exdName).c_str(), &file_info)) != -1)
-	{
-		do
-		{
-			//如果是文件夹中仍有文件夹,加入列表后迭代
-			//如果不是,加入列表
-			if ((file_info.attrib & _A_SUBDIR))
-			{
-				if (wcscmp(file_info.name, L".") != 0 && wcscmp(file_info.name, L"..") != 0)
-				{
-					std::wstring name(file_info.name);
-					std::wstring _path = pathName.assign(path).append(L"\\").append(file_info.name);
-					add_record(_path);
-					search_dir(_path);
-				}
-			}
-			else
-			{
-				if (wcscmp(file_info.name, L".") != 0 && wcscmp(file_info.name, L"..") != 0)
-				{
-					std::wstring name(file_info.name);
-					std::wstring _path = pathName.assign(path).append(L"\\").append(file_info.name);
-					add_record(_path);
-				}
-			}
-		}
-		while (_wfindnext(hFile, &file_info) == 0);
-		_findclose(hFile);
-	}
 }
 
 /**
@@ -198,7 +138,6 @@ void monitor_path(const std::string& path)
 {
 	const auto wPath = string2wstring(path);
 	DirectoryChangesReader dcr(wPath);
-	std::wstring dir_to_search;
 	auto&& flag = stop_flag.at(path);
 	while (flag.load())
 	{
@@ -214,37 +153,16 @@ void monitor_path(const std::string& path)
 				{
 				case FILE_ACTION_ADDED:
 				case FILE_ACTION_RENAMED_NEW_NAME:
-					if (wcsstr(data.c_str(), L"$RECYCLE.BIN") == nullptr)
+					if (data.find(L"$RECYCLE.BIN") == std::wstring::npos)
 					{
 						std::wstring data_with_disk;
 						data_with_disk.append(wPath).append(data);
 						add_record(data_with_disk);
-						if (!dir_to_search.empty() && dir_to_search != data_with_disk)
-						{
-							search_dir(dir_to_search);
-#ifdef TEST
-							std::cout << "start search dir: " << wstring2string(dir_to_search) << std::endl;
-#endif
-							dir_to_search.clear();
-						}
-#ifdef TEST
-						else
-						{
-							std::cout << "delay search dir: " << wstring2string(dir_to_search) << std::endl;
-						}
-#endif
-						if (is_dir(data_with_disk.c_str()))
-						{
-							dir_to_search = data_with_disk;
-						}
-#ifdef TEST
-						std::cout << "file added: " << wstring2string(data_with_disk) << std::endl;
-#endif
 					}
 					break;
 				case FILE_ACTION_REMOVED:
 				case FILE_ACTION_RENAMED_OLD_NAME:
-					if (wcsstr(data.c_str(), L"$RECYCLE.BIN") == nullptr)
+					if (data.find(L"$RECYCLE.BIN") == std::wstring::npos)
 					{
 						std::wstring data_with_disk;
 						data_with_disk.append(wPath).append(data);

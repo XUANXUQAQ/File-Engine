@@ -9,9 +9,7 @@ public class FileUtil {
 
     public static boolean isFileExist(String path) {
         try {
-            if (Files.exists(Path.of(path))) {
-                return true;
-            }
+            return Files.exists(Path.of(path));
         } catch (InvalidPathException e) {
             e.printStackTrace();
         }
@@ -51,8 +49,12 @@ public class FileUtil {
         return "";
     }
 
-    public static boolean isFile(String text) {
-        return Files.isRegularFile(Path.of(text));
+    public static boolean isDir(String path) {
+        return Files.isDirectory(Path.of(path));
+    }
+
+    public static boolean isFile(String path) {
+        return Files.isRegularFile(Path.of(path));
     }
 
     public static String getFileName(String path) {
