@@ -12,7 +12,7 @@ public class PreviewSearchBarEvent extends Event {
     public final int unchosenLabelFontColor;
     public final int defaultBackgroundColor;
     public final Constants.Enums.BorderType borderType;
-    public final int borderThickness;
+    public final float borderThickness;
 
     public PreviewSearchBarEvent(String borderColor,
                                  String searchBarColor,
@@ -31,7 +31,7 @@ public class PreviewSearchBarEvent extends Event {
         this.chosenLabelFontColor = Integer.parseInt(chosenLabelFontColor, 16);
         this.unchosenLabelFontColor = Integer.parseInt(unchosenLabelFontColor, 16);
         this.defaultBackgroundColor = Integer.parseInt(defaultBackgroundColor, 16);
-        this.borderThickness = Integer.parseInt(borderThickness);
+        this.borderThickness = Float.parseFloat(borderThickness);
         this.borderType = borderType;
     }
 }

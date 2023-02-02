@@ -188,18 +188,16 @@ public class SearchBar {
      * @param positionY        Y坐标
      * @param searchBarWidth   宽度
      * @param searchBarHeight  高度
-     * @param transparentColor 透明的背景颜色
-     * @param contentPanel     内容面板
      */
-    private void initFrame(int positionX, int positionY, int searchBarWidth, int searchBarHeight, Color transparentColor, JPanel contentPanel) {
+    private void initFrame(int positionX, int positionY, int searchBarWidth, int searchBarHeight) {
         //frame
         searchBar.setBounds(positionX, positionY, searchBarWidth, searchBarHeight);
         searchBar.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
         searchBar.setUndecorated(true);
         searchBar.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
-        searchBar.setBackground(transparentColor);
+        searchBar.setBackground(new Color(0, 0, 0, 0));
         searchBar.setOpacity(AllConfigs.getInstance().getConfigEntity().getTransparency());
-        searchBar.setContentPane(contentPanel);
+        searchBar.setContentPane(searchBarContentPane);
         searchBar.setType(JFrame.Type.UTILITY);
         searchBar.setAlwaysOnTop(true);
         //用于C++判断是否点击了当前窗口
@@ -224,7 +222,7 @@ public class SearchBar {
         labelFontColor = new Color(configs.getFontColor());
         initBorder(allConfigs.getBorderType(), new Color(configs.getBorderColor()), configs.getBorderThickness());
 
-        initFrame(positionX, positionY, searchBarWidth, searchBarHeight, transparentColor, searchBarContentPane);
+        initFrame(positionX, positionY, searchBarWidth, searchBarHeight);
 
         int labelHeight = searchBarHeight / 9;
         int textFieldHeight = (int) (labelHeight * TEXT_FIELD_HEIGHT_RATIO);
@@ -263,6 +261,7 @@ public class SearchBar {
             searchBar.setIconImage(image);
         }
         //panel
+        searchBarContentPane.setDoubleBuffered(true);
         searchBarContentPane.setBounds(0, 0, searchBarWidth, searchBarHeight);
         searchBarContentPane.setLayout(null);
         searchBarContentPane.setBackground(transparentColor);
@@ -413,8 +412,9 @@ public class SearchBar {
      * @param borderColor     边框颜色
      * @param borderThickness 边框厚度
      */
-    private void initBorder(Constants.Enums.BorderType borderType, Color borderColor, int borderThickness) {
+    private void initBorder(Constants.Enums.BorderType borderType, Color borderColor, float borderThickness) {
         double roundRadius = AllConfigs.getInstance().getConfigEntity().getRoundRadius();
+        int borderThickNessInt = (int) borderThickness;
         RoundBorder topRound = new RoundBorder(borderColor,
                 borderThickness,
                 (int) roundRadius,
@@ -432,7 +432,7 @@ public class SearchBar {
                 RoundBorder.ShowLines.ALL);
         if (Constants.Enums.BorderType.AROUND == borderType) {
             topBorder = topRound;
-            middleBorder = BorderFactory.createMatteBorder(0, borderThickness, 0, borderThickness, borderColor);
+            middleBorder = BorderFactory.createMatteBorder(0, borderThickNessInt, 0, borderThickNessInt, borderColor);
             bottomBorder = bottomRound;
             fullBorder = fullRound;
         } else if (Constants.Enums.BorderType.EMPTY == borderType) {
@@ -444,9 +444,9 @@ public class SearchBar {
         } else if (borderType == Constants.Enums.BorderType.FULL) {
             Border lineBorder = BorderFactory.createMatteBorder(
                     0,
-                    borderThickness,
-                    borderThickness,
-                    borderThickness,
+                    borderThickNessInt,
+                    borderThickNessInt,
+                    borderThickNessInt,
                     borderColor);
             topBorder = topRound;
             middleBorder = lineBorder;
@@ -2588,6 +2588,9 @@ public class SearchBar {
     }
 
     private void setSearchBarRadius(int x, int y, double radius, int width, int height) {
+        Graphics g = searchBar.getGraphics();
+        Graphics2D graphics2d = (Graphics2D) g;
+        graphics2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         searchBar.setShape(new RoundRectangle2D.Double(x, y, width, height, radius, radius));
     }
 
@@ -4397,7 +4400,7 @@ public class SearchBar {
         textField.setForeground(new Color(colorNum));
     }
 
-    private void setBorderColor(Constants.Enums.BorderType borderType, int colorNum, int borderThickness) {
+    private void setBorderColor(Constants.Enums.BorderType borderType, int colorNum, float borderThickness) {
         initBorder(borderType, new Color(colorNum), borderThickness);
     }
 }

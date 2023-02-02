@@ -99,7 +99,7 @@ public class ConfigEntity {
     private String borderType;
 
     @SerializedName("borderThickness")
-    private int borderThickness;
+    private float borderThickness;
 
     @SerializedName("roundRadius")
     private double roundRadius;

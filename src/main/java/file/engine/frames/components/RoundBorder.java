@@ -6,7 +6,7 @@ import java.awt.geom.Path2D;
 
 public class RoundBorder implements Border {
     private final Color color;
-    private final int thickness;
+    private final float thickness;
     private final int borderRadius;
     private final int roundedCorners;
     private final int showLines;
@@ -84,7 +84,7 @@ public class RoundBorder implements Border {
     }
 
 
-    public RoundBorder(Color color, int thickness, int roundRadius, int roundedCorners, int showLines) {
+    public RoundBorder(Color color, float thickness, int roundRadius, int roundedCorners, int showLines) {
         // 有参数的构造方法
         this.color = color;
         this.thickness = thickness;
@@ -104,7 +104,6 @@ public class RoundBorder implements Border {
         graphics2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         graphics2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_GASP);
         graphics2d.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
-        graphics2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         graphics2d.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
         graphics2d.setRenderingHint(RenderingHints.KEY_DITHERING, RenderingHints.VALUE_DITHER_ENABLE);
         graphics2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);

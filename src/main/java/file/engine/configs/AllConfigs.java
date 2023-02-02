@@ -430,7 +430,8 @@ public class AllConfigs {
     }
 
     private void readBorderThickness(Map<String, Object> settingsInJson) {
-        configEntity.setBorderThickness(getFromJson(settingsInJson, "borderThickness", 1));
+        Object borderThickness = getFromJson(settingsInJson, "borderThickness", 1);
+        configEntity.setBorderThickness(Float.parseFloat(String.valueOf(borderThickness)));
     }
 
     private void readLanguage(Map<String, Object> settingsInJson) {

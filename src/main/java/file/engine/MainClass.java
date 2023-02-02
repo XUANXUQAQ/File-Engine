@@ -169,6 +169,8 @@ public class MainClass {
      * -DFile_Engine_Preview=true
      */
     private static void setSystemProperties() {
+        System.setProperty("awt.useSystemAAFontSettings", "on");
+        System.setProperty("swing.aatext", "true");
         System.setProperty("File_Engine_Preview", "false");
         System.setProperty("file.encoding", "UTF-8");
         System.setProperty("sun.java2d.noddraw", "true");

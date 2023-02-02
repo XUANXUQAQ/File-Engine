@@ -759,6 +759,19 @@ public class SettingsFrame {
     }
 
     @SuppressWarnings("SameParameterValue")
+    private boolean canParseFloat(String str, float min, float max) {
+        try {
+            float v = Float.parseFloat(str);
+            if (min <= v && v <= max) {
+                return true;
+            }
+            throw new Exception("parse failed");
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @SuppressWarnings("SameParameterValue")
     private boolean canParseDouble(String str, double min, double max) {
         try {
             double v = Double.parseDouble(str);
@@ -3221,7 +3234,7 @@ public class SettingsFrame {
     }
 
     private void checkBorderThickness(StringBuilder stringBuilder) {
-        if (!canParseInteger(textFieldBorderThickness.getText(), 1, 4)) {
+        if (!canParseFloat(textFieldBorderThickness.getText(), 0, 4)) {
             stringBuilder.append(translateService.getTranslation("Border thickness is too large, please change"));
         }
     }
@@ -3340,7 +3353,7 @@ public class SettingsFrame {
             configEntity.setProxyType(Constants.Enums.ProxyType.PROXY_DIRECT);
         }
         configEntity.setUpdateAddress((String) chooseUpdateAddress.getSelectedItem());
-        configEntity.setBorderThickness(Integer.parseInt(textFieldBorderThickness.getText()));
+        configEntity.setBorderThickness(Float.parseFloat(textFieldBorderThickness.getText()));
         if (borderType == null) {
             borderType = Constants.Enums.BorderType.AROUND;
         }
