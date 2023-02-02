@@ -130,7 +130,9 @@ if len(sys.argv) == 2:
     print("JAVA_HOME set to " + jdkPath)
 
 # 编译jar
-os.system('set JAVA_HOME=' + jdkPath + '&& mvn clean compile package')
+if os.system('set JAVA_HOME=' + jdkPath + '&& mvn clean compile package') != 0:
+    print('maven compile failed')
+    exit()
 # 获取版本
 configs = jproperties.Properties()
 with open(r'.\target\maven-archiver\pom.properties', 'rb') as f:
@@ -140,18 +142,33 @@ fileEngineVersion = configs.get('version')
 # 切换到build
 os.chdir(buildDir)
 
-os.system(r'xcopy ..\target\File-Engine.jar . /Y')
+if os.system(r'xcopy ..\target\File-Engine.jar . /Y') != 0:
+    print('xcopy File-Engine.jar failed.')
+    exit()
 os.system(r'del /Q /F File-Engine.zip')
 
 # 生成jre
+# binPath = os.path.join(jdkPath, 'bin')
+# jdepExe = os.path.join(binPath, 'jdeps.exe')
+# deps = subprocess.check_output([jdepExe, '--ignore-missing-deps', '--print-module-deps', r'..\target\File-Engine-' + fileEngineVersion.data + '.jar'])
+# depsStr = deps.decode().strip()
 binPath = os.path.join(jdkPath, 'bin')
-jdepExe = os.path.join(binPath, 'jdeps.exe')
-deps = subprocess.check_output([jdepExe, '--ignore-missing-deps', '--print-module-deps', r'..\target\File-Engine-' + fileEngineVersion.data + '.jar'])
-depsStr = deps.decode().strip()
+javaExe = os.path.join(binPath, 'java.exe')
+modules = subprocess.check_output([javaExe, '--list-modules'])
+modulesStr = modules.decode().strip()
+tmpModuleList = modulesStr.splitlines()
+moduleList = []
+for each in tmpModuleList:
+    if not each.startswith('jdk.') and each.startswith('java.'):
+        moduleName = each.split('@')
+        moduleList.append(moduleName[0])
+depsStr = ','.join(moduleList)
 shutil.rmtree('jre')
 jlinkExe = os.path.join(binPath, 'jlink.exe')
 jlinkExe = jlinkExe[0:1] + '\"' + jlinkExe[1:] + '\"'
-os.system(jlinkExe + r' --no-header-files --no-man-pages --compress=2 --module-path jmods --add-modules ' + depsStr + ' --output jre')
+if os.system(jlinkExe + r' --no-header-files --no-man-pages --compress=2 --module-path jmods --add-modules ' + depsStr + ' --output jre') != 0:
+    print('Generate jre failed.')
+    exit()
 
 # 精简jar
 delFileInZip()
@@ -181,7 +198,9 @@ shutil.make_archive('File-Engine', 'zip', root_dir='.', base_dir='jre')
 with zipfile.ZipFile('File-Engine.zip', mode="a") as f:
     f.write('File-Engine.jar')
 
-os.system(r'xcopy File-Engine.zip "..\C++\launcherWrap\launcherWrap\" /Y')
+if os.system(r'xcopy File-Engine.zip "..\C++\launcherWrap\launcherWrap\" /Y') != 0:
+    print('xcopy File-Engine.zip to launcherWrap directory failed.')
+    exit()
 
 # 编译启动器
 vsPathList = vswhere.find(
