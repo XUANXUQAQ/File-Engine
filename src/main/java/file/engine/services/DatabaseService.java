@@ -440,7 +440,7 @@ public class DatabaseService {
         LinkedHashMap<String, Integer> tableNeedCache = scanDatabaseAndSelectCacheTable(disks,
                 tableQueueByPriority,
                 isStopCreateCache,
-                1,
+                2000,
                 Integer.MAX_VALUE);
         saveTableCacheForGPU(isStopCreateCache, tableNeedCache, createGpuCacheThreshold);
         System.out.println("添加完成");
@@ -660,7 +660,8 @@ public class DatabaseService {
     private int searchAndAddToTempResults(String sql,
                                           Statement stmt,
                                           String priorityStr,
-                                          SearchTask searchTask) {
+                                          SearchTask searchTask,
+                                          String key) {
         //结果太多则不再进行搜索
         if (searchTask.shouldStopSearch.get()) {
             return 0;
@@ -668,31 +669,50 @@ public class DatabaseService {
         AtomicInteger matchedResultCount = new AtomicInteger();
         EventManagement eventManagement = EventManagement.getInstance();
         AtomicInteger submitCount = new AtomicInteger();
+        final boolean[] isGPUMatchDone = {false};
         try (ResultSet resultSet = stmt.executeQuery(sql)) {
-            boolean isExit = false;
-            while (!isExit && !searchTask.shouldStopSearch.get() && eventManagement.notMainExit()) {
-                int i = 0;
+            boolean noMoreRecords = false;
+            out:
+            while (!noMoreRecords && !searchTask.shouldStopSearch.get() && eventManagement.notMainExit()) {
+                if (isEnableGPUAccelerate && GPUAccelerator.INSTANCE.isMatchDone(key)) {
+                    isGPUMatchDone[0] = true;
+                    break;
+                }
+                // 查询数据库，分配String数组
+                int realResultCount = 0;
                 String[] tmpQueryResultsCache = new String[MAX_TEMP_QUERY_RESULT_CACHE];
                 // 先将结果查询出来，再进行字符串匹配，提高吞吐量
-                while (i < MAX_TEMP_QUERY_RESULT_CACHE && !searchTask.shouldStopSearch.get() && eventManagement.notMainExit()) {
+                while (realResultCount < MAX_TEMP_QUERY_RESULT_CACHE) {
+                    if (isEnableGPUAccelerate && GPUAccelerator.INSTANCE.isMatchDone(key)) {
+                        isGPUMatchDone[0] = true;
+                        break out;
+                    }
+                    if (searchTask.shouldStopSearch.get() || !eventManagement.notMainExit()) {
+                        break out;
+                    }
                     if (resultSet.next()) {
-                        tmpQueryResultsCache[i] = resultSet.getString("PATH");
-                        ++i;
+                        tmpQueryResultsCache[realResultCount] = resultSet.getString("PATH");
+                        ++realResultCount;
                     } else {
-                        isExit = true;
+                        noMoreRecords = true;
                         break;
                     }
                 }
-                int finalI = i;
+                // 向线程池提交搜索任务
+                int realResultCount1 = realResultCount;
                 submitCount.getAndIncrement();
                 ThreadPoolUtil.getInstance().executeTask(() -> {
                     try {
-                        for (int j = 0; j < finalI; ++j) {
+                        for (int j = 0; j < realResultCount1; ++j) {
                             if (checkIsMatchedAndAddToList(tmpQueryResultsCache[j], priorityStr, searchTask)) {
                                 matchedResultCount.getAndIncrement();
                                 //结果太多则不再进行搜索
                                 //用户重新输入了信息
                                 if (searchTask.shouldStopSearch.get()) {
+                                    return;
+                                }
+                                if (isEnableGPUAccelerate && GPUAccelerator.INSTANCE.isMatchDone(key)) {
+                                    isGPUMatchDone[0] = true;
                                     return;
                                 }
                             }
@@ -713,7 +733,11 @@ public class DatabaseService {
                 break;
             }
         }
-        return matchedResultCount.get();
+        if (isGPUMatchDone[0]) {
+            return GPUAccelerator.INSTANCE.matchedNumber(key);
+        } else {
+            return matchedResultCount.get();
+        }
     }
 
     /**
@@ -876,23 +900,7 @@ public class DatabaseService {
                 long matchedNum = 0;
                 boolean fallbackFlag = !isEnableGPUAccelerate;
                 if (isEnableGPUAccelerate) {
-                    if (GPUAccelerator.INSTANCE.isCacheExist(key)) {
-                        final long startWaiting = System.currentTimeMillis();
-                        while (!GPUAccelerator.INSTANCE.isMatchDone(key)) {
-                            if (System.currentTimeMillis() - startWaiting > 1000) {
-                                if (IsDebug.isDebug()) {
-                                    System.out.println("等待GPU搜索超时");
-                                }
-                                fallbackFlag = true;
-                                break;
-                            }
-                            try {
-                                TimeUnit.MILLISECONDS.sleep(1);
-                            } catch (InterruptedException e) {
-                                throw new RuntimeException(e);
-                            }
-                        }
-                        //gpu搜索已经放入container，只需要获取matchedNum修改权重即可
+                    if (GPUAccelerator.INSTANCE.isMatchDone(key)) {
                         matchedNum = GPUAccelerator.INSTANCE.matchedNumber(key);
                     } else {
                         fallbackFlag = true;
@@ -967,7 +975,7 @@ public class DatabaseService {
             //格式化是为了以后的拓展性
             String formattedSql = String.format(sql, "PATH");
             //当前数据库表中有多少个结果匹配成功
-            matchedNum = searchAndAddToTempResults(formattedSql, stmt, priority, searchTask);
+            matchedNum = searchAndAddToTempResults(formattedSql, stmt, priority, searchTask, key);
         }
         return matchedNum;
     }
