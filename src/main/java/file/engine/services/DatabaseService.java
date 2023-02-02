@@ -540,23 +540,11 @@ public class DatabaseService {
     }
 
     private void syncFileChangesThread() {
-        ThreadPoolUtil threadPoolUtil = ThreadPoolUtil.getInstance();
-        EventManagement eventManagement = EventManagement.getInstance();
-        var fileChanges = new SynchronousQueue<Runnable>();
-        threadPoolUtil.executeTask(() -> addFileChangesRecords(fileChanges));
-        threadPoolUtil.executeTask(() -> {
-            while (eventManagement.notMainExit()) {
-                try {
-                    fileChanges.take().run();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
+        ThreadPoolUtil.getInstance().executeTask(this::addFileChangesRecords);
     }
 
     @SneakyThrows
-    private void addFileChangesRecords(SynchronousQueue<Runnable> fileChanges) {
+    private void addFileChangesRecords() {
         var eventManagement = EventManagement.getInstance();
         while (eventManagement.notMainExit()) {
             String addFilePath = FileMonitor.INSTANCE.pop_add_file();
@@ -566,7 +554,7 @@ public class DatabaseService {
                 do {
                     if (addFile.getParentFile() != null) {
                         var fileAbsolutePath = addFile.getAbsolutePath();
-                        fileChanges.put(() -> addFileToDatabase(fileAbsolutePath));
+                        addFileToDatabase(fileAbsolutePath);
                     }
                 } while ((addFile = addFile.getParentFile()) != null);
                 if (FileUtil.isDir(addFilePath)) {
@@ -577,13 +565,10 @@ public class DatabaseService {
                 }
             }
             if (deleteFilePath != null) {
-                fileChanges.put(() -> removeFileFromDatabase(deleteFilePath));
+                removeFileFromDatabase(deleteFilePath);
             }
             TimeUnit.MILLISECONDS.sleep(1);
         }
-        fileChanges.put(() -> {
-            //退出执行线程
-        });
     }
 
     public Set<String> getCache() {
