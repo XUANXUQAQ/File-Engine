@@ -1982,7 +1982,7 @@ public class DatabaseService {
     }
 
     @EventRegister(registerClass = OptimiseDatabaseEvent.class)
-    private static void optimiseDatabaseEvent(Event event) {
+    private static void optimizeDatabaseEvent(Event event) {
         DatabaseService databaseService = getInstance();
         if (databaseService.status.get() == Constants.Enums.DatabaseStatus._TEMP) {
             return;
@@ -1991,7 +1991,8 @@ public class DatabaseService {
             throw new RuntimeException("databaseService status设置VACUUM状态失败");
         }
         //执行VACUUM命令
-        for (String eachDisk : RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks())) {
+        String[] splitDisks = RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks());
+        for (String eachDisk : splitDisks) {
             try (Statement stmt = SQLiteUtil.getStatement(String.valueOf(eachDisk.charAt(0)))) {
                 stmt.execute("VACUUM;");
             } catch (Exception ex) {

@@ -77,7 +77,7 @@ public class SearchBar {
     private final AtomicBoolean isMergeThreadExist = new AtomicBoolean();
     private volatile boolean isStartMerge = false;
     private final AtomicBoolean isRoundRadiusSet = new AtomicBoolean();
-    private static final AtomicBoolean isPreviewMode = new AtomicBoolean();
+    private final AtomicBoolean isPreviewMode = new AtomicBoolean();
     private final AtomicBoolean isTutorialMode = new AtomicBoolean();
     private final AtomicBoolean isSwitchToNormalManual = new AtomicBoolean();
     private Border fullBorder;
@@ -130,13 +130,13 @@ public class SearchBar {
     private final JMenuItem openLast;
     private int lastMousePositionX = 0;
     private int lastMousePositionY = 0;
-    private final String PLUGIN_RESULT_SPLITTER_STR = "-@-@-";
+    private static final String PLUGIN_RESULT_SPLITTER_STR = "-@-@-";
     private static final int SEND_PREPARE_SEARCH_TIMEOUT = 350;  //毫秒(ms)
     private static final int SEND_START_SEARCH_TIMEOUT = 500;  //ms
     private static final int SHOW_RESULTS_TIMEOUT = 500; //ms
     private static final float SEARCH_BAR_WIDTH_RATIO = 0.3f;
     private static final float SEARCH_BAR_HEIGHT_RATIO = 0.4f;
-    private final float TEXT_FIELD_HEIGHT_RATIO = 0.7f;
+    private static final float TEXT_FIELD_HEIGHT_RATIO = 0.7f;
 
     private static volatile SearchBar instance = null;
 
@@ -278,7 +278,7 @@ public class SearchBar {
     }
 
     /**
-     * 插件返回的结果为plugin[pluginResultSplitStr]pluginIdentifier-result
+     * 插件返回的结果为plugin[pluginResultSplitStr]pluginIdentifier[pluginResultSplitStr]result
      *
      * @param res 结果
      * @return 以pluginResultSplitStr分开的字符串
@@ -2715,10 +2715,10 @@ public class SearchBar {
 
     @EventRegister(registerClass = PreviewSearchBarEvent.class)
     private static void previewSearchBarEvent(Event event) {
-        if (isPreviewMode.get()) {
+        SearchBar searchBar = getInstance();
+        if (searchBar.isPreviewMode.get()) {
             EventManagement eventManagement = EventManagement.getInstance();
             PreviewSearchBarEvent preview = (PreviewSearchBarEvent) event;
-            SearchBar searchBar = getInstance();
             searchBar.setBorderColor(preview.borderType, preview.borderColor, preview.borderThickness);
             searchBar.setSearchBarColor(preview.searchBarColor);
             searchBar.setDefaultBackgroundColor(preview.defaultBackgroundColor);
@@ -2756,12 +2756,12 @@ public class SearchBar {
 
     @EventRegister(registerClass = StartPreviewEvent.class)
     private static void startPreviewEvent(Event event) {
-        isPreviewMode.set(true);
+        getInstance().isPreviewMode.set(true);
     }
 
     @EventRegister(registerClass = StopPreviewEvent.class)
     private static void stopPreviewEvent(Event event) {
-        isPreviewMode.set(false);
+        getInstance().isPreviewMode.set(false);
         IsStartTimeSet.isStartTimeSet.set(false);
     }
 
