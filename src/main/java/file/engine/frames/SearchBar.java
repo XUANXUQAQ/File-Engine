@@ -4326,26 +4326,30 @@ public class SearchBar {
      * 重置所有状态并关闭窗口
      */
     private synchronized void closeSearchBar() {
-        if (!isPreviewMode.get()) {
-            if (isVisible()) {
-                setVisible(false);
+        SwingUtilities.invokeLater(() -> {
+            if (!isPreviewMode.get()) {
+                if (isVisible()) {
+                    setVisible(false);
+                }
+                clearAllLabels();
+                clearTextFieldText();
+                resetAllStatus();
             }
-            clearAllLabels();
-            clearTextFieldText();
-            resetAllStatus();
-        }
-        menu.setVisible(false);
-        isSwitchToNormalManual.set(false);
+            menu.setVisible(false);
+            isSwitchToNormalManual.set(false);
+        });
     }
 
     /**
      * 重置所有状态但不关闭窗口
      */
     private synchronized void closeWithoutHideSearchBar() {
-        clearAllLabels();
-        clearTextFieldText();
-        resetAllStatus();
-        menu.setVisible(false);
+        SwingUtilities.invokeLater(() -> {
+            clearAllLabels();
+            clearTextFieldText();
+            resetAllStatus();
+            menu.setVisible(false);
+        });
     }
 
     private void resetAllStatus() {
