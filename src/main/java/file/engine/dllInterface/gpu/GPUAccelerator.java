@@ -1,6 +1,8 @@
 package file.engine.dllInterface.gpu;
 
 import file.engine.configs.AllConfigs;
+import file.engine.event.handler.EventManagement;
+import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.utils.RegexUtil;
 
 import java.util.HashMap;
@@ -233,5 +235,10 @@ public enum GPUAccelerator {
             }
         }
         return false;
+    }
+
+    @SuppressWarnings("unused")
+    public static void sendRestartOnError0() {
+        EventManagement.getInstance().putEvent(new RestartEvent());
     }
 }
