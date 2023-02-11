@@ -148,11 +148,11 @@ if os.system(r'xcopy ..\target\File-Engine.jar . /Y') != 0:
 os.system(r'del /Q /F File-Engine.zip')
 
 # 生成jre
-# binPath = os.path.join(jdkPath, 'bin')
-# jdepExe = os.path.join(binPath, 'jdeps.exe')
-# deps = subprocess.check_output([jdepExe, '--ignore-missing-deps', '--print-module-deps', r'..\target\File-Engine-' + fileEngineVersion.data + '.jar'])
-# depsStr = deps.decode().strip()
 binPath = os.path.join(jdkPath, 'bin')
+jdepExe = os.path.join(binPath, 'jdeps.exe')
+deps = subprocess.check_output([jdepExe, '--ignore-missing-deps', '--print-module-deps', r'..\target\File-Engine-' + fileEngineVersion.data + '.jar'])
+depsStr = deps.decode().strip()
+modulesFromJar = depsStr.split(',')
 javaExe = os.path.join(binPath, 'java.exe')
 modules = subprocess.check_output([javaExe, '--list-modules'])
 modulesStr = modules.decode().strip()
@@ -162,6 +162,10 @@ for each in tmpModuleList:
     if not each.startswith('jdk.') and each.startswith('java.'):
         moduleName = each.split('@')
         moduleList.append(moduleName[0])
+for eachModule in modulesFromJar:
+    moduleList.append(eachModule)
+moduleList = set(moduleList)
+print("deps: " + str(moduleList))
 depsStr = ','.join(moduleList)
 shutil.rmtree('jre')
 jlinkExe = os.path.join(binPath, 'jlink.exe')
