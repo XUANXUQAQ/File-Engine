@@ -184,10 +184,10 @@ public class SearchBar {
     /**
      * 初始化窗口
      *
-     * @param positionX        X坐标
-     * @param positionY        Y坐标
-     * @param searchBarWidth   宽度
-     * @param searchBarHeight  高度
+     * @param positionX       X坐标
+     * @param positionY       Y坐标
+     * @param searchBarWidth  宽度
+     * @param searchBarHeight 高度
      */
     private void initFrame(int positionX, int positionY, int searchBarWidth, int searchBarHeight) {
         //frame
@@ -4296,7 +4296,7 @@ public class SearchBar {
     }
 
     private void clearTextFieldText() {
-        textField.setText("");
+        SwingUtilities.invokeLater(() -> textField.setText(""));
     }
 
     /**
@@ -4326,30 +4326,26 @@ public class SearchBar {
      * 重置所有状态并关闭窗口
      */
     private synchronized void closeSearchBar() {
-        SwingUtilities.invokeLater(() -> {
-            if (!isPreviewMode.get()) {
-                if (isVisible()) {
-                    setVisible(false);
-                }
-                clearAllLabels();
-                clearTextFieldText();
-                resetAllStatus();
+        if (!isPreviewMode.get()) {
+            if (isVisible()) {
+                setVisible(false);
             }
-            menu.setVisible(false);
-            isSwitchToNormalManual.set(false);
-        });
+            clearAllLabels();
+            clearTextFieldText();
+            resetAllStatus();
+        }
+        menu.setVisible(false);
+        isSwitchToNormalManual.set(false);
     }
 
     /**
      * 重置所有状态但不关闭窗口
      */
     private synchronized void closeWithoutHideSearchBar() {
-        SwingUtilities.invokeLater(() -> {
-            clearAllLabels();
-            clearTextFieldText();
-            resetAllStatus();
-            menu.setVisible(false);
-        });
+        clearAllLabels();
+        clearTextFieldText();
+        resetAllStatus();
+        menu.setVisible(false);
     }
 
     private void resetAllStatus() {
