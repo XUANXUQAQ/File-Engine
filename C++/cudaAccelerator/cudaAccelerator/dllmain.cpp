@@ -224,7 +224,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_match
     collect_threads_vec.reserve(COLLECT_RESULTS_THREADS);
     for (int i = 0; i < COLLECT_RESULTS_THREADS; ++i)
     {
-        collect_threads_vec.emplace_back(std::thread([&]
+        collect_threads_vec.emplace_back([&]
         {
             JNIEnv* thread_env = nullptr;
             JavaVMAttachArgs args{JNI_VERSION_10, nullptr, nullptr};
@@ -235,7 +235,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_match
             }
             collect_results(thread_env, result_collector, result_counter, max_results, search_case_vec);
             jvm->DetachCurrentThread();
-        }));
+        });
     }
     //GPU并行计算
     start_kernel(cache_map, search_case_vec, is_ignore_case, search_text_chars,

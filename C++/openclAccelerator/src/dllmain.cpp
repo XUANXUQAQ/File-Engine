@@ -16,7 +16,6 @@
 #include <array>
 #include <d3d.h>
 #include <dxgi.h>
-#include <map>
 #include <pdh.h>
 #include <unordered_map>
 #pragma comment(lib, "dxgi.lib")
@@ -41,6 +40,7 @@ void start_kernel(const std::vector<std::string>& search_case,
 	const std::vector<std::string>& keywords_lower_case,
 	const bool* is_keyword_path);
 size_t get_device_memory_used();
+void send_restart_event();
 
 //lock
 inline void wait_for_clear_cache();
@@ -248,18 +248,19 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_match
 	collect_threads_vec.reserve(COLLECT_RESULTS_THREADS);
 	for (int i = 0; i < COLLECT_RESULTS_THREADS; ++i)
 	{
-		collect_threads_vec.emplace_back(std::thread([&]
-			{
-				JNIEnv* thread_env = nullptr;
-		JavaVMAttachArgs args{ JNI_VERSION_10, nullptr, nullptr };
-		if (jvm->AttachCurrentThread(reinterpret_cast<void**>(&thread_env), &args) != JNI_OK)
+		auto&& collect_func = [&]
 		{
-			fprintf(stderr, "get thread JNIEnv ptr failed");
-			return;
-		}
-		collect_results(thread_env, result_collector, result_counter, max_results, search_case_vec);
-		jvm->DetachCurrentThread();
-			}));
+			JNIEnv* thread_env = nullptr;
+			JavaVMAttachArgs args{ JNI_VERSION_10, nullptr, nullptr };
+			if (jvm->AttachCurrentThread(reinterpret_cast<void**>(&thread_env), &args) != JNI_OK)
+			{
+				fprintf(stderr, "get thread JNIEnv ptr failed");
+				return;
+			}
+			collect_results(thread_env, result_collector, result_counter, max_results, search_case_vec);
+			jvm->DetachCurrentThread();
+		};
+		collect_threads_vec.emplace_back(collect_func);
 	}
 	//GPU并行计算
 	start_kernel(search_case_vec, is_ignore_case, search_text_chars, keywords_vec, keywords_lower_vec,
@@ -1034,6 +1035,7 @@ void start_kernel(const std::vector<std::string>& search_case,
 		if (ret != CL_SUCCESS)
 		{
 			fprintf(stderr, "OpenCL: init kernel failed. Error code: %d\n", ret);
+			send_restart_event();
 			break;
 		}
 		auto&& each_event = new cl::Event();
@@ -1043,6 +1045,7 @@ void start_kernel(const std::vector<std::string>& search_case,
 		if (ret != CL_SUCCESS)
 		{
 			fprintf(stderr, "OpenCL: start kernel function failed. Error code: %d\n", ret);
+			send_restart_event();
 			break;
 		}
 	}
@@ -1142,4 +1145,21 @@ std::unordered_map<std::wstring, LONGLONG> query_pdh_val(PDH_STATUS& ret)
 	delete[] lpItemBuffer;
 	ret = PdhCloseQuery(query);
 	return memory_usage_map;
+}
+
+void send_restart_event()
+{
+	fprintf(stderr, "Send RestartEvent.");
+	JNIEnv* env = nullptr;
+	JavaVMAttachArgs args{ JNI_VERSION_10, nullptr, nullptr };
+	if (jvm->AttachCurrentThread(reinterpret_cast<void**>(&env), &args) != JNI_OK)
+	{
+		fprintf(stderr, "get thread JNIEnv ptr failed");
+		return;
+	}
+	auto&& gpu_class = env->FindClass("file.engine.dllInterface.gpu.GPUAccelerator");
+	auto&& restart_method = env->GetMethodID(gpu_class, "sendRestartOnError0", "()V");
+	env->CallStaticVoidMethod(gpu_class, restart_method);
+	env->DeleteLocalRef(gpu_class);
+	jvm->DetachCurrentThread();
 }
