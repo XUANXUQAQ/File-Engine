@@ -64,7 +64,7 @@ __global__ void check(const size_t* str_address_records,
 	char* output,
 	const bool* is_stop_collect_var);
 
-__device__ void convert_to_pinyin(const char* chinese_str, char* output_str);
+__device__ void convert_to_pinyin(const char* chinese_str, char* output_str, char* pinyin_initials);
 void free_cuda_search_memory();
 void init_cuda_search_memory();
 bool set_using_device(int device_number);

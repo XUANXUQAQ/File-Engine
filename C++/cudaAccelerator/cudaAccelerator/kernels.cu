@@ -122,7 +122,7 @@ __device__ constexpr char spell_dict[396][7] = {
 	"zi", "zong", "zou", "zu", "zuan", "zui", "zun", "zuo"
 };
 
-__device__ void convert_to_pinyin(const char* chinese_str, char* output_str)
+__device__ void convert_to_pinyin(const char* chinese_str, char* output_str, char* pinyin_initials)
 {
 	// 循环处理字节数组
 	const auto length = strlen_cuda(chinese_str);
@@ -133,6 +133,7 @@ __device__ void convert_to_pinyin(const char* chinese_str, char* output_str)
 		if (val < 128)
 		{
 			str_add_single(output_str, chinese_str[j]);
+			str_add_single(pinyin_initials, chinese_str[j]);
 			// 偏移下标
 			++j;
 			continue;
@@ -144,6 +145,7 @@ __device__ void convert_to_pinyin(const char* chinese_str, char* output_str)
 		{
 			// 非汉字
 			str_add_single(output_str, chinese_str[j]);
+			str_add_single(pinyin_initials, chinese_str[j]);
 			// 偏移下标
 			++j;
 		}
@@ -156,6 +158,7 @@ __device__ void convert_to_pinyin(const char* chinese_str, char* output_str)
 				if (spell_value[i] <= chrasc)
 				{
 					strcat_cuda(output_str, spell_dict[i]);
+					str_add_single(pinyin_initials, spell_dict[i][0]);
 					break;
 				}
 			}
@@ -209,8 +212,10 @@ __device__ bool not_matched(const char* path,
 			// utf-8编码转换gbk
 			utf8_to_gbk(match_str, static_cast<unsigned>(strlen_cuda(match_str)), &gbk_buffer_ptr, nullptr);
 			char converted_pinyin[MAX_PATH_LENGTH * 6]{ 0 };
-			convert_to_pinyin(gbk_buffer, converted_pinyin);
-			if (strstr_cuda(converted_pinyin, each_keyword) == nullptr)
+			char converted_pinyin_initials[MAX_PATH_LENGTH]{ 0 };
+			convert_to_pinyin(gbk_buffer, converted_pinyin, converted_pinyin_initials);
+			if (strstr_cuda(converted_pinyin, each_keyword) == nullptr && 
+				strstr_cuda(converted_pinyin_initials, each_keyword) == nullptr)
 			{
 				return true;
 			}

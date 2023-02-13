@@ -164,7 +164,7 @@ char not_matched(global const char* path,
 void get_parent_path(global const char* path, char* output);
 void get_file_name(global const char* path, char* output);
 char is_str_contains_chinese(const char* source);
-void convert_to_pinyin(const char* chinese_str, char* output_str);
+void convert_to_pinyin(const char* chinese_str, char* output_str, char* pinyin_initials);
 void str_add_single(char* dst, char c);
 void utf8_to_gbk(global const unsigned short* p_utf162gbk, const char* from, unsigned int from_len, char** to);
 char* strcat(char* dst, char const* src);
@@ -276,8 +276,10 @@ char not_matched(global const char* path,
 			// utf-8编码转换gbk
 			utf8_to_gbk(p_utf162gbk, match_str, strlen(match_str), &gbk_buffer_ptr);
 			char converted_pinyin[MAX_PATH_LENGTH * 6] = { 0 };
-			convert_to_pinyin(gbk_buffer, converted_pinyin);
-			if (strstr(converted_pinyin, each_keyword_local) == NULL)
+			char converted_pinyin_initials[MAX_PATH_LENGTH] = { 0 };
+			convert_to_pinyin(gbk_buffer, converted_pinyin, converted_pinyin_initials);
+			if (strstr(converted_pinyin, each_keyword_local) == NULL && 
+				strstr(converted_pinyin_initials, each_keyword_local) == NULL)
 			{
 				return 1;
 			}
@@ -286,7 +288,7 @@ char not_matched(global const char* path,
 	return 0;
 }
 
-void convert_to_pinyin(const char* chinese_str, char* output_str)
+void convert_to_pinyin(const char* chinese_str, char* output_str, char* pinyin_initials)
 {
 	// 循环处理字节数组
 	const unsigned length = strlen(chinese_str);
@@ -297,6 +299,7 @@ void convert_to_pinyin(const char* chinese_str, char* output_str)
 		if (val < 128)
 		{
 			str_add_single(output_str, chinese_str[j]);
+			str_add_single(pinyin_initials, chinese_str[j]);
 			// 偏移下标
 			++j;
 			continue;
@@ -308,6 +311,7 @@ void convert_to_pinyin(const char* chinese_str, char* output_str)
 		{
 			// 非汉字
 			str_add_single(output_str, chinese_str[j]);
+			str_add_single(pinyin_initials, chinese_str[j]);
 			// 偏移下标
 			++j;
 		}
@@ -323,6 +327,7 @@ void convert_to_pinyin(const char* chinese_str, char* output_str)
 					char spell_dict_local[7] = { 0 };
 					copy_from_constant(spell_dict_local, p, strlen_constant(p));
 					strcat(output_str, spell_dict_local);
+					str_add_single(pinyin_initials, spell_dict_local[0]);
 					break;
 				}
 			}
