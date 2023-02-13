@@ -1,6 +1,7 @@
 package file.engine.services.utils;
 
 import file.engine.utils.PinyinUtil;
+import file.engine.utils.RegexUtil;
 import file.engine.utils.file.FileUtil;
 
 import java.nio.file.Files;
@@ -19,10 +20,12 @@ public class PathMatchUtil {
      */
     private static boolean notMatched(String path, boolean isIgnoreCase, String[] keywords, String[] keywordsLowerCase, boolean[] isKeywordPath) {
         final int length = keywords.length;
+        String parentPath = FileUtil.getParentPath(path);
+        String fileName = FileUtil.getFileName(path);
         for (int i = 0; i < length; ++i) {
             String eachKeyword;
             final boolean isPath = isKeywordPath[i];
-            String matcherStrFromFilePath = isPath ? FileUtil.getParentPath(path) : FileUtil.getFileName(path);
+            String matcherStrFromFilePath = isPath ? parentPath : fileName;
             if (isIgnoreCase) {
                 eachKeyword = keywordsLowerCase[i];
                 matcherStrFromFilePath = matcherStrFromFilePath.toLowerCase();
@@ -34,14 +37,20 @@ public class PathMatchUtil {
             }
             //开始匹配
             if (matcherStrFromFilePath.indexOf(eachKeyword) == -1) {
-                if (isPath) {
+                if (isPath || !PinyinUtil.isStringContainChinese(matcherStrFromFilePath)) {
                     return true;
                 } else {
-                    if (PinyinUtil.isStringContainChinese(matcherStrFromFilePath)) {
-                        if (PinyinUtil.toPinyin(matcherStrFromFilePath, "").indexOf(eachKeyword) == -1) {
-                            return true;
+                    String pinyin = PinyinUtil.toPinyin(matcherStrFromFilePath, ",");
+                    String[] pinyinList = RegexUtil.comma.split(pinyin);
+                    StringBuilder pinyinInitials = new StringBuilder();
+                    for (String eachPinyin : pinyinList) {
+                        if (eachPinyin.isEmpty()) {
+                            continue;
                         }
-                    } else {
+                        pinyinInitials.append(eachPinyin.charAt(0));
+                    }
+                    pinyin = RegexUtil.comma.matcher(pinyin).replaceAll("");
+                    if (pinyin.indexOf(eachKeyword) == -1 && pinyinInitials.indexOf(eachKeyword) == -1) {
                         return true;
                     }
                 }
@@ -52,13 +61,14 @@ public class PathMatchUtil {
 
     /**
      * 检查文件路径是否匹配所有输入规则
-     * @param path 将要匹配的文件路径
-     * @param searchCase 匹配规则 f d case full
-     * @param isIgnoreCase 当searchCase中包含case则为false，该变量用于防止searchCase重复计算
-     * @param searchText 用户输入字符串，由关键字通过 ; 连接
-     * @param keywords 用户输入字符串生成的关键字
+     *
+     * @param path              将要匹配的文件路径
+     * @param searchCase        匹配规则 f d case full
+     * @param isIgnoreCase      当searchCase中包含case则为false，该变量用于防止searchCase重复计算
+     * @param searchText        用户输入字符串，由关键字通过 ; 连接
+     * @param keywords          用户输入字符串生成的关键字
      * @param keywordsLowerCase 防止重复计算
-     * @param isKeywordPath keyword是否为路径或者文件名
+     * @param isKeywordPath     keyword是否为路径或者文件名
      * @return true如果满足所有条件 否则返回false
      */
     public static boolean check(String path,
