@@ -554,8 +554,10 @@ public class DatabaseService {
             String[] warmupKeywords = {"warmup"};
             while (eventManagement.notMainExit()) {
                 if (System.currentTimeMillis() - startTime > timeout) {
-                    startTime = System.currentTimeMillis();
-                    eventManagement.putEvent(new StartSearchEvent(() -> warmupKeywords[0], () -> null, () -> warmupKeywords));
+                    if (!GetHandle.INSTANCE.isForegroundFullscreen()) {
+                        startTime = System.currentTimeMillis();
+                        eventManagement.putEvent(new StartSearchEvent(() -> warmupKeywords[0], () -> null, () -> warmupKeywords));
+                    }
                 }
                 try {
                     TimeUnit.MILLISECONDS.sleep(100);
