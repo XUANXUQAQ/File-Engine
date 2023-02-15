@@ -28,9 +28,9 @@ import file.engine.services.utils.StringUtf8SumUtil;
 import file.engine.services.utils.SystemInfoUtil;
 import file.engine.services.utils.connection.SQLiteUtil;
 import file.engine.utils.Bit;
-import file.engine.utils.ThreadPoolUtil;
 import file.engine.utils.ProcessUtil;
 import file.engine.utils.RegexUtil;
+import file.engine.utils.ThreadPoolUtil;
 import file.engine.utils.file.FileUtil;
 import file.engine.utils.gson.GsonUtil;
 import file.engine.utils.system.properties.IsDebug;
@@ -46,7 +46,10 @@ import java.sql.Statement;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -541,6 +544,26 @@ public class DatabaseService {
 
     private void syncFileChangesThread() {
         ThreadPoolUtil.getInstance().executeTask(this::addFileChangesRecords);
+    }
+
+    private void warmupSearchThread() {
+        ThreadPoolUtil.getInstance().executeTask(() -> {
+            EventManagement eventManagement = EventManagement.getInstance();
+            final long timeout = 10 * 60 * 1000; // 10min
+            long startTime = System.currentTimeMillis();
+            String[] warmupKeywords = {"warmup"};
+            while (eventManagement.notMainExit()) {
+                if (System.currentTimeMillis() - startTime > timeout) {
+                    startTime = System.currentTimeMillis();
+                    eventManagement.putEvent(new StartSearchEvent(() -> warmupKeywords[0], () -> null, () -> warmupKeywords));
+                }
+                try {
+                    TimeUnit.MILLISECONDS.sleep(100);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
     }
 
     @SneakyThrows
@@ -1942,6 +1965,7 @@ public class DatabaseService {
         databaseService.checkTimeAndSendExecuteSqlSignalThread();
         databaseService.executeSqlCommandsThread();
         databaseService.saveTableCacheThread();
+        databaseService.warmupSearchThread();
         isEnableGPUAccelerate = allConfigs.getConfigEntity().isEnableGpuAccelerate();
     }
 
