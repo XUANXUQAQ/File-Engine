@@ -783,7 +783,6 @@ public class SearchBar {
                 if (isPreviewMode.get() || isTutorialMode.get()) {
                     return true;
                 }
-                clearAllLabels();
                 String res = listResults.get(currentResultCount.get());
                 if (runningMode == RunningMode.NORMAL_MODE) {
                     String searchBarText = getSearchBarText();
