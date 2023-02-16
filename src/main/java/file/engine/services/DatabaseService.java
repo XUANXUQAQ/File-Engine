@@ -546,15 +546,27 @@ public class DatabaseService {
         ThreadPoolUtil.getInstance().executeTask(this::addFileChangesRecords);
     }
 
+    @SuppressWarnings("SameParameterValue")
+    private static String getRandomString(int length) {
+        String str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        Random random = new Random();
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < length; i++) {
+            int number = random.nextInt(str.length());
+            sb.append(str.charAt(number));
+        }
+        return sb.toString();
+    }
+
     private void warmupSearchThread() {
         ThreadPoolUtil.getInstance().executeTask(() -> {
             EventManagement eventManagement = EventManagement.getInstance();
             final long timeout = 10 * 60 * 1000; // 10min
             long startTime = System.currentTimeMillis();
-            String[] warmupKeywords = {"warmup"};
             while (eventManagement.notMainExit()) {
                 if (System.currentTimeMillis() - startTime > timeout) {
                     if (!GetHandle.INSTANCE.isForegroundFullscreen()) {
+                        String[] warmupKeywords = {"warmup" + getRandomString(20)};
                         startTime = System.currentTimeMillis();
                         eventManagement.putEvent(new StartSearchEvent(() -> warmupKeywords[0], () -> null, () -> warmupKeywords));
                     }
