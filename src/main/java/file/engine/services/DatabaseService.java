@@ -86,6 +86,7 @@ public class DatabaseService {
     private static final int MAX_CACHED_RECORD_NUM = 10240 * 5;
     private static final int MAX_SQL_NUM = 5000;
     private static final int MAX_RESULTS = 200;
+    private static final String WARMUP_SEARCH_TEXT_PREFIX = "warmup";
 
     private static volatile DatabaseService INSTANCE = null;
 
@@ -566,7 +567,7 @@ public class DatabaseService {
             while (eventManagement.notMainExit()) {
                 if (System.currentTimeMillis() - startTime > timeout) {
                     if (!GetHandle.INSTANCE.isForegroundFullscreen()) {
-                        String[] warmupKeywords = {"warmup" + getRandomString(20)};
+                        String[] warmupKeywords = {WARMUP_SEARCH_TEXT_PREFIX + getRandomString(20)};
                         startTime = System.currentTimeMillis();
                         eventManagement.putEvent(new StartSearchEvent(() -> warmupKeywords[0], () -> null, () -> warmupKeywords));
                     }
@@ -952,7 +953,7 @@ public class DatabaseService {
                     }
                 }
                 final long weight = Math.min(matchedNum, 5);
-                if (weight != 0L) {
+                if (weight != 0L && !searchTask.searchInfo.searchText.startsWith(WARMUP_SEARCH_TEXT_PREFIX)) {
                     //更新表的权重，每次搜索将会按照各个表的权重排序
                     updateTableWeight(tableName, weight);
                 }
