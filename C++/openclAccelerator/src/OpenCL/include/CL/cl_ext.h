@@ -324,6 +324,9 @@ typedef struct _cl_mem_ion_host_ptr
 
 } cl_mem_ion_host_ptr;
 
+#define CL_DEVICE_GLOBAL_FREE_MEMORY_AMD           0x4039
+#define CL_DEVICE_BOARD_NAME_AMD                   0x4038
+
 #endif /* CL_VERSION_1_1 */
 
 #ifdef __cplusplus

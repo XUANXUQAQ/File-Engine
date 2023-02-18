@@ -163,6 +163,13 @@
     <ClInclude Include="src\jni_md.h" />
     <ClInclude Include="src\kernel.hpp" />
     <ClInclude Include="src\opencl.hpp" />
+    <ClInclude Include="src\OpenCL\include\CL\cl.h" />
+    <ClInclude Include="src\OpenCL\include\CL\cl.hpp" />
+    <ClInclude Include="src\OpenCL\include\CL\cl_ext.h" />
+    <ClInclude Include="src\OpenCL\include\CL\cl_gl.h" />
+    <ClInclude Include="src\OpenCL\include\CL\cl_gl_ext.h" />
+    <ClInclude Include="src\OpenCL\include\CL\cl_platform.h" />
+    <ClInclude Include="src\OpenCL\include\CL\opencl.h" />
     <ClInclude Include="src\utf162gbk_val.h" />
     <ClInclude Include="src\utilities.hpp" />
   </ItemGroup>

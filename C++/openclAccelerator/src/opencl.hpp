@@ -17,7 +17,7 @@
 struct Device_Info
 {
     cl::Device cl_device;
-    string name, vendor; // device name, vendor
+    string name, board_name, vendor; // device name, vendor
     string driver_version, opencl_c_version; // device driver version, OpenCL C version
     size_t memory = 0u; // global memory in bytes
     size_t memory_used = 0u; // track global memory usage in bytes
@@ -68,12 +68,12 @@ struct Device_Info
                                                          }) && !contains(to_lower(name), "rtx a");
         // identify P100, Volta, Turing, A100, A30
         const bool amd_128_cores_per_dualcu = contains(to_lower(name), "gfx10");
+        const bool amd_256_cores_per_dualcu = contains(to_lower(name), "gfx11"); // identify RDNA3 GPUs where dual CUs are reported
         // identify RDNA/RDNA2 GPUs where dual CUs are reported
         const float nvidia = static_cast<float>(contains(to_lower(vendor), "nvidia")) * (
             nvidia_192_cores_per_cu ? 192.0f : (nvidia_64_cores_per_cu ? 64.0f : 128.0f));
         // Nvidia GPUs have 192 cores/CU (Kepler), 128 cores/CU (Maxwell, Pascal, Ampere) or 64 cores/CU (P100, Volta, Turing, A100)
-        const float amd = static_cast<float>(contains_any(to_lower(vendor), {"amd", "advanced"})) * (
-            is_gpu ? (amd_128_cores_per_dualcu ? 128.0f : 64.0f) : 0.5f);
+        const float amd = (float)(contains_any(to_lower(vendor), { "amd", "advanced" })) * (is_gpu ? (amd_256_cores_per_dualcu ? 256.0f : amd_128_cores_per_dualcu ? 128.0f : 64.0f) : 0.5f); // AMD GPUs have 64 cores/CU (GCN, CDNA), 128 cores/dualCU (RDNA, RDNA2) or 256 cores/dualCU (RDNA3), AMD CPUs (with SMT) have 1/2 core/CU
         // AMD GPUs have 64 cores/CU (GCN, CDNA) or 128 cores/dualCU (RDNA, RDNA2), AMD CPUs (with SMT) have 1/2 core/CU
         const float intel = static_cast<float>(contains(to_lower(vendor), "intel")) * (is_gpu ? 8.0f : 0.5f);
         // Intel integrated GPUs usually have 8 cores/CU, Intel CPUs (with HT) have 1/2 core/CU
@@ -83,11 +83,24 @@ struct Device_Info
         // for CPUs, compute_units is the number of threads (twice the number of cores with hyperthreading)
         tflops = 1E-6f * static_cast<float>(cores) * static_cast<float>(ipc) * static_cast<float>(clock_frequency);
         // estimated device floating point performance in TeraFLOPs/s
+
+        if (contains_any(to_lower(vendor), { "amd", "advanced" }))
+        {
+            auto&& err = cl_device.getInfo<string>(CL_DEVICE_BOARD_NAME_AMD, &board_name);
+            if (err != CL_SUCCESS)
+            {
+                fprintf(stderr, "Failed to get device board name. Error Code: %d\n", err);
+            }
+        }
+        else
+        {
+            board_name = name;
+        }
     }
 
     inline Device_Info()
     {
-    }; // default constructor
+    } // default constructor
 };
 
 string get_opencl_c_code(); // implemented in kernel.hpp
@@ -247,30 +260,11 @@ public:
     inline Device()
     {
     } // default constructor
-    inline void finish_queue()
-    {
-        cl_queue.finish();
-    }
-
-    inline cl::Context get_cl_context() const
-    {
-        return cl_context;
-    }
-
-    inline cl::Program get_cl_program() const
-    {
-        return cl_program;
-    }
-
-    inline cl::CommandQueue get_cl_queue() const
-    {
-        return cl_queue;
-    }
-
-    inline bool is_initialized() const
-    {
-        return exists;
-    }
+    inline void finish_queue() { cl_queue.finish(); }
+    inline cl::Context get_cl_context() const { return cl_context; }
+    inline cl::Program get_cl_program() const { return cl_program; }
+    inline cl::CommandQueue get_cl_queue() const { return cl_queue; }
+    inline bool is_initialized() const { return exists; }
 };
 
 template <typename T>
@@ -288,22 +282,10 @@ private:
     cl::CommandQueue cl_queue; // command queue
     inline void initialize_auxiliary_pointers()
     {
-        x = s0 = host_buffer;
-        if (d > 0x1u) y = s1 = host_buffer + N;
-        if (d > 0x2u) z = s2 = host_buffer + N * 0x2ull;
-        if (d > 0x3u) w = s3 = host_buffer + N * 0x3ull;
-        if (d > 0x4u) s4 = host_buffer + N * 0x4ull;
-        if (d > 0x5u) s5 = host_buffer + N * 0x5ull;
-        if (d > 0x6u) s6 = host_buffer + N * 0x6ull;
-        if (d > 0x7u) s7 = host_buffer + N * 0x7ull;
-        if (d > 0x8u) s8 = host_buffer + N * 0x8ull;
-        if (d > 0x9u) s9 = host_buffer + N * 0x9ull;
-        if (d > 0xAu) sA = host_buffer + N * 0xAull;
-        if (d > 0xBu) sB = host_buffer + N * 0xBull;
-        if (d > 0xCu) sC = host_buffer + N * 0xCull;
-        if (d > 0xDu) sD = host_buffer + N * 0xDull;
-        if (d > 0xEu) sE = host_buffer + N * 0xEull;
-        if (d > 0xFu) sF = host_buffer + N * 0xFull;
+        /********/ x = s0 = host_buffer; /******/ if (d > 0x4u) s4 = host_buffer + N * 0x4ull; if (d > 0x8u) s8 = host_buffer + N * 0x8ull; if (d > 0xCu) sC = host_buffer + N * 0xCull;
+        if (d > 0x1u) y = s1 = host_buffer + N; /****/ if (d > 0x5u) s5 = host_buffer + N * 0x5ull; if (d > 0x9u) s9 = host_buffer + N * 0x9ull; if (d > 0xDu) sD = host_buffer + N * 0xDull;
+        if (d > 0x2u) z = s2 = host_buffer + N * 0x2ull; if (d > 0x6u) s6 = host_buffer + N * 0x6ull; if (d > 0xAu) sA = host_buffer + N * 0xAull; if (d > 0xEu) sE = host_buffer + N * 0xEull;
+        if (d > 0x3u) w = s3 = host_buffer + N * 0x3ull; if (d > 0x7u) s7 = host_buffer + N * 0x7ull; if (d > 0xBu) sB = host_buffer + N * 0xBull; if (d > 0xFu) sF = host_buffer + N * 0xFull;
     }
 
     inline void allocate_device_buffer(Device& device, const bool allocate_device)

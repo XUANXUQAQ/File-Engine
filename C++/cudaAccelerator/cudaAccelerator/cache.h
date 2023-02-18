@@ -5,8 +5,8 @@
 
 /**
  * \brief 存储数据结构
- * remain_blank_num：当前dev_cache_str有多少空闲空间，每一块大小为MAX_PATH_LENGTH
- * record_num：当前有多少个record，每个record长度为MAX_PATH_LENGTH
+ * remain_blank_num：当前dev_cache_str有多少空闲空间
+ * record_num：当前有多少个record
  * record_hash：每个record的hash，用于判断重复
  */
 using cache_data = struct cache_data
@@ -33,6 +33,7 @@ using list_cache = struct cache_struct
 {
     cache_data str_data;
     char* dev_output = nullptr;
+    size_t dev_output_bytes = 0;
     bool is_cache_valid = false;
     std::atomic_bool is_match_done;
     std::atomic_int is_output_done;

@@ -46,11 +46,7 @@ public interface IGPUAccelerator {
 
     void release();
 
-    /**
-     * 返回格式为[设备名],[设备id];[设备名],[设备id];....
-     * @return 设备信息
-     */
-    String getDevices();
+    String[] getDevices();
 
     boolean setDevice(int deviceNum);
 }

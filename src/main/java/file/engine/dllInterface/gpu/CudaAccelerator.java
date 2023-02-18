@@ -65,7 +65,7 @@ enum CudaAccelerator implements IGPUAccelerator {
 
     public native void release();
 
-    public native String getDevices();
+    public native String[] getDevices();
 
     public native boolean setDevice(int deviceNum);
 }

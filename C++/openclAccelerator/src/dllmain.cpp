@@ -65,34 +65,35 @@ std::atomic_bool is_results_number_exceed = false;
 IDXGIFactory* p_dxgi_factory = nullptr;
 concurrency::concurrent_unordered_map<std::wstring, DXGI_ADAPTER_DESC> gpu_name_adapter_map;
 
-constexpr auto bytes2G = 2147483648;
-
 /*
  * Class:     file_engine_dllInterface_gpu_OpenclAccelerator
  * Method:    getDevices
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_getDevices
+JNIEXPORT jobjectArray JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_getDevices
 (JNIEnv* env, jobject)
 {
-	std::string device_string;
-	std::string ret;
+	std::vector<string> device_vec;
 	auto&& devices = get_devices();
 	const auto device_count = devices.size();
 	for (size_t i = 0; i < device_count; ++i)
 	{
-		// 内存大于2G，并且是GPU
-		if (auto&& is_unified = devices[i].cl_device.getInfo<CL_DEVICE_HOST_UNIFIED_MEMORY>();
-			devices[i].memory > bytes2G && devices[i].is_gpu && !is_unified)
+		// 是GPU
+		if (devices[i].is_gpu)
 		{
-			device_string.append(devices[i].name).append(",").append(std::to_string(i)).append(";");
+			device_vec.emplace_back(devices[i].board_name);
 		}
 	}
-	if (device_count)
+	const auto gpu_device_count = device_vec.size();
+	auto&& string_clazz = env->FindClass("java/lang/String");
+	auto&& object_arr = env->NewObjectArray(static_cast<jsize>(gpu_device_count), string_clazz, nullptr);
+	for (uint i = 0; i < gpu_device_count; ++i)
 	{
-		ret = device_string.substr(0, strlen(device_string.c_str()) - 1);
+		auto&& each_device_name = device_vec[i];
+		env->SetObjectArrayElement(object_arr, i, env->NewStringUTF(each_device_name.c_str()));
 	}
-	return env->NewStringUTF(ret.c_str());
+	env->DeleteLocalRef(string_clazz);
+	return object_arr;
 }
 
 /*
@@ -163,11 +164,11 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_reset
 	p_stop_signal[0] = 0;
 	p_stop_signal.write_to_device();
 	// 初始化is_match_done is_output_done为false
-	for (const auto& [key, val] : cache_map)
+	for (auto& [_, cache_ptr] : cache_map)
 	{
-		val->is_match_done = false;
-		val->is_output_done = 0;
-		val->dev_output->reset();
+		cache_ptr->is_match_done = false;
+		cache_ptr->is_output_done = 0;
+		cache_ptr->dev_output->reset();
 	}
 	matched_result_number_map.clear();
 	is_results_number_exceed = false;
@@ -490,8 +491,7 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_i
 	jboolean ret = JNI_FALSE;
 	for (auto&& each : devices)
 	{
-		if (auto&& is_unified = each.cl_device.getInfo<CL_DEVICE_HOST_UNIFIED_MEMORY>();
-			each.memory > bytes2G && each.is_gpu && !is_unified)
+		if (each.is_gpu)
 		{
 			ret = JNI_TRUE;
 			break;
@@ -1085,7 +1085,7 @@ std::string n2hexstr(I w, size_t hex_len = sizeof(I) << 1)
 std::unordered_map<std::wstring, LONGLONG> query_pdh_val(PDH_STATUS& ret);
 size_t get_device_memory_used()
 {
-	auto&& device_name = current_device.info.name;
+	auto&& device_name = current_device.info.board_name;
 	auto&& device_name_wstr = string2wstring(device_name);
 	auto&& dxgi_device = gpu_name_adapter_map.find(device_name_wstr);
 	if (dxgi_device == gpu_name_adapter_map.end())

@@ -4,6 +4,7 @@
 #include "cache.h"
 #include <concurrent_unordered_map.h>
 #include "cuda_runtime.h"
+#include "jni.h"
 
 #define GET_TID() ((gridDim.x * gridDim.y * blockIdx.z + gridDim.x * blockIdx.y + blockIdx.x) * (blockDim.x * blockDim.y * blockDim.z) + blockDim.x * blockDim.y * threadIdx. z + blockDim.x * threadIdx.y + threadIdx.x)
 #define gpuErrchk(ans, is_exit, info) gpuAssert((ans), __FILE__, __LINE__, __FUNCTION__, (is_exit), (info))
@@ -69,3 +70,4 @@ void free_cuda_search_memory();
 void init_cuda_search_memory();
 bool set_using_device(int device_number);
 size_t find_table_sizeof2(size_t target);
+void set_jvm_ptr_in_kernel(JavaVM* p_vm);

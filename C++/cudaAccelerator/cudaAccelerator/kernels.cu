@@ -20,7 +20,7 @@ char* dev_keywords_lower_case = nullptr;
 size_t* dev_keywords_length = nullptr;
 bool* dev_is_keyword_path = nullptr;
 bool* dev_is_ignore_case = nullptr;
-extern JavaVM* jvm;
+static JavaVM* jvm_ptr = nullptr;
 static bool error_flag = false;
 
 __device__ constexpr int spell_value[] = {
@@ -479,7 +479,7 @@ void send_restart_event()
 		fprintf(stderr, "Send RestartEvent.");
 		JNIEnv* env = nullptr;
 		JavaVMAttachArgs args{ JNI_VERSION_10, nullptr, nullptr };
-		if (jvm->AttachCurrentThread(reinterpret_cast<void**>(&env), &args) != JNI_OK)
+		if (jvm_ptr->AttachCurrentThread(reinterpret_cast<void**>(&env), &args) != JNI_OK)
 		{
 			fprintf(stderr, "get thread JNIEnv ptr failed");
 			return;
@@ -488,6 +488,11 @@ void send_restart_event()
 		auto&& restart_method = env->GetMethodID(gpu_class, "sendRestartOnError0", "()V");
 		env->CallStaticVoidMethod(gpu_class, restart_method);
 		env->DeleteLocalRef(gpu_class);
-		jvm->DetachCurrentThread();
+		jvm_ptr->DetachCurrentThread();
 	}
+}
+
+void set_jvm_ptr_in_kernel(JavaVM* p_vm)
+{
+	jvm_ptr = p_vm;
 }

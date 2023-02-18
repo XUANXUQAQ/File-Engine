@@ -49,31 +49,35 @@ std::hash<std::string> hasher;
 std::atomic_bool exit_flag = false;
 static int current_using_device = 0;
 std::atomic_bool is_results_number_exceed = false;
-JavaVM* jvm;
+static JavaVM* jvm;
 
 /*
  * Class:     file_engine_dllInterface_gpu_CudaAccelerator
  * Method:    getDevices
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_getDevices
+JNIEXPORT jobjectArray JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_getDevices
 (JNIEnv* env, jobject)
 {
     int device_count = 0;
-    std::string device_string;
-    std::string ret;
+    std::vector<std::string> device_vec;
     gpuErrchk(cudaGetDeviceCount(&device_count), false, "get device number failed.");
     for (int i = 0; i < device_count; ++i)
     {
         cudaDeviceProp prop;
         gpuErrchk(cudaGetDeviceProperties(&prop, i), false, "get device info failed.");
-        device_string.append(prop.name).append(",").append(std::to_string(i)).append(";");
+        device_vec.emplace_back(prop.name);
     }
-    if (device_count)
+    auto&& string_clazz = env->FindClass("java/lang/String");
+    auto&& gpu_device_count = device_vec.size();
+    auto&& object_arr = env->NewObjectArray(static_cast<jsize>(gpu_device_count), string_clazz, nullptr);
+    for (UINT i = 0; i < gpu_device_count; ++i)
     {
-        ret = device_string.substr(0, device_string.length() - 1);
+        auto&& device_name = device_vec[i];
+        env->SetObjectArrayElement(object_arr, i, env->NewStringUTF(device_name.c_str()));
     }
-    return env->NewStringUTF(ret.c_str());
+    env->DeleteLocalRef(string_clazz);
+    return object_arr;
 }
 
 /*
@@ -85,7 +89,9 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_set
 (JNIEnv*, jobject, jint device_number_jint)
 {
     if (device_number_jint == current_using_device)
+    {
         return true;
+    }
     release_all();
     if (set_using_device(device_number_jint))
     {
@@ -126,7 +132,9 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_initial
     if (env->GetJavaVM(&jvm) != JNI_OK)
     {
         env->ThrowNew(env->FindClass("java/lang/Exception"), "get JavaVM ptr failed.");
+        return;
     }
+    set_jvm_ptr_in_kernel(jvm);
 }
 
 /*
@@ -139,12 +147,11 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_resetAl
 {
     set_stop(false);
     // 初始化is_match_done is_output_done为false
-    for (const auto& [key, val] : cache_map)
+    for (auto& [_, cache_ptr] : cache_map)
     {
-        val->is_match_done = false;
-        val->is_output_done = 0;
-        gpuErrchk(cudaMemset(val->dev_output, 0,
-                      val->str_data.record_num + val->str_data.remain_blank_num), true, nullptr);
+        cache_ptr->is_match_done = false;
+        cache_ptr->is_output_done = 0;
+        gpuErrchk(cudaMemset(cache_ptr->dev_output, 0, cache_ptr->dev_output_bytes), true, nullptr);
     }
     matched_result_number_map.clear();
     is_results_number_exceed = false;
@@ -377,6 +384,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_initCac
 
     gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&cache->dev_output), total_results_size), true,
               get_cache_info(key, cache).c_str());
+    cache->dev_output_bytes = total_results_size;
     cache->is_cache_valid = true;
     cache->is_match_done = false;
     cache->is_output_done = 0;
