@@ -151,7 +151,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_resetAl
     {
         cache_ptr->is_match_done = false;
         cache_ptr->is_output_done = 0;
-        gpuErrchk(cudaMemset(cache_ptr->dev_output, 0, cache_ptr->dev_output_bytes), true, nullptr);
+        // gpuErrchk(cudaMemset(cache_ptr->dev_output, 0, cache_ptr->dev_output_bytes), true, nullptr);
     }
     matched_result_number_map.clear();
     is_results_number_exceed = false;
@@ -609,7 +609,7 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
             }
             unsigned matched_number = 0;
             //复制结果数组到host，dev_output下标对应dev_cache中的下标，若dev_output[i]中的值为1，则对应dev_cache[i]字符串匹配成功
-            const auto output_ptr = new char[val->str_data.record_num + val->str_data.remain_blank_num];
+            const auto output_ptr = new char[val->dev_output_bytes];
             //将dev_output拷贝到output_ptr
             gpuErrchk(cudaMemcpy(output_ptr, val->dev_output, val->str_data.record_num, cudaMemcpyDeviceToHost), false,
                       "collect results failed");

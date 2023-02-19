@@ -247,16 +247,19 @@ __global__ void check(const size_t* str_address_records,
 	}
 	if (*is_stop_collect_var)
 	{
+		output[thread_id] = 0;
 		return;
 	}
 	const auto path = reinterpret_cast<const char*>(str_address_records[thread_id]);
 	if (path == nullptr || !path[0])
 	{
+		output[thread_id] = 0;
 		return;
 	}
 	if (not_matched(path, *is_ignore_case, keywords, keywords_lower_case, static_cast<int>(*keywords_length),
 		is_keyword_path))
 	{
+		output[thread_id] = 0;
 		return;
 	}
 	if (*search_case == 0)
@@ -273,6 +276,7 @@ __global__ void check(const size_t* str_address_records,
 		strlwr_cuda(file_name);
 		if (strcmp_cuda(search_text, file_name) != 0)
 		{
+			output[thread_id] = 0;
 			return;
 		}
 	}
@@ -373,8 +377,7 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 			break;
 		}
 		int grid_size, block_size;
-		const auto total = cache->str_data.record_num.load() + cache->str_data.remain_blank_num.load();
-		const auto max_pow_of_2 = find_table_sizeof2(total);
+		const auto max_pow_of_2 = find_table_sizeof2(cache->dev_output_bytes);
 		if (cache->str_data.record_num.load() > MAX_THREAD_PER_BLOCK)
 		{
 			block_size = MAX_THREAD_PER_BLOCK;
@@ -389,10 +392,10 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 		size_t* dev_total_number = nullptr;
 		gpuErrchk(cudaMalloc(&dev_total_number, sizeof(size_t)), true, nullptr);
 		dev_ptr_arr[count] = reinterpret_cast<size_t>(dev_total_number);
-		const auto total_number = cache->str_data.record_num + cache->str_data.remain_blank_num;
+		const auto total_number = cache->dev_output_bytes;
 		gpuErrchk(cudaMemcpy(dev_total_number, &total_number, sizeof(size_t), cudaMemcpyHostToDevice), true, nullptr);
 
-		check << <grid_size, block_size, 0, streams[count] >> >
+		check<<<grid_size, block_size, 0, streams[count]>>>
 			(cache->str_data.dev_str_addr,
 				dev_total_number,
 				dev_search_case,
@@ -476,7 +479,7 @@ void send_restart_event()
 	if (!error_flag)
 	{
 		error_flag = true;
-		fprintf(stderr, "Send RestartEvent.");
+		fprintf(stderr, "Send RestartEvent.\n");
 		JNIEnv* env = nullptr;
 		JavaVMAttachArgs args{ JNI_VERSION_10, nullptr, nullptr };
 		if (jvm_ptr->AttachCurrentThread(reinterpret_cast<void**>(&env), &args) != JNI_OK)
