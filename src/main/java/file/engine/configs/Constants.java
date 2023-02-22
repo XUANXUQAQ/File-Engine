@@ -13,6 +13,8 @@ import static file.engine.utils.BeanUtil.copyMatchingFields;
 public class Constants {
     public static String version;
 
+    public static String buildVersion;
+
     public static final int ALL_TABLE_NUM = 40;
 
     public static final int MIN_FRAME_VISIBLE_TIME = 500;
@@ -31,11 +33,13 @@ public class Constants {
 
     static {
         version = "0";
+        buildVersion = "Debug";
         if (!IsDebug.isDebug()) {
             Properties properties = new Properties();
             try (InputStream projectInfo = Constants.class.getResourceAsStream("/project-info.properties")) {
                 properties.load(projectInfo);
                 version = properties.getProperty("project.version");
+                buildVersion = properties.getProperty("project.build.version");
             } catch (IOException e) {
                 e.printStackTrace();
             }

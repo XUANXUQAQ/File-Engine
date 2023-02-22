@@ -37,6 +37,7 @@ using list_cache = struct cache_struct
     bool is_cache_valid = false;
     std::atomic_bool is_match_done;
     std::atomic_int is_output_done;
+    unsigned matched_number = 0;
 };
 
 

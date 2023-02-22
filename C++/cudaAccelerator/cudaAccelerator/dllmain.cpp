@@ -40,7 +40,6 @@ inline void lock_add_or_remove_result();
 inline void free_add_or_remove_results();
 
 concurrency::concurrent_unordered_map<std::string, list_cache*> cache_map;
-concurrency::concurrent_unordered_map<std::string, unsigned> matched_result_number_map;
 std::atomic_bool clear_cache_flag(false);
 std::atomic_uint add_record_thread_count(0);
 std::atomic_uint remove_record_thread_count(0);
@@ -151,9 +150,9 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_resetAl
     {
         cache_ptr->is_match_done = false;
         cache_ptr->is_output_done = 0;
+        cache_ptr->matched_number = 0;
         // gpuErrchk(cudaMemset(cache_ptr->dev_output, 0, cache_ptr->dev_output_bytes), true, nullptr);
     }
-    matched_result_number_map.clear();
     is_results_number_exceed = false;
 }
 
@@ -296,13 +295,14 @@ JNIEXPORT jint JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_matched
 (JNIEnv* env, jobject, jstring key_jstring)
 {
     const auto key = env->GetStringUTFChars(key_jstring, nullptr);
-    auto&& matched_number_iter = matched_result_number_map.find(key);
+    auto&& matched_number_iter = cache_map.find(key);
     env->ReleaseStringUTFChars(key_jstring, key);
-    if (matched_number_iter == matched_result_number_map.end())
+    if (matched_number_iter == cache_map.end())
     {
         return 0;
     }
-    return matched_number_iter->second;
+    auto&& matched_number = matched_number_iter->second;
+    return static_cast<jint>(matched_number->matched_number);
 }
 
 /*
@@ -665,7 +665,7 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
                     }
                 }
             }
-            matched_result_number_map.insert(std::make_pair(key, matched_number));
+            val->matched_number = matched_number;
             val->is_output_done = 2;
             delete[] output_ptr;
         }
