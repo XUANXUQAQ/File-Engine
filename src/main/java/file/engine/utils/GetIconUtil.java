@@ -172,7 +172,11 @@ public class GetIconUtil {
                     icon = task.icon;
                 } else {
                     icon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(task.path), task.width, task.height);
-                    cacheIconMap.put(task.path.getAbsolutePath(), icon);
+                    if (null != icon) {
+                        cacheIconMap.put(task.path.getAbsolutePath(), icon);
+                    } else {
+                        icon = changeIcon(constantIconMap.get("blankIcon"), task.width, task.height);
+                    }
                 }
                 task.timeoutCallBack.accept(icon);
             } else {
