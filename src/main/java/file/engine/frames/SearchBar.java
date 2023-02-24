@@ -3141,6 +3141,7 @@ public class SearchBar {
                     String text = getSearchBarText();
                     if (text.isEmpty()) {
                         clearAllLabels();
+                        listResults.clear();
                     } else if (!listResults.isEmpty()) {
                         //在结果不足8个的时候不断尝试显示
                         tryToShowRecords();
@@ -3282,12 +3283,14 @@ public class SearchBar {
         HashSet<String> listResultsSet = new HashSet<>();
         var allPlugins = pluginService.getAllPlugins();
         while (isVisible()) {
-            //用户重新输入关键字
-            if (listResultsTemp != listResults) {
-                listResultsTemp = listResults;
-                listResultsSet = new HashSet<>();
+            if (runningMode == RunningMode.NORMAL_MODE) {
+                //用户重新输入关键字
+                if (listResultsTemp != listResults) {
+                    listResultsTemp = listResults;
+                    listResultsSet = new HashSet<>();
+                }
+                mergeResultMethod(currentSearchTask, listResultsTemp, listResultsSet, allPlugins);
             }
-            mergeResultMethod(currentSearchTask, listResultsTemp, listResultsSet, allPlugins);
             TimeUnit.MILLISECONDS.sleep(1);
         }
     }
