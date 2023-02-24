@@ -2484,6 +2484,7 @@ public class SearchBar {
                 if (runningMode != RunningMode.PLUGIN_MODE) {
                     isPluginSearchBarClearReady.compareAndSet(isPluginSearchBarClearReady.get(), false);
                 }
+                currentSearchTask = null;
                 changeFontOnDisplayFailed();
                 clearAllLabels();
                 resetStatusOnTextChanged();
@@ -2506,6 +2507,7 @@ public class SearchBar {
                 if (runningMode != RunningMode.PLUGIN_MODE) {
                     isPluginSearchBarClearReady.compareAndSet(isPluginSearchBarClearReady.get(), false);
                 }
+                currentSearchTask = null;
                 changeFontOnDisplayFailed();
                 clearAllLabels();
                 resetStatusOnTextChanged();
@@ -2535,6 +2537,7 @@ public class SearchBar {
 
             @Override
             public void changedUpdate(DocumentEvent e) {
+                currentSearchTask = null;
                 clearAllLabels();
                 resetStatusOnTextChanged();
                 startTime = System.currentTimeMillis();
@@ -3141,7 +3144,6 @@ public class SearchBar {
                     String text = getSearchBarText();
                     if (text.isEmpty()) {
                         clearAllLabels();
-                        listResults.clear();
                     } else if (!listResults.isEmpty()) {
                         //在结果不足8个的时候不断尝试显示
                         tryToShowRecords();
@@ -3283,7 +3285,7 @@ public class SearchBar {
         HashSet<String> listResultsSet = new HashSet<>();
         var allPlugins = pluginService.getAllPlugins();
         while (isVisible()) {
-            if (runningMode == RunningMode.NORMAL_MODE) {
+            if (runningMode == RunningMode.NORMAL_MODE && currentSearchTask != null) {
                 //用户重新输入关键字
                 if (listResultsTemp != listResults) {
                     listResultsTemp = listResults;
@@ -3816,6 +3818,7 @@ public class SearchBar {
         } catch (InterruptedException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
+        listResults = new ArrayList<>();
         ThreadPoolUtil.getInstance().executeTask(() -> {
             if (isGrabFocus && !isSwitchToNormal) {
                 try {
@@ -4097,110 +4100,411 @@ public class SearchBar {
      */
     private void showFirst8Results(boolean isLabel1Chosen, boolean isLabel2Chosen, boolean isLabel3Chosen, boolean isLabel4Chosen,
                                    boolean isLabel5Chosen, boolean isLabel6Chosen, boolean isLabel7Chosen, boolean isLabel8Chosen) {
-        int size;
-        if (runningMode == RunningMode.NORMAL_MODE) {
-            String path;
-            if (!listResults.isEmpty()) {
-                path = listResults.get(0);
+        if (runningMode == RunningMode.NORMAL_MODE)
+            showFirst8ResultsOnNormalMode(isLabel1Chosen,
+                    isLabel2Chosen,
+                    isLabel3Chosen,
+                    isLabel4Chosen,
+                    isLabel5Chosen,
+                    isLabel6Chosen,
+                    isLabel7Chosen,
+                    isLabel8Chosen);
+        else if (runningMode == RunningMode.COMMAND_MODE)
+            showFirst8ResultsOnCommandMode(isLabel1Chosen,
+                    isLabel2Chosen,
+                    isLabel3Chosen,
+                    isLabel4Chosen,
+                    isLabel5Chosen,
+                    isLabel6Chosen,
+                    isLabel7Chosen,
+                    isLabel8Chosen);
+        else if (runningMode == RunningMode.PLUGIN_MODE)
+            showFirst8ResultsOnPluginMode(isLabel1Chosen,
+                    isLabel2Chosen,
+                    isLabel3Chosen,
+                    isLabel4Chosen,
+                    isLabel5Chosen,
+                    isLabel6Chosen,
+                    isLabel7Chosen,
+                    isLabel8Chosen);
+    }
+
+    private void showFirst8ResultsOnNormalMode(boolean isLabel1Chosen, boolean isLabel2Chosen, boolean isLabel3Chosen, boolean isLabel4Chosen, boolean isLabel5Chosen, boolean isLabel6Chosen, boolean isLabel7Chosen, boolean isLabel8Chosen) {
+        var listResultsLocal = listResults;
+        if (listResultsLocal.isEmpty()) {
+            return;
+        }
+        String path;
+        int size = listResultsLocal.size();
+        switch (size) {
+            case 1 -> {
+                path = listResultsLocal.get(0);
                 showResultOnLabel(path, label1, isLabel1Chosen);
+                clearALabel(label2);
+                clearALabel(label3);
+                clearALabel(label4);
+                clearALabel(label5);
+                clearALabel(label6);
+                clearALabel(label7);
+                clearALabel(label8);
             }
-            size = listResults.size();
-            if (size > 1) {
-                path = listResults.get(1);
+            case 2 -> {
+                path = listResultsLocal.get(0);
+                showResultOnLabel(path, label1, isLabel1Chosen);
+                path = listResultsLocal.get(1);
                 showResultOnLabel(path, label2, isLabel2Chosen);
+                clearALabel(label3);
+                clearALabel(label4);
+                clearALabel(label5);
+                clearALabel(label6);
+                clearALabel(label7);
+                clearALabel(label8);
             }
-            if (size > 2) {
-                path = listResults.get(2);
+            case 3 -> {
+                path = listResultsLocal.get(0);
+                showResultOnLabel(path, label1, isLabel1Chosen);
+                path = listResultsLocal.get(1);
+                showResultOnLabel(path, label2, isLabel2Chosen);
+                path = listResultsLocal.get(2);
                 showResultOnLabel(path, label3, isLabel3Chosen);
+                clearALabel(label4);
+                clearALabel(label5);
+                clearALabel(label6);
+                clearALabel(label7);
+                clearALabel(label8);
             }
-            if (size > 3) {
-                path = listResults.get(3);
+            case 4 -> {
+                path = listResultsLocal.get(0);
+                showResultOnLabel(path, label1, isLabel1Chosen);
+                path = listResultsLocal.get(1);
+                showResultOnLabel(path, label2, isLabel2Chosen);
+                path = listResultsLocal.get(2);
+                showResultOnLabel(path, label3, isLabel3Chosen);
+                path = listResultsLocal.get(3);
                 showResultOnLabel(path, label4, isLabel4Chosen);
+                clearALabel(label5);
+                clearALabel(label6);
+                clearALabel(label7);
+                clearALabel(label8);
             }
-            if (size > 4) {
-                path = listResults.get(4);
+            case 5 -> {
+                path = listResultsLocal.get(0);
+                showResultOnLabel(path, label1, isLabel1Chosen);
+                path = listResultsLocal.get(1);
+                showResultOnLabel(path, label2, isLabel2Chosen);
+                path = listResultsLocal.get(2);
+                showResultOnLabel(path, label3, isLabel3Chosen);
+                path = listResultsLocal.get(3);
+                showResultOnLabel(path, label4, isLabel4Chosen);
+                path = listResultsLocal.get(4);
                 showResultOnLabel(path, label5, isLabel5Chosen);
+                clearALabel(label6);
+                clearALabel(label7);
+                clearALabel(label8);
             }
-            if (size > 5) {
-                path = listResults.get(5);
+            case 6 -> {
+                path = listResultsLocal.get(0);
+                showResultOnLabel(path, label1, isLabel1Chosen);
+                path = listResultsLocal.get(1);
+                showResultOnLabel(path, label2, isLabel2Chosen);
+                path = listResultsLocal.get(2);
+                showResultOnLabel(path, label3, isLabel3Chosen);
+                path = listResultsLocal.get(3);
+                showResultOnLabel(path, label4, isLabel4Chosen);
+                path = listResultsLocal.get(4);
+                showResultOnLabel(path, label5, isLabel5Chosen);
+                path = listResultsLocal.get(5);
                 showResultOnLabel(path, label6, isLabel6Chosen);
+                clearALabel(label7);
+                clearALabel(label8);
             }
-            if (size > 6) {
-                path = listResults.get(6);
+            case 7 -> {
+                path = listResultsLocal.get(0);
+                showResultOnLabel(path, label1, isLabel1Chosen);
+                path = listResultsLocal.get(1);
+                showResultOnLabel(path, label2, isLabel2Chosen);
+                path = listResultsLocal.get(2);
+                showResultOnLabel(path, label3, isLabel3Chosen);
+                path = listResultsLocal.get(3);
+                showResultOnLabel(path, label4, isLabel4Chosen);
+                path = listResultsLocal.get(4);
+                showResultOnLabel(path, label5, isLabel5Chosen);
+                path = listResultsLocal.get(5);
+                showResultOnLabel(path, label6, isLabel6Chosen);
+                path = listResultsLocal.get(6);
                 showResultOnLabel(path, label7, isLabel7Chosen);
+                clearALabel(label8);
             }
-            if (size > 7) {
-                path = listResults.get(7);
+            default -> {
+                path = listResultsLocal.get(0);
+                showResultOnLabel(path, label1, isLabel1Chosen);
+                path = listResultsLocal.get(1);
+                showResultOnLabel(path, label2, isLabel2Chosen);
+                path = listResultsLocal.get(2);
+                showResultOnLabel(path, label3, isLabel3Chosen);
+                path = listResultsLocal.get(3);
+                showResultOnLabel(path, label4, isLabel4Chosen);
+                path = listResultsLocal.get(4);
+                showResultOnLabel(path, label5, isLabel5Chosen);
+                path = listResultsLocal.get(5);
+                showResultOnLabel(path, label6, isLabel6Chosen);
+                path = listResultsLocal.get(6);
+                showResultOnLabel(path, label7, isLabel7Chosen);
+                path = listResultsLocal.get(7);
                 showResultOnLabel(path, label8, isLabel8Chosen);
             }
-        } else if (runningMode == RunningMode.COMMAND_MODE) {
-            String command;
-            if (!listResults.isEmpty()) {
-                command = listResults.get(0);
+        }
+    }
+
+    private void showFirst8ResultsOnCommandMode(boolean isLabel1Chosen, boolean isLabel2Chosen, boolean isLabel3Chosen, boolean isLabel4Chosen, boolean isLabel5Chosen, boolean isLabel6Chosen, boolean isLabel7Chosen, boolean isLabel8Chosen) {
+        var listResultsLocal = listResults;
+        if (listResultsLocal.isEmpty()) {
+            return;
+        }
+        String command;
+        int size = listResultsLocal.size();
+        switch (size) {
+            case 1 -> {
+                command = listResultsLocal.get(0);
                 showCommandOnLabel(command, label1, isLabel1Chosen);
+                clearALabel(label2);
+                clearALabel(label3);
+                clearALabel(label4);
+                clearALabel(label5);
+                clearALabel(label6);
+                clearALabel(label7);
+                clearALabel(label8);
             }
-            size = listResults.size();
-            if (size > 1) {
-                command = listResults.get(1);
+            case 2 -> {
+                command = listResultsLocal.get(0);
+                showCommandOnLabel(command, label1, isLabel1Chosen);
+                command = listResultsLocal.get(1);
                 showCommandOnLabel(command, label2, isLabel2Chosen);
+                clearALabel(label3);
+                clearALabel(label4);
+                clearALabel(label5);
+                clearALabel(label6);
+                clearALabel(label7);
+                clearALabel(label8);
             }
-            if (size > 2) {
-                command = listResults.get(2);
+            case 3 -> {
+                command = listResultsLocal.get(0);
+                showCommandOnLabel(command, label1, isLabel1Chosen);
+                command = listResultsLocal.get(1);
+                showCommandOnLabel(command, label2, isLabel2Chosen);
+                command = listResultsLocal.get(2);
                 showCommandOnLabel(command, label3, isLabel3Chosen);
+                clearALabel(label4);
+                clearALabel(label5);
+                clearALabel(label6);
+                clearALabel(label7);
+                clearALabel(label8);
             }
-            if (size > 3) {
-                command = listResults.get(3);
+            case 4 -> {
+                command = listResultsLocal.get(0);
+                showCommandOnLabel(command, label1, isLabel1Chosen);
+                command = listResultsLocal.get(1);
+                showCommandOnLabel(command, label2, isLabel2Chosen);
+                command = listResultsLocal.get(2);
+                showCommandOnLabel(command, label3, isLabel3Chosen);
+                command = listResultsLocal.get(3);
                 showCommandOnLabel(command, label4, isLabel4Chosen);
+                clearALabel(label5);
+                clearALabel(label6);
+                clearALabel(label7);
+                clearALabel(label8);
             }
-            if (size > 4) {
-                command = listResults.get(4);
+            case 5 -> {
+                command = listResultsLocal.get(0);
+                showCommandOnLabel(command, label1, isLabel1Chosen);
+                command = listResultsLocal.get(1);
+                showCommandOnLabel(command, label2, isLabel2Chosen);
+                command = listResultsLocal.get(2);
+                showCommandOnLabel(command, label3, isLabel3Chosen);
+                command = listResultsLocal.get(3);
+                showCommandOnLabel(command, label4, isLabel4Chosen);
+                command = listResultsLocal.get(4);
                 showCommandOnLabel(command, label5, isLabel5Chosen);
+                clearALabel(label6);
+                clearALabel(label7);
+                clearALabel(label8);
             }
-            if (size > 5) {
-                command = listResults.get(5);
+            case 6 -> {
+                command = listResultsLocal.get(0);
+                showCommandOnLabel(command, label1, isLabel1Chosen);
+                command = listResultsLocal.get(1);
+                showCommandOnLabel(command, label2, isLabel2Chosen);
+                command = listResultsLocal.get(2);
+                showCommandOnLabel(command, label3, isLabel3Chosen);
+                command = listResultsLocal.get(3);
+                showCommandOnLabel(command, label4, isLabel4Chosen);
+                command = listResultsLocal.get(4);
+                showCommandOnLabel(command, label5, isLabel5Chosen);
+                command = listResultsLocal.get(5);
                 showCommandOnLabel(command, label6, isLabel6Chosen);
+                clearALabel(label7);
+                clearALabel(label8);
             }
-            if (size > 6) {
-                command = listResults.get(6);
+            case 7 -> {
+                command = listResultsLocal.get(0);
+                showCommandOnLabel(command, label1, isLabel1Chosen);
+                command = listResultsLocal.get(1);
+                showCommandOnLabel(command, label2, isLabel2Chosen);
+                command = listResultsLocal.get(2);
+                showCommandOnLabel(command, label3, isLabel3Chosen);
+                command = listResultsLocal.get(3);
+                showCommandOnLabel(command, label4, isLabel4Chosen);
+                command = listResultsLocal.get(4);
+                showCommandOnLabel(command, label5, isLabel5Chosen);
+                command = listResultsLocal.get(5);
+                showCommandOnLabel(command, label6, isLabel6Chosen);
+                command = listResultsLocal.get(6);
                 showCommandOnLabel(command, label7, isLabel7Chosen);
+                clearALabel(label8);
             }
-            if (size > 7) {
-                command = listResults.get(7);
+            default -> {
+                command = listResultsLocal.get(0);
+                showCommandOnLabel(command, label1, isLabel1Chosen);
+                command = listResultsLocal.get(1);
+                showCommandOnLabel(command, label2, isLabel2Chosen);
+                command = listResultsLocal.get(2);
+                showCommandOnLabel(command, label3, isLabel3Chosen);
+                command = listResultsLocal.get(3);
+                showCommandOnLabel(command, label4, isLabel4Chosen);
+                command = listResultsLocal.get(4);
+                showCommandOnLabel(command, label5, isLabel5Chosen);
+                command = listResultsLocal.get(5);
+                showCommandOnLabel(command, label6, isLabel6Chosen);
+                command = listResultsLocal.get(6);
+                showCommandOnLabel(command, label7, isLabel7Chosen);
+                command = listResultsLocal.get(7);
                 showCommandOnLabel(command, label8, isLabel8Chosen);
             }
-        } else if (runningMode == RunningMode.PLUGIN_MODE) {
-            String pluginResult;
-            if (!listResults.isEmpty()) {
-                pluginResult = listResults.get(0);
+        }
+    }
+
+    private void showFirst8ResultsOnPluginMode(boolean isLabel1Chosen, boolean isLabel2Chosen, boolean isLabel3Chosen, boolean isLabel4Chosen, boolean isLabel5Chosen, boolean isLabel6Chosen, boolean isLabel7Chosen, boolean isLabel8Chosen) {
+        var listResultsLocal = listResults;
+        if (listResultsLocal.isEmpty()) {
+            return;
+        }
+        String pluginResult;
+        int size = listResultsLocal.size();
+        switch (size) {
+            case 1 -> {
+                pluginResult = listResultsLocal.get(0);
                 showPluginResultOnLabel(pluginResult, label1, isLabel1Chosen);
+                clearALabel(label2);
+                clearALabel(label3);
+                clearALabel(label4);
+                clearALabel(label5);
+                clearALabel(label6);
+                clearALabel(label7);
+                clearALabel(label8);
             }
-            size = listResults.size();
-            if (size > 1) {
-                pluginResult = listResults.get(1);
+            case 2 -> {
+                pluginResult = listResultsLocal.get(0);
+                showPluginResultOnLabel(pluginResult, label1, isLabel1Chosen);
+                pluginResult = listResultsLocal.get(1);
                 showPluginResultOnLabel(pluginResult, label2, isLabel2Chosen);
+                clearALabel(label3);
+                clearALabel(label4);
+                clearALabel(label5);
+                clearALabel(label6);
+                clearALabel(label7);
+                clearALabel(label8);
             }
-            if (size > 2) {
-                pluginResult = listResults.get(2);
+            case 3 -> {
+                pluginResult = listResultsLocal.get(0);
+                showPluginResultOnLabel(pluginResult, label1, isLabel1Chosen);
+                pluginResult = listResultsLocal.get(1);
+                showPluginResultOnLabel(pluginResult, label2, isLabel2Chosen);
+                pluginResult = listResultsLocal.get(2);
                 showPluginResultOnLabel(pluginResult, label3, isLabel3Chosen);
+                clearALabel(label4);
+                clearALabel(label5);
+                clearALabel(label6);
+                clearALabel(label7);
+                clearALabel(label8);
             }
-            if (size > 3) {
-                pluginResult = listResults.get(3);
+            case 4 -> {
+                pluginResult = listResultsLocal.get(0);
+                showPluginResultOnLabel(pluginResult, label1, isLabel1Chosen);
+                pluginResult = listResultsLocal.get(1);
+                showPluginResultOnLabel(pluginResult, label2, isLabel2Chosen);
+                pluginResult = listResultsLocal.get(2);
+                showPluginResultOnLabel(pluginResult, label3, isLabel3Chosen);
+                pluginResult = listResultsLocal.get(3);
                 showPluginResultOnLabel(pluginResult, label4, isLabel4Chosen);
+                clearALabel(label5);
+                clearALabel(label6);
+                clearALabel(label7);
+                clearALabel(label8);
             }
-            if (size > 4) {
-                pluginResult = listResults.get(4);
+            case 5 -> {
+                pluginResult = listResultsLocal.get(0);
+                showPluginResultOnLabel(pluginResult, label1, isLabel1Chosen);
+                pluginResult = listResultsLocal.get(1);
+                showPluginResultOnLabel(pluginResult, label2, isLabel2Chosen);
+                pluginResult = listResultsLocal.get(2);
+                showPluginResultOnLabel(pluginResult, label3, isLabel3Chosen);
+                pluginResult = listResultsLocal.get(3);
+                showPluginResultOnLabel(pluginResult, label4, isLabel4Chosen);
+                pluginResult = listResultsLocal.get(4);
                 showPluginResultOnLabel(pluginResult, label5, isLabel5Chosen);
+                clearALabel(label6);
+                clearALabel(label7);
+                clearALabel(label8);
             }
-            if (size > 5) {
-                pluginResult = listResults.get(5);
+            case 6 -> {
+                pluginResult = listResultsLocal.get(0);
+                showPluginResultOnLabel(pluginResult, label1, isLabel1Chosen);
+                pluginResult = listResultsLocal.get(1);
+                showPluginResultOnLabel(pluginResult, label2, isLabel2Chosen);
+                pluginResult = listResultsLocal.get(2);
+                showPluginResultOnLabel(pluginResult, label3, isLabel3Chosen);
+                pluginResult = listResultsLocal.get(3);
+                showPluginResultOnLabel(pluginResult, label4, isLabel4Chosen);
+                pluginResult = listResultsLocal.get(4);
+                showPluginResultOnLabel(pluginResult, label5, isLabel5Chosen);
+                pluginResult = listResultsLocal.get(5);
                 showPluginResultOnLabel(pluginResult, label6, isLabel6Chosen);
+                clearALabel(label7);
+                clearALabel(label8);
             }
-            if (size > 6) {
-                pluginResult = listResults.get(6);
+            case 7 -> {
+                pluginResult = listResultsLocal.get(0);
+                showPluginResultOnLabel(pluginResult, label1, isLabel1Chosen);
+                pluginResult = listResultsLocal.get(1);
+                showPluginResultOnLabel(pluginResult, label2, isLabel2Chosen);
+                pluginResult = listResultsLocal.get(2);
+                showPluginResultOnLabel(pluginResult, label3, isLabel3Chosen);
+                pluginResult = listResultsLocal.get(3);
+                showPluginResultOnLabel(pluginResult, label4, isLabel4Chosen);
+                pluginResult = listResultsLocal.get(4);
+                showPluginResultOnLabel(pluginResult, label5, isLabel5Chosen);
+                pluginResult = listResultsLocal.get(5);
+                showPluginResultOnLabel(pluginResult, label6, isLabel6Chosen);
+                pluginResult = listResultsLocal.get(6);
                 showPluginResultOnLabel(pluginResult, label7, isLabel7Chosen);
+                clearALabel(label8);
             }
-            if (size > 7) {
-                pluginResult = listResults.get(7);
+            default -> {
+                pluginResult = listResultsLocal.get(0);
+                showPluginResultOnLabel(pluginResult, label1, isLabel1Chosen);
+                pluginResult = listResultsLocal.get(1);
+                showPluginResultOnLabel(pluginResult, label2, isLabel2Chosen);
+                pluginResult = listResultsLocal.get(2);
+                showPluginResultOnLabel(pluginResult, label3, isLabel3Chosen);
+                pluginResult = listResultsLocal.get(3);
+                showPluginResultOnLabel(pluginResult, label4, isLabel4Chosen);
+                pluginResult = listResultsLocal.get(4);
+                showPluginResultOnLabel(pluginResult, label5, isLabel5Chosen);
+                pluginResult = listResultsLocal.get(5);
+                showPluginResultOnLabel(pluginResult, label6, isLabel6Chosen);
+                pluginResult = listResultsLocal.get(6);
+                showPluginResultOnLabel(pluginResult, label7, isLabel7Chosen);
+                pluginResult = listResultsLocal.get(7);
                 showPluginResultOnLabel(pluginResult, label8, isLabel8Chosen);
             }
         }
