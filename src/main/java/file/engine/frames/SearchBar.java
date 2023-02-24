@@ -75,7 +75,6 @@ public class SearchBar {
     private final AtomicBoolean isLockMouseMotionThreadNotExist = new AtomicBoolean(true);
     private final AtomicBoolean isTryToShowResultThreadNotExist = new AtomicBoolean(true);
     private final AtomicBoolean isMergeThreadExist = new AtomicBoolean();
-    private volatile boolean isStartMerge = false;
     private final AtomicBoolean isRoundRadiusSet = new AtomicBoolean();
     private final AtomicBoolean isPreviewMode = new AtomicBoolean();
     private final AtomicBoolean isTutorialMode = new AtomicBoolean();
@@ -2393,7 +2392,6 @@ public class SearchBar {
      * 只在重新输入需要初始化所有设置时使用
      */
     private void resetStatusOnTextChanged() {
-        isStartMerge = false;
         listResults = new ArrayList<>();
         firstResultStartShowingTime = 0;
         currentResultCount.set(0);
@@ -2608,7 +2606,7 @@ public class SearchBar {
         int length = Math.min(listResults.size() + 1, 9);
         if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
             if (listResults.isEmpty()) {
-                if (getSearchBarText().isEmpty() || System.currentTimeMillis() - startTime < 300) {
+                if (getSearchBarText().isEmpty() || System.currentTimeMillis() - startTime < SHOW_RESULTS_TIMEOUT) {
                     setSearchBarRadius(roundRadius, searchBar.getWidth(), label1.getHeight());
                 } else {
                     setSearchBarRadius(roundRadius, searchBar.getWidth(), 2 * label1.getHeight());
@@ -3112,32 +3110,22 @@ public class SearchBar {
         });
     }
 
-    private void tryToShowRecordsWhenHasLabelEmpty() {
-        if (currentResultCount.get() < listResults.size()) {
-            var hasLabelEmpty = isLabelEmpty(label1) ||
-                    isLabelEmpty(label2) ||
-                    isLabelEmpty(label3) ||
-                    isLabelEmpty(label4) ||
-                    isLabelEmpty(label5) ||
-                    isLabelEmpty(label6) ||
-                    isLabelEmpty(label7) ||
-                    isLabelEmpty(label8);
-            if (hasLabelEmpty || currentResultCount.get() < 8) {
-                //设置窗口上的文字和图片显示，键盘模式
-                int pos = getCurrentLabelPos();
-                SwingUtilities.invokeLater(() -> {
-                    try {
-                        showFirst8Results(
-                                pos == 0, pos == 1, pos == 2, pos == 3,
-                                pos == 4, pos == 5, pos == 6, pos == 7
-                        );
-                    } catch (IndexOutOfBoundsException ignored) {
-                        // ignored
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                });
-            }
+    private void tryToShowRecords() {
+        if (currentResultCount.get() < 8) {
+            //设置窗口上的文字和图片显示，键盘模式
+            int pos = getCurrentLabelPos();
+            SwingUtilities.invokeLater(() -> {
+                try {
+                    showFirst8Results(
+                            pos == 0, pos == 1, pos == 2, pos == 3,
+                            pos == 4, pos == 5, pos == 6, pos == 7
+                    );
+                } catch (IndexOutOfBoundsException ignored) {
+                    // ignored
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
         }
     }
 
@@ -3155,7 +3143,7 @@ public class SearchBar {
                         clearAllLabels();
                     } else if (!listResults.isEmpty()) {
                         //在结果不足8个的时候不断尝试显示
-                        tryToShowRecordsWhenHasLabelEmpty();
+                        tryToShowRecords();
                         //设置窗口是被选中还是未被选中，鼠标模式
                         setLabelChosenOrNotChosenMouseMode(0, label1);
                         setLabelChosenOrNotChosenMouseMode(1, label2);
@@ -3299,9 +3287,7 @@ public class SearchBar {
                 listResultsTemp = listResults;
                 listResultsSet = new HashSet<>();
             }
-            if (isStartMerge) {
-                mergeResultMethod(currentSearchTask, listResultsTemp, listResultsSet, allPlugins);
-            }
+            mergeResultMethod(currentSearchTask, listResultsTemp, listResultsSet, allPlugins);
             TimeUnit.MILLISECONDS.sleep(1);
         }
     }
@@ -3613,7 +3599,10 @@ public class SearchBar {
                 searchCaseToLowerAndRemoveConflict();
                 PrepareSearchEvent prepareSearchEvent = new PrepareSearchEvent(() -> searchText, () -> searchCase, () -> keywords);
                 eventManagement.putEvent(prepareSearchEvent,
-                        event -> event.getReturnValue().ifPresent(res -> currentSearchTask = (DatabaseService.SearchTask) res),
+                        event -> event.getReturnValue().ifPresent(res -> {
+                            currentSearchTask = (DatabaseService.SearchTask) res;
+                            listResults = new ArrayList<>();
+                        }),
                         event -> System.err.println("prepare search event failed."));
             }
         }
@@ -3633,9 +3622,9 @@ public class SearchBar {
                 eventManagement.putEvent(startSearchEvent, event -> event.getReturnValue().ifPresent(res -> {
                     if (currentSearchTask != res) {
                         currentSearchTask = (DatabaseService.SearchTask) res;
+                        listResults = new ArrayList<>();
                     }
                     addShowSearchStatusThread();
-                    isStartMerge = true;
                 }), event -> System.err.println("send search event failed."));
             }
         }
@@ -4108,108 +4097,108 @@ public class SearchBar {
         int size;
         if (runningMode == RunningMode.NORMAL_MODE) {
             String path;
-            if (!listResults.isEmpty() && isLabelEmpty(label1)) {
+            if (!listResults.isEmpty()) {
                 path = listResults.get(0);
                 showResultOnLabel(path, label1, isLabel1Chosen);
             }
             size = listResults.size();
-            if (size > 1 && isLabelEmpty(label2)) {
+            if (size > 1) {
                 path = listResults.get(1);
                 showResultOnLabel(path, label2, isLabel2Chosen);
             }
-            if (size > 2 && isLabelEmpty(label3)) {
+            if (size > 2) {
                 path = listResults.get(2);
                 showResultOnLabel(path, label3, isLabel3Chosen);
             }
-            if (size > 3 && isLabelEmpty(label4)) {
+            if (size > 3) {
                 path = listResults.get(3);
                 showResultOnLabel(path, label4, isLabel4Chosen);
             }
-            if (size > 4 && isLabelEmpty(label5)) {
+            if (size > 4) {
                 path = listResults.get(4);
                 showResultOnLabel(path, label5, isLabel5Chosen);
             }
-            if (size > 5 && isLabelEmpty(label6)) {
+            if (size > 5) {
                 path = listResults.get(5);
                 showResultOnLabel(path, label6, isLabel6Chosen);
             }
-            if (size > 6 && isLabelEmpty(label7)) {
+            if (size > 6) {
                 path = listResults.get(6);
                 showResultOnLabel(path, label7, isLabel7Chosen);
             }
-            if (size > 7 && isLabelEmpty(label8)) {
+            if (size > 7) {
                 path = listResults.get(7);
                 showResultOnLabel(path, label8, isLabel8Chosen);
             }
         } else if (runningMode == RunningMode.COMMAND_MODE) {
             String command;
-            if (!listResults.isEmpty() && isLabelEmpty(label1)) {
+            if (!listResults.isEmpty()) {
                 command = listResults.get(0);
                 showCommandOnLabel(command, label1, isLabel1Chosen);
             }
             size = listResults.size();
-            if (size > 1 && isLabelEmpty(label2)) {
+            if (size > 1) {
                 command = listResults.get(1);
                 showCommandOnLabel(command, label2, isLabel2Chosen);
             }
-            if (size > 2 && isLabelEmpty(label3)) {
+            if (size > 2) {
                 command = listResults.get(2);
                 showCommandOnLabel(command, label3, isLabel3Chosen);
             }
-            if (size > 3 && isLabelEmpty(label4)) {
+            if (size > 3) {
                 command = listResults.get(3);
                 showCommandOnLabel(command, label4, isLabel4Chosen);
             }
-            if (size > 4 && isLabelEmpty(label5)) {
+            if (size > 4) {
                 command = listResults.get(4);
                 showCommandOnLabel(command, label5, isLabel5Chosen);
             }
-            if (size > 5 && isLabelEmpty(label6)) {
+            if (size > 5) {
                 command = listResults.get(5);
                 showCommandOnLabel(command, label6, isLabel6Chosen);
             }
-            if (size > 6 && isLabelEmpty(label7)) {
+            if (size > 6) {
                 command = listResults.get(6);
                 showCommandOnLabel(command, label7, isLabel7Chosen);
             }
-            if (size > 7 && isLabelEmpty(label8)) {
+            if (size > 7) {
                 command = listResults.get(7);
                 showCommandOnLabel(command, label8, isLabel8Chosen);
             }
         } else if (runningMode == RunningMode.PLUGIN_MODE) {
-            String command;
+            String pluginResult;
             if (!listResults.isEmpty()) {
-                command = listResults.get(0);
-                showPluginResultOnLabel(command, label1, isLabel1Chosen);
+                pluginResult = listResults.get(0);
+                showPluginResultOnLabel(pluginResult, label1, isLabel1Chosen);
             }
             size = listResults.size();
             if (size > 1) {
-                command = listResults.get(1);
-                showPluginResultOnLabel(command, label2, isLabel2Chosen);
+                pluginResult = listResults.get(1);
+                showPluginResultOnLabel(pluginResult, label2, isLabel2Chosen);
             }
             if (size > 2) {
-                command = listResults.get(2);
-                showPluginResultOnLabel(command, label3, isLabel3Chosen);
+                pluginResult = listResults.get(2);
+                showPluginResultOnLabel(pluginResult, label3, isLabel3Chosen);
             }
             if (size > 3) {
-                command = listResults.get(3);
-                showPluginResultOnLabel(command, label4, isLabel4Chosen);
+                pluginResult = listResults.get(3);
+                showPluginResultOnLabel(pluginResult, label4, isLabel4Chosen);
             }
             if (size > 4) {
-                command = listResults.get(4);
-                showPluginResultOnLabel(command, label5, isLabel5Chosen);
+                pluginResult = listResults.get(4);
+                showPluginResultOnLabel(pluginResult, label5, isLabel5Chosen);
             }
             if (size > 5) {
-                command = listResults.get(5);
-                showPluginResultOnLabel(command, label6, isLabel6Chosen);
+                pluginResult = listResults.get(5);
+                showPluginResultOnLabel(pluginResult, label6, isLabel6Chosen);
             }
             if (size > 6) {
-                command = listResults.get(6);
-                showPluginResultOnLabel(command, label7, isLabel7Chosen);
+                pluginResult = listResults.get(6);
+                showPluginResultOnLabel(pluginResult, label7, isLabel7Chosen);
             }
             if (size > 7) {
-                command = listResults.get(7);
-                showPluginResultOnLabel(command, label8, isLabel8Chosen);
+                pluginResult = listResults.get(7);
+                showPluginResultOnLabel(pluginResult, label8, isLabel8Chosen);
             }
         }
     }
@@ -4351,7 +4340,6 @@ public class SearchBar {
         startTime = System.currentTimeMillis();//结束搜索
         currentResultCount.set(0);
         currentLabelSelectedPosition.set(0);
-        isStartMerge = false;
         listResults = new ArrayList<>();
         isUserPressed.set(false);
         isLockMouseMotion.set(false);
