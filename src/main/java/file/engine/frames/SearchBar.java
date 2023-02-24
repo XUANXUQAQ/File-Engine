@@ -2500,7 +2500,7 @@ public class SearchBar {
                     isSearchNotStarted.set(true);
                     isCudaSearchNotStarted.set(true);
                 }
-                EventManagement.getInstance().putEvent(new StopSearchEvent());
+//                EventManagement.getInstance().putEvent(new StopSearchEvent());
             }
 
             @Override
@@ -2532,7 +2532,7 @@ public class SearchBar {
                         isCudaSearchNotStarted.set(true);
                     }
                 }
-                EventManagement.getInstance().putEvent(new StopSearchEvent());
+//                EventManagement.getInstance().putEvent(new StopSearchEvent());
             }
 
             @Override
@@ -2543,7 +2543,7 @@ public class SearchBar {
                 startSearchSignal.set(false);
                 isSearchNotStarted.set(false);
                 isCudaSearchNotStarted.set(false);
-                EventManagement.getInstance().putEvent(new StopSearchEvent());
+//                EventManagement.getInstance().putEvent(new StopSearchEvent());
             }
         });
     }
