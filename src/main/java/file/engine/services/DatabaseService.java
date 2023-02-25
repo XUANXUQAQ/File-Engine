@@ -224,7 +224,7 @@ public class DatabaseService {
     }
 
     private void searchFolder(String folder, SearchTask searchTask) {
-        if (!Files.exists(Path.of(folder))) {
+        if (!FileUtil.isFileExist(folder)) {
             return;
         }
         File path = new File(folder);
@@ -236,18 +236,19 @@ public class DatabaseService {
             return;
         }
         List<File> filesList = List.of(files);
-        ArrayDeque<File> dirsToSearch = new ArrayDeque<>(filesList);
-        ArrayDeque<File> listRemainDir = new ArrayDeque<>(filesList);
+        ArrayList<File> dirsToSearch = new ArrayList<>();
+        ArrayDeque<File> listRemainFiles = new ArrayDeque<>(filesList);
         do {
-            File remain = listRemainDir.poll();
+            File remain = listRemainFiles.poll();
             if (remain == null) {
                 continue;
             }
             if (remain.isDirectory()) {
+                dirsToSearch.add(remain);
                 File[] subFiles = remain.listFiles();
                 if (subFiles != null) {
                     List<File> subFilesList = List.of(subFiles);
-                    listRemainDir.addAll(subFilesList);
+                    listRemainFiles.addAll(subFilesList);
                     dirsToSearch.addAll(subFilesList);
                 }
             } else {
@@ -257,44 +258,14 @@ public class DatabaseService {
                     searchTask.cacheAndPriorityResults.add(pathToCheck);
                 }
             }
-        } while (!listRemainDir.isEmpty() && !searchTask.shouldStopSearch.get());
+        } while (!listRemainFiles.isEmpty() && !searchTask.shouldStopSearch.get());
         for (File eachDir : dirsToSearch) {
-            if (searchTask.shouldStopSearch.get()) {
-                return;
-            }
             var pathToCheck = eachDir.getAbsolutePath();
             String priorityStr = String.valueOf(getPriorityBySuffix(getSuffixByPath(pathToCheck)));
             if (checkIsMatchedAndAddToList(pathToCheck, priorityStr, searchTask)) {
                 searchTask.cacheAndPriorityResults.add(pathToCheck);
             }
         }
-    }
-
-    /**
-     * 搜索文件夹
-     */
-    private void searchStartMenu(SearchTask searchTask) {
-        searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{A4115719-D62E-491D-AA7C-E74B8BE3B067}"),
-                searchTask);
-        searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{625B53C3-AB48-4EC1-BA1F-A1EF4146FC19}"),
-                searchTask);
-    }
-
-    /**
-     * 搜索桌面
-     */
-    private void searchDesktop(SearchTask searchTask) {
-        searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}"),
-                searchTask);
-        searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{C4AA340D-F20F-4863-AFEF-F87EF2E6BA25}"),
-                searchTask);
-    }
-
-    /**
-     * 搜索优先文件夹
-     */
-    private void searchPriorityFolder(SearchTask searchTask) {
-        searchFolder(AllConfigs.getInstance().getConfigEntity().getPriorityFolder(), searchTask);
     }
 
     /**
@@ -1070,27 +1041,6 @@ public class DatabaseService {
         startSearchTimeMills = System.currentTimeMillis();
         var threadPoolUtil = ThreadPoolUtil.getInstance();
         var eventManagement = EventManagement.getInstance();
-        var countDownLatch = new CountDownLatch(3);
-        threadPoolUtil.executeTask(() -> {
-            searchPriorityFolder(searchTask);
-            countDownLatch.countDown();
-        });
-        threadPoolUtil.executeTask(() -> {
-            searchStartMenu(searchTask);
-            countDownLatch.countDown();
-        });
-        threadPoolUtil.executeTask(() -> {
-            searchDesktop(searchTask);
-            countDownLatch.countDown();
-        });
-
-        try {
-            if (!countDownLatch.await(3, TimeUnit.SECONDS)) {
-                System.out.println("等待优先搜索文件夹超时");
-            }
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
 
         var diskNumber = searchTask.taskMap.size();
         var searchThreadNumber = AllConfigs.getInstance().getConfigEntity().getSearchThreadNumber();
@@ -1909,11 +1859,40 @@ public class DatabaseService {
             searchTask.priorityContainers.put(String.valueOf(eachPriority.priority), new ConcurrentLinkedQueue<>());
         }
 
-        var cachedThreadPoolUtil = ThreadPoolUtil.getInstance();
+        var threadPoolUtil = ThreadPoolUtil.getInstance();
         databaseService.searchCache(searchTask);
+        var searchPriorityFolderCountDown = new CountDownLatch(5);
+        threadPoolUtil.executeTask(() -> {
+            databaseService.searchFolder(AllConfigs.getInstance().getConfigEntity().getPriorityFolder(), searchTask);
+            searchPriorityFolderCountDown.countDown();
+        });
+        threadPoolUtil.executeTask(() -> {
+            // start menu
+            databaseService.searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{A4115719-D62E-491D-AA7C-E74B8BE3B067}"),
+                    searchTask);
+            searchPriorityFolderCountDown.countDown();
+        });
+        threadPoolUtil.executeTask(() -> {
+            // start menu
+            databaseService.searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{625B53C3-AB48-4EC1-BA1F-A1EF4146FC19}"),
+                    searchTask);
+            searchPriorityFolderCountDown.countDown();
+        });
+        threadPoolUtil.executeTask(() -> {
+            // desktop
+            databaseService.searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}"),
+                    searchTask);
+            searchPriorityFolderCountDown.countDown();
+        });
+        threadPoolUtil.executeTask(() -> {
+            // desktop
+            databaseService.searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{C4AA340D-F20F-4863-AFEF-F87EF2E6BA25}"),
+                    searchTask);
+            searchPriorityFolderCountDown.countDown();
+        });
         databaseService.prepareSearchTasks(searchTask);
         if (isEnableGPUAccelerate && !searchTask.shouldStopSearch.get()) {
-            cachedThreadPoolUtil.executeTask(() -> {
+            threadPoolUtil.executeTask(() -> {
                 // 退出上一次搜索
                 final var timeout = 3000;
                 GPUAccelerator.INSTANCE.stopCollectResults();
@@ -1959,6 +1938,13 @@ public class DatabaseService {
                         });
                 SearchTask.isGpuThreadRunning.set(false);
             }, false);
+        }
+        try {
+            if (!searchPriorityFolderCountDown.await(2, TimeUnit.SECONDS)) {
+                System.out.println("等待优先搜索文件夹超时");
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
         return searchTask;
     }

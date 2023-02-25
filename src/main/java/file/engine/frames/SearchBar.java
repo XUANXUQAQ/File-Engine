@@ -3602,13 +3602,16 @@ public class SearchBar {
             isCudaSearchNotStarted.set(false);
             if (DatabaseService.getInstance().getStatus() == Constants.Enums.DatabaseStatus.NORMAL && runningMode == RunningMode.NORMAL_MODE) {
                 searchCaseToLowerAndRemoveConflict();
-                PrepareSearchEvent prepareSearchEvent = new PrepareSearchEvent(() -> searchText, () -> searchCase, () -> keywords);
-                eventManagement.putEvent(prepareSearchEvent,
-                        event -> event.getReturnValue().ifPresent(res -> {
-                            currentSearchTask = (DatabaseService.SearchTask) res;
-                            listResults = new ArrayList<>();
-                        }),
-                        event -> System.err.println("prepare search event failed."));
+                var prepareSearchEvent = new PrepareSearchEvent(() -> searchText, () -> searchCase, () -> keywords);
+                eventManagement.putEvent(prepareSearchEvent);
+                if (eventManagement.waitForEvent(prepareSearchEvent)) {
+                    System.err.println("prepare search event failed.");
+                    return;
+                }
+                prepareSearchEvent.getReturnValue().ifPresent(res -> {
+                    currentSearchTask = (DatabaseService.SearchTask) res;
+                    listResults = new ArrayList<>();
+                });
             }
         }
     }
