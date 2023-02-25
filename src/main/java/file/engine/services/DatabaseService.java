@@ -46,10 +46,7 @@ import java.sql.Statement;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -1073,6 +1070,27 @@ public class DatabaseService {
         startSearchTimeMills = System.currentTimeMillis();
         var threadPoolUtil = ThreadPoolUtil.getInstance();
         var eventManagement = EventManagement.getInstance();
+        var countDownLatch = new CountDownLatch(3);
+        threadPoolUtil.executeTask(() -> {
+            searchPriorityFolder(searchTask);
+            countDownLatch.countDown();
+        });
+        threadPoolUtil.executeTask(() -> {
+            searchStartMenu(searchTask);
+            countDownLatch.countDown();
+        });
+        threadPoolUtil.executeTask(() -> {
+            searchDesktop(searchTask);
+            countDownLatch.countDown();
+        });
+
+        try {
+            if (!countDownLatch.await(3, TimeUnit.SECONDS)) {
+                System.out.println("等待优先搜索文件夹超时");
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
 
         var diskNumber = searchTask.taskMap.size();
         var searchThreadNumber = AllConfigs.getInstance().getConfigEntity().getSearchThreadNumber();
@@ -1893,17 +1911,6 @@ public class DatabaseService {
 
         var cachedThreadPoolUtil = ThreadPoolUtil.getInstance();
         databaseService.searchCache(searchTask);
-        cachedThreadPoolUtil.executeTask(() -> {
-            databaseService.searchPriorityFolder(searchTask);
-            if (searchTask.shouldStopSearch.get()) {
-                return;
-            }
-            databaseService.searchStartMenu(searchTask);
-            if (searchTask.shouldStopSearch.get()) {
-                return;
-            }
-            databaseService.searchDesktop(searchTask);
-        });
         databaseService.prepareSearchTasks(searchTask);
         if (isEnableGPUAccelerate && !searchTask.shouldStopSearch.get()) {
             cachedThreadPoolUtil.executeTask(() -> {
