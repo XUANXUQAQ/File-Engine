@@ -1859,12 +1859,6 @@ public class DatabaseService {
             searchPriorityFolderCountDown.countDown();
         });
         threadPoolUtil.executeTask(() -> {
-            // start menu
-            databaseService.searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{625B53C3-AB48-4EC1-BA1F-A1EF4146FC19}"),
-                    searchTask);
-            searchPriorityFolderCountDown.countDown();
-        });
-        threadPoolUtil.executeTask(() -> {
             // desktop
             databaseService.searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}"),
                     searchTask);

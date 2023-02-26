@@ -2932,7 +2932,9 @@ public class SearchBar {
             //设置窗口大小
             changeSearchBarSize(positionX, positionY, searchBarWidth, searchBarHeight, labelHeight);
             setLabelAtTop(searchBarHeight);
-            showSearchbar();
+            if (!isVisible()) {
+                showSearchbar();
+            }
         }
     }
 
