@@ -3280,18 +3280,16 @@ public class SearchBar {
      */
     @SneakyThrows
     private void mergeResults() {
-        PluginService pluginService = PluginService.getInstance();
-        ArrayList<String> listResultsTemp = listResults;
-        HashSet<String> listResultsSet = new HashSet<>();
+        var pluginService = PluginService.getInstance();
+        var listResultsTemp = listResults;
         var allPlugins = pluginService.getAllPlugins();
         while (isVisible()) {
             if (runningMode == RunningMode.NORMAL_MODE && currentSearchTask != null) {
                 //用户重新输入关键字
                 if (listResultsTemp != listResults) {
                     listResultsTemp = listResults;
-                    listResultsSet = new HashSet<>();
                 }
-                mergeResultMethod(currentSearchTask, listResultsTemp, listResultsSet, allPlugins);
+                mergeResultMethod(currentSearchTask, listResultsTemp, allPlugins);
             }
             TimeUnit.MILLISECONDS.sleep(1);
         }
@@ -3299,11 +3297,10 @@ public class SearchBar {
 
     private void mergeResultMethod(DatabaseService.SearchTask tempSearchTask,
                                    ArrayList<String> listResultsTemp,
-                                   HashSet<String> listResultsSet,
                                    Set<PluginService.PluginInfo> allPlugins) {
         if (tempSearchTask != null) {
             for (String each : tempSearchTask.getCacheAndPriorityResults()) {
-                if (listResultsSet.add(each)) {
+                if (!listResultsTemp.contains(each)) {
                     listResultsTemp.add(each);
                 }
                 if (listResultsTemp != listResults) {
@@ -3322,14 +3319,14 @@ public class SearchBar {
                     break out;
                 }
                 each = "plugin" + PLUGIN_RESULT_SPLITTER_STR + eachPlugin.plugin.identifier + PLUGIN_RESULT_SPLITTER_STR + each;
-                if (listResultsSet.add(each)) {
+                if (!listResultsTemp.contains(each)) {
                     listResultsTemp.add(each);
                 }
             }
         }
         if (tempSearchTask != null) {
             for (String each : tempSearchTask.getTempResults()) {
-                if (listResultsSet.add(each)) {
+                if (!listResultsTemp.contains(each)) {
                     listResultsTemp.add(each);
                 }
                 if (listResultsTemp != listResults) {
