@@ -1853,7 +1853,7 @@ public class DatabaseService {
 
         var threadPoolUtil = ThreadPoolUtil.getInstance();
         databaseService.searchCache(searchTask);
-        var searchPriorityFolderCountDown = new CountDownLatch(4);
+        var searchPriorityFolderCountDown = new CountDownLatch(3);
         threadPoolUtil.executeTask(() -> {
             databaseService.searchFolder(AllConfigs.getInstance().getConfigEntity().getPriorityFolder(), searchTask);
             searchPriorityFolderCountDown.countDown();
