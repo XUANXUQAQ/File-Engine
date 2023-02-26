@@ -2402,7 +2402,7 @@ public class SettingsFrame {
         buttonAddSuffix.addActionListener(e -> {
             int ret = JOptionPane.showConfirmDialog(frame, panel, translateService.getTranslation("Add"), JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
-                String suffix = suffixName.getText();
+                String suffix = suffixName.getText().toLowerCase();
                 String priorityNumTmp = priorityNum.getText();
                 StringBuilder err = new StringBuilder();
                 if (checkSuffixAndPriority(suffix, priorityNumTmp, err, true, true)) {

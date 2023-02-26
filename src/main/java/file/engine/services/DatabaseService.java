@@ -2027,7 +2027,7 @@ public class DatabaseService {
             return;
         }
         AddToSuffixPriorityMapEvent event1 = (AddToSuffixPriorityMapEvent) event;
-        String suffix = event1.suffix;
+        String suffix = event1.suffix.toLowerCase();
         int priority = event1.priority;
         databaseService.addToCommandQueue(
                 new SQLWithTaskId(String.format("INSERT INTO priority VALUES(\"%s\", %d);", suffix, priority), SqlTaskIds.UPDATE_SUFFIX, "cache"));
