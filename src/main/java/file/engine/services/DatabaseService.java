@@ -59,7 +59,7 @@ import java.util.stream.Stream;
 public class DatabaseService {
     private static boolean isEnableGPUAccelerate = false;
     // 搜索任务队列
-    private static final ConcurrentLinkedQueue<SearchTask> searchTasksQueue = new ConcurrentLinkedQueue<>();
+    private static volatile SearchTask lastSearchTask;
     // 预搜索任务map，当发送PrepareSearchEvent后，将会创建预搜索任务，并放入该map中。
     // 发送StartSearchEvent后将会先寻找预搜索任务，成功找到则直接添加进入searchTasksQueue中，不重新创建搜索任务。
     private static final ConcurrentHashMap<SearchInfo, SearchTask> prepareTasksMap = new ConcurrentHashMap<>();
@@ -224,7 +224,7 @@ public class DatabaseService {
     }
 
     private void searchFolder(String folder, SearchTask searchTask) {
-        if (!FileUtil.isFileExist(folder)) {
+        if (FileUtil.isFileNotExist(folder)) {
             return;
         }
         File path = new File(folder);
@@ -634,7 +634,7 @@ public class DatabaseService {
                 searchTask.searchInfo.keywordsLowerCase,
                 searchTask.searchInfo.isKeywordPath)) {
             //字符串匹配通过
-            if (!FileUtil.isFileExist(path)) {
+            if (FileUtil.isFileNotExist(path)) {
                 removeFileFromDatabase(path);
             } else if (searchTask.tempResultsSet.add(path)) {
                 ret = true;
@@ -1502,7 +1502,7 @@ public class DatabaseService {
     }
 
     private void stopAllSearch() {
-        searchTasksQueue.clear();
+        lastSearchTask = null;
     }
 
     /**
@@ -1827,8 +1827,6 @@ public class DatabaseService {
             Thread.onSpinWait();
         }
 
-        searchTasksQueue.removeIf(SearchTask::shouldStopSearch);
-
         var startSearchEvent = (StartSearchEvent) event;
         var searchInfo = prepareSearchKeywords(startSearchEvent.searchText, startSearchEvent.searchCase, startSearchEvent.keywords);
         var searchTask = prepareTasksMap.get(searchInfo);
@@ -1848,22 +1846,16 @@ public class DatabaseService {
         var databaseService = getInstance();
         databaseService.stopAllSearch();
         var searchTask = new SearchTask(searchInfo);
-        searchTasksQueue.add(searchTask);
+        lastSearchTask = searchTask;
         for (var eachPriority : databaseService.priorityMap) {
             searchTask.priorityContainers.put(String.valueOf(eachPriority.priority), new ConcurrentLinkedQueue<>());
         }
 
         var threadPoolUtil = ThreadPoolUtil.getInstance();
         databaseService.searchCache(searchTask);
-        var searchPriorityFolderCountDown = new CountDownLatch(5);
+        var searchPriorityFolderCountDown = new CountDownLatch(4);
         threadPoolUtil.executeTask(() -> {
             databaseService.searchFolder(AllConfigs.getInstance().getConfigEntity().getPriorityFolder(), searchTask);
-            searchPriorityFolderCountDown.countDown();
-        });
-        threadPoolUtil.executeTask(() -> {
-            // start menu
-            databaseService.searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{A4115719-D62E-491D-AA7C-E74B8BE3B067}"),
-                    searchTask);
             searchPriorityFolderCountDown.countDown();
         });
         threadPoolUtil.executeTask(() -> {
@@ -1915,7 +1907,7 @@ public class DatabaseService {
                             if (searchTask.shouldStopSearch()) {
                                 return;
                             }
-                            if (!FileUtil.isFileExist(path)) {
+                            if (FileUtil.isFileNotExist(path)) {
                                 databaseService.removeFileFromDatabase(path);
                                 return;
                             }
@@ -2322,8 +2314,7 @@ public class DatabaseService {
         }
 
         private boolean shouldStopSearch() {
-            SearchTask peek = searchTasksQueue.peek();
-            return peek != this || this.tempResultsSet.size() > MAX_RESULTS;
+            return lastSearchTask != this || this.tempResultsSet.size() > MAX_RESULTS;
         }
     }
 

@@ -7,13 +7,13 @@ import java.nio.file.Path;
 
 public class FileUtil {
 
-    public static boolean isFileExist(String path) {
+    public static boolean isFileNotExist(String path) {
         try {
-            return Files.exists(Path.of(path));
+            return !Files.exists(Path.of(path));
         } catch (InvalidPathException e) {
             e.printStackTrace();
         }
-        return false;
+        return true;
     }
 
     /**
