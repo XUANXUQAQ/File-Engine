@@ -1835,7 +1835,6 @@ public class DatabaseService {
         if (searchTask == null) {
             searchTask = prepareSearch(searchInfo);
         }
-        searchTasksQueue.add(searchTask);
         databaseService.startSearchInThreadPool(searchTask);
         event.setReturnValue(searchTask);
     }
@@ -1849,6 +1848,7 @@ public class DatabaseService {
         var databaseService = getInstance();
         databaseService.stopAllSearch();
         var searchTask = new SearchTask(searchInfo);
+        searchTasksQueue.add(searchTask);
         for (var eachPriority : databaseService.priorityMap) {
             searchTask.priorityContainers.put(String.valueOf(eachPriority.priority), new ConcurrentLinkedQueue<>());
         }
