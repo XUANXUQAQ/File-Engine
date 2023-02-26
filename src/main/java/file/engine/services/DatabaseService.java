@@ -18,6 +18,7 @@ import file.engine.event.handler.impl.database.*;
 import file.engine.event.handler.impl.database.gpu.GPUAddRecordEvent;
 import file.engine.event.handler.impl.database.gpu.GPUClearCacheEvent;
 import file.engine.event.handler.impl.database.gpu.GPURemoveRecordEvent;
+import file.engine.event.handler.impl.frame.searchBar.SearchBarCloseEvent;
 import file.engine.event.handler.impl.frame.searchBar.SearchBarReadyEvent;
 import file.engine.event.handler.impl.monitor.disk.StartMonitorDiskEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
@@ -871,9 +872,6 @@ public class DatabaseService {
                 }
                 //每一个任务负责查询一个priority和list0-list40生成的41个SQL
                 addTaskForDatabase0(eachDisk, tasks, commandsMap, currentTaskNum, searchTask);
-                if (searchTask.shouldStopSearch()) {
-                    return;
-                }
             }
         }
     }
@@ -1853,22 +1851,26 @@ public class DatabaseService {
 
         var threadPoolUtil = ThreadPoolUtil.getInstance();
         databaseService.searchCache(searchTask);
-        var searchPriorityFolderCountDown = new CountDownLatch(3);
+        CountDownLatch countDownLatch = new CountDownLatch(3);
         threadPoolUtil.executeTask(() -> {
             databaseService.searchFolder(AllConfigs.getInstance().getConfigEntity().getPriorityFolder(), searchTask);
-            searchPriorityFolderCountDown.countDown();
+            countDownLatch.countDown();
+        });
+        threadPoolUtil.executeTask(() -> {
+            // start menu
+            String startMenu = GetWindowsKnownFolder.INSTANCE.getKnownFolder("{A4115719-D62E-491D-AA7C-E74B8BE3B067}");
+            databaseService.searchFolder(startMenu, searchTask);
+            startMenu = GetWindowsKnownFolder.INSTANCE.getKnownFolder("{625B53C3-AB48-4EC1-BA1F-A1EF4146FC19}");
+            databaseService.searchFolder(startMenu, searchTask);
+            countDownLatch.countDown();
         });
         threadPoolUtil.executeTask(() -> {
             // desktop
-            databaseService.searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}"),
-                    searchTask);
-            searchPriorityFolderCountDown.countDown();
-        });
-        threadPoolUtil.executeTask(() -> {
-            // desktop
-            databaseService.searchFolder(GetWindowsKnownFolder.INSTANCE.getKnownFolder("{C4AA340D-F20F-4863-AFEF-F87EF2E6BA25}"),
-                    searchTask);
-            searchPriorityFolderCountDown.countDown();
+            String desktop = GetWindowsKnownFolder.INSTANCE.getKnownFolder("{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}");
+            databaseService.searchFolder(desktop, searchTask);
+            desktop = GetWindowsKnownFolder.INSTANCE.getKnownFolder("{C4AA340D-F20F-4863-AFEF-F87EF2E6BA25}");
+            databaseService.searchFolder(desktop, searchTask);
+            countDownLatch.countDown();
         });
         databaseService.prepareSearchTasks(searchTask);
         if (isEnableGPUAccelerate && !searchTask.shouldStopSearch()) {
@@ -1917,7 +1919,7 @@ public class DatabaseService {
             }, false);
         }
         try {
-            if (!searchPriorityFolderCountDown.await(2, TimeUnit.SECONDS)) {
+            if (!countDownLatch.await(2, TimeUnit.SECONDS)) {
                 System.out.println("等待优先搜索文件夹超时");
             }
         } catch (InterruptedException e) {
@@ -1927,6 +1929,7 @@ public class DatabaseService {
     }
 
     @EventRegister(registerClass = StopSearchEvent.class)
+    @EventListener(listenClass = SearchBarCloseEvent.class)
     private static void stopSearchEvent(Event event) {
         DatabaseService databaseService = getInstance();
         databaseService.stopAllSearch();

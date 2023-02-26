@@ -10,7 +10,9 @@ public class FileUtil {
     public static boolean isFileNotExist(String path) {
         try {
             return !Files.exists(Path.of(path));
-        } catch (InvalidPathException e) {
+        } catch (InvalidPathException ignored) {
+            // ignored
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return true;
