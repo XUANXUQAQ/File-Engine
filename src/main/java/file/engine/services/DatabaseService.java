@@ -1823,7 +1823,6 @@ public class DatabaseService {
     @EventRegister(registerClass = StartSearchEvent.class)
     private static void startSearchEvent(Event event) {
         DatabaseService databaseService = getInstance();
-        databaseService.stopAllSearch();
         final long startWaiting = System.currentTimeMillis();
         final long timeout = 3000;
         while (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL) {
@@ -1854,6 +1853,7 @@ public class DatabaseService {
      */
     private static SearchTask prepareSearch(SearchInfo searchInfo) {
         var databaseService = getInstance();
+        databaseService.stopAllSearch();
         var searchTask = new SearchTask(searchInfo);
         for (var eachPriority : databaseService.priorityMap) {
             searchTask.priorityContainers.put(String.valueOf(eachPriority.priority), new ConcurrentLinkedQueue<>());
