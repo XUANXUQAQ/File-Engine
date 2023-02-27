@@ -3205,7 +3205,7 @@ public class SearchBar {
             var isIconSetObj = new Object() {
                 boolean isIconSet = false;
             };
-            while (isVisible() && !currentTaskRef.isSearchDone() && listResultsTemp == listResults) {
+            while (isVisible() && !getSearchBarText().isEmpty() && !currentTaskRef.isSearchDone() && listResultsTemp == listResults) {
                 if (runningMode != RunningMode.NORMAL_MODE) {
                     return;
                 }
@@ -3226,7 +3226,8 @@ public class SearchBar {
                 }
             }
             final long startShowSearchDoneTime = System.currentTimeMillis();
-            while (isVisible() && System.currentTimeMillis() - startShowSearchDoneTime < 3000 && listResultsTemp == listResults) {
+            while (isVisible() && !getSearchBarText().isEmpty() &&
+                    System.currentTimeMillis() - startShowSearchDoneTime < 3000 && listResultsTemp == listResults) {
                 if (runningMode != RunningMode.NORMAL_MODE) {
                     return;
                 }
@@ -3243,7 +3244,7 @@ public class SearchBar {
                     throw new RuntimeException(e);
                 }
             }
-            while (isVisible() && listResultsTemp == listResults) {
+            while (isVisible() && !getSearchBarText().isEmpty() && listResultsTemp == listResults) {
                 if (runningMode != RunningMode.NORMAL_MODE) {
                     return;
                 }
