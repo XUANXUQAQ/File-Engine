@@ -115,7 +115,6 @@ public class SearchBar {
     private volatile long visibleStartTime = 0;  //记录窗口开始可见的事件，窗口默认最短可见时间0.5秒，防止窗口快速闪烁
     private volatile long firstResultStartShowingTime = 0;  //记录开始显示结果的时间，用于防止刚开始移动到鼠标导致误触
     private volatile ArrayList<String> listResults = new ArrayList<>();  //保存从数据库中找出符合条件的记录（文件路径）
-    private volatile DatabaseService.SearchTask currentSearchTask;
     private volatile String[] searchCase;
     private volatile String searchText = "";
     private volatile String[] keywords;
@@ -2392,7 +2391,6 @@ public class SearchBar {
      * 只在重新输入需要初始化所有设置时使用
      */
     private void resetStatusOnTextChanged() {
-        listResults = new ArrayList<>();
         firstResultStartShowingTime = 0;
         currentResultCount.set(0);
         currentLabelSelectedPosition.set(0);
@@ -2484,7 +2482,6 @@ public class SearchBar {
                 if (runningMode != RunningMode.PLUGIN_MODE) {
                     isPluginSearchBarClearReady.compareAndSet(isPluginSearchBarClearReady.get(), false);
                 }
-                currentSearchTask = null;
                 changeFontOnDisplayFailed();
                 clearAllLabels();
                 resetStatusOnTextChanged();
@@ -2507,7 +2504,6 @@ public class SearchBar {
                 if (runningMode != RunningMode.PLUGIN_MODE) {
                     isPluginSearchBarClearReady.compareAndSet(isPluginSearchBarClearReady.get(), false);
                 }
-                currentSearchTask = null;
                 changeFontOnDisplayFailed();
                 clearAllLabels();
                 resetStatusOnTextChanged();
@@ -2537,7 +2533,6 @@ public class SearchBar {
 
             @Override
             public void changedUpdate(DocumentEvent e) {
-                currentSearchTask = null;
                 clearAllLabels();
                 resetStatusOnTextChanged();
                 startTime = System.currentTimeMillis();
@@ -3204,13 +3199,9 @@ public class SearchBar {
         SwingUtilities.invokeLater(searchBar::repaint);
     }
 
-    private void addShowSearchStatusThread() {
+    private void addShowSearchStatusThread(DatabaseService.SearchTask currentTaskRef) {
         ThreadPoolUtil.getInstance().executeTask(() -> {
             ArrayList<String> listResultsTemp = listResults;
-            var currentTaskRef = currentSearchTask;
-            if (currentTaskRef == null) {
-                return;
-            }
             var isIconSetObj = new Object() {
                 boolean isIconSet = false;
             };
@@ -3281,17 +3272,21 @@ public class SearchBar {
      * 将tempResults以及插件返回的结果转移到listResults中来显示
      */
     @SneakyThrows
-    private void mergeResults() {
+    private void mergeResults(DatabaseService.SearchTask currentSearchTask) {
         var pluginService = PluginService.getInstance();
         var listResultsTemp = listResults;
         var allPlugins = pluginService.getAllPlugins();
         while (isVisible()) {
-            if (runningMode == RunningMode.NORMAL_MODE && currentSearchTask != null) {
-                //用户重新输入关键字
-                if (listResultsTemp != listResults) {
-                    listResultsTemp = listResults;
+            //用户重新输入关键字
+            if (listResultsTemp != listResults) {
+                return;
+            }
+            if (getSearchBarText().isEmpty()) {
+                listResults.clear();
+            } else {
+                if (runningMode == RunningMode.NORMAL_MODE) {
+                    mergeResultMethod(currentSearchTask, listResultsTemp, allPlugins);
                 }
-                mergeResultMethod(currentSearchTask, listResultsTemp, allPlugins);
             }
             TimeUnit.MILLISECONDS.sleep(1);
         }
@@ -3595,8 +3590,9 @@ public class SearchBar {
 //        }
     }
 
-    private void sendPrepareSearchEvent() {
+    private DatabaseService.SearchTask sendPrepareSearchEvent() {
         EventManagement eventManagement = EventManagement.getInstance();
+        final DatabaseService.SearchTask[] ret = new DatabaseService.SearchTask[1];
         if (!getSearchBarText().isEmpty()) {
             isCudaSearchNotStarted.set(false);
             if (DatabaseService.getInstance().getStatus() == Constants.Enums.DatabaseStatus.NORMAL && runningMode == RunningMode.NORMAL_MODE) {
@@ -3605,21 +3601,23 @@ public class SearchBar {
                 eventManagement.putEvent(prepareSearchEvent);
                 if (eventManagement.waitForEvent(prepareSearchEvent)) {
                     System.err.println("prepare search event failed.");
-                    return;
+                    return null;
                 }
                 prepareSearchEvent.getReturnValue().ifPresent(res -> {
-                    currentSearchTask = (DatabaseService.SearchTask) res;
+                    ret[0] = (DatabaseService.SearchTask) res;
                     listResults = new ArrayList<>();
                 });
             }
         }
+        return ret[0];
     }
 
     /**
      * 发送开始搜索事件
      */
-    private void sendSearchEvent() {
+    private void sendSearchEvent(DatabaseService.SearchTask preparedSearchTasks) {
         EventManagement eventManagement = EventManagement.getInstance();
+        final DatabaseService.SearchTask[] workingSearchTask = {preparedSearchTasks};
         if (!getSearchBarText().isEmpty()) {
             isSearchNotStarted.set(false);
             if (DatabaseService.getInstance().getStatus() == Constants.Enums.DatabaseStatus.NORMAL &&
@@ -3627,11 +3625,20 @@ public class SearchBar {
                 searchCaseToLowerAndRemoveConflict();
                 var startSearchEvent = new StartSearchEvent(() -> searchText, () -> searchCase, () -> keywords);
                 eventManagement.putEvent(startSearchEvent, event -> event.getReturnValue().ifPresent(res -> {
-                    if (currentSearchTask != res) {
-                        currentSearchTask = (DatabaseService.SearchTask) res;
+                    if (preparedSearchTasks != res) {
+                        workingSearchTask[0] = (DatabaseService.SearchTask) res;
                         listResults = new ArrayList<>();
                     }
-                    addShowSearchStatusThread();
+                    addShowSearchStatusThread(workingSearchTask[0]);
+                    if (isMergeThreadExist.compareAndSet(false, true)) {
+                        ThreadPoolUtil.getInstance().executeTask(() -> {
+                            try {
+                                mergeResults(workingSearchTask[0]);
+                            } finally {
+                                isMergeThreadExist.set(false);
+                            }
+                        });
+                    }
                 }), event -> System.err.println("send search event failed."));
             }
         }
@@ -3649,15 +3656,16 @@ public class SearchBar {
             final AtomicBoolean isWaiting = new AtomicBoolean(false);
             while (eventManagement.notMainExit()) {
                 final long endTime = System.currentTimeMillis();
+                DatabaseService.SearchTask searchTask = null;
                 if ((endTime - startTime > SEND_PREPARE_SEARCH_TIMEOUT) && isCudaSearchNotStarted.get() &&
                         startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
                     setSearchKeywordsAndSearchCase();
-                    sendPrepareSearchEvent();
+                    searchTask = sendPrepareSearchEvent();
                 }
                 if ((endTime - startTime > SEND_START_SEARCH_TIMEOUT) && isSearchNotStarted.get() &&
                         startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
                     setSearchKeywordsAndSearchCase();
-                    sendSearchEvent();
+                    sendSearchEvent(searchTask);
                 }
 
                 if ((endTime - startTime > SHOW_RESULTS_TIMEOUT) && startSearchSignal.get()) {
@@ -3839,15 +3847,6 @@ public class SearchBar {
         }
         if (isLockMouseMotionThreadNotExist.compareAndSet(true, false)) {
             lockMouseMotionThread();
-        }
-        if (isMergeThreadExist.compareAndSet(false, true)) {
-            ThreadPoolUtil.getInstance().executeTask(() -> {
-                try {
-                    mergeResults();
-                } finally {
-                    isMergeThreadExist.set(false);
-                }
-            });
         }
     }
 
@@ -4642,6 +4641,7 @@ public class SearchBar {
         clearAllLabels();
         clearTextFieldText();
         resetAllStatus();
+        listResults = new ArrayList<>();
         menu.setVisible(false);
     }
 
@@ -4649,7 +4649,6 @@ public class SearchBar {
         startTime = System.currentTimeMillis();//结束搜索
         currentResultCount.set(0);
         currentLabelSelectedPosition.set(0);
-        listResults = new ArrayList<>();
         isUserPressed.set(false);
         isLockMouseMotion.set(false);
         isOpenLastFolderPressed.set(false);
