@@ -2482,6 +2482,7 @@ public class SearchBar {
                 if (runningMode != RunningMode.PLUGIN_MODE) {
                     isPluginSearchBarClearReady.compareAndSet(isPluginSearchBarClearReady.get(), false);
                 }
+                listResults = new ArrayList<>();
                 changeFontOnDisplayFailed();
                 clearAllLabels();
                 resetStatusOnTextChanged();
@@ -2504,6 +2505,7 @@ public class SearchBar {
                 if (runningMode != RunningMode.PLUGIN_MODE) {
                     isPluginSearchBarClearReady.compareAndSet(isPluginSearchBarClearReady.get(), false);
                 }
+                listResults = new ArrayList<>();
                 changeFontOnDisplayFailed();
                 clearAllLabels();
                 resetStatusOnTextChanged();
@@ -2533,6 +2535,7 @@ public class SearchBar {
 
             @Override
             public void changedUpdate(DocumentEvent e) {
+                listResults = new ArrayList<>();
                 clearAllLabels();
                 resetStatusOnTextChanged();
                 startTime = System.currentTimeMillis();
@@ -3168,7 +3171,6 @@ public class SearchBar {
                         clearALabel(label6);
                         clearALabel(label7);
                         clearALabel(label8);
-                        repaint();
                     }
                     SwingUtilities.invokeLater(() -> {
                         autoSetSearchBarRadius();
@@ -3177,6 +3179,7 @@ public class SearchBar {
                             searchInfoLabel.setIcon(null);
                         }
                     });
+                    repaint();
                     try {
                         TimeUnit.MILLISECONDS.sleep(200);
                     } catch (InterruptedException e) {
