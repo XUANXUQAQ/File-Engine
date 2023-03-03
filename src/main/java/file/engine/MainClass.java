@@ -307,7 +307,7 @@ public class MainClass {
             }
         }
         if (isFileCreated) {
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(startTimeCount), StandardCharsets.UTF_8))) {
+            try (var reader = new BufferedReader(new InputStreamReader(new FileInputStream(startTimeCount), StandardCharsets.UTF_8))) {
                 //读取启动次数
                 String times = reader.readLine();
                 if (!(times == null || times.isEmpty())) {
@@ -326,7 +326,7 @@ public class MainClass {
                 }
                 //自增后写入
                 startTimes++;
-                try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(startTimeCount), StandardCharsets.UTF_8))) {
+                try (var writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(startTimeCount), StandardCharsets.UTF_8))) {
                     writer.write(String.valueOf(startTimes));
                 }
             } catch (Exception e) {

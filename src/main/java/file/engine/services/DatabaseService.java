@@ -1281,51 +1281,49 @@ public class DatabaseService {
      * 执行sql
      */
     @SuppressWarnings("SqlNoDataSourceInspection")
-    private void executeAllCommands() {
-        synchronized (this) {
-            if (!sqlCommandQueue.isEmpty()) {
-                LinkedHashSet<SQLWithTaskId> tempCommandSet = new LinkedHashSet<>(sqlCommandQueue);
-                HashMap<String, Statement> statementHashMap = new HashMap<>();
+    private synchronized void executeAllCommands() {
+        if (!sqlCommandQueue.isEmpty()) {
+            LinkedHashSet<SQLWithTaskId> tempCommandSet = new LinkedHashSet<>(sqlCommandQueue);
+            HashMap<String, Statement> statementHashMap = new HashMap<>();
 
-                tempCommandSet.forEach(sqlWithTaskId -> {
-                    Statement stmt;
-                    try {
-                        if (statementHashMap.containsKey(sqlWithTaskId.diskStr)) {
-                            stmt = statementHashMap.get(sqlWithTaskId.diskStr);
-                        } else {
-                            stmt = SQLiteUtil.getStatement(sqlWithTaskId.diskStr);
-                            statementHashMap.put(sqlWithTaskId.diskStr, stmt);
-                            stmt.execute("BEGIN;");
-                        }
-                        if (IsDebug.isDebug()) {
-                            System.out.println("----------------------------------------------");
-                            System.out.println("执行SQL命令--" + sqlWithTaskId.sql);
-                            System.out.println("----------------------------------------------");
-                        }
-                        if (!stmt.execute(sqlWithTaskId.sql)) {
-                            int updateCount = stmt.getUpdateCount();
-                            if (sqlWithTaskId.key != null && updateCount != -1 && updateCount != 0) {
-                                if (databaseResultsCount.containsKey(sqlWithTaskId.key)) {
-                                    var recordsNumber = databaseResultsCount.get(sqlWithTaskId.key);
-                                    updateCount = sqlWithTaskId.taskId == SqlTaskIds.INSERT_TO_LIST ? updateCount : -updateCount;
-                                    recordsNumber.addAndGet(updateCount);
-                                }
+            tempCommandSet.forEach(sqlWithTaskId -> {
+                Statement stmt;
+                try {
+                    if (statementHashMap.containsKey(sqlWithTaskId.diskStr)) {
+                        stmt = statementHashMap.get(sqlWithTaskId.diskStr);
+                    } else {
+                        stmt = SQLiteUtil.getStatement(sqlWithTaskId.diskStr);
+                        statementHashMap.put(sqlWithTaskId.diskStr, stmt);
+                        stmt.execute("BEGIN;");
+                    }
+                    if (IsDebug.isDebug()) {
+                        System.out.println("----------------------------------------------");
+                        System.out.println("执行SQL命令--" + sqlWithTaskId.sql);
+                        System.out.println("----------------------------------------------");
+                    }
+                    if (!stmt.execute(sqlWithTaskId.sql)) {
+                        int updateCount = stmt.getUpdateCount();
+                        if (sqlWithTaskId.key != null && updateCount != -1 && updateCount != 0) {
+                            if (databaseResultsCount.containsKey(sqlWithTaskId.key)) {
+                                var recordsNumber = databaseResultsCount.get(sqlWithTaskId.key);
+                                updateCount = sqlWithTaskId.taskId == SqlTaskIds.INSERT_TO_LIST ? updateCount : -updateCount;
+                                recordsNumber.addAndGet(updateCount);
                             }
                         }
-                    } catch (SQLException e) {
-                        e.printStackTrace();
                     }
-                });
-                statementHashMap.forEach((k, v) -> {
-                    try {
-                        v.execute("COMMIT;");
-                        v.close();
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
-                });
-                sqlCommandQueue.removeAll(tempCommandSet);
-            }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            });
+            statementHashMap.forEach((k, v) -> {
+                try {
+                    v.execute("COMMIT;");
+                    v.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            });
+            sqlCommandQueue.removeAll(tempCommandSet);
         }
     }
 
@@ -1424,6 +1422,15 @@ public class DatabaseService {
         return Runtime.getRuntime().exec(new String[]{"cmd.exe", "/c", start + end}, null, new File("user"));
     }
 
+    private void resetStartTimeCount() {
+        File startTimeCount = new File("user/startTimeCount.dat");
+        try (var writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(startTimeCount), StandardCharsets.UTF_8))) {
+            writer.write(String.valueOf(1));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
      * 检查索引数据库大小
      */
@@ -1477,7 +1484,7 @@ public class DatabaseService {
             }
         }
         String toJson = gson.toJson(databaseCreateTimeMap);
-        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(databaseCreateTimeFileName), StandardCharsets.UTF_8))) {
+        try (var writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(databaseCreateTimeFileName), StandardCharsets.UTF_8))) {
             writer.write(toJson);
         } catch (IOException e) {
             e.printStackTrace();
@@ -1603,7 +1610,7 @@ public class DatabaseService {
         }
         // 检查数据库文件大小，过大则删除
         checkDbFileSize(isDropPrevious);
-
+        resetStartTimeCount();
         Process searchByUSN = null;
         try {
             // 创建搜索进程并等待

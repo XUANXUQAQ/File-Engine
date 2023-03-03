@@ -10,7 +10,6 @@
 #include <thread>
 #include <concurrent_queue.h>
 #include <concurrent_unordered_map.h>
-#include <io.h>
 #include "string_wstring_converter.h"
 #include "dir_changes_reader.h"
 
@@ -22,7 +21,7 @@ using namespace concurrency;
 using file_record_queue = concurrent_queue<std::wstring>;
 
 void monitor(const char* path);
-void stop_monitor(const std::string path);
+void stop_monitor(std::string path);
 void monitor_path(const std::string& path);
 void add_record(const std::wstring& record);
 void delete_record(const std::wstring& record);
