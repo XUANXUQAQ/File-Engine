@@ -1900,9 +1900,6 @@ public class DatabaseService {
                         searchInfo.isKeywordPath,
                         MAX_RESULTS,
                         (key, path) -> {
-                            if (searchTask.shouldStopSearch()) {
-                                return;
-                            }
                             if (FileUtil.isFileNotExist(path)) {
                                 databaseService.removeFileFromDatabase(path);
                                 return;
