@@ -129,8 +129,6 @@ public class SearchBar {
     private int lastMousePositionX = 0;
     private int lastMousePositionY = 0;
     private static final String PLUGIN_RESULT_SPLITTER_STR = "-@-@-";
-    private static final int SEND_PREPARE_SEARCH_TIMEOUT = 150;  //毫秒(ms)
-    private static final int SEND_START_SEARCH_TIMEOUT = 250;  //ms
     private static final int SHOW_RESULTS_TIMEOUT = 250; //ms
     private static final float SEARCH_BAR_WIDTH_RATIO = 0.3f;
     private static final float SEARCH_BAR_HEIGHT_RATIO = 0.4f;
@@ -3657,16 +3655,18 @@ public class SearchBar {
             if (AllConfigs.isFirstRun()) {
                 runInternalCommand("help");
             }
+            AllConfigs allConfigs = AllConfigs.getInstance();
             final AtomicBoolean isWaiting = new AtomicBoolean(false);
             while (eventManagement.notMainExit()) {
+                var advancedConfigs = allConfigs.getConfigEntity().getAdvancedConfigEntity();
                 final long endTime = System.currentTimeMillis();
                 DatabaseService.SearchTask searchTask = null;
-                if ((endTime - startTime > SEND_PREPARE_SEARCH_TIMEOUT) && isCudaSearchNotStarted.get() &&
+                if ((endTime - startTime > advancedConfigs.getWaitForInputAndPrepareSearchTimeoutInMills()) && isCudaSearchNotStarted.get() &&
                         startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
                     setSearchKeywordsAndSearchCase();
                     searchTask = sendPrepareSearchEvent();
                 }
-                if ((endTime - startTime > SEND_START_SEARCH_TIMEOUT) && isSearchNotStarted.get() &&
+                if ((endTime - startTime > advancedConfigs.getWaitForInputAndStartSearchTimeoutInMills()) && isSearchNotStarted.get() &&
                         startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
                     setSearchKeywordsAndSearchCase();
                     sendSearchEvent(searchTask);
@@ -3678,7 +3678,6 @@ public class SearchBar {
                         //去掉冒号
                         String text = getSearchBarText();
                         if (text.length() <= 1 || !runInternalCommand(text.substring(1).toLowerCase())) {
-                            AllConfigs allConfigs = AllConfigs.getInstance();
                             LinkedHashSet<String> cmdSet = allConfigs.getCmdSet();
                             cmdSet.add(":clearbin;" + translateService.getTranslation("Clear the recycle bin"));
                             cmdSet.add(":update;" + translateService.getTranslation("Update file index"));

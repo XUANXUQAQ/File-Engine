@@ -3170,9 +3170,10 @@ public class SettingsFrame {
         threadPoolUtil.executeTask(() -> {
             try {
                 final long startVisible = System.currentTimeMillis();
-                while (SettingsFrame.frame.isVisible() || System.currentTimeMillis() - startVisible < 3000) {
+                while (eventManagement.notMainExit() &&
+                        (SettingsFrame.frame.isVisible() || System.currentTimeMillis() - startVisible < 3000)) {
                     settingsFrame.saveChanges(true);
-                    TimeUnit.SECONDS.sleep(1);
+                    TimeUnit.SECONDS.sleep(5);
                 }
             } catch (InterruptedException ignored) {
                 // ignore

@@ -115,4 +115,7 @@ public class ConfigEntity {
 
     @SerializedName("searchThreadNumber")
     private int searchThreadNumber;
+
+    @SerializedName("advancedConfigs")
+    private AdvancedConfigEntity advancedConfigEntity;
 }

@@ -441,6 +441,19 @@ public class AllConfigs {
         translateService.setLanguage(language);
     }
 
+    @SuppressWarnings("unchecked")
+    private void readAdvancedConfigs(Map<String, Object> settingsInJson) {
+        Map<String, Object> advancedConfigs = (Map<String, Object>) settingsInJson.getOrDefault("advancedConfigs", new HashMap<String, Object>());
+        long searchWarmupTimeoutInMills = Long.parseLong(getFromJson(advancedConfigs, "searchWarmupTimeoutInMills", (long) 10 * 60 * 1000).toString());
+        long waitForInputAndPrepareSearchTimeoutInMills = Long.parseLong(getFromJson(advancedConfigs, "waitForInputAndPrepareSearchTimeoutInMills", (long) 150).toString());
+        long waitForInputAndStartSearchTimeoutInMills = Long.parseLong(getFromJson(advancedConfigs, "waitForInputAndStartSearchTimeoutInMills", (long) 250).toString());
+        long waitForSearchTasksTimeoutInMills = Long.parseLong(getFromJson(advancedConfigs, "waitForSearchTasksTimeoutInMills", (long) 5 * 60 * 1000).toString());
+        configEntity.setAdvancedConfigEntity(new AdvancedConfigEntity(searchWarmupTimeoutInMills,
+                waitForInputAndPrepareSearchTimeoutInMills,
+                waitForInputAndStartSearchTimeoutInMills,
+                waitForSearchTasksTimeoutInMills));
+    }
+
     private void readSearchThreadNumber(Map<String, Object> settingsInJson) {
         int availableProcessors = Runtime.getRuntime().availableProcessors();
         int searchThreadNumber = getFromJson(settingsInJson, "searchThreadNumber", availableProcessors);
@@ -470,7 +483,7 @@ public class AllConfigs {
         configEntity.setShowTipCreatingLnk(getFromJson(settingsInJson, "isShowTipOnCreatingLnk", true));
     }
 
-    private String readConfigsJson() {
+    private String readConfigsJson0() {
         File settings = new File("user/settings.json");
         if (settings.exists()) {
             try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(settings), StandardCharsets.UTF_8))) {
@@ -496,7 +509,7 @@ public class AllConfigs {
      */
     @SuppressWarnings("unchecked")
     private Map<String, Object> getSettingsJSON() {
-        String jsonConfig = readConfigsJson();
+        String jsonConfig = readConfigsJson0();
         if (jsonConfig.isEmpty()) {
             return new HashMap<>();
         } else {
@@ -587,6 +600,7 @@ public class AllConfigs {
         readIsEnableGpuAccelerate(settingsInJson);
         readGpuDevice(settingsInJson);
         readSearchThreadNumber(settingsInJson);
+        readAdvancedConfigs(settingsInJson);
         initUpdateAddress();
         initCmdSetSettings();
     }
@@ -824,7 +838,10 @@ public class AllConfigs {
             setConfigsEvent.setConfigs(allConfigs.configEntity);
         } else {
             // 更新设置
+            Map<String, Object> configsJson = allConfigs.getSettingsJSON();
+            allConfigs.readAdvancedConfigs(configsJson);
             ConfigEntity tempConfigEntity = setConfigsEvent.getConfigs();
+            tempConfigEntity.setAdvancedConfigEntity(allConfigs.getConfigEntity().getAdvancedConfigEntity());
             if (allConfigs.noNullValue(tempConfigEntity)) {
                 allConfigs.setInvalidConfigs(tempConfigEntity, config -> {
                     if (config.isEnableGpuAccelerate()) {

@@ -531,10 +531,12 @@ public class DatabaseService {
     private void warmupSearchThread() {
         ThreadPoolUtil.getInstance().executeTask(() -> {
             EventManagement eventManagement = EventManagement.getInstance();
-            final long timeout = 10 * 60 * 1000; // 10min
             long startTime = System.currentTimeMillis();
             while (eventManagement.notMainExit()) {
-                if (System.currentTimeMillis() - startTime > timeout) {
+                if (System.currentTimeMillis() - startTime > AllConfigs.getInstance()
+                        .getConfigEntity()
+                        .getAdvancedConfigEntity()
+                        .getSearchWarmupTimeoutInMills()) {
                     if (!GetHandle.INSTANCE.isForegroundFullscreen()) {
                         String[] warmupKeywords = {WARMUP_SEARCH_TEXT_PREFIX + getRandomString(20)};
                         startTime = System.currentTimeMillis();
@@ -785,10 +787,13 @@ public class DatabaseService {
         try {
             var eventManagement = EventManagement.getInstance();
             final long startWaiting = System.currentTimeMillis();
-            final long timeout = 5 * 60 * 1000; // 线程最大存活时间为5分钟
+            AllConfigs allConfigs = AllConfigs.getInstance();
             while (!searchTask.taskStatus.equals(searchTask.allTaskStatus) &&
                     eventManagement.notMainExit() &&
-                    System.currentTimeMillis() - startWaiting < timeout) {
+                    System.currentTimeMillis() - startWaiting < allConfigs
+                            .getConfigEntity()
+                            .getAdvancedConfigEntity()
+                            .getWaitForSearchTasksTimeoutInMills()) {
                 TimeUnit.MILLISECONDS.sleep(1);
             }
         } catch (Exception e) {
