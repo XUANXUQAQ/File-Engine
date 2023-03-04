@@ -624,7 +624,7 @@ public class DatabaseService {
      * @return true如果匹配成功
      */
     private boolean checkIsMatchedAndAddToList(String path,
-                                               String priorityStr,
+                                               @SuppressWarnings("unused") String priorityStr,
                                                SearchTask searchTask) {
         boolean ret = false;
         if (PathMatchUtil.check(path,
@@ -639,10 +639,7 @@ public class DatabaseService {
                 removeFileFromDatabase(path);
             } else if (searchTask.tempResultsSet.add(path)) {
                 ret = true;
-                var container = searchTask.priorityContainers.get(priorityStr);
-                if (container != null) {
-                    container.add(path);
-                }
+                searchTask.tempResults.add(path);
             }
         }
         return ret;
@@ -792,26 +789,11 @@ public class DatabaseService {
             while (!searchTask.taskStatus.equals(searchTask.allTaskStatus) &&
                     eventManagement.notMainExit() &&
                     System.currentTimeMillis() - startWaiting < timeout) {
-                for (var eachPriority : priorityMap) {
-                    var priorityContainer = searchTask.priorityContainers.get(String.valueOf(eachPriority.priority));
-                    if (priorityContainer != null) {
-                        String eachResult;
-                        while ((eachResult = priorityContainer.poll()) != null) {
-                            searchTask.tempResults.add(eachResult);
-                        }
-                    }
-                }
                 TimeUnit.MILLISECONDS.sleep(1);
             }
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            for (var eachPriority : priorityMap) {
-                var priorityContainer = searchTask.priorityContainers.get(String.valueOf(eachPriority.priority));
-                if (priorityContainer != null) {
-                    searchTask.tempResults.addAll(priorityContainer);
-                }
-            }
             searchDone(searchTask);
         }
     }
@@ -974,7 +956,7 @@ public class DatabaseService {
 
     /**
      * 生成未格式化的sql
-     * 第一个map中每一个priority加上list0-list40会生成41条SQL作为key，value是搜索的表，即SELECT* FROM [list?]中的[list?];
+     * 每一个priority加上list0-list40会生成41条SQL作为key，value是搜索的表，即SELECT* FROM [list?]中的[list?];
      *
      * @return set
      */
@@ -1852,9 +1834,6 @@ public class DatabaseService {
         databaseService.stopAllSearch();
         var searchTask = new SearchTask(searchInfo);
         lastSearchTask = searchTask;
-        for (var eachPriority : databaseService.priorityMap) {
-            searchTask.priorityContainers.put(String.valueOf(eachPriority.priority), new ConcurrentLinkedQueue<>());
-        }
 
         var threadPoolUtil = ThreadPoolUtil.getInstance();
         databaseService.searchCache(searchTask);
@@ -1912,11 +1891,7 @@ public class DatabaseService {
                                 return;
                             }
                             if (searchTask.tempResultsSet.add(path)) {
-                                var priorityStr = RegexUtil.comma.split(key)[2];
-                                var container = searchTask.priorityContainers.get(priorityStr);
-                                if (container != null) {
-                                    container.add(path);
-                                }
+                                searchTask.tempResults.add(path);
                             }
                         });
                 SearchTask.isGpuThreadRunning.set(false);
@@ -2305,7 +2280,6 @@ public class DatabaseService {
         private final Set<String> tempResultsSet = ConcurrentHashMap.newKeySet();
         private final AtomicBoolean searchDoneFlag = new AtomicBoolean();
         private final long taskCreateTimeMills = System.currentTimeMillis();
-        private final ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> priorityContainers = new ConcurrentHashMap<>();
 
         private static final AtomicBoolean isGpuThreadRunning = new AtomicBoolean();
         private static final long maxTaskValidThreshold = 5000;
