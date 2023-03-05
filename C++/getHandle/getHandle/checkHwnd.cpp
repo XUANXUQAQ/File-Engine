@@ -35,18 +35,25 @@ bool is_explorer_window_by_class_name(const HWND& hwnd)
 	if (IsWindowEnabled(hwnd) && !IsIconic(hwnd))
 	{
 		char class_name[200];
-		GetClassNameA(hwnd, class_name, 200);
+		GetClassNameA(hwnd, class_name, sizeof class_name);
 		std::string window_class_name(class_name);
-		transform(window_class_name.begin(), window_class_name.end(), window_class_name.begin(), ::tolower);
+		std::transform(window_class_name.begin(), window_class_name.end(), window_class_name.begin(), std::tolower);
 		//使用检测窗口类名的方式更节省CPU资源
 		if (window_class_name.find("cabinet") != std::string::npos)
 		{
 			if (IsWindows8OrGreater())
 			{
-				return FindWindowExA(hwnd, nullptr, "UIRibbonCommandBarDock", nullptr);
+				if (FindWindowExA(hwnd, nullptr, "UIRibbonCommandBarDock", nullptr))
+				{
+					return true;
+				}
+				BOOL CALLBACK is_hwnd_has_cabinetWClass(HWND hwndChild, LPARAM lParam);
+				int has_cabinet = 0;
+				EnumChildWindows(hwnd, is_hwnd_has_cabinetWClass, reinterpret_cast<LPARAM>(&has_cabinet));
+				return has_cabinet == 7;
 			}
 			// windows 7
-			HWND tmp = FindWindowExA(hwnd, nullptr, "ShellTabWindowClass", nullptr);
+			const HWND tmp = FindWindowExA(hwnd, nullptr, "ShellTabWindowClass", nullptr);
 			if (tmp)
 			{
 				return !FindWindowExA(
@@ -136,10 +143,38 @@ bool is_file_chooser_window(const HWND& hwnd)
 BOOL CALLBACK is_hwnd_has_toolbar(HWND hwndChild, LPARAM lParam)
 {
 	char window_class_name[100] = {'\0'};
-	GetClassNameA(hwndChild, window_class_name, 100);
+	GetClassNameA(hwndChild, window_class_name, sizeof window_class_name);
 	if (strcmp(window_class_name, "ToolbarWindow32") == 0)
 	{
 		*reinterpret_cast<int*>(lParam) = true;
+		return false;
+	}
+	return true;
+}
+
+/**
+ * 判断窗口句柄是否为explorer上方的toolbar
+ */
+BOOL CALLBACK is_hwnd_has_cabinetWClass(HWND hwndChild, LPARAM lParam)
+{
+	const auto flag = reinterpret_cast<int*>(lParam);
+	char window_class_name[100] = { '\0' };
+	GetClassNameA(hwndChild, window_class_name, sizeof window_class_name);
+	const std::string class_name_str(window_class_name);
+	if (class_name_str.find("Windows.UI.Core.CoreWindow") != std::string::npos)
+	{
+		*flag = 1;
+	}
+	else if (*flag & 1 && class_name_str.find("WorkerW") != std::string::npos)
+	{
+		*flag |= 2;
+	}
+	else if (*flag & 2 && class_name_str.find("ToolbarWindow32") != std::string::npos)
+	{
+		*flag |= 4;
+	}
+	if (*flag == 7)
+	{
 		return false;
 	}
 	return true;

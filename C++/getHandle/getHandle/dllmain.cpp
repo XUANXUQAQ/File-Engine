@@ -12,7 +12,6 @@
 #pragma comment(lib, "user32")
 #pragma comment(lib, "kernel32")
 
-using namespace std;
 
 constexpr auto EXPLORER_MIN_HEIGHT = 200; //当窗口大小满足这些条件后才开始判断是否为explorer.exe
 constexpr auto EXPLORER_MIN_WIDTH = 200;
@@ -462,9 +461,9 @@ void start()
 	if (!is_running)
 	{
 		is_running = true;
-		thread checkTopWindow(checkTopWindowThread);
+		std::thread checkTopWindow(checkTopWindowThread);
 		checkTopWindow.detach();
-		thread checkMouse(checkMouseThread);
+		std::thread checkMouse(checkMouseThread);
 		checkMouse.detach();
 	}
 }
