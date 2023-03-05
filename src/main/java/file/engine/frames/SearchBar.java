@@ -129,7 +129,6 @@ public class SearchBar {
     private int lastMousePositionX = 0;
     private int lastMousePositionY = 0;
     private static final String PLUGIN_RESULT_SPLITTER_STR = "-@-@-";
-    private static final int SHOW_RESULTS_TIMEOUT = 250; //ms
     private static final float SEARCH_BAR_WIDTH_RATIO = 0.3f;
     private static final float SEARCH_BAR_HEIGHT_RATIO = 0.4f;
     private static final float TEXT_FIELD_HEIGHT_RATIO = 0.7f;
@@ -2605,7 +2604,12 @@ public class SearchBar {
         int length = Math.min(listResults.size() + 1, 9);
         if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
             if (listResults.isEmpty()) {
-                if (getSearchBarText().isEmpty() || System.currentTimeMillis() - startTime < SHOW_RESULTS_TIMEOUT) {
+                long waitForInputAndStartSearchTimeoutInMills = AllConfigs
+                        .getInstance()
+                        .getConfigEntity()
+                        .getAdvancedConfigEntity()
+                        .getWaitForInputAndStartSearchTimeoutInMills();
+                if (getSearchBarText().isEmpty() || System.currentTimeMillis() - startTime < waitForInputAndStartSearchTimeoutInMills) {
                     setSearchBarRadius(roundRadius, searchBar.getWidth(), label1.getHeight());
                 } else {
                     setSearchBarRadius(roundRadius, searchBar.getWidth(), 2 * label1.getHeight());
@@ -3661,18 +3665,20 @@ public class SearchBar {
                 var advancedConfigs = allConfigs.getConfigEntity().getAdvancedConfigEntity();
                 final long endTime = System.currentTimeMillis();
                 DatabaseService.SearchTask searchTask = null;
-                if ((endTime - startTime > advancedConfigs.getWaitForInputAndPrepareSearchTimeoutInMills()) && isCudaSearchNotStarted.get() &&
+                long waitForInputAndPrepareSearchTimeoutInMills = advancedConfigs.getWaitForInputAndPrepareSearchTimeoutInMills();
+                if ((endTime - startTime > waitForInputAndPrepareSearchTimeoutInMills) && isCudaSearchNotStarted.get() &&
                         startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
                     setSearchKeywordsAndSearchCase();
                     searchTask = sendPrepareSearchEvent();
                 }
-                if ((endTime - startTime > advancedConfigs.getWaitForInputAndStartSearchTimeoutInMills()) && isSearchNotStarted.get() &&
+                long waitForInputAndStartSearchTimeoutInMills = advancedConfigs.getWaitForInputAndStartSearchTimeoutInMills();
+                if ((endTime - startTime > waitForInputAndStartSearchTimeoutInMills) && isSearchNotStarted.get() &&
                         startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
                     setSearchKeywordsAndSearchCase();
                     sendSearchEvent(searchTask);
                 }
 
-                if ((endTime - startTime > SHOW_RESULTS_TIMEOUT) && startSearchSignal.get()) {
+                if ((endTime - startTime > waitForInputAndStartSearchTimeoutInMills) && startSearchSignal.get()) {
                     startSearchSignal.set(false); //开始搜索 计时停止
                     if (runningMode == RunningMode.COMMAND_MODE) {
                         //去掉冒号

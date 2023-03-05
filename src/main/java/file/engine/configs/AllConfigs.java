@@ -446,7 +446,7 @@ public class AllConfigs {
         Map<String, Object> advancedConfigs = (Map<String, Object>) settingsInJson.getOrDefault("advancedConfigs", new HashMap<String, Object>());
         long searchWarmupTimeoutInMills = Long.parseLong(getFromJson(advancedConfigs, "searchWarmupTimeoutInMills", (long) 10 * 60 * 1000).toString());
         long waitForInputAndPrepareSearchTimeoutInMills = Long.parseLong(getFromJson(advancedConfigs, "waitForInputAndPrepareSearchTimeoutInMills", (long) 150).toString());
-        long waitForInputAndStartSearchTimeoutInMills = Long.parseLong(getFromJson(advancedConfigs, "waitForInputAndStartSearchTimeoutInMills", (long) 250).toString());
+        long waitForInputAndStartSearchTimeoutInMills = Long.parseLong(getFromJson(advancedConfigs, "waitForInputAndStartSearchTimeoutInMills", (long) 350).toString());
         long waitForSearchTasksTimeoutInMills = Long.parseLong(getFromJson(advancedConfigs, "waitForSearchTasksTimeoutInMills", (long) 5 * 60 * 1000).toString());
         configEntity.setAdvancedConfigEntity(new AdvancedConfigEntity(searchWarmupTimeoutInMills,
                 waitForInputAndPrepareSearchTimeoutInMills,
@@ -841,7 +841,7 @@ public class AllConfigs {
             Map<String, Object> configsJson = allConfigs.getSettingsJSON();
             allConfigs.readAdvancedConfigs(configsJson);
             ConfigEntity tempConfigEntity = setConfigsEvent.getConfigs();
-            tempConfigEntity.setAdvancedConfigEntity(allConfigs.getConfigEntity().getAdvancedConfigEntity());
+            tempConfigEntity.setAdvancedConfigEntity(allConfigs.configEntity.getAdvancedConfigEntity());
             if (allConfigs.noNullValue(tempConfigEntity)) {
                 allConfigs.setInvalidConfigs(tempConfigEntity, config -> {
                     if (config.isEnableGpuAccelerate()) {
