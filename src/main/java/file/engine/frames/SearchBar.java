@@ -3116,7 +3116,7 @@ public class SearchBar {
     }
 
     private void tryToShowRecords() {
-        if (currentResultCount.get() < 8) {
+        if (currentResultCount.get() == 0) {
             //设置窗口上的文字和图片显示，键盘模式
             int pos = getCurrentLabelPos();
             SwingUtilities.invokeLater(() -> {
