@@ -112,11 +112,11 @@ void startListen()
 	short isKey5Pressed;
 	DoubleClickKeyStateSaver ctrlSaver;
 	DoubleClickKeyStateSaver shiftSaver;
-	BYTE allKeyState[256]{ 0 };
 	while (!isStop)
 	{
 		isCtrlDoubleClicked = doubleClickCheck(VK_CONTROL, ctrlSaver);
 		isShiftDoubleClicked = doubleClickCheck(VK_SHIFT, shiftSaver);
+		BYTE allKeyState[256]{ 0 };
 		unsigned validHotkeyCount = 0;
 		if (hotkey1 > 0)
 		{

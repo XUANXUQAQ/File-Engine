@@ -195,7 +195,7 @@ public enum GPUAccelerator {
     }
 
     public boolean setDevice(String deviceCategoryAndId) {
-        if (gpuAccelerator != null && isEnableGpuAccelerate) {
+        if (gpuAccelerator != null) {
             // 切换GPU设备重启生效，运行中不允许切换
             return true;
         }

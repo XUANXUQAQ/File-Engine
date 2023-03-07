@@ -1770,10 +1770,16 @@ public class DatabaseService {
 
     @EventListener(listenClass = SetConfigsEvent.class)
     private static void setGpuDevice(Event event) {
-        var device = AllConfigs.getInstance().getConfigEntity().getGpuDevice();
-        if (!GPUAccelerator.INSTANCE.setDevice(device)) {
-            System.err.println("gpu设备" + device + "无效");
-        }
+        ThreadPoolUtil.getInstance().executeTask(() -> {
+            if (isEnableGPUAccelerate) {
+                synchronized (DatabaseService.class) {
+                    var device = AllConfigs.getInstance().getConfigEntity().getGpuDevice();
+                    if (!GPUAccelerator.INSTANCE.setDevice(device)) {
+                        System.err.println("gpu设备" + device + "无效");
+                    }
+                }
+            }
+        });
     }
 
     @EventRegister(registerClass = PrepareSearchEvent.class)
