@@ -12,10 +12,10 @@ import file.engine.dllInterface.IsLocalDisk;
 import file.engine.dllInterface.gpu.GPUAccelerator;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
-import file.engine.event.handler.impl.configs.SetSwingLaf;
 import file.engine.event.handler.impl.configs.AddCmdEvent;
 import file.engine.event.handler.impl.configs.DeleteCmdEvent;
 import file.engine.event.handler.impl.configs.SetConfigsEvent;
+import file.engine.event.handler.impl.configs.SetSwingLaf;
 import file.engine.event.handler.impl.database.*;
 import file.engine.event.handler.impl.download.StartDownloadEvent;
 import file.engine.event.handler.impl.download.StopDownloadEvent;
@@ -32,16 +32,15 @@ import file.engine.event.handler.impl.plugin.GetPluginByNameEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.frames.components.SetDownloadProgress;
-import file.engine.services.CheckHotKeyService;
 import file.engine.services.DatabaseService;
 import file.engine.services.TranslateService;
 import file.engine.services.download.DownloadManager;
 import file.engine.services.plugin.system.Plugin;
 import file.engine.services.plugin.system.PluginService;
-import file.engine.utils.ThreadPoolUtil;
 import file.engine.utils.DpiUtil;
 import file.engine.utils.RegexUtil;
 import file.engine.utils.StartupUtil;
+import file.engine.utils.ThreadPoolUtil;
 import file.engine.utils.file.MoveDesktopFilesUtil;
 import file.engine.utils.system.properties.IsDebug;
 import file.engine.utils.system.properties.IsPreview;
@@ -333,7 +332,7 @@ public class SettingsFrame {
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                String errors = saveChanges(false);
+                String errors = saveChanges();
                 if (!errors.isEmpty()) {
                     int ret = JOptionPane.showConfirmDialog(null, translateService.getTranslation("Errors") + ":\n" + errors + "\n" + translateService.getTranslation("Failed to save settings, do you still close the window"));
                     if (ret == JOptionPane.YES_OPTION) {
@@ -359,10 +358,32 @@ public class SettingsFrame {
         });
     }
 
-    /**
-     * 添加到开机启动监听器
-     */
-    private void addCheckBoxStartupListener() {
+    private void addCheckBoxListener() {
+        checkBoxLoseFocus.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                saveChanges();
+            }
+        });
+        checkBoxAdmin.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                saveChanges();
+            }
+        });
+        checkBoxIsShowTipOnCreatingLnk.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                saveChanges();
+            }
+        });
+        checkBoxIsAttachExplorer.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                saveChanges();
+            }
+        });
+        //添加到开机启动监听器
         checkBoxAddToStartup.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -470,6 +491,28 @@ public class SettingsFrame {
         });
     }
 
+    private void addTextFieldProxyListener() {
+        DocumentListener documentListener = new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                saveChanges();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                saveChanges();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+            }
+        };
+        textFieldAddress.getDocument().addDocumentListener(documentListener);
+        textFieldPort.getDocument().addDocumentListener(documentListener);
+        textFieldUserName.getDocument().addDocumentListener(documentListener);
+        textFieldPassword.getDocument().addDocumentListener(documentListener);
+    }
+
     private void addTextFieldRunAsAdminListener() {
         textFieldRunAsAdminHotKey.addKeyListener(new KeyAdapter() {
             @Override
@@ -501,6 +544,7 @@ public class SettingsFrame {
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 textFieldPriorityFolder.setText(file.getAbsolutePath());
             }
+            saveChanges();
         });
     }
 
@@ -2025,13 +2069,13 @@ public class SettingsFrame {
                         borderType = (Constants.Enums.BorderType) comboBoxBorderType.getSelectedItem();
                         if (
                                 canParseToRGB(borderColor) &&
-                                canParseToRGB(searchBarColor) &&
-                                canParseToRGB(searchBarFontColor) &&
-                                canParseToRGB(labelColor) &&
-                                canParseToRGB(fontColorCoverage) &&
-                                canParseToRGB(fontColor) &&
-                                canParseToRGB(defaultBackgroundColor) &&
-                                canParseFloat(borderThickness, 0, 4)
+                                        canParseToRGB(searchBarColor) &&
+                                        canParseToRGB(searchBarFontColor) &&
+                                        canParseToRGB(labelColor) &&
+                                        canParseToRGB(fontColorCoverage) &&
+                                        canParseToRGB(fontColor) &&
+                                        canParseToRGB(defaultBackgroundColor) &&
+                                        canParseFloat(borderThickness, 0, 4)
                         ) {
                             eventManagement.putEvent(new PreviewSearchBarEvent(borderColor, searchBarColor, searchBarFontColor, labelColor, fontColorCoverage, fontColor, defaultBackgroundColor, borderType, borderThickness));
                         }
@@ -2961,13 +3005,14 @@ public class SettingsFrame {
      */
     private void addListeners() {
         addWindowCloseListener();
-        addCheckBoxStartupListener();
+        addCheckBoxListener();
         addButtonRemoveDesktopListener();
         addFileChooserButtonListener();
         addTextFieldListener();
         addPriorityFileChooserListener();
         addPriorityTextFieldListener();
         addTextFieldRunAsAdminListener();
+        addTextFieldProxyListener();
         addTextFieldOpenLastFolderListener();
         addButtonCMDListener();
         addButtonDelCMDListener();
@@ -3167,18 +3212,6 @@ public class SettingsFrame {
         } else {
             settingsFrame.showWindow(showSettingsFrameEvent.showTabName);
         }
-        threadPoolUtil.executeTask(() -> {
-            try {
-                final long startVisible = System.currentTimeMillis();
-                while (eventManagement.notMainExit() &&
-                        (SettingsFrame.frame.isVisible() || System.currentTimeMillis() - startVisible < 3000)) {
-                    settingsFrame.saveChanges(true);
-                    TimeUnit.SECONDS.sleep(5);
-                }
-            } catch (InterruptedException ignored) {
-                // ignore
-            }
-        });
     }
 
     @EventListener(listenClass = AddToCacheEvent.class)
@@ -3355,7 +3388,7 @@ public class SettingsFrame {
      *
      * @return ConfigEntity
      */
-    private ConfigEntity getConfigEntity(boolean isContinuousUpdate) {
+    private ConfigEntity getConfigEntity() {
         ConfigEntity configEntity = new ConfigEntity();
         String ignorePathTemp = RegexUtil.getPattern("\n", 0).matcher(textAreaIgnorePath.getText()).replaceAll("");
         String swingTheme = (String) listSwingThemes.getSelectedValue();
@@ -3378,11 +3411,7 @@ public class SettingsFrame {
         }
         configEntity.setBorderType(borderType.toString());
         configEntity.setPriorityFolder(textFieldPriorityFolder.getText());
-        if (isContinuousUpdate) {
-            configEntity.setHotkey(CheckHotKeyService.getCurrentHotkey());
-        } else {
-            configEntity.setHotkey(textFieldHotkey.getText());
-        }
+        configEntity.setHotkey(textFieldHotkey.getText());
         configEntity.setCacheNumLimit(Integer.parseInt(textFieldCacheNum.getText()));
         configEntity.setUpdateTimeLimit(Integer.parseInt(textFieldUpdateInterval.getText()));
         configEntity.setIgnorePath(ignorePathTemp);
@@ -3424,7 +3453,7 @@ public class SettingsFrame {
      *
      * @return 出现的错误信息，若成功则为空
      */
-    private String saveChanges(boolean isContinuousUpdate) {
+    private String saveChanges() {
         StringBuilder errorsStrBuilder = new StringBuilder();
 
         checkProxy(errorsStrBuilder);
@@ -3455,7 +3484,7 @@ public class SettingsFrame {
 
         //所有配置均正确
         //使所有配置生效
-        ConfigEntity configEntity = getConfigEntity(isContinuousUpdate);
+        ConfigEntity configEntity = getConfigEntity();
 
         eventManagement.putEvent(new SetConfigsEvent(configEntity));
 
