@@ -7,7 +7,6 @@ public enum ThreadPoolUtil {
     INSTANCE;
     private static final int THREAD_POOL_AWAIT_TIMEOUT = 10;
     private final ExecutorService cachedThreadPool;
-    private final ExecutorService fixedThreadPool;
     private final AtomicBoolean isShutdown = new AtomicBoolean(false);
 
     ThreadPoolUtil() {
@@ -19,7 +18,6 @@ public enum ThreadPoolUtil {
                 new SynchronousQueue<>(),
                 Executors.defaultThreadFactory()
         );
-        fixedThreadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     }
 
     public static ThreadPoolUtil getInstance() {
@@ -36,6 +34,10 @@ public enum ThreadPoolUtil {
 
     private void executeTaskPlatform(Runnable task) {
         cachedThreadPool.submit(task);
+    }
+
+    public ExecutorService createNewWorkStealingPool(int threadNum) {
+        return Executors.newWorkStealingPool(threadNum);
     }
 
     /**
@@ -79,29 +81,12 @@ public enum ThreadPoolUtil {
         executeTaskPlatform(task);
     }
 
-    public void executeTaskInFixedThreadPool(Runnable task) {
-        if (isShutdown.get()) {
-            return;
-        }
-        fixedThreadPool.submit(task);
-    }
-
-    @SuppressWarnings("unused")
-    public <V> Future<V> executeTaskInFixedThreadPool(Callable<V> task) {
-        if (isShutdown.get()) {
-            return null;
-        }
-        return fixedThreadPool.submit(task);
-    }
-
     /**
      * 关闭线程池病等待
      */
     public void shutdown() {
         isShutdown.set(true);
         cachedThreadPool.shutdown();
-        fixedThreadPool.shutdown();
-        printInfo((ThreadPoolExecutor) fixedThreadPool);
         printInfo((ThreadPoolExecutor) cachedThreadPool);
     }
 

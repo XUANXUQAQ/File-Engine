@@ -1020,13 +1020,10 @@ public class DatabaseService {
      */
     private void startSearch(SearchTask searchTask) {
         startSearchTimeMills = System.currentTimeMillis();
-        var threadPoolUtil = ThreadPoolUtil.getInstance();
         var eventManagement = EventManagement.getInstance();
 
-        var diskNumber = searchTask.taskMap.size();
         var searchThreadNumber = AllConfigs.getInstance().getConfigEntity().getSearchThreadNumber();
-        final int threadNumberPerDisk = Math.max(1, searchThreadNumber / diskNumber);
-        final int remainThreads = searchThreadNumber - diskNumber * threadNumberPerDisk;
+        ExecutorService workStealingPool = ThreadPoolUtil.getInstance().createNewWorkStealingPool(searchThreadNumber);
 
         Consumer<ConcurrentLinkedQueue<Runnable>> taskHandler = (taskQueue) -> {
             while (!taskQueue.isEmpty() && eventManagement.notMainExit()) {
@@ -1034,30 +1031,20 @@ public class DatabaseService {
                 if (runnable == null) {
                     continue;
                 }
-                runnable.run();
+                workStealingPool.submit(() -> {
+                    try {
+                        searchThreadCount.incrementAndGet();
+                        runnable.run();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    } finally {
+                        searchThreadCount.decrementAndGet();
+                    }
+                });
             }
         };
         for (var taskQueue : searchTask.taskMap.values()) {
-            for (int i = 0; i < threadNumberPerDisk; i++) {
-                threadPoolUtil.executeTaskInFixedThreadPool(() -> {
-                    searchThreadCount.incrementAndGet();
-                    taskHandler.accept(taskQueue);
-                    //自身任务已经完成，开始扫描其他线程的任务
-                    for (var otherTaskQueue : searchTask.taskMap.values()) {
-                        taskHandler.accept(otherTaskQueue);
-                    }
-                    searchThreadCount.decrementAndGet();
-                });
-            }
-        }
-        for (int i = 0; i < remainThreads; i++) {
-            threadPoolUtil.executeTaskInFixedThreadPool(() -> {
-                searchThreadCount.incrementAndGet();
-                for (var otherTaskQueue : searchTask.taskMap.values()) {
-                    taskHandler.accept(otherTaskQueue);
-                }
-                searchThreadCount.decrementAndGet();
-            });
+            taskHandler.accept(taskQueue);
         }
         waitForTasks(searchTask);
     }
