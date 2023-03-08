@@ -2726,10 +2726,7 @@ public class SearchBar {
 
     @EventListener(listenClass = SetConfigsEvent.class)
     private static void setSearchBar(Event event) {
-        setSearchBarTheme(AllConfigs.getInstance().getConfigEntity());
-    }
-
-    private static void setSearchBarTheme(ConfigEntity configs) {
+        var configs = AllConfigs.getInstance().getConfigEntity();
         SearchBar searchBar = getInstance();
         searchBar.setTransparency(configs.getTransparency());
         searchBar.setBorderColor(AllConfigs.getInstance().getBorderType(), configs.getBorderColor(), configs.getBorderThickness());
@@ -2775,16 +2772,18 @@ public class SearchBar {
             } else {
                 searchBar.textField.setCaretColor(Color.BLACK);
             }
-            eventManagement.putEvent(new ShowSearchBarEvent(false));
+            if (!searchBar.isVisible()) {
+                eventManagement.putEvent(new ShowSearchBarEvent(false));
+            }
             if (searchBar.getSearchBarText() == null || searchBar.getSearchBarText().isEmpty()) {
-                ThreadPoolUtil.getInstance().executeTask(() -> {
-                    try {
-                        TimeUnit.MILLISECONDS.sleep(50);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    searchBar.textField.setText("a");
+                try {
+                    TimeUnit.MILLISECONDS.sleep(50);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                SwingUtilities.invokeLater(() -> {
                     if (!IsStartTimeSet.isStartTimeSet.get()) {
+                        searchBar.textField.setText("a");
                         IsStartTimeSet.isStartTimeSet.set(true);
                         searchBar.startTime = System.currentTimeMillis();
                         searchBar.startSearchSignal.set(true);
