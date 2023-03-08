@@ -12,7 +12,7 @@ public enum ThreadPoolUtil {
     ThreadPoolUtil() {
         cachedThreadPool = new ThreadPoolExecutor(
                 0,
-                100,
+                1000,
                 60,
                 TimeUnit.SECONDS,
                 new SynchronousQueue<>(),
