@@ -2707,7 +2707,7 @@ public class SearchBar {
 
     @EventRegister(registerClass = ShowSearchBarEvent.class)
     private static void showSearchBarEvent(Event event) {
-        ShowSearchBarEvent showSearchBarTask = (ShowSearchBarEvent) event;
+        var showSearchBarTask = (ShowSearchBarEvent) event;
         SearchBar searchBarInstance = getInstance();
         searchBarInstance.showSearchbar(showSearchBarTask.isGrabFocus, showSearchBarTask.isSwitchToNormal);
     }
@@ -2715,8 +2715,19 @@ public class SearchBar {
     @EventRegister(registerClass = HideSearchBarEvent.class)
     @EventListener(listenClass = RestartEvent.class)
     private static void hideSearchBarEvent(Event event) {
-        SearchBar searchBar = getInstance();
-        searchBar.detectShowingModeAndClose();
+        SearchBar searchBarInstance = getInstance();
+        searchBarInstance.detectShowingModeAndClose();
+    }
+
+    @EventRegister(registerClass = SwitchVisibleStatusEvent.class)
+    private static void switchVisibleStatus(Event event) {
+        var switchVisibleStatusEvent = (SwitchVisibleStatusEvent) event;
+        SearchBar searchBarInstance = getInstance();
+        if (searchBarInstance.isVisible()) {
+            searchBarInstance.detectShowingModeAndClose();
+        } else {
+            searchBarInstance.showSearchbar(switchVisibleStatusEvent.isGrabFocus, switchVisibleStatusEvent.isSwitchToNormal);
+        }
     }
 
     @EventListener(listenClass = RestartEvent.class)

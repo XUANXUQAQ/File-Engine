@@ -8,11 +8,13 @@ import file.engine.dllInterface.HotkeyListener;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.configs.SetConfigsEvent;
-import file.engine.event.handler.impl.frame.searchBar.*;
+import file.engine.event.handler.impl.frame.searchBar.GetShowingModeEvent;
+import file.engine.event.handler.impl.frame.searchBar.GrabFocusOnAttachModeEvent;
+import file.engine.event.handler.impl.frame.searchBar.SwitchVisibleStatusEvent;
 import file.engine.event.handler.impl.hotkey.CheckHotKeyAvailableEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
-import file.engine.utils.ThreadPoolUtil;
 import file.engine.utils.RegexUtil;
+import file.engine.utils.ThreadPoolUtil;
 import lombok.Getter;
 
 import java.awt.event.KeyEvent;
@@ -28,7 +30,6 @@ public class CheckHotKeyService {
     private static volatile CheckHotKeyService INSTANCE = null;
     @Getter
     private static volatile String currentHotkey;
-    private static boolean isSearchBarVisible = false;
 
     private static CheckHotKeyService getInstance() {
         if (INSTANCE == null) {
@@ -101,37 +102,32 @@ public class CheckHotKeyService {
     private void startListenHotkeyThread() {
         ThreadPoolUtil.getInstance().executeTask(() -> {
             EventManagement eventManagement = EventManagement.getInstance();
-            AtomicLong startVisibleTime = new AtomicLong();
-            AtomicLong endVisibleTime = new AtomicLong();
             boolean isExecuted = true;
-            endVisibleTime.set(System.currentTimeMillis());
             //获取快捷键状态，检测是否被按下线程
             long grabFocusOnAttachModeTime = 0;
+            AtomicLong statusSwitchTime = new AtomicLong(System.currentTimeMillis());
             while (eventManagement.notMainExit()) {
                 if (!isExecuted && shouldOpenSearchBar()) {
-                    //是否搜索框可见
-                    if (isSearchBarVisible) {
-                        //搜索框最小可见时间为200ms，必须显示超过200ms后才响应关闭事件，防止闪屏
-                        if (System.currentTimeMillis() - startVisibleTime.get() > 200) {
-                            //获取当前显示模式
-                            eventManagement.putEvent(new GetShowingModeEvent(), getShowingModeEvent -> {
-                                Optional<Constants.Enums.ShowingSearchBarMode> returnValue = getShowingModeEvent.getReturnValue();
-                                //noinspection OptionalGetWithoutIsPresent
-                                if (returnValue.get() == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                                    eventManagement.putEvent(new HideSearchBarEvent());
-                                    endVisibleTime.set(System.currentTimeMillis());
-                                } else {
-                                    eventManagement.putEvent(new ShowSearchBarEvent(true, true));
-                                    startVisibleTime.set(System.currentTimeMillis());
+                    eventManagement.putEvent(new GetShowingModeEvent(), getShowingModeEvent -> {
+                        Optional<Constants.Enums.ShowingSearchBarMode> ret = getShowingModeEvent.getReturnValue();
+                        ret.ifPresent(showingSearchBarMode -> {
+                            switch (showingSearchBarMode) {
+                                case NORMAL_SHOWING -> {
+                                    if (System.currentTimeMillis() - statusSwitchTime.get() > 200) {
+                                        eventManagement.putEvent(new SwitchVisibleStatusEvent(true));
+                                        statusSwitchTime.set(System.currentTimeMillis());
+                                    }
                                 }
-                            }, event1 -> System.err.println("获取当前显示模式任务执行失败"));
-                        }
-                    } else {
-                        if (System.currentTimeMillis() - endVisibleTime.get() > 200) {
-                            eventManagement.putEvent(new ShowSearchBarEvent(true));
-                            startVisibleTime.set(System.currentTimeMillis());
-                        }
-                    }
+                                case EXPLORER_ATTACH -> {
+                                    if (System.currentTimeMillis() - statusSwitchTime.get() > 200) {
+                                        eventManagement.putEvent(new SwitchVisibleStatusEvent(true, true));
+                                        statusSwitchTime.set(System.currentTimeMillis());
+                                    }
+                                }
+                            }
+                        });
+                    }, event -> {
+                    });
                 }
                 isExecuted = shouldOpenSearchBar();
                 if (HotkeyListener.INSTANCE.isShiftDoubleClicked() && System.currentTimeMillis() - grabFocusOnAttachModeTime > 300) {
@@ -157,18 +153,13 @@ public class CheckHotKeyService {
 
     @EventRegister(registerClass = CheckHotKeyAvailableEvent.class)
     private static void checkHotKeyAvailableEvent(Event event) {
-        CheckHotKeyAvailableEvent event1 = (CheckHotKeyAvailableEvent) event;
+        var event1 = (CheckHotKeyAvailableEvent) event;
         event1.setReturnValue(getInstance().isHotkeyAvailable(event1.hotkey));
     }
 
     @EventListener(listenClass = SetConfigsEvent.class)
     private static void registerHotKeyEvent(Event event) {
         getInstance().registerHotkey(AllConfigs.getInstance().getConfigEntity().getHotkey());
-    }
-
-    @EventListener(listenClass = {SearchBarCloseEvent.class, SearchBarReadyEvent.class})
-    private static void setSearchBarVisibleStatus(Event event) {
-        isSearchBarVisible = event instanceof SearchBarReadyEvent;
     }
 
     @EventListener(listenClass = RestartEvent.class)

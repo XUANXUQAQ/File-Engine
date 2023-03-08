@@ -366,10 +366,10 @@ public class EventManagement {
                 if (IsDebug.isDebug()) {
                     Class<?>[] parameterTypes = method.getParameterTypes();
                     if (!Modifier.isStatic(method.getModifiers())) {
-                        throw new RuntimeException("方法不是static" + method);
+                        throw new RuntimeException("方法不是static " + method);
                     }
                     if (Arrays.stream(parameterTypes).noneMatch(each -> each.equals(Event.class)) || method.getParameterCount() != 1) {
-                        throw new RuntimeException("注册handler方法参数错误" + method);
+                        throw new RuntimeException("注册handler方法参数错误 " + method);
                     }
                 }
                 String registerClassName = annotation.registerClass().getName();

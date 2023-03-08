@@ -15,7 +15,7 @@ void startListen();
 void stopListen();
 inline time_t getCurrentMills();
 inline int isVirtualKeyPressed(int vk);
-void checkHotkeyAndAddCounter(int hotkey, unsigned* counter);
+void checkHotkeyAndAddCounter(int hotkey, unsigned& counter);
 
 using DoubleClickKeyStateSaver = struct KeySaver
 {
@@ -116,12 +116,11 @@ void startListen()
 	{
 		isCtrlDoubleClicked = doubleClickCheck(VK_CONTROL, ctrlSaver);
 		isShiftDoubleClicked = doubleClickCheck(VK_SHIFT, shiftSaver);
-		BYTE allKeyState[256]{ 0 };
 		unsigned validHotkeyCount = 0;
 		if (hotkey1 > 0)
 		{
 			isKey1Pressed = GetKeyState(hotkey1);
-			checkHotkeyAndAddCounter(hotkey1, &validHotkeyCount);
+			checkHotkeyAndAddCounter(hotkey1, validHotkeyCount);
 		}
 		else
 		{
@@ -130,7 +129,7 @@ void startListen()
 		if (hotkey2 > 0)
 		{
 			isKey2Pressed = GetKeyState(hotkey2);
-			checkHotkeyAndAddCounter(hotkey2, &validHotkeyCount);
+			checkHotkeyAndAddCounter(hotkey2, validHotkeyCount);
 		}
 		else
 		{
@@ -139,7 +138,7 @@ void startListen()
 		if (hotkey3 > 0)
 		{
 			isKey3Pressed = GetKeyState(hotkey3);
-			checkHotkeyAndAddCounter(hotkey3, &validHotkeyCount);
+			checkHotkeyAndAddCounter(hotkey3, validHotkeyCount);
 		}
 		else
 		{
@@ -148,7 +147,7 @@ void startListen()
 		if (hotkey4 > 0)
 		{
 			isKey4Pressed = GetKeyState(hotkey4);
-			checkHotkeyAndAddCounter(hotkey4, &validHotkeyCount);
+			checkHotkeyAndAddCounter(hotkey4, validHotkeyCount);
 		}
 		else
 		{
@@ -157,7 +156,7 @@ void startListen()
 		if (hotkey5 > 0)
 		{
 			isKey5Pressed = GetKeyState(hotkey5);
-			checkHotkeyAndAddCounter(hotkey5, &validHotkeyCount);
+			checkHotkeyAndAddCounter(hotkey5, validHotkeyCount);
 		}
 		else
 		{
@@ -170,6 +169,7 @@ void startListen()
 			isKey5Pressed < 0) //如果某键被按下
 		{
 			unsigned pressedKeyCount = 0;
+			BYTE allKeyState[256]{ 0 };
 			GetKeyboardState(allKeyState);
 			for (const unsigned char keyState : allKeyState)
 			{
@@ -199,15 +199,15 @@ void startListen()
 	}
 }
 
-void checkHotkeyAndAddCounter(int hotkey, unsigned* counter)
+void checkHotkeyAndAddCounter(int hotkey, unsigned& counter)
 {
 	if (hotkey == VK_CONTROL || hotkey == VK_MENU || hotkey == VK_SHIFT)
 	{
-		*counter += 2;
+		counter += 2;
 	}
 	else
 	{
-		++* counter;
+		++counter;
 	}
 }
 
