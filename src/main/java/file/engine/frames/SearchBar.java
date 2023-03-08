@@ -83,6 +83,10 @@ public class SearchBar {
     private Border topBorder;
     private Border middleBorder;
     private Border bottomBorder;
+    private Border explorerFullBorder;
+    private Border explorerTopBorder;
+    private Border explorerMiddleBorder;
+    private Border explorerBottomBorder;
     private Border pluginFullBorder;
     private Border pluginTopBorder;
     private Border pluginMiddleBorder;
@@ -410,7 +414,18 @@ public class SearchBar {
     private void initBorder(Constants.Enums.BorderType borderType, Color borderColor, float borderThickness) {
         double roundRadius = AllConfigs.getInstance().getConfigEntity().getRoundRadius();
         int borderThickNessInt = (int) borderThickness;
+        Color explorerAttachBorderColor;
+        if (ColorUtil.isDark(searchBarColor.getRGB())) {
+            explorerAttachBorderColor = Color.WHITE;
+        } else {
+            explorerAttachBorderColor = Color.BLACK;
+        }
         RoundBorder topRound = new RoundBorder(borderColor,
+                borderThickness,
+                (int) roundRadius,
+                RoundBorder.RoundedCorners.TOP_LEFT | RoundBorder.RoundedCorners.TOP_RIGHT,
+                RoundBorder.ShowLines.TOP | RoundBorder.ShowLines.LEFT | RoundBorder.ShowLines.RIGHT);
+        RoundBorder explorerTopRound = new RoundBorder(explorerAttachBorderColor,
                 borderThickness,
                 (int) roundRadius,
                 RoundBorder.RoundedCorners.TOP_LEFT | RoundBorder.RoundedCorners.TOP_RIGHT,
@@ -420,7 +435,17 @@ public class SearchBar {
                 (int) roundRadius,
                 RoundBorder.RoundedCorners.BOTTOM_LEFT | RoundBorder.RoundedCorners.BOTTOM_RIGHT,
                 RoundBorder.ShowLines.BOTTOM | RoundBorder.ShowLines.LEFT | RoundBorder.ShowLines.RIGHT);
+        RoundBorder explorerBottomRound = new RoundBorder(explorerAttachBorderColor,
+                borderThickness,
+                (int) roundRadius,
+                RoundBorder.RoundedCorners.BOTTOM_LEFT | RoundBorder.RoundedCorners.BOTTOM_RIGHT,
+                RoundBorder.ShowLines.BOTTOM | RoundBorder.ShowLines.LEFT | RoundBorder.ShowLines.RIGHT);
         RoundBorder fullRound = new RoundBorder(borderColor,
+                borderThickness,
+                (int) roundRadius,
+                RoundBorder.RoundedCorners.ALL,
+                RoundBorder.ShowLines.ALL);
+        RoundBorder explorerFullRound = new RoundBorder(explorerAttachBorderColor,
                 borderThickness,
                 (int) roundRadius,
                 RoundBorder.RoundedCorners.ALL,
@@ -430,12 +455,20 @@ public class SearchBar {
             middleBorder = BorderFactory.createMatteBorder(0, borderThickNessInt, 0, borderThickNessInt, borderColor);
             bottomBorder = bottomRound;
             fullBorder = fullRound;
+            explorerTopBorder = explorerTopRound;
+            explorerMiddleBorder = BorderFactory.createMatteBorder(0, borderThickNessInt, 0, borderThickNessInt, explorerAttachBorderColor);
+            explorerBottomBorder = explorerBottomRound;
+            explorerFullBorder = explorerFullRound;
         } else if (Constants.Enums.BorderType.EMPTY == borderType) {
             Border emptyBorder = BorderFactory.createEmptyBorder();
             topBorder = emptyBorder;
             middleBorder = emptyBorder;
             bottomBorder = emptyBorder;
             fullBorder = emptyBorder;
+            explorerTopBorder = emptyBorder;
+            explorerMiddleBorder = emptyBorder;
+            explorerBottomBorder = emptyBorder;
+            explorerFullBorder = emptyBorder;
         } else if (borderType == Constants.Enums.BorderType.FULL) {
             Border lineBorder = BorderFactory.createMatteBorder(
                     0,
@@ -447,6 +480,16 @@ public class SearchBar {
             middleBorder = lineBorder;
             bottomBorder = bottomRound;
             fullBorder = fullRound;
+            lineBorder = BorderFactory.createMatteBorder(
+                    0,
+                    borderThickNessInt,
+                    borderThickNessInt,
+                    borderThickNessInt,
+                    explorerAttachBorderColor);
+            explorerTopBorder = explorerTopRound;
+            explorerMiddleBorder = lineBorder;
+            explorerBottomBorder = explorerBottomRound;
+            explorerFullBorder = explorerFullRound;
         }
         Color highContrast = ColorUtil.generateHighContrastColor(searchBarColor);
         pluginTopBorder = new RoundBorder(highContrast,
@@ -3371,7 +3414,11 @@ public class SearchBar {
         if (currentUsingPlugin != null && runningMode == RunningMode.PLUGIN_MODE) {
             setBorder0(component, type, pluginTopBorder, pluginBottomBorder, pluginMiddleBorder, pluginFullBorder);
         } else {
-            setBorder0(component, type, topBorder, bottomBorder, middleBorder, fullBorder);
+            if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                setBorder0(component, type, topBorder, bottomBorder, middleBorder, fullBorder);
+            } else {
+                setBorder0(component, type, explorerTopBorder, explorerBottomBorder, explorerMiddleBorder, explorerFullBorder);
+            }
         }
     }
 

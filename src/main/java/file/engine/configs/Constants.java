@@ -130,9 +130,9 @@ public class Constants {
 
         public static SearchBarColor getDefaultSearchBarColor() {
             if (SystemThemeInfo.INSTANCE.isDarkThemeEnabled()) {
-                return light;
+                return dark;
             }
-            return dark;
+            return light;
         }
 
         public static SearchBarColor getDark() {
