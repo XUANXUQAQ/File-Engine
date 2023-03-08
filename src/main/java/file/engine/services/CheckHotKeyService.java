@@ -10,6 +10,7 @@ import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.configs.SetConfigsEvent;
 import file.engine.event.handler.impl.frame.searchBar.GetShowingModeEvent;
 import file.engine.event.handler.impl.frame.searchBar.GrabFocusOnAttachModeEvent;
+import file.engine.event.handler.impl.frame.searchBar.ShowSearchBarEvent;
 import file.engine.event.handler.impl.frame.searchBar.SwitchVisibleStatusEvent;
 import file.engine.event.handler.impl.hotkey.CheckHotKeyAvailableEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
@@ -120,7 +121,7 @@ public class CheckHotKeyService {
                                 }
                                 case EXPLORER_ATTACH -> {
                                     if (System.currentTimeMillis() - statusSwitchTime.get() > 200) {
-                                        eventManagement.putEvent(new SwitchVisibleStatusEvent(true, true));
+                                        eventManagement.putEvent(new ShowSearchBarEvent(true, true));
                                         statusSwitchTime.set(System.currentTimeMillis());
                                     }
                                 }
