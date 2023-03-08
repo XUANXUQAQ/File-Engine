@@ -10,7 +10,7 @@
 
 
 void registerHotKey(int key1, int key2, int key3, int key4, int key5);
-BOOL getKeyStatus();
+bool getKeyStatus();
 void startListen();
 void stopListen();
 inline time_t getCurrentMills();
@@ -43,7 +43,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_HotkeyListener_registerHotK
 JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_HotkeyListener_getKeyStatus
 (JNIEnv*, jobject)
 {
-	return static_cast<jboolean>(getKeyStatus());
+	return getKeyStatus();
 }
 
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_HotkeyListener_startListen
@@ -177,6 +177,10 @@ void startListen()
 				{
 					++pressedKeyCount;
 				}
+				if (pressedKeyCount > validHotkeyCount)
+				{
+					break;
+				}
 			}
 			if (pressedKeyCount == validHotkeyCount)
 			{
@@ -191,7 +195,7 @@ void startListen()
 		{
 			isKeyPressed = false;
 		}
-		Sleep(10);
+		Sleep(1);
 	}
 }
 
@@ -207,7 +211,7 @@ void checkHotkeyAndAddCounter(int hotkey, unsigned* counter)
 	}
 }
 
-BOOL getKeyStatus()
+bool getKeyStatus()
 {
 	return isKeyPressed;
 }
