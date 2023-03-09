@@ -16,7 +16,7 @@ void stopListen();
 inline time_t getCurrentMills();
 inline int isVirtualKeyPressed(int vk);
 void checkHotkeyAndAddCounter(int hotkey, unsigned& counter);
-short getKeyPressedStatus(const int& hotkey);
+bool getKeyPressedStatus(const int& hotkey);
 
 using DoubleClickKeyStateSaver = struct KeySaver
 {
@@ -113,43 +113,38 @@ void startListen()
 	{
 		isCtrlDoubleClicked = doubleClickCheck(VK_CONTROL, ctrlSaver);
 		isShiftDoubleClicked = doubleClickCheck(VK_SHIFT, shiftSaver);
-		const short isKey1Pressed = getKeyPressedStatus(hotkey1);
-		const short isKey2Pressed = getKeyPressedStatus(hotkey2);
-		const short isKey3Pressed = getKeyPressedStatus(hotkey3);
-		const short isKey4Pressed = getKeyPressedStatus(hotkey4);
-		const short isKey5Pressed = getKeyPressedStatus(hotkey5);
-		if (isKey1Pressed < 0 &&
-			isKey2Pressed < 0 &&
-			isKey3Pressed < 0 &&
-			isKey4Pressed < 0 &&
-			isKey5Pressed < 0) //如果某键被按下
+		const bool isKey1Pressed = getKeyPressedStatus(hotkey1);
+		const bool isKey2Pressed = getKeyPressedStatus(hotkey2);
+		const bool isKey3Pressed = getKeyPressedStatus(hotkey3);
+		const bool isKey4Pressed = getKeyPressedStatus(hotkey4);
+		const bool isKey5Pressed = getKeyPressedStatus(hotkey5);
+		BYTE allKeyState[256]{ 0 };
+		GetKeyboardState(allKeyState);
+		
+		unsigned pressedKeyCount = 0;
+		for (unsigned i = 0; i <= sizeof allKeyState; ++i)
 		{
-			BYTE allKeyState[256]{ 0 };
-			if (GetKeyboardState(allKeyState) == 0)
-			{
-				fprintf(stderr, "Error GetKeyboardState, error code: %ld\n", GetLastError());
-				break;
-			}
-			unsigned pressedKeyCount = 0;
-			for (const BYTE keyState : allKeyState)
+			const BYTE keyState = allKeyState[i];
+			if ((0x30 <= i && i <= 0x5A) || 
+				(VK_F1 <= i && i <= VK_F12) || 
+				i == VK_SHIFT || i == VK_LSHIFT || i == VK_RSHIFT ||
+				i == VK_CONTROL || i == VK_LCONTROL || i == VK_RCONTROL ||
+				i == VK_MENU || i == VK_LMENU || i == VK_RMENU)
 			{
 				if (keyState & static_cast<BYTE>(0x80))
 				{
 					++pressedKeyCount;
 				}
-				if (pressedKeyCount > validHotkeyCount)
-				{
-					break;
-				}
 			}
-			if (pressedKeyCount == validHotkeyCount)
-			{
-				isKeyPressed = true;
-			}
-			else
-			{
-				isKeyPressed = false;
-			}
+		}
+		if (isKey1Pressed &&
+			isKey2Pressed &&
+			isKey3Pressed &&
+			isKey4Pressed &&
+			isKey5Pressed &&
+			pressedKeyCount == validHotkeyCount) //如果某键被按下
+		{
+			isKeyPressed = true;
 		}
 		else
 		{
@@ -159,13 +154,13 @@ void startListen()
 	}
 }
 
-short getKeyPressedStatus(const int& hotkey)
+bool getKeyPressedStatus(const int& hotkey)
 {
 	if (hotkey > 0)
 	{
-		return GetKeyState(hotkey);
+		return GetKeyState(hotkey) & 0x80;
 	}
-	return -1;
+	return true;
 }
 
 void checkHotkeyAndAddCounter(int hotkey, unsigned& counter)
