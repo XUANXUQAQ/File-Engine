@@ -696,7 +696,7 @@ public class DatabaseService {
                 // 向线程池提交搜索任务
                 int realResultCount1 = realResultCount;
                 submitCount.getAndIncrement();
-                ThreadPoolUtil.getInstance().executeTask(() -> {
+                searchTask.workStealingPool.submit(() -> {
                     try {
                         for (int j = 0; j < realResultCount1; ++j) {
                             if (checkIsMatchedAndAddToList(tmpQueryResultsCache[j], priorityStr, searchTask)) {
@@ -1047,6 +1047,8 @@ public class DatabaseService {
             taskHandler.accept(taskQueue);
         }
         waitForTasks(searchTask);
+        workStealingPool.shutdownNow();
+        searchTask.closeThreadPool();
     }
 
     /**
@@ -2278,6 +2280,10 @@ public class DatabaseService {
         private final Set<String> tempResultsSet = ConcurrentHashMap.newKeySet();
         private final AtomicBoolean searchDoneFlag = new AtomicBoolean();
         private final long taskCreateTimeMills = System.currentTimeMillis();
+        private final ExecutorService workStealingPool = ThreadPoolUtil.getInstance().createNewWorkStealingPool(
+                AllConfigs.getInstance().getConfigEntity().getSearchThreadNumber()
+        );
+
 
         private static final AtomicBoolean isGpuThreadRunning = new AtomicBoolean();
         private static final long maxTaskValidThreshold = 5000;
@@ -2288,6 +2294,10 @@ public class DatabaseService {
 
         private boolean shouldStopSearch() {
             return lastSearchTask != this || this.tempResultsSet.size() > MAX_RESULTS;
+        }
+
+        private void closeThreadPool() {
+            workStealingPool.shutdownNow();
         }
     }
 
