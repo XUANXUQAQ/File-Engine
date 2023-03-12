@@ -40,7 +40,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 
 import static file.engine.configs.Constants.DEFAULT_SWING_THEME;
 import static file.engine.configs.Constants.Enums;
@@ -696,8 +695,15 @@ public class AllConfigs {
         return true;
     }
 
-    private void setInvalidConfigs(ConfigEntity configEntity, Consumer<ConfigEntity> check) {
-        check.accept(configEntity);
+    private void correctInvalidConfigs(ConfigEntity config) {
+        if (config.isEnableGpuAccelerate()) {
+            config.setEnableGpuAccelerate(GPUAccelerator.INSTANCE.isGPUAvailableOnSystem());
+        }
+        int availableProcessors = Runtime.getRuntime().availableProcessors();
+        int searchThreadNumber = config.getSearchThreadNumber();
+        if (searchThreadNumber > availableProcessors || searchThreadNumber < 1) {
+            config.setSearchThreadNumber(availableProcessors);
+        }
     }
 
     /**
@@ -796,13 +802,6 @@ public class AllConfigs {
         }
     }
 
-    @EventRegister(registerClass = ReadConfigsEvent.class)
-    private static void readConfigsEvent(Event event) {
-        AllConfigs allConfigs = AllConfigs.getInstance();
-        allConfigs.readAllSettings();
-        allConfigs.saveAllSettings();
-    }
-
     @EventRegister(registerClass = CheckConfigsEvent.class)
     private static void checkConfigsEvent(Event event) {
         StringBuilder stringBuilder = new StringBuilder();
@@ -835,24 +834,18 @@ public class AllConfigs {
         AllConfigs allConfigs = getInstance();
         if (setConfigsEvent.getConfigs() == null) {
             // MainClass初始化
+            allConfigs.readAllSettings();
             setConfigsEvent.setConfigs(allConfigs.configEntity);
         } else {
-            // 更新设置
+            // 添加高级设置参数
             Map<String, Object> configsJson = allConfigs.getSettingsJSON();
             allConfigs.readAdvancedConfigs(configsJson);
             ConfigEntity tempConfigEntity = setConfigsEvent.getConfigs();
             tempConfigEntity.setAdvancedConfigEntity(allConfigs.configEntity.getAdvancedConfigEntity());
+
+            // 更新设置
             if (allConfigs.noNullValue(tempConfigEntity)) {
-                allConfigs.setInvalidConfigs(tempConfigEntity, config -> {
-                    if (config.isEnableGpuAccelerate()) {
-                        config.setEnableGpuAccelerate(GPUAccelerator.INSTANCE.isGPUAvailableOnSystem());
-                    }
-                    int availableProcessors = Runtime.getRuntime().availableProcessors();
-                    int searchThreadNumber = config.getSearchThreadNumber();
-                    if (searchThreadNumber > availableProcessors || searchThreadNumber < 1) {
-                        config.setSearchThreadNumber(availableProcessors);
-                    }
-                });
+                allConfigs.correctInvalidConfigs(tempConfigEntity);
                 allConfigs.configEntity = tempConfigEntity;
                 allConfigs.saveAllSettings();
             } else {

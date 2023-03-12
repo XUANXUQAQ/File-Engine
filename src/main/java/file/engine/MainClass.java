@@ -3,12 +3,10 @@ package file.engine;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.Constants;
 import file.engine.dllInterface.GetHandle;
-import file.engine.dllInterface.gpu.GPUAccelerator;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.BootSystemEvent;
 import file.engine.event.handler.impl.configs.CheckConfigsEvent;
-import file.engine.event.handler.impl.configs.ReadConfigsEvent;
 import file.engine.event.handler.impl.configs.SetConfigsEvent;
 import file.engine.event.handler.impl.daemon.StartDaemonEvent;
 import file.engine.event.handler.impl.daemon.StopDaemonEvent;
@@ -58,11 +56,9 @@ public class MainClass {
             updateLauncher();
             //清空tmp
             FileUtil.deleteDir(new File("tmp"));
-            readAllConfigs();
-            GPUAccelerator.INSTANCE.initialize();
-            initDatabase();
-            checkConfigs();
             setAllConfigs();
+            checkConfigs();
+            initDatabase();
             // 初始化全部完成，发出启动系统事件
             if (sendBootSystemSignal()) {
                 JOptionPane.showMessageDialog(null, "Boot system failed", "ERROR", JOptionPane.ERROR_MESSAGE);
@@ -88,7 +84,6 @@ public class MainClass {
         Class.forName("file.engine.dllInterface.HotkeyListener");
         Class.forName("file.engine.dllInterface.GetHandle");
         Class.forName("file.engine.dllInterface.EmptyRecycleBin");
-        Class.forName("file.engine.dllInterface.gpu.GPUAccelerator");
     }
 
     /**
@@ -173,17 +168,6 @@ public class MainClass {
         System.setProperty("file.encoding", "UTF-8");
         System.setProperty("org.sqlite.lib.path", Path.of("user/").toAbsolutePath().toString());
         System.setProperty("org.sqlite.lib.name", "sqliteJDBC.dll");
-    }
-
-    private static void readAllConfigs() {
-        EventManagement eventManagement = EventManagement.getInstance();
-        // 发送读取所有配置事件，初始化配置
-        ReadConfigsEvent readConfigsEvent = new ReadConfigsEvent();
-        eventManagement.putEvent(readConfigsEvent);
-        if (eventManagement.waitForEvent(readConfigsEvent)) {
-            JOptionPane.showMessageDialog(null, "Read configs failed", "ERROR", JOptionPane.ERROR_MESSAGE);
-            throw new RuntimeException("Read Configs Failed");
-        }
     }
 
     private static void initDatabase() {

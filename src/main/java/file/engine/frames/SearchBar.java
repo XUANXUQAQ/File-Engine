@@ -10,6 +10,7 @@ import file.engine.dllInterface.EmptyRecycleBin;
 import file.engine.dllInterface.GetHandle;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
+import file.engine.event.handler.impl.BootSystemEvent;
 import file.engine.event.handler.impl.configs.SetConfigsEvent;
 import file.engine.event.handler.impl.database.*;
 import file.engine.event.handler.impl.frame.searchBar.*;
@@ -156,27 +157,17 @@ public class SearchBar {
         currentLabelSelectedPosition = new AtomicInteger(0);
 
         initGUI();
-
         initMenuItems();
-
-        //开启所有线程
-        initThreadPool();
-
         //添加textField搜索变更检测
         addTextFieldDocumentListener();
-
         //添加结果的鼠标事件响应
         addSearchBarMouseListener();
-
         //添加结果的鼠标滚轮响应
         addSearchBarMouseWheelListener();
-
         //添加结果的鼠标移动事件响应
         addSearchBarMouseMotionListener();
-
         //添加textField对键盘的响应
         addTextFieldKeyListener();
-
         addTextFieldFocusListener();
     }
 
@@ -2697,6 +2688,13 @@ public class SearchBar {
         switchSearchBarShowingMode();
     }
 
+    @EventListener(listenClass = BootSystemEvent.class)
+    private static void init(Event event) {
+        SearchBar tempInstance = getInstance();
+        //开启所有线程
+        tempInstance.initThreadPool();
+    }
+
     @EventRegister(registerClass = GrabFocusOnAttachModeEvent.class)
     private static void grabFocusOnAttachMode(Event event) {
         SearchBar searchBarInstance = getInstance();
@@ -2738,21 +2736,21 @@ public class SearchBar {
     @EventListener(listenClass = SetConfigsEvent.class)
     private static void setSearchBar(Event event) {
         var configs = AllConfigs.getInstance().getConfigEntity();
-        SearchBar searchBar = getInstance();
-        searchBar.setTransparency(configs.getTransparency());
-        searchBar.setBorderColor(AllConfigs.getInstance().getBorderType(), configs.getBorderColor(), configs.getBorderThickness());
+        var searchBarInstance = getInstance();
+        searchBarInstance.setTransparency(configs.getTransparency());
+        searchBarInstance.setBorderColor(AllConfigs.getInstance().getBorderType(), configs.getBorderColor(), configs.getBorderThickness());
         var color = configs.getSearchBarColor();
-        searchBar.setSearchBarColor(color);
-        searchBar.setLabelColor(configs.getLabelColor());
-        searchBar.setDefaultBackgroundColor(configs.getDefaultBackgroundColor());
-        searchBar.setFontColorWithCoverage(configs.getFontColorWithCoverage());
-        searchBar.setLabelFontColor(configs.getFontColor());
-        searchBar.setSearchBarFontColor(configs.getSearchBarFontColor());
-        searchBar.searchInfoLabel.setBackground(new Color(color));
+        searchBarInstance.setSearchBarColor(color);
+        searchBarInstance.setLabelColor(configs.getLabelColor());
+        searchBarInstance.setDefaultBackgroundColor(configs.getDefaultBackgroundColor());
+        searchBarInstance.setFontColorWithCoverage(configs.getFontColorWithCoverage());
+        searchBarInstance.setLabelFontColor(configs.getFontColor());
+        searchBarInstance.setSearchBarFontColor(configs.getSearchBarFontColor());
+        searchBarInstance.searchInfoLabel.setBackground(new Color(color));
         if (ColorUtil.isDark(color)) {
-            searchBar.textField.setCaretColor(Color.WHITE);
+            searchBarInstance.textField.setCaretColor(Color.WHITE);
         } else {
-            searchBar.textField.setCaretColor(Color.BLACK);
+            searchBarInstance.textField.setCaretColor(Color.BLACK);
         }
     }
 
