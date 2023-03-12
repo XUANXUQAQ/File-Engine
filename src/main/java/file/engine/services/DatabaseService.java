@@ -374,6 +374,7 @@ public class DatabaseService {
                             // 防止显存占用超过70%后仍然扫描数据库
                             startCheckInfo.startCheckTimeMills = System.currentTimeMillis();
                             if (GPUAccelerator.INSTANCE.hasCache()) {
+                                System.out.println("由于显存占用过多，清除GPU缓存");
                                 GPUClearCacheEvent gpuClearCacheEvent = new GPUClearCacheEvent();
                                 eventManagement.putEvent(gpuClearCacheEvent);
                                 eventManagement.waitForEvent(gpuClearCacheEvent);
@@ -1021,17 +1022,14 @@ public class DatabaseService {
     private void startSearch(SearchTask searchTask) {
         startSearchTimeMills = System.currentTimeMillis();
         var eventManagement = EventManagement.getInstance();
-
-        var searchThreadNumber = AllConfigs.getInstance().getConfigEntity().getSearchThreadNumber();
-        ExecutorService workStealingPool = ThreadPoolUtil.getInstance().createNewWorkStealingPool(searchThreadNumber);
-
         Consumer<ConcurrentLinkedQueue<Runnable>> taskHandler = (taskQueue) -> {
+            ThreadPoolUtil threadPoolUtil = ThreadPoolUtil.getInstance();
             while (!taskQueue.isEmpty() && eventManagement.notMainExit()) {
                 var runnable = taskQueue.poll();
                 if (runnable == null) {
                     continue;
                 }
-                workStealingPool.submit(() -> {
+                threadPoolUtil.executeTask(() -> {
                     try {
                         searchThreadCount.incrementAndGet();
                         runnable.run();
@@ -1047,7 +1045,6 @@ public class DatabaseService {
             taskHandler.accept(taskQueue);
         }
         waitForTasks(searchTask);
-        workStealingPool.shutdownNow();
         searchTask.closeThreadPool();
     }
 
@@ -1759,16 +1756,15 @@ public class DatabaseService {
 
     @EventListener(listenClass = SetConfigsEvent.class)
     private static void setGpuDevice(Event event) {
-        ThreadPoolUtil.getInstance().executeTask(() -> {
-            if (isEnableGPUAccelerate) {
-                synchronized (DatabaseService.class) {
-                    var device = AllConfigs.getInstance().getConfigEntity().getGpuDevice();
-                    if (!GPUAccelerator.INSTANCE.setDevice(device)) {
-                        System.err.println("gpu设备" + device + "无效");
-                    }
+        isEnableGPUAccelerate = AllConfigs.getInstance().getConfigEntity().isEnableGpuAccelerate();
+        if (isEnableGPUAccelerate) {
+            synchronized (DatabaseService.class) {
+                var device = AllConfigs.getInstance().getConfigEntity().getGpuDevice();
+                if (!GPUAccelerator.INSTANCE.setDevice(device)) {
+                    System.err.println("gpu设备" + device + "无效");
                 }
             }
-        });
+        }
     }
 
     @EventRegister(registerClass = PrepareSearchEvent.class)
@@ -1933,7 +1929,6 @@ public class DatabaseService {
         databaseService.executeSqlCommandsThread();
         databaseService.saveTableCacheThread();
         databaseService.warmupSearchThread();
-        isEnableGPUAccelerate = allConfigs.getConfigEntity().isEnableGpuAccelerate();
     }
 
     @EventRegister(registerClass = AddToCacheEvent.class)
@@ -2102,6 +2097,7 @@ public class DatabaseService {
                         startCheckInvalidCacheTime = System.currentTimeMillis();
                         String eachKey;
                         while (eventManagement.notMainExit() && (eachKey = invalidCacheKeys.poll()) != null) {
+                            System.out.println("清除GPU缓存，key：" + eachKey);
                             GPUAccelerator.INSTANCE.clearCache(eachKey);
                         }
                     }
@@ -2155,6 +2151,7 @@ public class DatabaseService {
 
         private static void addRecord(String key, String fileRecord) {
             if (GPUAccelerator.INSTANCE.isCacheExist(key) && !GPUAccelerator.INSTANCE.isCacheValid(key)) {
+                System.out.println("GPU缓存 key: " + key + "不再有效");
                 invalidCacheKeys.add(key);
             } else {
                 Set<String> container;
