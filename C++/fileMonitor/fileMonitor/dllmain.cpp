@@ -4,7 +4,6 @@
 #include <iostream>
 #endif
 #include <Windows.h>
-#include <tchar.h>
 #include <iomanip>
 #include <string>
 #include <thread>
@@ -21,7 +20,7 @@ using namespace concurrency;
 using file_record_queue = concurrent_queue<std::wstring>;
 
 void monitor(const char* path);
-void stop_monitor(std::string path);
+void stop_monitor(const std::string& path);
 void monitor_path(const std::string& path);
 void add_record(const std::wstring& record);
 void delete_record(const std::wstring& record);
@@ -106,21 +105,20 @@ bool pop_add_file(std::wstring& record)
 
 void monitor(const char* path)
 {
-	std::string _path(path);
-	auto&& flag = stop_flag.find(_path);
-	if (flag == stop_flag.end())
+	std::string path_str(path);
+	if (auto&& flag = stop_flag.find(path_str); flag == stop_flag.end())
 	{
-		stop_flag.insert(std::make_pair(_path, true));
+		stop_flag.insert(std::make_pair(path_str, true));
 	}
 	else
 	{
 		flag->second.store(true);
 	}
-	std::thread t(monitor_path, _path);
+	std::thread t(monitor_path, path_str);
 	t.join();
 }
 
-void stop_monitor(const std::string path)
+void stop_monitor(const std::string& path)
 {
 	auto&& flag = stop_flag.find(path);
 	if (flag == stop_flag.end()) 
@@ -143,11 +141,8 @@ void monitor_path(const std::string& path)
 		dcr.EnqueueReadDirectoryChanges();
 		if (const DWORD rv = dcr.WaitForHandles(); rv == WAIT_OBJECT_0)
 		{
-			auto res = dcr.GetDirectoryChangesResultW();
-			for (const auto& pair : res)
+			for (auto&& res = dcr.GetDirectoryChangesResultW(); const auto& [action, data] : res)
 			{
-				const DWORD action = pair.first;
-				std::wstring data = pair.second;
 				switch (action)
 				{
 				case FILE_ACTION_ADDED:
@@ -172,16 +167,12 @@ void monitor_path(const std::string& path)
 					}
 					break;
 				case FILE_ACTION_MODIFIED:
-					break;
 				default:
-#ifdef TEST
-					std::cout << "Unknown command!  " << action << std::endl;
-#endif
 					break;
 				}
 			}
 		}
-		Sleep(100);
+		Sleep(10);
 	}
 #ifdef TEST
 	std::cout << "stop monitoring " << path << std::endl;
