@@ -665,7 +665,9 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 void wait_for_clear_cache()
 {
 	while (clear_cache_flag.load())
-		std::this_thread::yield();
+	{
+		Sleep(1);
+	}
 }
 
 /**
@@ -709,7 +711,14 @@ void lock_clear_cache(std::atomic_uint& thread_counter)
 {
 	std::lock_guard lock_guard(modify_cache_lock);
 	wait_for_clear_cache();
-	++thread_counter;
+	while (true)
+	{
+		if (unsigned val = thread_counter.load();
+			thread_counter.compare_exchange_strong(val, val + 1))
+		{
+			break;
+		}
+	}
 }
 
 /**
@@ -718,7 +727,14 @@ void lock_clear_cache(std::atomic_uint& thread_counter)
  */
 void free_clear_cache(std::atomic_uint& thread_counter)
 {
-	--thread_counter;
+	while (true)
+	{
+		if (unsigned val = thread_counter.load();
+			thread_counter.compare_exchange_strong(val, val - 1))
+		{
+			break;
+		}
+	}
 }
 
 bool is_record_repeat(const std::string& record, const list_cache* cache)
@@ -842,7 +858,9 @@ void remove_records_from_cache(const std::string& key, std::vector<std::string>&
 void wait_for_add_or_remove_record()
 {
 	while (add_record_thread_count.load() != 0 || remove_record_thread_count.load() != 0)
-		std::this_thread::yield();
+	{
+		Sleep(1);
+	}
 }
 
 /**
@@ -862,11 +880,11 @@ void free_add_or_remove_results()
 
 void clear_cache(const std::string& key)
 {
-	//对add_one_record_to_cache和remove_one_record_from_cache方法加锁
-	lock_add_or_remove_result();
 	//对自身加锁，防止多个线程同时清除cache
 	static std::mutex clear_cache_lock;
 	std::lock_guard clear_cache_lock_guard(clear_cache_lock);
+	//对add_one_record_to_cache和remove_one_record_from_cache方法加锁
+	lock_add_or_remove_result();
 	try
 	{
 		const auto cache = cache_map.at(key);
