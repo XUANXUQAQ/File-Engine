@@ -2081,7 +2081,7 @@ public class DatabaseService {
 
     @SuppressWarnings("unused")
     private static class GPUCacheService {
-        private static final ConcurrentLinkedQueue<String> invalidCacheKeys = new ConcurrentLinkedQueue<>();
+        private static final Set<String> invalidCacheKeys = ConcurrentHashMap.newKeySet();
         private static final ConcurrentHashMap<String, Set<String>> recordsToAdd = new ConcurrentHashMap<>();
         private static final ConcurrentHashMap<String, Set<String>> recordsToRemove = new ConcurrentHashMap<>();
 
@@ -2095,11 +2095,14 @@ public class DatabaseService {
                 while (eventManagement.notMainExit()) {
                     if (System.currentTimeMillis() - startCheckInvalidCacheTime > checkInterval && !GetHandle.INSTANCE.isForegroundFullscreen()) {
                         startCheckInvalidCacheTime = System.currentTimeMillis();
-                        String eachKey;
-                        while (eventManagement.notMainExit() && (eachKey = invalidCacheKeys.poll()) != null) {
-                            System.out.println("清除GPU缓存，key：" + eachKey);
+                        HashSet<String> keysToRemove = new HashSet<>(invalidCacheKeys);
+                        for (var eachKey : keysToRemove) {
+                            if (IsDebug.isDebug()) {
+                                System.out.println("清除GPU缓存，key：" + eachKey);
+                            }
                             GPUAccelerator.INSTANCE.clearCache(eachKey);
                         }
+                        invalidCacheKeys.removeAll(keysToRemove);
                     }
                     try {
                         TimeUnit.MILLISECONDS.sleep(100);
@@ -2151,7 +2154,9 @@ public class DatabaseService {
 
         private static void addRecord(String key, String fileRecord) {
             if (GPUAccelerator.INSTANCE.isCacheExist(key) && !GPUAccelerator.INSTANCE.isCacheValid(key)) {
-                System.out.println("GPU缓存 key: " + key + "不再有效");
+                if (IsDebug.isDebug()) {
+                    System.out.println("GPU缓存 key: " + key + "不再有效");
+                }
                 invalidCacheKeys.add(key);
             } else {
                 Set<String> container;
