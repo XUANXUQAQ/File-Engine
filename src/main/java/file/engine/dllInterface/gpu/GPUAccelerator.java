@@ -152,7 +152,7 @@ public enum GPUAccelerator {
         if (gpuAccelerator != null) {
             return gpuAccelerator.getGPUMemUsage();
         }
-        return 0;
+        return 100;
     }
 
     public void release() {

@@ -9,12 +9,18 @@
 #include "str_convert.cuh"
 #include <thread>
 #include <Shlwapi.h>
+#include <Pdh.h>
+#include <unordered_map>
+#include <d3d.h>
+#include <dxgi.h>
 #ifdef DEBUG_OUTPUT
 #include <iostream>
 #endif
 
 #pragma comment(lib, "cudart.lib")
 #pragma comment(lib, "Shlwapi.lib")
+#pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "pdh.lib")
 
 void clear_cache(const std::string& key);
 void clear_all_cache();
@@ -39,6 +45,7 @@ inline void free_clear_cache(std::atomic_uint& thread_counter);
 inline void lock_add_or_remove_result();
 inline void free_add_or_remove_results();
 
+concurrency::concurrent_unordered_map<std::wstring, DXGI_ADAPTER_DESC> gpu_name_adapter_map;
 concurrency::concurrent_unordered_map<std::string, list_cache*> cache_map;
 std::atomic_bool clear_cache_flag(false);
 std::atomic_uint add_record_thread_count(0);
@@ -49,6 +56,8 @@ std::atomic_bool exit_flag = false;
 static int current_using_device = 0;
 std::atomic_bool is_results_number_exceed = false;
 static JavaVM* jvm;
+IDXGIFactory* p_dxgi_factory = nullptr;
+
 
 /*
  * Class:     file_engine_dllInterface_gpu_CudaAccelerator
@@ -134,6 +143,19 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_initial
 		return;
 	}
 	set_jvm_ptr_in_kernel(jvm);
+	if (CreateDXGIFactory(__uuidof(IDXGIFactory), reinterpret_cast<void**>(&p_dxgi_factory)) != S_OK)
+	{
+		env->ThrowNew(env->FindClass("java/lang/Exception"), "create dxgi factory failed.");
+	}
+	IDXGIAdapter* p_adapter = nullptr;
+	for (UINT i = 0;
+		p_dxgi_factory->EnumAdapters(i, &p_adapter) != DXGI_ERROR_NOT_FOUND;
+		++i)
+	{
+		DXGI_ADAPTER_DESC adapter_desc;
+		p_adapter->GetDesc(&adapter_desc);
+		gpu_name_adapter_map.insert(std::make_pair(adapter_desc.Description, adapter_desc));
+	}
 }
 
 /*
@@ -544,14 +566,97 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_clearAl
  * Method:    getGPUMemUsage
  * Signature: ()I
  */
+size_t get_device_memory_used();
 JNIEXPORT jint JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_getGPUMemUsage
 (JNIEnv*, jobject)
 {
-	size_t avail = 0;
-	size_t total = 1;
-	cudaMemGetInfo(&avail, &total);
-	const size_t used = total - avail;
-	return static_cast<long>(used * 100 / total);
+	size_t free;
+	size_t total;
+	gpuErrchk(cudaMemGetInfo(&free, &total), true, "Get memory info failed");
+	auto&& total_mem = total;
+	auto&& memory_used = get_device_memory_used();
+	if (memory_used == INFINITE)
+	{
+		return 100;
+	}
+	return static_cast<jint>(memory_used * 100 / total_mem);
+}
+
+template <typename I>
+std::string n2hexstr(I w, size_t hex_len = sizeof(I) << 1)
+{
+	static const char* digits = "0123456789ABCDEF";
+	std::string rc(hex_len, '0');
+	for (size_t i = 0, j = (hex_len - 1) * 4; i < hex_len; ++i, j -= 4)
+		rc[i] = digits[w >> j & 0x0f];
+	return rc;
+}
+
+std::unordered_map<std::wstring, LONGLONG> query_pdh_val(PDH_STATUS& ret);
+size_t get_device_memory_used()
+{
+	cudaDeviceProp prop;
+	gpuErrchk(cudaGetDeviceProperties(&prop, current_using_device), true, "Get device info failed.");
+	auto&& device_name = prop.name;
+	auto&& device_name_wstr = string2wstring(device_name);
+	auto&& dxgi_device = gpu_name_adapter_map.find(device_name_wstr);
+	if (dxgi_device == gpu_name_adapter_map.end())
+	{
+		return INFINITE;
+	}
+	auto&& adapter_luid = dxgi_device->second.AdapterLuid;
+	auto&& luid_str = "0x" + n2hexstr(adapter_luid.HighPart) + "_" + "0x" + n2hexstr(adapter_luid.LowPart);
+	auto&& luid_wstr = string2wstring(luid_str);
+	PDH_STATUS status;
+	auto&& memory_map = query_pdh_val(status);
+	for (auto& [gpu_name, memory_used] : memory_map)
+	{
+		if (gpu_name.find(luid_wstr) != std::wstring::npos)
+		{
+			return memory_used;
+		}
+	}
+	return INFINITE;
+}
+
+std::unordered_map<std::wstring, LONGLONG> query_pdh_val(PDH_STATUS& ret)
+{
+	PDH_HQUERY query;
+	std::unordered_map<std::wstring, LONGLONG> memory_usage_map;
+	ret = PdhOpenQuery(nullptr, NULL, &query);
+	if (ret != ERROR_SUCCESS)
+	{
+		return memory_usage_map;
+	}
+	PDH_HCOUNTER counter;
+	ret = PdhAddCounter(query, L"\\GPU Adapter Memory(*)\\Dedicated Usage", NULL, &counter);
+	if (ret != ERROR_SUCCESS)
+	{
+		return memory_usage_map;
+	}
+	ret = PdhCollectQueryData(query);
+	if (ret != ERROR_SUCCESS)
+	{
+		return memory_usage_map;
+	}
+	DWORD bufferSize = 0;
+	DWORD itemCount = 0;
+	PdhGetRawCounterArray(counter, &bufferSize, &itemCount, nullptr);
+	auto&& lpItemBuffer = reinterpret_cast<PPDH_RAW_COUNTER_ITEM_W>(new char[bufferSize]);
+	ret = PdhGetRawCounterArray(counter, &bufferSize, &itemCount, lpItemBuffer);
+	if (ret != ERROR_SUCCESS)
+	{
+		delete[] lpItemBuffer;
+		return memory_usage_map;
+	}
+	for (DWORD i = 0; i < itemCount; ++i)
+	{
+		auto& [szName, RawValue] = lpItemBuffer[i];
+		memory_usage_map.insert(std::make_pair(szName, RawValue.FirstValue));
+	}
+	delete[] lpItemBuffer;
+	ret = PdhCloseQuery(query);
+	return memory_usage_map;
 }
 
 /**

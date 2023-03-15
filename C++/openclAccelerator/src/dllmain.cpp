@@ -545,6 +545,10 @@ JNIEXPORT jint JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_getGP
 	// }
 	const auto total_mem = current_device.info.memory;
 	auto&& memory_used = get_device_memory_used();
+	if (memory_used == INFINITE)
+	{
+		return 100;
+	}
 	return static_cast<jint>(memory_used * 100 / total_mem);
 }
 
