@@ -2067,116 +2067,300 @@ public class SearchBar {
     /**
      * 尝试显示结果，并将第一个label设置为选中
      */
-    private void tryToShowResultsAndSetFirstChosen() {
-        int size = listResults.size();
+    private void tryToShowResultsAndSetFirstChosen(boolean isContinueUpdate) {
         if (runningMode == RunningMode.NORMAL_MODE) {
-            //到达了最上端，刷新显示
-            try {
-                String path = listResults.get(currentResultCount.get());
-                showResultOnLabel(path, label1, true);
-                if (size > currentResultCount.get() + 1) {
-                    path = listResults.get(currentResultCount.get() + 1);
-                    showResultOnLabel(path, label2, false);
-                }
-                if (size > currentResultCount.get() + 2) {
-                    path = listResults.get(currentResultCount.get() + 2);
-                    showResultOnLabel(path, label3, false);
-                }
-                if (size > currentResultCount.get() + 3) {
-                    path = listResults.get(currentResultCount.get() + 3);
-                    showResultOnLabel(path, label4, false);
-                }
-                if (size > currentResultCount.get() + 4) {
-                    path = listResults.get(currentResultCount.get() + 4);
-                    showResultOnLabel(path, label5, false);
-                }
-                if (size > currentResultCount.get() + 5) {
-                    path = listResults.get(currentResultCount.get() + 5);
-                    showResultOnLabel(path, label6, false);
-                }
-                if (size > currentResultCount.get() + 6) {
-                    path = listResults.get(currentResultCount.get() + 6);
-                    showResultOnLabel(path, label7, false);
-                }
-                if (size > currentResultCount.get() + 7) {
-                    path = listResults.get(currentResultCount.get() + 7);
-                    showResultOnLabel(path, label8, false);
-                }
-            } catch (ArrayIndexOutOfBoundsException e) {
-                e.printStackTrace();
-            }
+            refreshShowingResultsOnNormalMode(isContinueUpdate);
         } else if (runningMode == RunningMode.COMMAND_MODE) {
-            //到达了最上端，刷新显示
-            try {
-                String command = listResults.get(currentResultCount.get());
-                showCommandOnLabel(command, label1, true);
-                if (size > currentResultCount.get() + 1) {
-                    command = listResults.get(currentResultCount.get() + 1);
-                    showCommandOnLabel(command, label2, false);
-                }
-                if (size > currentResultCount.get() + 2) {
-                    command = listResults.get(currentResultCount.get() + 2);
-                    showCommandOnLabel(command, label3, false);
-                }
-                if (size > currentResultCount.get() + 3) {
-                    command = listResults.get(currentResultCount.get() + 3);
-                    showCommandOnLabel(command, label4, false);
-                }
-                if (size > currentResultCount.get() + 4) {
-                    command = listResults.get(currentResultCount.get() + 4);
-                    showCommandOnLabel(command, label5, false);
-                }
-                if (size > currentResultCount.get() + 5) {
-                    command = listResults.get(currentResultCount.get() + 5);
-                    showCommandOnLabel(command, label6, false);
-                }
-                if (size > currentResultCount.get() + 6) {
-                    command = listResults.get(currentResultCount.get() + 6);
-                    showCommandOnLabel(command, label7, false);
-                }
-                if (size > currentResultCount.get() + 7) {
-                    command = listResults.get(currentResultCount.get() + 7);
-                    showCommandOnLabel(command, label8, false);
-                }
-            } catch (ArrayIndexOutOfBoundsException e) {
-                e.printStackTrace();
-            }
+            refreshShowingResultsOnCommandMode(isContinueUpdate);
         } else if (runningMode == RunningMode.PLUGIN_MODE) {
-            try {
-                String command = listResults.get(currentResultCount.get());
-                showPluginResultOnLabel(command, label1, true);
+            refreshShowingResultsOnPluginMode(isContinueUpdate);
+        }
+    }
 
-                if (size > currentResultCount.get() + 1) {
+    private void refreshShowingResultsOnPluginMode(boolean isContinueUpdate) {
+        int size = listResults.size();
+        String command;
+        try {
+            if (isContinueUpdate) {
+                if (isLabelEmpty(label1)) {
+                    command = listResults.get(currentResultCount.get());
+                    showPluginResultOnLabel(command, label1, true);
+                }
+            } else {
+                command = listResults.get(currentResultCount.get());
+                showPluginResultOnLabel(command, label1, true);
+            }
+            if (size > currentResultCount.get() + 1) {
+                if (isContinueUpdate) {
+                    if (isLabelEmpty(label2)) {
+                        command = listResults.get(currentResultCount.get() + 1);
+                        showPluginResultOnLabel(command, label2, false);
+                    }
+                } else {
                     command = listResults.get(currentResultCount.get() + 1);
                     showPluginResultOnLabel(command, label2, false);
                 }
-                if (size > currentResultCount.get() + 2) {
+            }
+            if (size > currentResultCount.get() + 2) {
+                if (isContinueUpdate) {
+                    if (isLabelEmpty(label3)) {
+                        command = listResults.get(currentResultCount.get() + 2);
+                        showPluginResultOnLabel(command, label3, false);
+                    }
+                } else {
                     command = listResults.get(currentResultCount.get() + 2);
                     showPluginResultOnLabel(command, label3, false);
                 }
-                if (size > currentResultCount.get() + 3) {
+            }
+            if (size > currentResultCount.get() + 3) {
+                if (isContinueUpdate) {
+                    if (isLabelEmpty(label4)) {
+                        command = listResults.get(currentResultCount.get() + 3);
+                        showPluginResultOnLabel(command, label4, false);
+                    }
+                } else {
                     command = listResults.get(currentResultCount.get() + 3);
                     showPluginResultOnLabel(command, label4, false);
                 }
-                if (size > currentResultCount.get() + 4) {
+            }
+            if (size > currentResultCount.get() + 4) {
+                if (isContinueUpdate) {
+                    if (isLabelEmpty(label5)) {
+                        command = listResults.get(currentResultCount.get() + 4);
+                        showPluginResultOnLabel(command, label5, false);
+                    }
+                } else {
                     command = listResults.get(currentResultCount.get() + 4);
                     showPluginResultOnLabel(command, label5, false);
                 }
-                if (size > currentResultCount.get() + 5) {
+            }
+            if (size > currentResultCount.get() + 5) {
+                if (isContinueUpdate) {
+                    if (isLabelEmpty(label6)) {
+                        command = listResults.get(currentResultCount.get() + 5);
+                        showPluginResultOnLabel(command, label6, false);
+                    }
+                } else {
                     command = listResults.get(currentResultCount.get() + 5);
                     showPluginResultOnLabel(command, label6, false);
                 }
-                if (size > currentResultCount.get() + 6) {
+            }
+            if (size > currentResultCount.get() + 6) {
+                if (isContinueUpdate) {
+                    if (isLabelEmpty(label7)) {
+                        command = listResults.get(currentResultCount.get() + 6);
+                        showPluginResultOnLabel(command, label7, false);
+                    }
+                } else {
                     command = listResults.get(currentResultCount.get() + 6);
                     showPluginResultOnLabel(command, label7, false);
                 }
-                if (size > currentResultCount.get() + 7) {
+            }
+            if (size > currentResultCount.get() + 7) {
+                if (isContinueUpdate) {
+                    if (isLabelEmpty(label8)) {
+                        command = listResults.get(currentResultCount.get() + 7);
+                        showPluginResultOnLabel(command, label8, false);
+                    }
+                } else {
                     command = listResults.get(currentResultCount.get() + 7);
                     showPluginResultOnLabel(command, label8, false);
                 }
-            } catch (ArrayIndexOutOfBoundsException e) {
-                e.printStackTrace();
             }
+        } catch (ArrayIndexOutOfBoundsException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void refreshShowingResultsOnCommandMode(boolean isContinueUpdate) {
+        int size = listResults.size();
+        //到达了最上端，刷新显示
+        String command;
+        try {
+            if (isContinueUpdate) {
+                if (isLabelEmpty(label1)) {
+                    command = listResults.get(currentResultCount.get());
+                    showCommandOnLabel(command, label1, true);
+                }
+            } else {
+                command = listResults.get(currentResultCount.get());
+                showCommandOnLabel(command, label1, true);
+            }
+            if (size > currentResultCount.get() + 1) {
+                if (isContinueUpdate) {
+                    if (isLabelEmpty(label2)) {
+                        command = listResults.get(currentResultCount.get() + 1);
+                        showCommandOnLabel(command, label2, false);
+                    }
+                } else {
+                    command = listResults.get(currentResultCount.get() + 1);
+                    showCommandOnLabel(command, label2, false);
+                }
+            }
+            if (size > currentResultCount.get() + 2) {
+                if (isContinueUpdate) {
+                    if (isLabelEmpty(label3)) {
+                        command = listResults.get(currentResultCount.get() + 2);
+                        showCommandOnLabel(command, label3, false);
+                    }
+                } else {
+                    command = listResults.get(currentResultCount.get() + 2);
+                    showCommandOnLabel(command, label3, false);
+                }
+            }
+            if (size > currentResultCount.get() + 3) {
+                if (isContinueUpdate) {
+                    if (isLabelEmpty(label4)) {
+                        command = listResults.get(currentResultCount.get() + 3);
+                        showCommandOnLabel(command, label4, false);
+                    }
+                } else {
+                    command = listResults.get(currentResultCount.get() + 3);
+                    showCommandOnLabel(command, label4, false);
+                }
+            }
+            if (size > currentResultCount.get() + 4) {
+                if (isContinueUpdate) {
+                    if (isLabelEmpty(label5)) {
+                        command = listResults.get(currentResultCount.get() + 4);
+                        showCommandOnLabel(command, label5, false);
+                    }
+                } else {
+                    command = listResults.get(currentResultCount.get() + 4);
+                    showCommandOnLabel(command, label5, false);
+                }
+            }
+            if (size > currentResultCount.get() + 5) {
+                if (isContinueUpdate) {
+                    if (isLabelEmpty(label6)) {
+                        command = listResults.get(currentResultCount.get() + 5);
+                        showCommandOnLabel(command, label6, false);
+                    }
+                } else {
+                    command = listResults.get(currentResultCount.get() + 5);
+                    showCommandOnLabel(command, label6, false);
+                }
+            }
+            if (size > currentResultCount.get() + 6) {
+                if (isContinueUpdate) {
+                    if (isLabelEmpty(label7)) {
+                        command = listResults.get(currentResultCount.get() + 6);
+                        showCommandOnLabel(command, label7, false);
+                    }
+                } else {
+                    command = listResults.get(currentResultCount.get() + 6);
+                    showCommandOnLabel(command, label7, false);
+                }
+            }
+            if (size > currentResultCount.get() + 7) {
+                if (isContinueUpdate) {
+                    if (isLabelEmpty(label8)) {
+                        command = listResults.get(currentResultCount.get() + 7);
+                        showCommandOnLabel(command, label8, false);
+                    }
+                } else {
+                    command = listResults.get(currentResultCount.get() + 7);
+                    showCommandOnLabel(command, label8, false);
+                }
+            }
+        } catch (ArrayIndexOutOfBoundsException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void refreshShowingResultsOnNormalMode(boolean isContinueUpdate) {
+        int size = listResults.size();
+        //到达了最上端，刷新显示
+        String path;
+        try {
+            if (isContinueUpdate) {
+                if (isLabelEmpty(label1)) {
+                    path = listResults.get(currentResultCount.get());
+                    showResultOnLabel(path, label1, true);
+                }
+            } else {
+                path = listResults.get(currentResultCount.get());
+                showResultOnLabel(path, label1, true);
+            }
+            if (size > currentResultCount.get() + 1) {
+                if (isContinueUpdate) {
+                    if (isLabelEmpty(label2)) {
+                        path = listResults.get(currentResultCount.get() + 1);
+                        showResultOnLabel(path, label2, false);
+                    }
+                } else {
+                    path = listResults.get(currentResultCount.get() + 1);
+                    showResultOnLabel(path, label2, false);
+                }
+            }
+            if (size > currentResultCount.get() + 2) {
+                if (isContinueUpdate) {
+                    if (isLabelEmpty(label3)) {
+                        path = listResults.get(currentResultCount.get() + 2);
+                        showResultOnLabel(path, label3, false);
+                    }
+                } else {
+                    path = listResults.get(currentResultCount.get() + 2);
+                    showResultOnLabel(path, label3, false);
+                }
+            }
+            if (size > currentResultCount.get() + 3) {
+                if (isContinueUpdate) {
+                    if (isLabelEmpty(label4)) {
+                        path = listResults.get(currentResultCount.get() + 3);
+                        showResultOnLabel(path, label4, false);
+                    }
+                } else {
+                    path = listResults.get(currentResultCount.get() + 3);
+                    showResultOnLabel(path, label4, false);
+                }
+            }
+            if (size > currentResultCount.get() + 4) {
+                if (isContinueUpdate) {
+                    if (isLabelEmpty(label5)) {
+                        path = listResults.get(currentResultCount.get() + 4);
+                        showResultOnLabel(path, label5, false);
+                    }
+                } else {
+                    path = listResults.get(currentResultCount.get() + 4);
+                    showResultOnLabel(path, label5, false);
+                }
+            }
+            if (size > currentResultCount.get() + 5) {
+                if (isContinueUpdate) {
+                    if (isLabelEmpty(label6)) {
+                        path = listResults.get(currentResultCount.get() + 5);
+                        showResultOnLabel(path, label6, false);
+                    }
+                } else {
+                    path = listResults.get(currentResultCount.get() + 5);
+                    showResultOnLabel(path, label6, false);
+                }
+            }
+            if (size > currentResultCount.get() + 6) {
+                if (isContinueUpdate) {
+                    if (isLabelEmpty(label7)) {
+                        path = listResults.get(currentResultCount.get() + 6);
+                        showResultOnLabel(path, label7, false);
+                    }
+                } else {
+                    path = listResults.get(currentResultCount.get() + 6);
+                    showResultOnLabel(path, label7, false);
+                }
+            }
+            if (size > currentResultCount.get() + 7) {
+                if (isContinueUpdate) {
+                    if (isLabelEmpty(label8)) {
+                        path = listResults.get(currentResultCount.get() + 7);
+                        showResultOnLabel(path, label8, false);
+                    }
+                } else {
+                    path = listResults.get(currentResultCount.get() + 7);
+                    showResultOnLabel(path, label8, false);
+                }
+            }
+        } catch (ArrayIndexOutOfBoundsException e) {
+            e.printStackTrace();
         }
     }
 
@@ -2191,7 +2375,7 @@ public class SearchBar {
         int size;
         switch (position) {
             case 0 -> {
-                tryToShowResultsAndSetFirstChosen();
+                tryToShowResultsAndSetFirstChosen(false);
                 repaint();
             }
             case 1 -> {
@@ -3181,16 +3365,8 @@ public class SearchBar {
                     } else if (!listResults.isEmpty()) {
                         //在结果不足8个的时候不断尝试显示
                         //设置窗口上的文字和图片显示
-                        var hasLabelEmpty = isLabelEmpty(label1) ||
-                                isLabelEmpty(label2) ||
-                                isLabelEmpty(label3) ||
-                                isLabelEmpty(label4) ||
-                                isLabelEmpty(label5) ||
-                                isLabelEmpty(label6) ||
-                                isLabelEmpty(label7) ||
-                                isLabelEmpty(label8);
-                        if (currentResultCount.get() == 0 && hasLabelEmpty) {
-                            tryToShowResultsAndSetFirstChosen();
+                        if (currentResultCount.get() == 0) {
+                            tryToShowResultsAndSetFirstChosen(true);
                         }
                         //设置窗口是被选中还是未被选中，鼠标模式
                         setLabelChosenOrNotChosenMouseMode(0, label1);
