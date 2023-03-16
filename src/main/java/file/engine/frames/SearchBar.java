@@ -1227,7 +1227,7 @@ public class SearchBar {
         if (label != null) {
             SwingUtilities.invokeLater(() -> {
                 String name = label.getName();
-                if (!(name == null || name.isEmpty() || RESULT_LABEL_NAME_HOLDER.equals(name))) {
+                if (!((name == null) || name.isEmpty() || RESULT_LABEL_NAME_HOLDER.equals(name))) {
                     String currentText = label.getText();
                     //indexOf效率更高
                     if (currentText == null || currentText.indexOf(":\\") == -1) {
@@ -3181,7 +3181,15 @@ public class SearchBar {
                     } else if (!listResults.isEmpty()) {
                         //在结果不足8个的时候不断尝试显示
                         //设置窗口上的文字和图片显示
-                        if (currentResultCount.get() == 0) {
+                        var hasLabelEmpty = isLabelEmpty(label1) ||
+                                isLabelEmpty(label2) ||
+                                isLabelEmpty(label3) ||
+                                isLabelEmpty(label4) ||
+                                isLabelEmpty(label5) ||
+                                isLabelEmpty(label6) ||
+                                isLabelEmpty(label7) ||
+                                isLabelEmpty(label8);
+                        if (currentResultCount.get() == 0 && hasLabelEmpty) {
                             tryToShowResultsAndSetFirstChosen();
                         }
                         //设置窗口是被选中还是未被选中，鼠标模式
@@ -3972,14 +3980,15 @@ public class SearchBar {
     /**
      * 根据path或command生成显示html
      *
-     * @param path    path
-     * @param command command
+     * @param path                     path
+     * @param command                  command
+     * @param isResultStringContracted 结果是否压缩，在显示path的情况下可能由于文件路径太长而不显示
      * @return html
      */
-    private String getHtml(String path, String command, boolean[] isParentPathEmpty) {
+    private String getHtml(String path, String command, boolean[] isResultStringContracted) {
         String colorHex = "#" + ColorUtil.parseColorHex(labelFontColor);
         String template = "<html><body style=\"color: " + colorHex + ";\">%s</body></html>";
-        isParentPathEmpty[0] = false;
+        isResultStringContracted[0] = false;
         if (path == null) {
             // 命令模式
             String[] info = RegexUtil.semicolon.split(command);
@@ -3992,7 +4001,8 @@ public class SearchBar {
                     "&gt;&gt;" + commandPath +
                     "</div>" +
                     "</div>");
-        } else if (command == null) {
+        }
+        if (command == null) {
             // 普通模式
             String parentPath = FileUtil.getParentPath(path);
             String fileName = FileUtil.getFileName(path);
@@ -4004,11 +4014,12 @@ public class SearchBar {
                         "<div style=\"overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: smaller;\">" + parentPath +
                         "</div>" +
                         "</div>");
+            } else {
+                isResultStringContracted[0] = true;
+                return String.format(template, "<div>" +
+                        highLight(fileName, keywords) +
+                        "</div>");
             }
-            isParentPathEmpty[0] = true;
-            return String.format(template, "<div>" +
-                    highLight(fileName, keywords) +
-                    "</div>");
         }
         return template.replace("%s", "");
     }
@@ -4028,8 +4039,8 @@ public class SearchBar {
         GetIconUtil getIconUtil = GetIconUtil.getInstance();
         String searchBarText = getSearchBarText();
         if (!searchBarText.isEmpty() && searchBarText.charAt(0) == '>') {
-            GetPluginByIdentifierEvent getPluginByIdentifierEvent = new GetPluginByIdentifierEvent(path);
-            EventManagement eventManagement = EventManagement.getInstance();
+            var getPluginByIdentifierEvent = new GetPluginByIdentifierEvent(path);
+            var eventManagement = EventManagement.getInstance();
             eventManagement.putEvent(getPluginByIdentifierEvent);
             eventManagement.waitForEvent(getPluginByIdentifierEvent);
             Optional<PluginService.PluginInfo> pluginInfoByName = getPluginByIdentifierEvent.getReturnValue();
@@ -4083,8 +4094,8 @@ public class SearchBar {
         if (runningMode == RunningMode.PLUGIN_MODE) {
             currentUsingPlugin.showResultOnLabel(resultWithPluginInfo[2], label, isChosen);
         } else {
-            GetPluginByIdentifierEvent getPluginByIdentifierEvent = new GetPluginByIdentifierEvent(resultWithPluginInfo[1]);
-            EventManagement eventManagement = EventManagement.getInstance();
+            var getPluginByIdentifierEvent = new GetPluginByIdentifierEvent(resultWithPluginInfo[1]);
+            var eventManagement = EventManagement.getInstance();
             eventManagement.putEvent(getPluginByIdentifierEvent);
             eventManagement.waitForEvent(getPluginByIdentifierEvent);
             Optional<PluginService.PluginInfo> pluginInfoOptional = getPluginByIdentifierEvent.getReturnValue();
