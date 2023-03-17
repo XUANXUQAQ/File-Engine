@@ -17,6 +17,12 @@ public enum GPUAccelerator {
     private static final CudaAccelerator cudaAccelerator = CudaAccelerator.INSTANCE;
     private static final OpenclAccelerator openclAccelerator = OpenclAccelerator.INSTANCE;
 
+    /**
+     * 之所以采用双重检验锁机制，是由于要实现懒加载，并且不能在加载类的时候进行加载
+     * 由于在事务管理器扫描@EventRegister和@EventListener的阶段将会尝试加载所有类，此时配置中心还不可用
+     * 因此采用getInstance()方法来实现懒加载，在BootSystem事件发出后再进行初始化。
+     * @param isEnableGpuAccelerate
+     */
     record IsEnabledWrapper(boolean isEnableGpuAccelerate) {
         private static volatile IsEnabledWrapper instance;
 
