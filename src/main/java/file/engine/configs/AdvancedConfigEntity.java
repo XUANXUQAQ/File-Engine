@@ -14,4 +14,6 @@ public class AdvancedConfigEntity {
     private long waitForInputAndStartSearchTimeoutInMills;
 
     private long waitForSearchTasksTimeoutInMills;
+
+    private long clearIconCacheTimeoutInMills;
 }

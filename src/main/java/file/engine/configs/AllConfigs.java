@@ -447,10 +447,12 @@ public class AllConfigs {
         long waitForInputAndPrepareSearchTimeoutInMills = Long.parseLong(getFromJson(advancedConfigs, "waitForInputAndPrepareSearchTimeoutInMills", (long) 150).toString());
         long waitForInputAndStartSearchTimeoutInMills = Long.parseLong(getFromJson(advancedConfigs, "waitForInputAndStartSearchTimeoutInMills", (long) 350).toString());
         long waitForSearchTasksTimeoutInMills = Long.parseLong(getFromJson(advancedConfigs, "waitForSearchTasksTimeoutInMills", (long) 5 * 60 * 1000).toString());
+        long clearIconCacheTimeoutInMills = Long.parseLong(getFromJson(advancedConfigs, "clearIconCacheTimeoutInMills", (long) 60 * 1000).toString());
         configEntity.setAdvancedConfigEntity(new AdvancedConfigEntity(searchWarmupTimeoutInMills,
                 waitForInputAndPrepareSearchTimeoutInMills,
                 waitForInputAndStartSearchTimeoutInMills,
-                waitForSearchTasksTimeoutInMills));
+                waitForSearchTasksTimeoutInMills,
+                clearIconCacheTimeoutInMills));
     }
 
     private void readSearchThreadNumber(Map<String, Object> settingsInJson) {
