@@ -3365,9 +3365,7 @@ public class SearchBar {
                     } else if (!listResults.isEmpty()) {
                         //在结果不足8个的时候不断尝试显示
                         //设置窗口上的文字和图片显示
-                        if (currentResultCount.get() == 0) {
-                            tryToShowResultsAndSetFirstChosen(true);
-                        }
+                        tryToShowResultsAndSetFirstChosen(true);
                         //设置窗口是被选中还是未被选中，鼠标模式
                         setLabelChosenOrNotChosenMouseMode(0, label1);
                         setLabelChosenOrNotChosenMouseMode(1, label2);

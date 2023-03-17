@@ -21,6 +21,7 @@ public enum GPUAccelerator {
      * 之所以采用双重检验锁机制，是由于要实现懒加载，并且不能在加载类的时候进行加载
      * 由于在事务管理器扫描@EventRegister和@EventListener的阶段将会尝试加载所有类，此时配置中心还不可用
      * 因此采用getInstance()方法来实现懒加载，在BootSystem事件发出后再进行初始化。
+     *
      * @param isEnableGpuAccelerate
      */
     record IsEnabledWrapper(boolean isEnableGpuAccelerate) {
@@ -213,15 +214,17 @@ public enum GPUAccelerator {
         if (deviceCategoryAndId.isEmpty()) {
             if (cudaAccelerator.isGPUAvailableOnSystem()) {
                 cudaAccelerator.initialize();
-                cudaAccelerator.setDevice(0);
-                gpuAccelerator = cudaAccelerator;
-                return true;
+                if (cudaAccelerator.setDevice(0)) {
+                    gpuAccelerator = cudaAccelerator;
+                    return true;
+                }
             }
             if (openclAccelerator.isGPUAvailableOnSystem()) {
                 openclAccelerator.initialize();
-                openclAccelerator.setDevice(0);
-                gpuAccelerator = openclAccelerator;
-                return true;
+                if (openclAccelerator.setDevice(0)) {
+                    gpuAccelerator = openclAccelerator;
+                    return true;
+                }
             }
             return false;
         }
@@ -234,16 +237,18 @@ public enum GPUAccelerator {
                 case CUDA:
                     if (cudaAccelerator.isGPUAvailableOnSystem()) {
                         cudaAccelerator.initialize();
-                        cudaAccelerator.setDevice(id);
-                        gpuAccelerator = cudaAccelerator;
-                        return true;
+                        if (cudaAccelerator.setDevice(id)) {
+                            gpuAccelerator = cudaAccelerator;
+                            return true;
+                        }
                     }
                 case OPENCL:
                     if (openclAccelerator.isGPUAvailableOnSystem()) {
                         openclAccelerator.initialize();
-                        openclAccelerator.setDevice(id);
-                        gpuAccelerator = openclAccelerator;
-                        return true;
+                        if (openclAccelerator.setDevice(id)) {
+                            gpuAccelerator = openclAccelerator;
+                            return true;
+                        }
                     }
             }
         }
