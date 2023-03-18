@@ -3398,9 +3398,8 @@ public class SearchBar {
                             searchInfoLabel.setIcon(null);
                         }
                     });
-                    repaint();
                     try {
-                        TimeUnit.MILLISECONDS.sleep(200);
+                        TimeUnit.MILLISECONDS.sleep(30);
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }
@@ -4421,24 +4420,6 @@ public class SearchBar {
                 searchBar.setVisible(false);
                 EventManagement eventManagement = EventManagement.getInstance();
                 eventManagement.putEvent(new SearchBarCloseEvent());
-                ThreadPoolUtil.getInstance().executeTask(() -> {
-                    final long startWaitTime = System.currentTimeMillis();
-                    AllConfigs allConfigs = AllConfigs.getInstance();
-                    while (!isVisible() && eventManagement.notMainExit()) {
-                        if (System.currentTimeMillis() - startWaitTime > allConfigs
-                                .getConfigEntity()
-                                .getAdvancedConfigEntity()
-                                .getClearIconCacheTimeoutInMills()) {
-                            GetIconUtil.getInstance().clearIconCache();
-                            return;
-                        }
-                        try {
-                            TimeUnit.SECONDS.sleep(1);
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-                });
             }
         } else {
             searchBar.setVisible(true);

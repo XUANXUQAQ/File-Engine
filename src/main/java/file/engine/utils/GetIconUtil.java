@@ -1,5 +1,6 @@
 package file.engine.utils;
 
+import file.engine.configs.AllConfigs;
 import file.engine.event.handler.EventManagement;
 import file.engine.utils.system.properties.IsDebug;
 import lombok.NonNull;
@@ -10,6 +11,7 @@ import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.function.BiConsumer;
@@ -21,13 +23,20 @@ public class GetIconUtil {
     private final ConcurrentHashMap<String, ImageIcon> constantIconMap = new ConcurrentHashMap<>();
     private final ConcurrentLinkedQueue<Task> workingQueue = new ConcurrentLinkedQueue<>();
     private final ExecutorService iconTaskConsumer = Executors.newFixedThreadPool(MAX_CONSUMER_THREAD_NUM);
-    private final ConcurrentHashMap<String, ImageIcon> cacheIconMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, IconCache> cacheIconMap = new ConcurrentHashMap<>();
 
     private static volatile GetIconUtil INSTANCE = null;
+
+    private record IconCache(
+            long cacheCreateTime,
+            ImageIcon icon
+    ) {
+    }
 
     private GetIconUtil() {
         initIconCache();
         startWorkingThread();
+        clearIconCacheThread();
     }
 
     public static GetIconUtil getInstance() {
@@ -83,8 +92,33 @@ public class GetIconUtil {
         return image[0];
     }
 
-    public void clearIconCache() {
-        cacheIconMap.clear();
+    public void clearIconCacheThread() {
+        new Thread(() -> {
+            var eventManagement = EventManagement.getInstance();
+            var allConfigs = AllConfigs.getInstance();
+            long startCheck = System.currentTimeMillis();
+            while (eventManagement.notMainExit()) {
+                long clearIconCacheTimeoutInMills = allConfigs
+                        .getConfigEntity()
+                        .getAdvancedConfigEntity()
+                        .getClearIconCacheTimeoutInMills();
+                if (System.currentTimeMillis() - startCheck > clearIconCacheTimeoutInMills) {
+                    startCheck = System.currentTimeMillis();
+                    ArrayList<String> keyToRemove = new ArrayList<>();
+                    cacheIconMap.forEach((path, iconCache) -> {
+                        if (System.currentTimeMillis() - iconCache.cacheCreateTime > clearIconCacheTimeoutInMills) {
+                            keyToRemove.add(path);
+                        }
+                    });
+                    keyToRemove.forEach(cacheIconMap::remove);
+                }
+                try {
+                    TimeUnit.MILLISECONDS.sleep(100);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }).start();
     }
 
     public void getBigIcon(String pathOrKey,
@@ -120,9 +154,9 @@ public class GetIconUtil {
             normalCallback.accept(changeIcon(constantIconMap.get("folderImageIcon"), width, height), false);
             return;
         }
-        ImageIcon cachedIcon = cacheIconMap.get(pathOrKey);
+        var cachedIcon = cacheIconMap.get(pathOrKey);
         if (cachedIcon != null) {
-            normalCallback.accept(changeIcon(cachedIcon, width, height), false);
+            normalCallback.accept(changeIcon(cachedIcon.icon(), width, height), false);
             return;
         }
         Task task = new Task(f, width, height);
@@ -173,7 +207,7 @@ public class GetIconUtil {
                 } else {
                     icon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(task.path), task.width, task.height);
                     if (null != icon) {
-                        cacheIconMap.put(task.path.getAbsolutePath(), icon);
+                        cacheIconMap.put(task.path.getAbsolutePath(), new IconCache(System.currentTimeMillis(), icon));
                     } else {
                         icon = changeIcon(constantIconMap.get("blankIcon"), task.width, task.height);
                     }
@@ -182,7 +216,7 @@ public class GetIconUtil {
             } else {
                 task.icon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(task.path), task.width, task.height);
                 task.isDone = true;
-                cacheIconMap.put(task.path.getAbsolutePath(), task.icon);
+                cacheIconMap.put(task.path.getAbsolutePath(), new IconCache(System.currentTimeMillis(), task.icon));
             }
             TimeUnit.MILLISECONDS.sleep(1);
         }
