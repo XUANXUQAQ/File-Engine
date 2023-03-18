@@ -132,6 +132,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_initi
 	if (env->GetJavaVM(&jvm) != JNI_OK)
 	{
 		env->ThrowNew(env->FindClass("java/lang/Exception"), "get JavaVM ptr failed.");
+		return;
 	}
 	current_device = Device(select_device_with_id(0));
 	p_stop_signal = Memory<char>(current_device, 1);
@@ -140,6 +141,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_initi
 	if (CreateDXGIFactory(__uuidof(IDXGIFactory), reinterpret_cast<void**>(&p_dxgi_factory)) != S_OK)
 	{
 		env->ThrowNew(env->FindClass("java/lang/Exception"), "create dxgi factory failed.");
+		return;
 	}
 	IDXGIAdapter* p_adapter = nullptr;
 	for (UINT i = 0;

@@ -146,6 +146,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_initial
 	if (CreateDXGIFactory(__uuidof(IDXGIFactory), reinterpret_cast<void**>(&p_dxgi_factory)) != S_OK)
 	{
 		env->ThrowNew(env->FindClass("java/lang/Exception"), "create dxgi factory failed.");
+		return;
 	}
 	IDXGIAdapter* p_adapter = nullptr;
 	for (UINT i = 0;
