@@ -22,8 +22,6 @@ using file_record_queue = concurrent_queue<std::wstring>;
 void monitor(const char* path);
 void stop_monitor(const std::string& path);
 void monitor_path(const std::string& path);
-void add_record(const std::wstring& record);
-void delete_record(const std::wstring& record);
 bool pop_del_file(std::wstring& record);
 bool pop_add_file(std::wstring& record);
 
@@ -50,8 +48,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_stop_1monitor
 JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_FileMonitor_pop_1add_1file
 (JNIEnv* env, jobject)
 {
-	std::wstring record;
-	if (pop_add_file(record))
+	if (std::wstring record; pop_add_file(record))
 	{
 		const auto str = wstring2string(record);
 		return env->NewStringUTF(str.c_str());
@@ -62,29 +59,12 @@ JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_FileMonitor_pop_1add_1fi
 JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_FileMonitor_pop_1del_1file
 (JNIEnv* env, jobject)
 {
-	std::wstring record;
-	if (pop_del_file(record))
+	if (std::wstring record; pop_del_file(record))
 	{
 		const auto str = wstring2string(record);
 		return env->NewStringUTF(str.c_str());
 	}
 	return nullptr;
-}
-
-/**
- * 添加文件到file_added_queue
- */
-void add_record(const std::wstring& record)
-{
-	file_added_queue.push(record);
-}
-
-/**
- * 添加文件到file_del_queue
- */
-void delete_record(const std::wstring& record)
-{
-	file_del_queue.push(record);
 }
 
 /**
@@ -114,14 +94,13 @@ void monitor(const char* path)
 	{
 		flag->second.store(true);
 	}
-	std::thread t(monitor_path, path_str);
-	t.join();
+	monitor_path(path_str);
 }
 
 void stop_monitor(const std::string& path)
 {
 	auto&& flag = stop_flag.find(path);
-	if (flag == stop_flag.end()) 
+	if (flag == stop_flag.end())
 	{
 		return;
 	}
@@ -134,14 +113,15 @@ void stop_monitor(const std::string& path)
 void monitor_path(const std::string& path)
 {
 	const auto wPath = string2wstring(path);
-	DirectoryChangesReader dcr(wPath);
+	DirectoryChangesReader<1, 65536> dcr(wPath);
 	auto&& flag = stop_flag.at(path);
 	while (flag.load())
 	{
 		dcr.EnqueueReadDirectoryChanges();
 		if (const DWORD rv = dcr.WaitForHandles(); rv == WAIT_OBJECT_0)
 		{
-			for (auto&& res = dcr.GetDirectoryChangesResultW(); const auto& [action, data] : res)
+			for (auto&& res = dcr.GetDirectoryChangesResultW();
+				const auto & [action, data] : res)
 			{
 				switch (action)
 				{
@@ -151,28 +131,38 @@ void monitor_path(const std::string& path)
 					{
 						std::wstring data_with_disk;
 						data_with_disk.append(wPath).append(data);
-						add_record(data_with_disk);
+						if (std::find(file_added_queue.unsafe_begin(),
+							file_added_queue.unsafe_end(),
+							data_with_disk) == file_added_queue.unsafe_end())
+						{
+							file_added_queue.push(data_with_disk);
+						}
 					}
 					break;
 				case FILE_ACTION_REMOVED:
-				case FILE_ACTION_RENAMED_OLD_NAME:
 					if (data.find(L"$RECYCLE.BIN") == std::wstring::npos)
 					{
 						std::wstring data_with_disk;
 						data_with_disk.append(wPath).append(data);
-						delete_record(data_with_disk);
+						if (std::find(file_del_queue.unsafe_begin(),
+							file_del_queue.unsafe_end(),
+							data_with_disk) == file_del_queue.unsafe_end())
+						{
+							file_del_queue.push(data_with_disk);
+						}
 #ifdef TEST
 						std::cout << "file removed: " << wstring2string(data_with_disk) << std::endl;
 #endif
 					}
 					break;
+				case FILE_ACTION_RENAMED_OLD_NAME:
 				case FILE_ACTION_MODIFIED:
 				default:
 					break;
 				}
 			}
 		}
-		Sleep(10);
+		Sleep(500);
 	}
 #ifdef TEST
 	std::cout << "stop monitoring " << path << std::endl;

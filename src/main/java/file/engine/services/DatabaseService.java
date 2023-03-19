@@ -79,7 +79,6 @@ public class DatabaseService {
     // 对数据库cache表的缓存，保存常用的应用
     private final ConcurrentSkipListSet<String> databaseCacheSet = new ConcurrentSkipListSet<>();
     private final AtomicInteger searchThreadCount = new AtomicInteger(0);
-    private long startSearchTimeMills = 0;
     private static final int MAX_TEMP_QUERY_RESULT_CACHE = 512;
     private static final int MAX_CACHED_RECORD_NUM = 10240 * 5;
     private static final int MAX_SQL_NUM = 5000;
@@ -577,7 +576,7 @@ public class DatabaseService {
             if (deleteFilePath != null) {
                 removeFileFromDatabase(deleteFilePath);
             }
-            TimeUnit.MILLISECONDS.sleep(1);
+            TimeUnit.SECONDS.sleep(1);
         }
     }
 
@@ -1020,7 +1019,6 @@ public class DatabaseService {
      * 添加sql语句，并开始搜索
      */
     private void startSearch(SearchTask searchTask) {
-        startSearchTimeMills = System.currentTimeMillis();
         var eventManagement = EventManagement.getInstance();
         Consumer<ConcurrentLinkedQueue<Runnable>> taskHandler = (taskQueue) -> {
             ThreadPoolUtil threadPoolUtil = ThreadPoolUtil.getInstance();
@@ -1662,21 +1660,15 @@ public class DatabaseService {
         ThreadPoolUtil.getInstance().executeTask(() -> {
             // 时间检测线程
             AllConfigs allConfigs = AllConfigs.getInstance();
-            final long timeout = Constants.CLOSE_DATABASE_TIMEOUT_MILLS - 30 * 1000;
             EventManagement eventManagement = EventManagement.getInstance();
             long checkTime = System.currentTimeMillis();
             while (eventManagement.notMainExit()) {
                 final long updateTimeLimit = allConfigs.getConfigEntity().getUpdateTimeLimit() * 1000L;
-                if (System.currentTimeMillis() - checkTime >= updateTimeLimit) {
+                boolean isTooManySQLsToExecute =
+                        getStatus() == Constants.Enums.DatabaseStatus.NORMAL && sqlCommandQueue.size() > 100;
+                if (isTooManySQLsToExecute || System.currentTimeMillis() - checkTime >= updateTimeLimit) {
                     checkTime = System.currentTimeMillis();
-                    boolean isTooManySQLsToExecute =
-                            getStatus() == Constants.Enums.DatabaseStatus.NORMAL && sqlCommandQueue.size() > 100;
-                    boolean isDatabaseNotClosed =
-                            getStatus() == Constants.Enums.DatabaseStatus.NORMAL &&
-                                    System.currentTimeMillis() - startSearchTimeMills < timeout;
-                    if (isDatabaseNotClosed || isTooManySQLsToExecute) {
-                        sendExecuteSQLSignal();
-                    }
+                    sendExecuteSQLSignal();
                 }
                 try {
                     TimeUnit.SECONDS.sleep(1);
