@@ -871,7 +871,7 @@ void lock_clear_cache(std::atomic_uint& thread_counter)
 	wait_for_clear_cache();
 	while (true)
 	{
-		if (unsigned val = thread_counter.load(); 
+		if (unsigned val = thread_counter.load();
 			thread_counter.compare_exchange_strong(val, val + 1))
 		{
 			break;
@@ -936,15 +936,26 @@ void add_records_to_cache(const std::string& key, const std::vector<std::string>
 					{
 						const auto index = cache->str_data.record_num.load();
 						//计算上一个字符串的内存地址
-						char* last_str_addr;
-						gpuErrchk(cudaMemcpy(&last_str_addr, cache->str_data.dev_str_addr + index - 1,
-							sizeof(size_t), cudaMemcpyDeviceToHost), true, nullptr);
+						char* last_str_addr = nullptr;
+						if (index != 0)
+						{
+							gpuErrchk(cudaMemcpy(&last_str_addr, cache->str_data.dev_str_addr + index - 1,
+								sizeof(size_t), cudaMemcpyDeviceToHost), true, nullptr);
 #ifdef DEBUG_OUTPUT
-						std::cout << "last str address: " << std::hex << "0x" << reinterpret_cast<size_t>(last_str_addr);
-						std::cout << "  last str length: 0x" << cache->str_data.str_length[index - 1] << std::endl;
+							std::cout << "last str address: " << std::hex << "0x" << reinterpret_cast<size_t>(last_str_addr);
+							std::cout << "  last str length: 0x" << cache->str_data.str_length[index - 1] << std::endl;
 #endif
-						//字符串尾的下一位即为新字符串起始地址
-						char* target_address = last_str_addr + cache->str_data.str_length[index - 1] + 1;
+						}
+						char* target_address;
+						if (last_str_addr != nullptr)
+						{
+							//字符串尾的下一位即为新字符串起始地址
+							target_address = last_str_addr + cache->str_data.str_length[index - 1] + 1;
+						}
+						else
+						{
+							target_address = cache->str_data.dev_strs;
+						}
 						//记录到下一空位内存地址target_address
 						gpuErrchk(cudaMemsetAsync(target_address, 0, record_len + 1, stream), true,
 							get_cache_info(key, cache).c_str());
@@ -1017,7 +1028,7 @@ void remove_records_from_cache(const std::string& key, std::vector<std::string>&
 					printf("removing record: %s\n", tmp);
 #endif
 					//成功找到字符串
-					//判断是否已经是最后一个字符串
+					//判断是否已经是最后一个字符串，如果是，直接将record_num - 1即可，不需要操作内存
 					if (const auto last_index = cache->str_data.record_num - 1; last_index != i)
 					{
 						const char* last_str_address;
@@ -1039,7 +1050,7 @@ void remove_records_from_cache(const std::string& key, std::vector<std::string>&
 								true, get_cache_info(key, cache).c_str());
 							//记录字符串长度
 							cache->str_data.str_length[i] = cache->str_data.str_length[last_index];
-					}
+						}
 						else
 						{
 							// 不删除字符串，只更新字符串地址
@@ -1056,14 +1067,14 @@ void remove_records_from_cache(const std::string& key, std::vector<std::string>&
 									sizeof(size_t), cudaMemcpyDeviceToDevice, stream), true, nullptr);
 							//记录字符串长度
 							cache->str_data.str_length[i] = cache->str_data.str_length[last_index];
-				}
-			}
+						}
+					}
 					--cache->str_data.record_num;
 					++cache->str_data.remain_blank_num;
 					cache->str_data.record_hash.unsafe_erase(hasher(*record));
+				}
+			}
 		}
-	}
-}
 		gpuErrchk(cudaStreamSynchronize(stream), true, nullptr);
 		gpuErrchk(cudaStreamDestroy(stream), true, nullptr);
 		// 处理内存碎片
@@ -1100,7 +1111,7 @@ void handle_memory_fragmentation(const list_cache* cache)
 			{
 				std::cout << "address: " << std::hex << "0x" << reinterpret_cast<size_t>(last_addr) <<
 					" is higher than " << "0x" << reinterpret_cast<size_t>(str_address_in_device) << std::endl;
-	}
+			}
 		}
 		last_addr = str_address_in_device;
 #endif
@@ -1153,8 +1164,8 @@ void handle_memory_fragmentation(const list_cache* cache)
 				}
 			}
 			p_last_addr = str_address_in_device;
+		}
 	}
-}
 #endif
 }
 
