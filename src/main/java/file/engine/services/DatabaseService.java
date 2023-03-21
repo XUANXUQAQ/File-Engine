@@ -1819,7 +1819,6 @@ public class DatabaseService {
      */
     private static SearchTask prepareSearch(SearchInfo searchInfo) {
         var databaseService = getInstance();
-        databaseService.stopAllSearch();
         var searchTask = new SearchTask(searchInfo);
         lastSearchTask = searchTask;
 

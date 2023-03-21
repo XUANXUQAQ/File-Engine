@@ -76,7 +76,6 @@ public class SearchBar {
     private final AtomicBoolean isBorderThreadNotExist = new AtomicBoolean(true);
     private final AtomicBoolean isLockMouseMotionThreadNotExist = new AtomicBoolean(true);
     private final AtomicBoolean isTryToShowResultThreadNotExist = new AtomicBoolean(true);
-    private final AtomicBoolean isMergeThreadExist = new AtomicBoolean();
     private final AtomicBoolean isRoundRadiusSet = new AtomicBoolean();
     private final AtomicBoolean isPreviewMode = new AtomicBoolean();
     private final AtomicBoolean isTutorialMode = new AtomicBoolean();
@@ -3358,9 +3357,8 @@ public class SearchBar {
      * 将tempResults以及插件返回的结果转移到listResults中来显示
      */
     @SneakyThrows
-    private void mergeResults(DatabaseService.SearchTask currentSearchTask) {
+    private void mergeResults(DatabaseService.SearchTask currentSearchTask, ArrayList<String> listResultsTemp) {
         var pluginService = PluginService.getInstance();
-        var listResultsTemp = listResults;
         var allPlugins = pluginService.getAllPlugins();
         while (isVisible()) {
             //用户重新输入关键字
@@ -3693,10 +3691,7 @@ public class SearchBar {
                     System.err.println("prepare search event failed.");
                     return null;
                 }
-                prepareSearchEvent.getReturnValue().ifPresent(res -> {
-                    ret[0] = (DatabaseService.SearchTask) res;
-                    listResults = new ArrayList<>();
-                });
+                prepareSearchEvent.getReturnValue().ifPresent(res -> ret[0] = (DatabaseService.SearchTask) res);
             }
         }
         return ret[0];
@@ -3720,15 +3715,7 @@ public class SearchBar {
                         listResults = new ArrayList<>();
                     }
                     addShowSearchStatusThread(workingSearchTask[0]);
-                    if (isMergeThreadExist.compareAndSet(false, true)) {
-                        ThreadPoolUtil.getInstance().executeTask(() -> {
-                            try {
-                                mergeResults(workingSearchTask[0]);
-                            } finally {
-                                isMergeThreadExist.set(false);
-                            }
-                        });
-                    }
+                    ThreadPoolUtil.getInstance().executeTask(() -> mergeResults(workingSearchTask[0], listResults));
                 }), event -> System.err.println("send search event failed."));
             }
         }
