@@ -55,6 +55,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -1667,15 +1668,16 @@ public class SearchBar {
     }
 
     private boolean isLabelEmpty(JLabel label) {
-        boolean isEmpty = true;
-        String text;
         if (label != null) {
-            text = label.getText();
+            if (label.getBackground() == null) {
+                return true;
+            }
+            var text = label.getText();
             if (text != null) {
-                isEmpty = text.isEmpty();
+                return text.isEmpty();
             }
         }
-        return isEmpty;
+        return true;
     }
 
     /**
@@ -2065,301 +2067,153 @@ public class SearchBar {
     }
 
     /**
+     * 尝试显示结果
+     */
+    private void tryToShowResults(Predicate<JLabel> labelChosenPredicate) {
+        if (runningMode == RunningMode.NORMAL_MODE) {
+            refreshShowingResultsOnNormalMode(labelChosenPredicate, true);
+        } else if (runningMode == RunningMode.COMMAND_MODE) {
+            refreshShowingResultsOnCommandMode(labelChosenPredicate, true);
+        } else if (runningMode == RunningMode.PLUGIN_MODE) {
+            refreshShowingResultsOnPluginMode(labelChosenPredicate, true);
+        }
+    }
+
+    /**
      * 尝试显示结果，并将第一个label设置为选中
      */
-    private void tryToShowResultsAndSetFirstChosen(boolean isContinueUpdate) {
+    private void tryToShowResultsAndSetFirstChosen() {
+        Predicate<JLabel> firstChosen = label -> label == label1;
         if (runningMode == RunningMode.NORMAL_MODE) {
-            refreshShowingResultsOnNormalMode(isContinueUpdate);
+            refreshShowingResultsOnNormalMode(firstChosen, false);
         } else if (runningMode == RunningMode.COMMAND_MODE) {
-            refreshShowingResultsOnCommandMode(isContinueUpdate);
+            refreshShowingResultsOnCommandMode(firstChosen, false);
         } else if (runningMode == RunningMode.PLUGIN_MODE) {
-            refreshShowingResultsOnPluginMode(isContinueUpdate);
+            refreshShowingResultsOnPluginMode(firstChosen, false);
         }
     }
 
-    private void refreshShowingResultsOnPluginMode(boolean isContinueUpdate) {
+    private void refreshShowingResultsOnPluginMode(Predicate<JLabel> isLabelChosenFunc, boolean isRefreshOnlyOnEmptyLabel) {
         int size = listResults.size();
         String command;
         try {
-            if (isContinueUpdate) {
-                if (isLabelEmpty(label1)) {
-                    command = listResults.get(currentResultCount.get());
-                    showPluginResultOnLabel(command, label1, true);
-                }
-            } else {
+            if (size > currentResultCount.get() && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label1))) {
                 command = listResults.get(currentResultCount.get());
-                showPluginResultOnLabel(command, label1, true);
+                showPluginResultOnLabel(command, label1, isLabelChosenFunc.test(label1));
             }
-            if (size > currentResultCount.get() + 1) {
-                if (isContinueUpdate) {
-                    if (isLabelEmpty(label2)) {
-                        command = listResults.get(currentResultCount.get() + 1);
-                        showPluginResultOnLabel(command, label2, false);
-                    }
-                } else {
-                    command = listResults.get(currentResultCount.get() + 1);
-                    showPluginResultOnLabel(command, label2, false);
-                }
+            if (size > currentResultCount.get() + 1 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label2))) {
+                command = listResults.get(currentResultCount.get() + 1);
+                showPluginResultOnLabel(command, label2, isLabelChosenFunc.test(label2));
             }
-            if (size > currentResultCount.get() + 2) {
-                if (isContinueUpdate) {
-                    if (isLabelEmpty(label3)) {
-                        command = listResults.get(currentResultCount.get() + 2);
-                        showPluginResultOnLabel(command, label3, false);
-                    }
-                } else {
-                    command = listResults.get(currentResultCount.get() + 2);
-                    showPluginResultOnLabel(command, label3, false);
-                }
+            if (size > currentResultCount.get() + 2 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label3))) {
+                command = listResults.get(currentResultCount.get() + 2);
+                showPluginResultOnLabel(command, label3, isLabelChosenFunc.test(label3));
             }
-            if (size > currentResultCount.get() + 3) {
-                if (isContinueUpdate) {
-                    if (isLabelEmpty(label4)) {
-                        command = listResults.get(currentResultCount.get() + 3);
-                        showPluginResultOnLabel(command, label4, false);
-                    }
-                } else {
-                    command = listResults.get(currentResultCount.get() + 3);
-                    showPluginResultOnLabel(command, label4, false);
-                }
+            if (size > currentResultCount.get() + 3 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label4))) {
+                command = listResults.get(currentResultCount.get() + 3);
+                showPluginResultOnLabel(command, label4, isLabelChosenFunc.test(label4));
             }
-            if (size > currentResultCount.get() + 4) {
-                if (isContinueUpdate) {
-                    if (isLabelEmpty(label5)) {
-                        command = listResults.get(currentResultCount.get() + 4);
-                        showPluginResultOnLabel(command, label5, false);
-                    }
-                } else {
-                    command = listResults.get(currentResultCount.get() + 4);
-                    showPluginResultOnLabel(command, label5, false);
-                }
+            if (size > currentResultCount.get() + 4 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label5))) {
+                command = listResults.get(currentResultCount.get() + 4);
+                showPluginResultOnLabel(command, label5, isLabelChosenFunc.test(label5));
             }
-            if (size > currentResultCount.get() + 5) {
-                if (isContinueUpdate) {
-                    if (isLabelEmpty(label6)) {
-                        command = listResults.get(currentResultCount.get() + 5);
-                        showPluginResultOnLabel(command, label6, false);
-                    }
-                } else {
-                    command = listResults.get(currentResultCount.get() + 5);
-                    showPluginResultOnLabel(command, label6, false);
-                }
+            if (size > currentResultCount.get() + 5 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label6))) {
+                command = listResults.get(currentResultCount.get() + 5);
+                showPluginResultOnLabel(command, label6, isLabelChosenFunc.test(label6));
             }
-            if (size > currentResultCount.get() + 6) {
-                if (isContinueUpdate) {
-                    if (isLabelEmpty(label7)) {
-                        command = listResults.get(currentResultCount.get() + 6);
-                        showPluginResultOnLabel(command, label7, false);
-                    }
-                } else {
-                    command = listResults.get(currentResultCount.get() + 6);
-                    showPluginResultOnLabel(command, label7, false);
-                }
+            if (size > currentResultCount.get() + 6 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label7))) {
+                command = listResults.get(currentResultCount.get() + 6);
+                showPluginResultOnLabel(command, label7, isLabelChosenFunc.test(label7));
             }
-            if (size > currentResultCount.get() + 7) {
-                if (isContinueUpdate) {
-                    if (isLabelEmpty(label8)) {
-                        command = listResults.get(currentResultCount.get() + 7);
-                        showPluginResultOnLabel(command, label8, false);
-                    }
-                } else {
-                    command = listResults.get(currentResultCount.get() + 7);
-                    showPluginResultOnLabel(command, label8, false);
-                }
+            if (size > currentResultCount.get() + 7 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label8))) {
+                command = listResults.get(currentResultCount.get() + 7);
+                showPluginResultOnLabel(command, label8, isLabelChosenFunc.test(label8));
             }
-        } catch (ArrayIndexOutOfBoundsException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void refreshShowingResultsOnCommandMode(boolean isContinueUpdate) {
+    private void refreshShowingResultsOnCommandMode(Predicate<JLabel> isLabelChosenFunc, boolean isRefreshOnlyOnEmptyLabel) {
         int size = listResults.size();
         //到达了最上端，刷新显示
         String command;
         try {
-            if (isContinueUpdate) {
-                if (isLabelEmpty(label1)) {
-                    command = listResults.get(currentResultCount.get());
-                    showCommandOnLabel(command, label1, true);
-                }
-            } else {
+            if (size > currentResultCount.get() && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label1))) {
                 command = listResults.get(currentResultCount.get());
-                showCommandOnLabel(command, label1, true);
+                showCommandOnLabel(command, label1, isLabelChosenFunc.test(label1));
             }
-            if (size > currentResultCount.get() + 1) {
-                if (isContinueUpdate) {
-                    if (isLabelEmpty(label2)) {
-                        command = listResults.get(currentResultCount.get() + 1);
-                        showCommandOnLabel(command, label2, false);
-                    }
-                } else {
-                    command = listResults.get(currentResultCount.get() + 1);
-                    showCommandOnLabel(command, label2, false);
-                }
+            if (size > currentResultCount.get() + 1 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label2))) {
+                command = listResults.get(currentResultCount.get() + 1);
+                showCommandOnLabel(command, label2, isLabelChosenFunc.test(label2));
             }
-            if (size > currentResultCount.get() + 2) {
-                if (isContinueUpdate) {
-                    if (isLabelEmpty(label3)) {
-                        command = listResults.get(currentResultCount.get() + 2);
-                        showCommandOnLabel(command, label3, false);
-                    }
-                } else {
-                    command = listResults.get(currentResultCount.get() + 2);
-                    showCommandOnLabel(command, label3, false);
-                }
+            if (size > currentResultCount.get() + 2 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label3))) {
+                command = listResults.get(currentResultCount.get() + 2);
+                showCommandOnLabel(command, label3, isLabelChosenFunc.test(label3));
             }
-            if (size > currentResultCount.get() + 3) {
-                if (isContinueUpdate) {
-                    if (isLabelEmpty(label4)) {
-                        command = listResults.get(currentResultCount.get() + 3);
-                        showCommandOnLabel(command, label4, false);
-                    }
-                } else {
-                    command = listResults.get(currentResultCount.get() + 3);
-                    showCommandOnLabel(command, label4, false);
-                }
+            if (size > currentResultCount.get() + 3 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label4))) {
+                command = listResults.get(currentResultCount.get() + 3);
+                showCommandOnLabel(command, label4, isLabelChosenFunc.test(label4));
             }
-            if (size > currentResultCount.get() + 4) {
-                if (isContinueUpdate) {
-                    if (isLabelEmpty(label5)) {
-                        command = listResults.get(currentResultCount.get() + 4);
-                        showCommandOnLabel(command, label5, false);
-                    }
-                } else {
-                    command = listResults.get(currentResultCount.get() + 4);
-                    showCommandOnLabel(command, label5, false);
-                }
+            if (size > currentResultCount.get() + 4 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label5))) {
+                command = listResults.get(currentResultCount.get() + 4);
+                showCommandOnLabel(command, label5, isLabelChosenFunc.test(label5));
             }
-            if (size > currentResultCount.get() + 5) {
-                if (isContinueUpdate) {
-                    if (isLabelEmpty(label6)) {
-                        command = listResults.get(currentResultCount.get() + 5);
-                        showCommandOnLabel(command, label6, false);
-                    }
-                } else {
-                    command = listResults.get(currentResultCount.get() + 5);
-                    showCommandOnLabel(command, label6, false);
-                }
+            if (size > currentResultCount.get() + 5 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label6))) {
+                command = listResults.get(currentResultCount.get() + 5);
+                showCommandOnLabel(command, label6, isLabelChosenFunc.test(label6));
             }
-            if (size > currentResultCount.get() + 6) {
-                if (isContinueUpdate) {
-                    if (isLabelEmpty(label7)) {
-                        command = listResults.get(currentResultCount.get() + 6);
-                        showCommandOnLabel(command, label7, false);
-                    }
-                } else {
-                    command = listResults.get(currentResultCount.get() + 6);
-                    showCommandOnLabel(command, label7, false);
-                }
+            if (size > currentResultCount.get() + 6 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label7))) {
+                command = listResults.get(currentResultCount.get() + 6);
+                showCommandOnLabel(command, label7, isLabelChosenFunc.test(label7));
             }
-            if (size > currentResultCount.get() + 7) {
-                if (isContinueUpdate) {
-                    if (isLabelEmpty(label8)) {
-                        command = listResults.get(currentResultCount.get() + 7);
-                        showCommandOnLabel(command, label8, false);
-                    }
-                } else {
-                    command = listResults.get(currentResultCount.get() + 7);
-                    showCommandOnLabel(command, label8, false);
-                }
+            if (size > currentResultCount.get() + 7 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label8))) {
+                command = listResults.get(currentResultCount.get() + 7);
+                showCommandOnLabel(command, label8, isLabelChosenFunc.test(label8));
             }
-        } catch (ArrayIndexOutOfBoundsException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void refreshShowingResultsOnNormalMode(boolean isContinueUpdate) {
-        int size = listResults.size();
+    private void refreshShowingResultsOnNormalMode(Predicate<JLabel> isLabelChosenFunc, boolean isRefreshOnlyOnEmptyLabel) {
         //到达了最上端，刷新显示
+        int size = listResults.size();
         String path;
         try {
-            if (isContinueUpdate) {
-                if (isLabelEmpty(label1)) {
-                    path = listResults.get(currentResultCount.get());
-                    showResultOnLabel(path, label1, true);
-                }
-            } else {
+            if (size > currentResultCount.get() && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label1))) {
                 path = listResults.get(currentResultCount.get());
-                showResultOnLabel(path, label1, true);
+                showResultOnLabel(path, label1, isLabelChosenFunc.test(label1));
             }
-            if (size > currentResultCount.get() + 1) {
-                if (isContinueUpdate) {
-                    if (isLabelEmpty(label2)) {
-                        path = listResults.get(currentResultCount.get() + 1);
-                        showResultOnLabel(path, label2, false);
-                    }
-                } else {
-                    path = listResults.get(currentResultCount.get() + 1);
-                    showResultOnLabel(path, label2, false);
-                }
+            if (size > currentResultCount.get() + 1 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label2))) {
+                path = listResults.get(currentResultCount.get() + 1);
+                showResultOnLabel(path, label2, isLabelChosenFunc.test(label2));
             }
-            if (size > currentResultCount.get() + 2) {
-                if (isContinueUpdate) {
-                    if (isLabelEmpty(label3)) {
-                        path = listResults.get(currentResultCount.get() + 2);
-                        showResultOnLabel(path, label3, false);
-                    }
-                } else {
-                    path = listResults.get(currentResultCount.get() + 2);
-                    showResultOnLabel(path, label3, false);
-                }
+            if (size > currentResultCount.get() + 2 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label3))) {
+                path = listResults.get(currentResultCount.get() + 2);
+                showResultOnLabel(path, label3, isLabelChosenFunc.test(label3));
             }
-            if (size > currentResultCount.get() + 3) {
-                if (isContinueUpdate) {
-                    if (isLabelEmpty(label4)) {
-                        path = listResults.get(currentResultCount.get() + 3);
-                        showResultOnLabel(path, label4, false);
-                    }
-                } else {
-                    path = listResults.get(currentResultCount.get() + 3);
-                    showResultOnLabel(path, label4, false);
-                }
+            if (size > currentResultCount.get() + 3 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label4))) {
+                path = listResults.get(currentResultCount.get() + 3);
+                showResultOnLabel(path, label4, isLabelChosenFunc.test(label4));
             }
-            if (size > currentResultCount.get() + 4) {
-                if (isContinueUpdate) {
-                    if (isLabelEmpty(label5)) {
-                        path = listResults.get(currentResultCount.get() + 4);
-                        showResultOnLabel(path, label5, false);
-                    }
-                } else {
-                    path = listResults.get(currentResultCount.get() + 4);
-                    showResultOnLabel(path, label5, false);
-                }
+            if (size > currentResultCount.get() + 4 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label5))) {
+                path = listResults.get(currentResultCount.get() + 4);
+                showResultOnLabel(path, label5, isLabelChosenFunc.test(label5));
             }
-            if (size > currentResultCount.get() + 5) {
-                if (isContinueUpdate) {
-                    if (isLabelEmpty(label6)) {
-                        path = listResults.get(currentResultCount.get() + 5);
-                        showResultOnLabel(path, label6, false);
-                    }
-                } else {
-                    path = listResults.get(currentResultCount.get() + 5);
-                    showResultOnLabel(path, label6, false);
-                }
+            if (size > currentResultCount.get() + 5 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label6))) {
+                path = listResults.get(currentResultCount.get() + 5);
+                showResultOnLabel(path, label6, isLabelChosenFunc.test(label6));
             }
-            if (size > currentResultCount.get() + 6) {
-                if (isContinueUpdate) {
-                    if (isLabelEmpty(label7)) {
-                        path = listResults.get(currentResultCount.get() + 6);
-                        showResultOnLabel(path, label7, false);
-                    }
-                } else {
-                    path = listResults.get(currentResultCount.get() + 6);
-                    showResultOnLabel(path, label7, false);
-                }
+            if (size > currentResultCount.get() + 6 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label7))) {
+                path = listResults.get(currentResultCount.get() + 6);
+                showResultOnLabel(path, label7, isLabelChosenFunc.test(label7));
             }
-            if (size > currentResultCount.get() + 7) {
-                if (isContinueUpdate) {
-                    if (isLabelEmpty(label8)) {
-                        path = listResults.get(currentResultCount.get() + 7);
-                        showResultOnLabel(path, label8, false);
-                    }
-                } else {
-                    path = listResults.get(currentResultCount.get() + 7);
-                    showResultOnLabel(path, label8, false);
-                }
+            if (size > currentResultCount.get() + 7 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label8))) {
+                path = listResults.get(currentResultCount.get() + 7);
+                showResultOnLabel(path, label8, isLabelChosenFunc.test(label8));
             }
-        } catch (ArrayIndexOutOfBoundsException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -2375,7 +2229,7 @@ public class SearchBar {
         int size;
         switch (position) {
             case 0 -> {
-                tryToShowResultsAndSetFirstChosen(false);
+                tryToShowResultsAndSetFirstChosen();
                 repaint();
             }
             case 1 -> {
@@ -3353,7 +3207,7 @@ public class SearchBar {
     /**
      * 不断尝试显示结果
      */
-    private void tryToShowRecordsThread() {
+    private void tryToShowResultsThread() {
         ThreadPoolUtil.getInstance().executeTask(() -> {
             //显示结果线程
             try {
@@ -3365,7 +3219,17 @@ public class SearchBar {
                     } else if (!listResults.isEmpty()) {
                         //在结果不足8个的时候不断尝试显示
                         //设置窗口上的文字和图片显示
-                        tryToShowResultsAndSetFirstChosen(true);
+                        tryToShowResults(label -> {
+                            try {
+                                Field labelField = this.getClass().getDeclaredField("label" + Math.min(currentResultCount.get() + 1, 8));
+                                labelField.setAccessible(true);
+                                JLabel labelObj = (JLabel) labelField.get(this);
+                                return labelObj == label;
+                            } catch (NoSuchFieldException | IllegalAccessException e) {
+                                e.printStackTrace();
+                                throw new RuntimeException(e);
+                            }
+                        });
                         //设置窗口是被选中还是未被选中，鼠标模式
                         setLabelChosenOrNotChosenMouseMode(0, label1);
                         setLabelChosenOrNotChosenMouseMode(1, label2);
@@ -4072,7 +3936,7 @@ public class SearchBar {
             ThreadPoolUtil.getInstance().executeTask(this::setBorderOnVisible);
         }
         if (isTryToShowResultThreadNotExist.compareAndSet(true, false)) {
-            tryToShowRecordsThread();
+            tryToShowResultsThread();
         }
         if (isLockMouseMotionThreadNotExist.compareAndSet(true, false)) {
             lockMouseMotionThread();
