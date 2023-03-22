@@ -701,15 +701,6 @@ public class DatabaseService {
                         for (int j = 0; j < realResultCount1; ++j) {
                             if (checkIsMatchedAndAddToList(tmpQueryResultsCache[j], priorityStr, searchTask)) {
                                 matchedResultCount.getAndIncrement();
-                                //结果太多则不再进行搜索
-                                //用户重新输入了信息
-                                if (searchTask.shouldStopSearch()) {
-                                    return;
-                                }
-                                if (isEnableGPUAccelerate && GPUAccelerator.INSTANCE.isMatchDone(key)) {
-                                    isGPUMatchDone[0] = true;
-                                    return;
-                                }
                             }
                         }
                     } finally {
