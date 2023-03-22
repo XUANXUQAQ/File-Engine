@@ -576,7 +576,7 @@ public class DatabaseService {
             if (deleteFilePath != null) {
                 removeFileFromDatabase(deleteFilePath);
             }
-            TimeUnit.SECONDS.sleep(1);
+            TimeUnit.MILLISECONDS.sleep(1);
         }
     }
 

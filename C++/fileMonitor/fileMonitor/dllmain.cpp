@@ -139,6 +139,7 @@ void monitor_path(const std::string& path)
 						}
 					}
 					break;
+				case FILE_ACTION_RENAMED_OLD_NAME:
 				case FILE_ACTION_REMOVED:
 					if (data.find(L"$RECYCLE.BIN") == std::wstring::npos)
 					{
@@ -150,12 +151,8 @@ void monitor_path(const std::string& path)
 						{
 							file_del_queue.push(data_with_disk);
 						}
-#ifdef TEST
-						std::cout << "file removed: " << wstring2string(data_with_disk) << std::endl;
-#endif
 					}
 					break;
-				case FILE_ACTION_RENAMED_OLD_NAME:
 				case FILE_ACTION_MODIFIED:
 				default:
 					break;
