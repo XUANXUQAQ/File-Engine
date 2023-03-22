@@ -3261,6 +3261,7 @@ public class SearchBar {
                             searchInfoLabel.setIcon(null);
                         }
                     });
+                    repaint();
                     try {
                         TimeUnit.MILLISECONDS.sleep(30);
                     } catch (InterruptedException e) {
