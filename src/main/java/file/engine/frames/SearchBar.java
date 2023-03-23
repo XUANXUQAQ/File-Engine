@@ -3728,10 +3728,9 @@ public class SearchBar {
             if (AllConfigs.isFirstRun()) {
                 runInternalCommand("help");
             }
-            AllConfigs allConfigs = AllConfigs.getInstance();
             final AtomicBoolean isWaiting = new AtomicBoolean(false);
             while (eventManagement.notMainExit()) {
-                var advancedConfigs = allConfigs.getConfigEntity().getAdvancedConfigEntity();
+                var advancedConfigs = AllConfigs.getInstance().getConfigEntity().getAdvancedConfigEntity();
                 final long endTime = System.currentTimeMillis();
                 DatabaseService.SearchTask searchTask = null;
                 long waitForInputAndPrepareSearchTimeoutInMills = advancedConfigs.getWaitForInputAndPrepareSearchTimeoutInMills();
@@ -3748,11 +3747,12 @@ public class SearchBar {
                 }
 
                 if ((endTime - startTime > waitForInputAndStartSearchTimeoutInMills) && startSearchSignal.get()) {
+                    startSearchSignal.set(false); //开始搜索 计时停止
                     if (runningMode == RunningMode.COMMAND_MODE) {
                         //去掉冒号
                         String text = getSearchBarText();
                         if (text.length() <= 1 || !runInternalCommand(text.substring(1).toLowerCase())) {
-                            LinkedHashSet<String> cmdSet = allConfigs.getCmdSet();
+                            LinkedHashSet<String> cmdSet = AllConfigs.getInstance().getCmdSet();
                             cmdSet.add(":clearbin;" + translateService.getTranslation("Clear the recycle bin"));
                             cmdSet.add(":update;" + translateService.getTranslation("Update file index"));
                             cmdSet.add(":clearUpdate;" + translateService.getTranslation("Clear the database and update file index"));
@@ -3771,7 +3771,6 @@ public class SearchBar {
                             }
                         }
                     } else if (runningMode == RunningMode.NORMAL_MODE) {
-                        startSearchSignal.set(false); //开始搜索 计时停止
                         String searchBarText = getSearchBarText();
                         if (!searchBarText.isEmpty() && searchBarText.charAt(0) == '>') {
                             if (searchBarText.length() > 1) {
