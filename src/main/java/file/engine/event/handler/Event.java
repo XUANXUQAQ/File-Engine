@@ -10,7 +10,7 @@ public class Event {
     private final AtomicInteger executeTimes = new AtomicInteger(0);
     private final AtomicBoolean isBlock = new AtomicBoolean(false);
     private int maxRetryTimes = 5;
-    private Object returnValue;
+    private volatile Object returnValue;
     private Consumer<Event> callback;
     private Consumer<Event> errorHandler;
 

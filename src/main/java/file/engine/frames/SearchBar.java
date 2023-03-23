@@ -3358,13 +3358,10 @@ public class SearchBar {
     private void mergeResults(DatabaseService.SearchTask currentSearchTask, ArrayList<String> listResultsTemp) {
         var pluginService = PluginService.getInstance();
         var allPlugins = pluginService.getAllPlugins();
-        while (isVisible()) {
-            //用户重新输入关键字
-            if (listResultsTemp != listResults) {
-                return;
-            }
+        var eventManagement = EventManagement.getInstance();
+        while (listResultsTemp == listResults && eventManagement.notMainExit()) {
             if (getSearchBarText().isEmpty()) {
-                listResults.clear();
+                listResultsTemp.clear();
             } else {
                 if (runningMode == RunningMode.NORMAL_MODE) {
                     mergeResultMethod(currentSearchTask, listResultsTemp, allPlugins);
@@ -3681,7 +3678,8 @@ public class SearchBar {
         final DatabaseService.SearchTask[] ret = new DatabaseService.SearchTask[1];
         if (!getSearchBarText().isEmpty()) {
             isCudaSearchNotStarted.set(false);
-            if (DatabaseService.getInstance().getStatus() == Constants.Enums.DatabaseStatus.NORMAL && runningMode == RunningMode.NORMAL_MODE) {
+            if (DatabaseService.getInstance().getStatus() == Constants.Enums.DatabaseStatus.NORMAL &&
+                    runningMode == RunningMode.NORMAL_MODE) {
                 searchCaseToLowerAndRemoveConflict();
                 var prepareSearchEvent = new PrepareSearchEvent(() -> searchText, () -> searchCase, () -> keywords);
                 eventManagement.putEvent(prepareSearchEvent);
@@ -3689,7 +3687,11 @@ public class SearchBar {
                     System.err.println("prepare search event failed.");
                     return null;
                 }
-                prepareSearchEvent.getReturnValue().ifPresent(res -> ret[0] = (DatabaseService.SearchTask) res);
+                prepareSearchEvent.getReturnValue().ifPresent(res -> {
+                    ret[0] = (DatabaseService.SearchTask) res;
+                    addShowSearchStatusThread(ret[0]);
+                    ThreadPoolUtil.getInstance().executeTask(() -> mergeResults(ret[0], listResults));
+                });
             }
         }
         return ret[0];
@@ -3711,9 +3713,9 @@ public class SearchBar {
                     if (preparedSearchTasks != res) {
                         workingSearchTask[0] = (DatabaseService.SearchTask) res;
                         listResults = new ArrayList<>();
+                        addShowSearchStatusThread(workingSearchTask[0]);
+                        ThreadPoolUtil.getInstance().executeTask(() -> mergeResults(workingSearchTask[0], listResults));
                     }
-                    addShowSearchStatusThread(workingSearchTask[0]);
-                    ThreadPoolUtil.getInstance().executeTask(() -> mergeResults(workingSearchTask[0], listResults));
                 }), event -> System.err.println("send search event failed."));
             }
         }
