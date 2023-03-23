@@ -119,6 +119,7 @@ public class SearchBar {
     private int iconSideLength;
     private volatile long visibleStartTime = 0;  //记录窗口开始可见的事件，窗口默认最短可见时间0.5秒，防止窗口快速闪烁
     private volatile long firstResultStartShowingTime = 0;  //记录开始显示结果的时间，用于防止刚开始移动到鼠标导致误触
+    private volatile AtomicInteger labelRefreshFlag = new AtomicInteger(); //记录label是否已经有显示结果，从低位开始，label1-8对应1-8位
     private volatile ArrayList<String> listResults = new ArrayList<>();  //保存从数据库中找出符合条件的记录（文件路径）
     private volatile String[] searchCase;
     private volatile String searchText = "";
@@ -2065,6 +2066,22 @@ public class SearchBar {
         }
     }
 
+    @SneakyThrows
+    private void casSetLabelRefreshFlag(AtomicInteger labelRefreshFlagRef, JLabel label) {
+        for (int i = 1; i <= 8; i++) {
+            Field declaredField = this.getClass().getDeclaredField("label" + i);
+            Object o = declaredField.get(this);
+            if (o == label) {
+                int expect;
+                do {
+                    expect = labelRefreshFlagRef.get();
+                } while (!labelRefreshFlagRef.compareAndSet(expect, expect | (1 << i - 1)));
+                return;
+            }
+        }
+        throw new RuntimeException("cas set label refresh state failed.");
+    }
+
     /**
      * 尝试显示结果
      */
@@ -2096,35 +2113,35 @@ public class SearchBar {
         int size = listResults.size();
         String command;
         try {
-            if (size > currentResultCount.get() && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label1))) {
+            if (size > currentResultCount.get() && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label1) || ((labelRefreshFlag.get() & 1) == 0))) {
                 command = listResults.get(currentResultCount.get());
                 showPluginResultOnLabel(command, label1, isLabelChosenFunc.test(label1));
             }
-            if (size > currentResultCount.get() + 1 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label2))) {
+            if (size > currentResultCount.get() + 1 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label2) || ((labelRefreshFlag.get() & 2) == 0))) {
                 command = listResults.get(currentResultCount.get() + 1);
                 showPluginResultOnLabel(command, label2, isLabelChosenFunc.test(label2));
             }
-            if (size > currentResultCount.get() + 2 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label3))) {
+            if (size > currentResultCount.get() + 2 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label3) || ((labelRefreshFlag.get() & 4) == 0))) {
                 command = listResults.get(currentResultCount.get() + 2);
                 showPluginResultOnLabel(command, label3, isLabelChosenFunc.test(label3));
             }
-            if (size > currentResultCount.get() + 3 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label4))) {
+            if (size > currentResultCount.get() + 3 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label4) || ((labelRefreshFlag.get() & 8) == 0))) {
                 command = listResults.get(currentResultCount.get() + 3);
                 showPluginResultOnLabel(command, label4, isLabelChosenFunc.test(label4));
             }
-            if (size > currentResultCount.get() + 4 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label5))) {
+            if (size > currentResultCount.get() + 4 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label5) || ((labelRefreshFlag.get() & 16) == 0))) {
                 command = listResults.get(currentResultCount.get() + 4);
                 showPluginResultOnLabel(command, label5, isLabelChosenFunc.test(label5));
             }
-            if (size > currentResultCount.get() + 5 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label6))) {
+            if (size > currentResultCount.get() + 5 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label6) || ((labelRefreshFlag.get() & 32) == 0))) {
                 command = listResults.get(currentResultCount.get() + 5);
                 showPluginResultOnLabel(command, label6, isLabelChosenFunc.test(label6));
             }
-            if (size > currentResultCount.get() + 6 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label7))) {
+            if (size > currentResultCount.get() + 6 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label7) || ((labelRefreshFlag.get() & 64) == 0))) {
                 command = listResults.get(currentResultCount.get() + 6);
                 showPluginResultOnLabel(command, label7, isLabelChosenFunc.test(label7));
             }
-            if (size > currentResultCount.get() + 7 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label8))) {
+            if (size > currentResultCount.get() + 7 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label8) || ((labelRefreshFlag.get() & 128) == 0))) {
                 command = listResults.get(currentResultCount.get() + 7);
                 showPluginResultOnLabel(command, label8, isLabelChosenFunc.test(label8));
             }
@@ -2138,35 +2155,35 @@ public class SearchBar {
         //到达了最上端，刷新显示
         String command;
         try {
-            if (size > currentResultCount.get() && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label1))) {
+            if (size > currentResultCount.get() && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label1) || ((labelRefreshFlag.get() & 1) == 0))) {
                 command = listResults.get(currentResultCount.get());
                 showCommandOnLabel(command, label1, isLabelChosenFunc.test(label1));
             }
-            if (size > currentResultCount.get() + 1 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label2))) {
+            if (size > currentResultCount.get() + 1 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label2) || ((labelRefreshFlag.get() & 2) == 0))) {
                 command = listResults.get(currentResultCount.get() + 1);
                 showCommandOnLabel(command, label2, isLabelChosenFunc.test(label2));
             }
-            if (size > currentResultCount.get() + 2 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label3))) {
+            if (size > currentResultCount.get() + 2 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label3) || ((labelRefreshFlag.get() & 4) == 0))) {
                 command = listResults.get(currentResultCount.get() + 2);
                 showCommandOnLabel(command, label3, isLabelChosenFunc.test(label3));
             }
-            if (size > currentResultCount.get() + 3 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label4))) {
+            if (size > currentResultCount.get() + 3 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label4) || ((labelRefreshFlag.get() & 8) == 0))) {
                 command = listResults.get(currentResultCount.get() + 3);
                 showCommandOnLabel(command, label4, isLabelChosenFunc.test(label4));
             }
-            if (size > currentResultCount.get() + 4 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label5))) {
+            if (size > currentResultCount.get() + 4 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label5) || ((labelRefreshFlag.get() & 16) == 0))) {
                 command = listResults.get(currentResultCount.get() + 4);
                 showCommandOnLabel(command, label5, isLabelChosenFunc.test(label5));
             }
-            if (size > currentResultCount.get() + 5 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label6))) {
+            if (size > currentResultCount.get() + 5 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label6) || ((labelRefreshFlag.get() & 32) == 0))) {
                 command = listResults.get(currentResultCount.get() + 5);
                 showCommandOnLabel(command, label6, isLabelChosenFunc.test(label6));
             }
-            if (size > currentResultCount.get() + 6 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label7))) {
+            if (size > currentResultCount.get() + 6 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label7) || ((labelRefreshFlag.get() & 64) == 0))) {
                 command = listResults.get(currentResultCount.get() + 6);
                 showCommandOnLabel(command, label7, isLabelChosenFunc.test(label7));
             }
-            if (size > currentResultCount.get() + 7 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label8))) {
+            if (size > currentResultCount.get() + 7 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label8) || ((labelRefreshFlag.get() & 128) == 0))) {
                 command = listResults.get(currentResultCount.get() + 7);
                 showCommandOnLabel(command, label8, isLabelChosenFunc.test(label8));
             }
@@ -2180,35 +2197,35 @@ public class SearchBar {
         int size = listResults.size();
         String path;
         try {
-            if (size > currentResultCount.get() && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label1))) {
+            if (size > currentResultCount.get() && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label1) || ((labelRefreshFlag.get() & 1) == 0))) {
                 path = listResults.get(currentResultCount.get());
                 showResultOnLabel(path, label1, isLabelChosenFunc.test(label1));
             }
-            if (size > currentResultCount.get() + 1 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label2))) {
+            if (size > currentResultCount.get() + 1 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label2) || ((labelRefreshFlag.get() & 2) == 0))) {
                 path = listResults.get(currentResultCount.get() + 1);
                 showResultOnLabel(path, label2, isLabelChosenFunc.test(label2));
             }
-            if (size > currentResultCount.get() + 2 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label3))) {
+            if (size > currentResultCount.get() + 2 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label3) || ((labelRefreshFlag.get() & 4) == 0))) {
                 path = listResults.get(currentResultCount.get() + 2);
                 showResultOnLabel(path, label3, isLabelChosenFunc.test(label3));
             }
-            if (size > currentResultCount.get() + 3 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label4))) {
+            if (size > currentResultCount.get() + 3 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label4) || ((labelRefreshFlag.get() & 8) == 0))) {
                 path = listResults.get(currentResultCount.get() + 3);
                 showResultOnLabel(path, label4, isLabelChosenFunc.test(label4));
             }
-            if (size > currentResultCount.get() + 4 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label5))) {
+            if (size > currentResultCount.get() + 4 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label5) || ((labelRefreshFlag.get() & 16) == 0))) {
                 path = listResults.get(currentResultCount.get() + 4);
                 showResultOnLabel(path, label5, isLabelChosenFunc.test(label5));
             }
-            if (size > currentResultCount.get() + 5 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label6))) {
+            if (size > currentResultCount.get() + 5 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label6) || ((labelRefreshFlag.get() & 32) == 0))) {
                 path = listResults.get(currentResultCount.get() + 5);
                 showResultOnLabel(path, label6, isLabelChosenFunc.test(label6));
             }
-            if (size > currentResultCount.get() + 6 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label7))) {
+            if (size > currentResultCount.get() + 6 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label7) || ((labelRefreshFlag.get() & 64) == 0))) {
                 path = listResults.get(currentResultCount.get() + 6);
                 showResultOnLabel(path, label7, isLabelChosenFunc.test(label7));
             }
-            if (size > currentResultCount.get() + 7 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label8))) {
+            if (size > currentResultCount.get() + 7 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label8) || ((labelRefreshFlag.get() & 128) == 0))) {
                 path = listResults.get(currentResultCount.get() + 7);
                 showResultOnLabel(path, label8, isLabelChosenFunc.test(label8));
             }
@@ -2551,6 +2568,7 @@ public class SearchBar {
                     isPluginSearchBarClearReady.compareAndSet(isPluginSearchBarClearReady.get(), false);
                 }
                 listResults = new ArrayList<>();
+                labelRefreshFlag = new AtomicInteger();
                 changeFontOnDisplayFailed();
                 clearAllLabels();
                 resetStatusOnTextChanged();
@@ -2574,6 +2592,7 @@ public class SearchBar {
                     isPluginSearchBarClearReady.compareAndSet(isPluginSearchBarClearReady.get(), false);
                 }
                 listResults = new ArrayList<>();
+                labelRefreshFlag = new AtomicInteger();
                 changeFontOnDisplayFailed();
                 clearAllLabels();
                 resetStatusOnTextChanged();
@@ -2604,6 +2623,7 @@ public class SearchBar {
             @Override
             public void changedUpdate(DocumentEvent e) {
                 listResults = new ArrayList<>();
+                labelRefreshFlag = new AtomicInteger();
                 clearAllLabels();
                 resetStatusOnTextChanged();
                 startTime = System.currentTimeMillis();
@@ -3713,6 +3733,7 @@ public class SearchBar {
                     if (preparedSearchTasks != res) {
                         workingSearchTask[0] = (DatabaseService.SearchTask) res;
                         listResults = new ArrayList<>();
+                        labelRefreshFlag = new AtomicInteger();
                         addShowSearchStatusThread(workingSearchTask[0]);
                         ThreadPoolUtil.getInstance().executeTask(() -> mergeResults(workingSearchTask[0], listResults));
                     }
@@ -3908,6 +3929,7 @@ public class SearchBar {
             throw new RuntimeException(e);
         }
         listResults = new ArrayList<>();
+        labelRefreshFlag = new AtomicInteger();
         ThreadPoolUtil.getInstance().executeTask(() -> {
             if (isGrabFocus && !isSwitchToNormal) {
                 try {
@@ -4103,6 +4125,7 @@ public class SearchBar {
         } else {
             setLabelNotChosen(label);
         }
+        casSetLabelRefreshFlag(labelRefreshFlag, label);
     }
 
     /**
@@ -4125,6 +4148,7 @@ public class SearchBar {
             pluginInfoOptional.ifPresent(pluginInfo -> pluginInfo.plugin.showResultOnLabel(resultWithPluginInfo[2], label, isChosen));
         }
         label.setName(RESULT_LABEL_NAME_HOLDER);
+        casSetLabelRefreshFlag(labelRefreshFlag, label);
     }
 
     /**
@@ -4167,6 +4191,7 @@ public class SearchBar {
         } else {
             setLabelNotChosen(label);
         }
+        casSetLabelRefreshFlag(labelRefreshFlag, label);
     }
 
     /**
@@ -4300,6 +4325,7 @@ public class SearchBar {
         clearTextFieldText();
         resetAllStatus();
         listResults = new ArrayList<>();
+        labelRefreshFlag = new AtomicInteger();
         menu.setVisible(false);
     }
 
