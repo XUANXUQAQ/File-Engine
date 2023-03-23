@@ -2607,9 +2607,6 @@ public class SearchBar {
                 clearAllLabels();
                 resetStatusOnTextChanged();
                 startTime = System.currentTimeMillis();
-                startSearchSignal.set(false);
-                isSearchNotStarted.set(false);
-                isCudaSearchNotStarted.set(false);
 //                EventManagement.getInstance().putEvent(new StopSearchEvent());
             }
         });
@@ -3751,7 +3748,6 @@ public class SearchBar {
                 }
 
                 if ((endTime - startTime > waitForInputAndStartSearchTimeoutInMills) && startSearchSignal.get()) {
-                    startSearchSignal.set(false); //开始搜索 计时停止
                     if (runningMode == RunningMode.COMMAND_MODE) {
                         //去掉冒号
                         String text = getSearchBarText();
@@ -3775,6 +3771,7 @@ public class SearchBar {
                             }
                         }
                     } else if (runningMode == RunningMode.NORMAL_MODE) {
+                        startSearchSignal.set(false); //开始搜索 计时停止
                         String searchBarText = getSearchBarText();
                         if (!searchBarText.isEmpty() && searchBarText.charAt(0) == '>') {
                             if (searchBarText.length() > 1) {
@@ -3814,8 +3811,8 @@ public class SearchBar {
                             }
                             try {
                                 TimeUnit.MILLISECONDS.sleep(10);
-                            } catch (InterruptedException ignored) {
-                                // ignored
+                            } catch (InterruptedException e) {
+                                throw new RuntimeException(e);
                             }
                         }
                     }
@@ -3827,8 +3824,8 @@ public class SearchBar {
                 }
                 try {
                     TimeUnit.MILLISECONDS.sleep(10);
-                } catch (InterruptedException ignored) {
-                    // ignored
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
             }
         });
