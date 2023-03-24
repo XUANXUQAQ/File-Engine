@@ -3733,6 +3733,7 @@ public class SearchBar {
                 eventManagement.putEvent(startSearchEvent, event -> event.getReturnValue().ifPresent(res -> {
                     if (preparedSearchTasks != res) {
                         workingSearchTask[0] = (DatabaseService.SearchTask) res;
+                        listResults = new ArrayList<>();
                         labelRefreshFlag = new AtomicInteger();
                         addShowSearchStatusThread(workingSearchTask[0]);
                         ThreadPoolUtil.getInstance().executeTask(() -> mergeResults(workingSearchTask[0], listResults));
