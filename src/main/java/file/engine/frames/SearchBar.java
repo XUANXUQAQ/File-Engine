@@ -3709,6 +3709,8 @@ public class SearchBar {
                 }
                 prepareSearchEvent.getReturnValue().ifPresent(res -> {
                     ret[0] = (DatabaseService.SearchTask) res;
+                    listResults = new ArrayList<>();
+                    labelRefreshFlag = new AtomicInteger();
                     addShowSearchStatusThread(ret[0]);
                     ThreadPoolUtil.getInstance().executeTask(() -> mergeResults(ret[0], listResults));
                 });
