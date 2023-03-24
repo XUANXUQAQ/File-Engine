@@ -842,12 +842,9 @@ public class DatabaseService {
                 Bit currentTaskNum = new Bit(taskNumber);
                 //记录当前任务信息到allTaskStatus
                 byte[] origin;
-                while ((origin = searchTask.allTaskStatus.getBytes()) != null) {
-                    Bit or = Bit.or(origin, currentTaskNum.getBytes());
-                    if (searchTask.allTaskStatus.compareAndSet(origin, or)) {
-                        break;
-                    }
-                }
+                do {
+                    origin = searchTask.allTaskStatus.getBytes();
+                } while (!searchTask.allTaskStatus.compareAndSet(origin, Bit.or(origin, currentTaskNum.getBytes())));
                 //每一个任务负责查询一个priority和list0-list40生成的41个SQL
                 addTaskForDatabase0(eachDisk, tasks, commandsMap, currentTaskNum, searchTask);
             }
@@ -900,12 +897,9 @@ public class DatabaseService {
             }
             //执行完后将对应的线程flag设为1
             byte[] originalBytes;
-            while ((originalBytes = searchTask.taskStatus.getBytes()) != null) {
-                Bit or = Bit.or(originalBytes, currentTaskNum.getBytes());
-                if (searchTask.taskStatus.compareAndSet(originalBytes, or)) {
-                    break;
-                }
-            }
+            do {
+                originalBytes = searchTask.taskStatus.getBytes();
+            } while (!searchTask.taskStatus.compareAndSet(originalBytes, Bit.or(originalBytes, currentTaskNum.getBytes())));
             if (stmt != null) {
                 try {
                     stmt.close();
