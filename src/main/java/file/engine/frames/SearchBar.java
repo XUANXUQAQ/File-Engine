@@ -55,6 +55,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -120,7 +121,7 @@ public class SearchBar {
     private volatile long visibleStartTime = 0;  //记录窗口开始可见的事件，窗口默认最短可见时间0.5秒，防止窗口快速闪烁
     private volatile long firstResultStartShowingTime = 0;  //记录开始显示结果的时间，用于防止刚开始移动到鼠标导致误触
     private volatile AtomicInteger labelRefreshFlag = new AtomicInteger(); //记录label是否已经有显示结果，从低位开始，label1-8对应1-8位
-    private volatile ArrayList<String> listResults = new ArrayList<>();  //保存从数据库中找出符合条件的记录（文件路径）
+    private volatile ArrayList<ResultWrap> listResults = new ArrayList<>();  //保存从数据库中找出符合条件的记录（文件路径）
     private volatile String[] searchCase;
     private volatile String searchText = "";
     private volatile String[] keywords;
@@ -140,6 +141,9 @@ public class SearchBar {
     private static final float TEXT_FIELD_HEIGHT_RATIO = 0.7f;
 
     private static volatile SearchBar instance = null;
+
+    private record ResultWrap(DatabaseService.SearchTask searchTask, String result) {
+    }
 
     private SearchBar() {
         currentResultCount = new AtomicInteger(0);
@@ -300,7 +304,7 @@ public class SearchBar {
                 return;
             }
             if (!listResults.isEmpty()) {
-                String res = listResults.get(currentResultCount.get());
+                String res = listResults.get(currentResultCount.get()).result();
                 if (runningMode == RunningMode.NORMAL_MODE) {
                     if (res.startsWith("plugin")) {
                         String[] split = splitPluginResult(res);
@@ -325,7 +329,7 @@ public class SearchBar {
                 return;
             }
             if (!listResults.isEmpty()) {
-                String res = listResults.get(currentResultCount.get());
+                String res = listResults.get(currentResultCount.get()).result();
                 if (runningMode == RunningMode.NORMAL_MODE) {
                     if (res.startsWith("plugin")) {
                         String[] split = splitPluginResult(res);
@@ -350,7 +354,7 @@ public class SearchBar {
                 return;
             }
             if (!listResults.isEmpty()) {
-                String res = listResults.get(currentResultCount.get());
+                String res = listResults.get(currentResultCount.get()).result();
                 if (runningMode == RunningMode.NORMAL_MODE) {
                     if (res.startsWith("plugin")) {
                         String[] split = splitPluginResult(res);
@@ -375,7 +379,7 @@ public class SearchBar {
                 return;
             }
             if (!listResults.isEmpty()) {
-                String res = listResults.get(currentResultCount.get());
+                String res = listResults.get(currentResultCount.get()).result();
                 if (runningMode == RunningMode.NORMAL_MODE) {
                     if (res.startsWith("plugin")) {
                         String[] split = splitPluginResult(res);
@@ -589,7 +593,7 @@ public class SearchBar {
                     return;
                 }
                 int count = e.getClickCount();
-                String res = listResults.get(currentResultCount.get());
+                String res = listResults.get(currentResultCount.get()).result();
                 // 如果点击的是插件显示的结果，则发送鼠标事件到对应插件
                 if (res.startsWith("plugin")) {
                     String[] split = splitPluginResult(res);
@@ -655,7 +659,7 @@ public class SearchBar {
                         showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING &&
                         currentUsingPlugin != null) {
                     if (!listResults.isEmpty()) {
-                        String[] split = splitPluginResult(listResults.get(currentResultCount.get()));
+                        String[] split = splitPluginResult(listResults.get(currentResultCount.get()).result());
                         currentUsingPlugin.mousePressed(e, split[2]);
                         if (count == 2) {
                             detectShowingModeAndClose();
@@ -677,7 +681,7 @@ public class SearchBar {
                 if (listResults.isEmpty()) {
                     return;
                 }
-                String res = listResults.get(currentResultCount.get());
+                String res = listResults.get(currentResultCount.get()).result();
                 if (res.startsWith("plugin")) {
                     String[] split = splitPluginResult(res);
                     GetPluginByIdentifierEvent getPluginByIdentifierEvent = new GetPluginByIdentifierEvent(split[1]);
@@ -787,7 +791,7 @@ public class SearchBar {
 
                 if (!listResults.isEmpty()) {
                     if (key != 38 && key != 40) {
-                        String res = listResults.get(currentResultCount.get());
+                        String res = listResults.get(currentResultCount.get()).result();
                         if (runningMode == RunningMode.NORMAL_MODE) {
                             if (res.startsWith("plugin")) {
                                 String[] split = splitPluginResult(res);
@@ -813,7 +817,7 @@ public class SearchBar {
                 if (isPreviewMode.get() || isTutorialMode.get()) {
                     return true;
                 }
-                String res = listResults.get(currentResultCount.get());
+                String res = listResults.get(currentResultCount.get()).result();
                 if (runningMode == RunningMode.NORMAL_MODE) {
                     String searchBarText = getSearchBarText();
                     if (searchBarText.charAt(0) == '>') {
@@ -924,7 +928,7 @@ public class SearchBar {
                 var configs = allConfigs.getConfigEntity();
 
                 if (key != 38 && key != 40) {
-                    String res = listResults.get(currentResultCount.get());
+                    String res = listResults.get(currentResultCount.get()).result();
                     if (runningMode == RunningMode.NORMAL_MODE) {
                         if (res.startsWith("plugin")) {
                             String[] split = splitPluginResult(res);
@@ -960,7 +964,7 @@ public class SearchBar {
                 }
 
                 if (key != 38 && key != 40) {
-                    String res = listResults.get(currentResultCount.get());
+                    String res = listResults.get(currentResultCount.get()).result();
                     if (runningMode == RunningMode.NORMAL_MODE) {
                         if (res.startsWith("plugin")) {
                             String[] split = splitPluginResult(res);
@@ -1297,7 +1301,7 @@ public class SearchBar {
                 );
                 if (isMouseDraggedInWindow.get() && !isIconCreated.get() && !listResults.isEmpty()) {
                     isIconCreated.set(true);
-                    String result = listResults.get(currentResultCount.get());
+                    String result = listResults.get(currentResultCount.get()).result();
                     File f = null;
                     if (runningMode == RunningMode.NORMAL_MODE) {
                         //普通模式直接获取文件路径
@@ -1980,28 +1984,28 @@ public class SearchBar {
         if (runningMode == RunningMode.NORMAL_MODE) {
             //到达最下端，刷新显示
             try {
-                String path = listResults.get(currentResultCount.get() - 7);
+                String path = listResults.get(currentResultCount.get() - 7).result();
                 showResultOnLabel(path, label1, false);
 
-                path = listResults.get(currentResultCount.get() - 6);
+                path = listResults.get(currentResultCount.get() - 6).result();
                 showResultOnLabel(path, label2, false);
 
-                path = listResults.get(currentResultCount.get() - 5);
+                path = listResults.get(currentResultCount.get() - 5).result();
                 showResultOnLabel(path, label3, false);
 
-                path = listResults.get(currentResultCount.get() - 4);
+                path = listResults.get(currentResultCount.get() - 4).result();
                 showResultOnLabel(path, label4, false);
 
-                path = listResults.get(currentResultCount.get() - 3);
+                path = listResults.get(currentResultCount.get() - 3).result();
                 showResultOnLabel(path, label5, false);
 
-                path = listResults.get(currentResultCount.get() - 2);
+                path = listResults.get(currentResultCount.get() - 2).result();
                 showResultOnLabel(path, label6, false);
 
-                path = listResults.get(currentResultCount.get() - 1);
+                path = listResults.get(currentResultCount.get() - 1).result();
                 showResultOnLabel(path, label7, false);
 
-                path = listResults.get(currentResultCount.get());
+                path = listResults.get(currentResultCount.get()).result();
                 showResultOnLabel(path, label8, true);
             } catch (ArrayIndexOutOfBoundsException e) {
                 e.printStackTrace();
@@ -2009,56 +2013,56 @@ public class SearchBar {
         } else if (runningMode == RunningMode.COMMAND_MODE) {
             //到达了最下端，刷新显示
             try {
-                String command = listResults.get(currentResultCount.get() - 7);
+                String command = listResults.get(currentResultCount.get() - 7).result();
                 showCommandOnLabel(command, label1, false);
 
-                command = listResults.get(currentResultCount.get() - 6);
+                command = listResults.get(currentResultCount.get() - 6).result();
                 showCommandOnLabel(command, label2, false);
 
-                command = listResults.get(currentResultCount.get() - 5);
+                command = listResults.get(currentResultCount.get() - 5).result();
                 showCommandOnLabel(command, label3, false);
 
-                command = listResults.get(currentResultCount.get() - 4);
+                command = listResults.get(currentResultCount.get() - 4).result();
                 showCommandOnLabel(command, label4, false);
 
-                command = listResults.get(currentResultCount.get() - 3);
+                command = listResults.get(currentResultCount.get() - 3).result();
                 showCommandOnLabel(command, label5, false);
 
-                command = listResults.get(currentResultCount.get() - 2);
+                command = listResults.get(currentResultCount.get() - 2).result();
                 showCommandOnLabel(command, label6, false);
 
-                command = listResults.get(currentResultCount.get() - 1);
+                command = listResults.get(currentResultCount.get() - 1).result();
                 showCommandOnLabel(command, label7, false);
 
-                command = listResults.get(currentResultCount.get());
+                command = listResults.get(currentResultCount.get()).result();
                 showCommandOnLabel(command, label8, true);
             } catch (ArrayIndexOutOfBoundsException e) {
                 e.printStackTrace();
             }
         } else if (runningMode == RunningMode.PLUGIN_MODE) {
             try {
-                String command = listResults.get(currentResultCount.get() - 7);
+                String command = listResults.get(currentResultCount.get() - 7).result();
                 showPluginResultOnLabel(command, label1, false);
 
-                command = listResults.get(currentResultCount.get() - 6);
+                command = listResults.get(currentResultCount.get() - 6).result();
                 showPluginResultOnLabel(command, label2, false);
 
-                command = listResults.get(currentResultCount.get() - 5);
+                command = listResults.get(currentResultCount.get() - 5).result();
                 showPluginResultOnLabel(command, label3, false);
 
-                command = listResults.get(currentResultCount.get() - 4);
+                command = listResults.get(currentResultCount.get() - 4).result();
                 showPluginResultOnLabel(command, label4, false);
 
-                command = listResults.get(currentResultCount.get() - 3);
+                command = listResults.get(currentResultCount.get() - 3).result();
                 showPluginResultOnLabel(command, label5, false);
 
-                command = listResults.get(currentResultCount.get() - 2);
+                command = listResults.get(currentResultCount.get() - 2).result();
                 showPluginResultOnLabel(command, label6, false);
 
-                command = listResults.get(currentResultCount.get() - 1);
+                command = listResults.get(currentResultCount.get() - 1).result();
                 showPluginResultOnLabel(command, label7, false);
 
-                command = listResults.get(currentResultCount.get());
+                command = listResults.get(currentResultCount.get()).result();
                 showPluginResultOnLabel(command, label8, true);
             } catch (ArrayIndexOutOfBoundsException e) {
                 e.printStackTrace();
@@ -2114,35 +2118,35 @@ public class SearchBar {
         String command;
         try {
             if (size > currentResultCount.get() && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label1) || ((labelRefreshFlag.get() & 1) == 0))) {
-                command = listResults.get(currentResultCount.get());
+                command = listResults.get(currentResultCount.get()).result();
                 showPluginResultOnLabel(command, label1, isLabelChosenFunc.test(label1));
             }
             if (size > currentResultCount.get() + 1 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label2) || ((labelRefreshFlag.get() & 2) == 0))) {
-                command = listResults.get(currentResultCount.get() + 1);
+                command = listResults.get(currentResultCount.get() + 1).result();
                 showPluginResultOnLabel(command, label2, isLabelChosenFunc.test(label2));
             }
             if (size > currentResultCount.get() + 2 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label3) || ((labelRefreshFlag.get() & 4) == 0))) {
-                command = listResults.get(currentResultCount.get() + 2);
+                command = listResults.get(currentResultCount.get() + 2).result();
                 showPluginResultOnLabel(command, label3, isLabelChosenFunc.test(label3));
             }
             if (size > currentResultCount.get() + 3 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label4) || ((labelRefreshFlag.get() & 8) == 0))) {
-                command = listResults.get(currentResultCount.get() + 3);
+                command = listResults.get(currentResultCount.get() + 3).result();
                 showPluginResultOnLabel(command, label4, isLabelChosenFunc.test(label4));
             }
             if (size > currentResultCount.get() + 4 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label5) || ((labelRefreshFlag.get() & 16) == 0))) {
-                command = listResults.get(currentResultCount.get() + 4);
+                command = listResults.get(currentResultCount.get() + 4).result();
                 showPluginResultOnLabel(command, label5, isLabelChosenFunc.test(label5));
             }
             if (size > currentResultCount.get() + 5 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label6) || ((labelRefreshFlag.get() & 32) == 0))) {
-                command = listResults.get(currentResultCount.get() + 5);
+                command = listResults.get(currentResultCount.get() + 5).result();
                 showPluginResultOnLabel(command, label6, isLabelChosenFunc.test(label6));
             }
             if (size > currentResultCount.get() + 6 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label7) || ((labelRefreshFlag.get() & 64) == 0))) {
-                command = listResults.get(currentResultCount.get() + 6);
+                command = listResults.get(currentResultCount.get() + 6).result();
                 showPluginResultOnLabel(command, label7, isLabelChosenFunc.test(label7));
             }
             if (size > currentResultCount.get() + 7 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label8) || ((labelRefreshFlag.get() & 128) == 0))) {
-                command = listResults.get(currentResultCount.get() + 7);
+                command = listResults.get(currentResultCount.get() + 7).result();
                 showPluginResultOnLabel(command, label8, isLabelChosenFunc.test(label8));
             }
         } catch (Exception e) {
@@ -2156,35 +2160,35 @@ public class SearchBar {
         String command;
         try {
             if (size > currentResultCount.get() && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label1) || ((labelRefreshFlag.get() & 1) == 0))) {
-                command = listResults.get(currentResultCount.get());
+                command = listResults.get(currentResultCount.get()).result();
                 showCommandOnLabel(command, label1, isLabelChosenFunc.test(label1));
             }
             if (size > currentResultCount.get() + 1 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label2) || ((labelRefreshFlag.get() & 2) == 0))) {
-                command = listResults.get(currentResultCount.get() + 1);
+                command = listResults.get(currentResultCount.get() + 1).result();
                 showCommandOnLabel(command, label2, isLabelChosenFunc.test(label2));
             }
             if (size > currentResultCount.get() + 2 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label3) || ((labelRefreshFlag.get() & 4) == 0))) {
-                command = listResults.get(currentResultCount.get() + 2);
+                command = listResults.get(currentResultCount.get() + 2).result();
                 showCommandOnLabel(command, label3, isLabelChosenFunc.test(label3));
             }
             if (size > currentResultCount.get() + 3 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label4) || ((labelRefreshFlag.get() & 8) == 0))) {
-                command = listResults.get(currentResultCount.get() + 3);
+                command = listResults.get(currentResultCount.get() + 3).result();
                 showCommandOnLabel(command, label4, isLabelChosenFunc.test(label4));
             }
             if (size > currentResultCount.get() + 4 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label5) || ((labelRefreshFlag.get() & 16) == 0))) {
-                command = listResults.get(currentResultCount.get() + 4);
+                command = listResults.get(currentResultCount.get() + 4).result();
                 showCommandOnLabel(command, label5, isLabelChosenFunc.test(label5));
             }
             if (size > currentResultCount.get() + 5 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label6) || ((labelRefreshFlag.get() & 32) == 0))) {
-                command = listResults.get(currentResultCount.get() + 5);
+                command = listResults.get(currentResultCount.get() + 5).result();
                 showCommandOnLabel(command, label6, isLabelChosenFunc.test(label6));
             }
             if (size > currentResultCount.get() + 6 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label7) || ((labelRefreshFlag.get() & 64) == 0))) {
-                command = listResults.get(currentResultCount.get() + 6);
+                command = listResults.get(currentResultCount.get() + 6).result();
                 showCommandOnLabel(command, label7, isLabelChosenFunc.test(label7));
             }
             if (size > currentResultCount.get() + 7 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label8) || ((labelRefreshFlag.get() & 128) == 0))) {
-                command = listResults.get(currentResultCount.get() + 7);
+                command = listResults.get(currentResultCount.get() + 7).result();
                 showCommandOnLabel(command, label8, isLabelChosenFunc.test(label8));
             }
         } catch (Exception e) {
@@ -2198,35 +2202,35 @@ public class SearchBar {
         String path;
         try {
             if (size > currentResultCount.get() && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label1) || ((labelRefreshFlag.get() & 1) == 0))) {
-                path = listResults.get(currentResultCount.get());
+                path = listResults.get(currentResultCount.get()).result();
                 showResultOnLabel(path, label1, isLabelChosenFunc.test(label1));
             }
             if (size > currentResultCount.get() + 1 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label2) || ((labelRefreshFlag.get() & 2) == 0))) {
-                path = listResults.get(currentResultCount.get() + 1);
+                path = listResults.get(currentResultCount.get() + 1).result();
                 showResultOnLabel(path, label2, isLabelChosenFunc.test(label2));
             }
             if (size > currentResultCount.get() + 2 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label3) || ((labelRefreshFlag.get() & 4) == 0))) {
-                path = listResults.get(currentResultCount.get() + 2);
+                path = listResults.get(currentResultCount.get() + 2).result();
                 showResultOnLabel(path, label3, isLabelChosenFunc.test(label3));
             }
             if (size > currentResultCount.get() + 3 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label4) || ((labelRefreshFlag.get() & 8) == 0))) {
-                path = listResults.get(currentResultCount.get() + 3);
+                path = listResults.get(currentResultCount.get() + 3).result();
                 showResultOnLabel(path, label4, isLabelChosenFunc.test(label4));
             }
             if (size > currentResultCount.get() + 4 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label5) || ((labelRefreshFlag.get() & 16) == 0))) {
-                path = listResults.get(currentResultCount.get() + 4);
+                path = listResults.get(currentResultCount.get() + 4).result();
                 showResultOnLabel(path, label5, isLabelChosenFunc.test(label5));
             }
             if (size > currentResultCount.get() + 5 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label6) || ((labelRefreshFlag.get() & 32) == 0))) {
-                path = listResults.get(currentResultCount.get() + 5);
+                path = listResults.get(currentResultCount.get() + 5).result();
                 showResultOnLabel(path, label6, isLabelChosenFunc.test(label6));
             }
             if (size > currentResultCount.get() + 6 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label7) || ((labelRefreshFlag.get() & 64) == 0))) {
-                path = listResults.get(currentResultCount.get() + 6);
+                path = listResults.get(currentResultCount.get() + 6).result();
                 showResultOnLabel(path, label7, isLabelChosenFunc.test(label7));
             }
             if (size > currentResultCount.get() + 7 && (!isRefreshOnlyOnEmptyLabel || isLabelEmpty(label8) || ((labelRefreshFlag.get() & 128) == 0))) {
-                path = listResults.get(currentResultCount.get() + 7);
+                path = listResults.get(currentResultCount.get() + 7).result();
                 showResultOnLabel(path, label8, isLabelChosenFunc.test(label8));
             }
         } catch (Exception e) {
@@ -3303,7 +3307,7 @@ public class SearchBar {
 
     private void addShowSearchStatusThread(DatabaseService.SearchTask currentTaskRef) {
         ThreadPoolUtil.getInstance().executeTask(() -> {
-            ArrayList<String> listResultsTemp = listResults;
+            var listResultsTemp = listResults;
             var isIconSetObj = new Object() {
                 boolean isIconSet = false;
             };
@@ -3375,7 +3379,7 @@ public class SearchBar {
      * 将tempResults以及插件返回的结果转移到listResults中来显示
      */
     @SneakyThrows
-    private void mergeResults(DatabaseService.SearchTask currentSearchTask, ArrayList<String> listResultsTemp, boolean isPollPluginResults) {
+    private void mergeResults(DatabaseService.SearchTask currentSearchTask, ArrayList<ResultWrap> listResultsTemp, boolean isPollPluginResults) {
         var pluginService = PluginService.getInstance();
         var allPlugins = pluginService.getAllPlugins();
         var eventManagement = EventManagement.getInstance();
@@ -3392,13 +3396,15 @@ public class SearchBar {
     }
 
     private void mergeResultMethod(DatabaseService.SearchTask tempSearchTask,
-                                   ArrayList<String> listResultsTemp,
+                                   ArrayList<ResultWrap> listResultsTemp,
                                    Set<PluginService.PluginInfo> allPlugins,
                                    boolean isPollPluginResults) {
         if (tempSearchTask != null) {
             for (String each : tempSearchTask.getCacheAndPriorityResults()) {
-                if (!listResultsTemp.contains(each)) {
-                    listResultsTemp.add(each);
+                ResultWrap resultWrap = new ResultWrap(tempSearchTask, each);
+                if (!listResultsTemp.contains(resultWrap)) {
+                    listResultsTemp.add(resultWrap);
+                    listResultsTemp.removeIf(e -> e.searchTask != tempSearchTask);
                 }
                 if (listResultsTemp != listResults) {
                     break;
@@ -3417,16 +3423,20 @@ public class SearchBar {
                         break out;
                     }
                     each = "plugin" + PLUGIN_RESULT_SPLITTER_STR + eachPlugin.plugin.identifier + PLUGIN_RESULT_SPLITTER_STR + each;
-                    if (!listResultsTemp.contains(each)) {
-                        listResultsTemp.add(each);
+                    ResultWrap resultWrap = new ResultWrap(tempSearchTask, each);
+                    if (!listResultsTemp.contains(resultWrap)) {
+                        listResultsTemp.add(resultWrap);
+                        listResultsTemp.removeIf(e -> e.searchTask != tempSearchTask);
                     }
                 }
             }
         }
         if (tempSearchTask != null) {
             for (String each : tempSearchTask.getTempResults()) {
-                if (!listResultsTemp.contains(each)) {
-                    listResultsTemp.add(each);
+                ResultWrap resultWrap = new ResultWrap(tempSearchTask, each);
+                if (!listResultsTemp.contains(resultWrap)) {
+                    listResultsTemp.add(resultWrap);
+                    listResultsTemp.removeIf(e -> e.searchTask != tempSearchTask);
                 }
                 if (listResultsTemp != listResults) {
                     break;
@@ -3698,7 +3708,7 @@ public class SearchBar {
 
     private DatabaseService.SearchTask sendPrepareSearchEvent() {
         EventManagement eventManagement = EventManagement.getInstance();
-        final DatabaseService.SearchTask[] ret = new DatabaseService.SearchTask[1];
+        var ret = new AtomicReference<DatabaseService.SearchTask>();
         if (!getSearchBarText().isEmpty()) {
             isCudaSearchNotStarted.set(false);
             if (DatabaseService.getInstance().getStatus() == Constants.Enums.DatabaseStatus.NORMAL &&
@@ -3711,14 +3721,14 @@ public class SearchBar {
                     return null;
                 }
                 prepareSearchEvent.getReturnValue().ifPresent(res -> {
-                    ret[0] = (DatabaseService.SearchTask) res;
+                    ret.set((DatabaseService.SearchTask) res);
                     labelRefreshFlag = new AtomicInteger();
-                    addShowSearchStatusThread(ret[0]);
-                    ThreadPoolUtil.getInstance().executeTask(() -> mergeResults(ret[0], listResults, false));
+                    addShowSearchStatusThread(ret.get());
+                    ThreadPoolUtil.getInstance().executeTask(() -> mergeResults(ret.get(), listResults, false));
                 });
             }
         }
-        return ret[0];
+        return ret.get();
     }
 
     /**
@@ -3726,7 +3736,7 @@ public class SearchBar {
      */
     private void sendSearchEvent(DatabaseService.SearchTask preparedSearchTasks) {
         EventManagement eventManagement = EventManagement.getInstance();
-        final DatabaseService.SearchTask[] workingSearchTask = {preparedSearchTasks};
+        var workingSearchTask = new AtomicReference<>(preparedSearchTasks);
         if (!getSearchBarText().isEmpty()) {
             isSearchNotStarted.set(false);
             if (DatabaseService.getInstance().getStatus() == Constants.Enums.DatabaseStatus.NORMAL &&
@@ -3735,11 +3745,11 @@ public class SearchBar {
                 var startSearchEvent = new StartSearchEvent(() -> searchText, () -> searchCase, () -> keywords);
                 eventManagement.putEvent(startSearchEvent, event -> event.getReturnValue().ifPresent(res -> {
                     if (preparedSearchTasks != res) {
-                        workingSearchTask[0] = (DatabaseService.SearchTask) res;
+                        workingSearchTask.set((DatabaseService.SearchTask) res);
                         listResults = new ArrayList<>();
                         labelRefreshFlag = new AtomicInteger();
-                        addShowSearchStatusThread(workingSearchTask[0]);
-                        ThreadPoolUtil.getInstance().executeTask(() -> mergeResults(workingSearchTask[0], listResults, true));
+                        addShowSearchStatusThread(workingSearchTask.get());
+                        ThreadPoolUtil.getInstance().executeTask(() -> mergeResults(workingSearchTask.get(), listResults, true));
                     }
                 }), event -> System.err.println("send search event failed."));
             }
@@ -3756,10 +3766,10 @@ public class SearchBar {
                 runInternalCommand("help");
             }
             final AtomicBoolean isWaiting = new AtomicBoolean(false);
+            DatabaseService.SearchTask searchTask = null;
             while (eventManagement.notMainExit()) {
                 var advancedConfigs = AllConfigs.getInstance().getConfigEntity().getAdvancedConfigEntity();
                 final long endTime = System.currentTimeMillis();
-                DatabaseService.SearchTask searchTask = null;
                 long waitForInputAndPrepareSearchTimeoutInMills = advancedConfigs.getWaitForInputAndPrepareSearchTimeoutInMills();
                 if ((endTime - startTime > waitForInputAndPrepareSearchTimeoutInMills) && isCudaSearchNotStarted.get() &&
                         startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
@@ -3789,7 +3799,7 @@ public class SearchBar {
                                 String[] cmdInfo = RegexUtil.semicolon.split(i);
                                 if (cmdInfo[0].contains(text.substring(1))) {
                                     String result = translateService.getTranslation("Run command") + i;
-                                    listResults.add(result);
+                                    listResults.add(new ResultWrap(null, result));
                                 }
                                 if (cmdInfo[0].equals(text)) {
                                     detectShowingModeAndClose();
@@ -3807,7 +3817,7 @@ public class SearchBar {
                             }
                             var pluginInfos = PluginService.getInstance().searchPluginByKeyword(searchBarText);
                             for (PluginService.PluginInfo pluginInfo : pluginInfos) {
-                                listResults.add(pluginInfo.identifier);
+                                listResults.add(new ResultWrap(null, pluginInfo.identifier));
                             }
                         } else {
                             DatabaseService databaseService = DatabaseService.getInstance();
@@ -3831,8 +3841,9 @@ public class SearchBar {
                                     (result = currentUsingPlugin.pollFromResultQueue()) != null &&
                                     runningMode == RunningMode.PLUGIN_MODE) {
                                 result = "plugin" + PLUGIN_RESULT_SPLITTER_STR + currentUsingPlugin.identifier + PLUGIN_RESULT_SPLITTER_STR + result;
-                                if (!listResults.contains(result)) {
-                                    listResults.add(result);
+                                ResultWrap resultWrap = new ResultWrap(null, result);
+                                if (!listResults.contains(resultWrap)) {
+                                    listResults.add(resultWrap);
                                 }
                             }
                             try {
