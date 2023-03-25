@@ -3305,9 +3305,8 @@ public class SearchBar {
         SwingUtilities.invokeLater(searchBar::repaint);
     }
 
-    private void addShowSearchStatusThread(DatabaseService.SearchTask currentTaskRef) {
+    private void addShowSearchStatusThread(DatabaseService.SearchTask currentTaskRef, ArrayList<ResultWrap> listResultsTemp) {
         ThreadPoolUtil.getInstance().executeTask(() -> {
-            var listResultsTemp = listResults;
             var isIconSetObj = new Object() {
                 boolean isIconSet = false;
             };
@@ -3383,13 +3382,12 @@ public class SearchBar {
         var pluginService = PluginService.getInstance();
         var allPlugins = pluginService.getAllPlugins();
         var eventManagement = EventManagement.getInstance();
+        HashSet<String> listSet = new HashSet<>();
         while (listResultsTemp == listResults && eventManagement.notMainExit()) {
             if (getSearchBarText().isEmpty()) {
                 listResultsTemp.clear();
-            } else {
-                if (runningMode == RunningMode.NORMAL_MODE) {
-                    mergeResultMethod(currentSearchTask, listResultsTemp, allPlugins, isPollPluginResults);
-                }
+            } else if (runningMode == RunningMode.NORMAL_MODE) {
+                mergeResultMethod(currentSearchTask, listResultsTemp, listSet, allPlugins, isPollPluginResults);
             }
             TimeUnit.MILLISECONDS.sleep(1);
         }
@@ -3397,12 +3395,13 @@ public class SearchBar {
 
     private void mergeResultMethod(DatabaseService.SearchTask tempSearchTask,
                                    ArrayList<ResultWrap> listResultsTemp,
+                                   HashSet<String> listSet,
                                    Set<PluginService.PluginInfo> allPlugins,
                                    boolean isPollPluginResults) {
         if (tempSearchTask != null) {
             for (String each : tempSearchTask.getCacheAndPriorityResults()) {
-                ResultWrap resultWrap = new ResultWrap(tempSearchTask, each);
-                if (!listResultsTemp.contains(resultWrap)) {
+                if (listSet.add(each)) {
+                    ResultWrap resultWrap = new ResultWrap(tempSearchTask, each);
                     listResultsTemp.add(resultWrap);
                     listResultsTemp.removeIf(e -> e.searchTask != tempSearchTask);
                 }
@@ -3416,25 +3415,25 @@ public class SearchBar {
             for (var eachPlugin : allPlugins) {
                 String each;
                 while ((each = eachPlugin.plugin.pollFromResultQueue()) != null) {
+                    each = "plugin" + PLUGIN_RESULT_SPLITTER_STR + eachPlugin.plugin.identifier + PLUGIN_RESULT_SPLITTER_STR + each;
+                    if (listSet.add(each)) {
+                        ResultWrap resultWrap = new ResultWrap(tempSearchTask, each);
+                        listResultsTemp.add(resultWrap);
+                        listResultsTemp.removeIf(e -> e.searchTask != tempSearchTask);
+                    }
                     if (listResultsTemp != listResults) {
                         for (var allPlugin : allPlugins) {
                             allPlugin.plugin.clearResultQueue();
                         }
                         break out;
                     }
-                    each = "plugin" + PLUGIN_RESULT_SPLITTER_STR + eachPlugin.plugin.identifier + PLUGIN_RESULT_SPLITTER_STR + each;
-                    ResultWrap resultWrap = new ResultWrap(tempSearchTask, each);
-                    if (!listResultsTemp.contains(resultWrap)) {
-                        listResultsTemp.add(resultWrap);
-                        listResultsTemp.removeIf(e -> e.searchTask != tempSearchTask);
-                    }
                 }
             }
         }
         if (tempSearchTask != null) {
             for (String each : tempSearchTask.getTempResults()) {
-                ResultWrap resultWrap = new ResultWrap(tempSearchTask, each);
-                if (!listResultsTemp.contains(resultWrap)) {
+                if (listSet.add(each)) {
+                    ResultWrap resultWrap = new ResultWrap(tempSearchTask, each);
                     listResultsTemp.add(resultWrap);
                     listResultsTemp.removeIf(e -> e.searchTask != tempSearchTask);
                 }
@@ -3722,9 +3721,11 @@ public class SearchBar {
                 }
                 prepareSearchEvent.getReturnValue().ifPresent(res -> {
                     ret.set((DatabaseService.SearchTask) res);
+                    var listResultsTemp = new ArrayList<ResultWrap>();
+                    listResults = listResultsTemp;
                     labelRefreshFlag = new AtomicInteger();
-                    addShowSearchStatusThread(ret.get());
-                    ThreadPoolUtil.getInstance().executeTask(() -> mergeResults(ret.get(), listResults, false));
+                    addShowSearchStatusThread(ret.get(), listResultsTemp);
+                    ThreadPoolUtil.getInstance().executeTask(() -> mergeResults(ret.get(), listResultsTemp, false));
                 });
             }
         }
@@ -3746,10 +3747,11 @@ public class SearchBar {
                 eventManagement.putEvent(startSearchEvent, event -> event.getReturnValue().ifPresent(res -> {
                     if (preparedSearchTasks != res) {
                         workingSearchTask.set((DatabaseService.SearchTask) res);
-                        listResults = new ArrayList<>();
+                        var listResultsTemp = new ArrayList<ResultWrap>();
+                        listResults = listResultsTemp;
                         labelRefreshFlag = new AtomicInteger();
-                        addShowSearchStatusThread(workingSearchTask.get());
-                        ThreadPoolUtil.getInstance().executeTask(() -> mergeResults(workingSearchTask.get(), listResults, true));
+                        addShowSearchStatusThread(workingSearchTask.get(), listResultsTemp);
+                        ThreadPoolUtil.getInstance().executeTask(() -> mergeResults(workingSearchTask.get(), listResultsTemp, true));
                     }
                 }), event -> System.err.println("send search event failed."));
             }
