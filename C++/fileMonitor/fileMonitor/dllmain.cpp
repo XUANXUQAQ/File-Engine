@@ -27,7 +27,7 @@ bool pop_add_file(std::wstring& record);
 
 file_record_queue file_added_queue;
 file_record_queue file_del_queue;
-concurrent_unordered_map<std::string, std::atomic_bool> stop_flag;
+concurrent_unordered_map<std::string, bool*> stop_flag;
 
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_monitor
 (JNIEnv* env, jobject, jstring path)
@@ -88,11 +88,12 @@ void monitor(const char* path)
 	std::string path_str(path);
 	if (auto&& flag = stop_flag.find(path_str); flag == stop_flag.end())
 	{
-		stop_flag.insert(std::make_pair(path_str, true));
+		auto flag_ptr = new bool(true);
+		stop_flag.insert(std::make_pair(path_str, flag_ptr));
 	}
 	else
 	{
-		flag->second.store(true);
+		*flag->second = true;
 	}
 	monitor_path(path_str);
 }
@@ -104,7 +105,7 @@ void stop_monitor(const std::string& path)
 	{
 		return;
 	}
-	flag->second.store(false);
+	*flag->second = false;
 }
 
 /**
@@ -114,8 +115,8 @@ void monitor_path(const std::string& path)
 {
 	const auto wPath = string2wstring(path);
 	DirectoryChangesReader<1, 65536> dcr(wPath);
-	auto&& flag = stop_flag.at(path);
-	while (flag.load())
+	const bool* flag = stop_flag.at(path);
+	while (*flag)
 	{
 		dcr.EnqueueReadDirectoryChanges();
 		if (const DWORD rv = dcr.WaitForHandles(); rv == WAIT_OBJECT_0)
@@ -131,12 +132,7 @@ void monitor_path(const std::string& path)
 					{
 						std::wstring data_with_disk;
 						data_with_disk.append(wPath).append(data);
-						if (std::find(file_added_queue.unsafe_begin(),
-							file_added_queue.unsafe_end(),
-							data_with_disk) == file_added_queue.unsafe_end())
-						{
-							file_added_queue.push(data_with_disk);
-						}
+						file_added_queue.push(data_with_disk);
 					}
 					break;
 				case FILE_ACTION_RENAMED_OLD_NAME:
@@ -145,12 +141,7 @@ void monitor_path(const std::string& path)
 					{
 						std::wstring data_with_disk;
 						data_with_disk.append(wPath).append(data);
-						if (std::find(file_del_queue.unsafe_begin(),
-							file_del_queue.unsafe_end(),
-							data_with_disk) == file_del_queue.unsafe_end())
-						{
-							file_del_queue.push(data_with_disk);
-						}
+						file_del_queue.push(data_with_disk);
 					}
 					break;
 				case FILE_ACTION_MODIFIED:
@@ -161,6 +152,7 @@ void monitor_path(const std::string& path)
 		}
 		Sleep(500);
 	}
+	delete flag;
 #ifdef TEST
 	std::cout << "stop monitoring " << path << std::endl;
 #endif
