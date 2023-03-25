@@ -23,7 +23,7 @@
 #define CHECK_TIME_THRESHOLD 1
 
 // TODO 该变量为File-Engine.zip中的File-Engine.jar的md5值
-#define FILE_ENGINE_JAR_MD5 "4ed7ca51dcc9d5b3d4f0ca0d23f5c53c"
+#define FILE_ENGINE_JAR_MD5 "de5b2fec8d1f2b34134d5a7f217d4bec"
 
 #ifndef TEST
 #pragma comment( linker, "/subsystem:windows /entry:mainCRTStartup" )
@@ -31,7 +31,7 @@
 
 constexpr auto* g_file_engine_zip_name = "File-Engine.zip";
 std::string g_jvm_parameters =
-"-Xms8M -Xmx256M -XX:+UseParallelGC -XX:MaxHeapFreeRatio=20 -XX:MinHeapFreeRatio=10 -XX:+CompactStrings";
+"-Xms8M -Xmx256M -XX:+UseParallelGC -XX:MaxHeapFreeRatio=20 -XX:MinHeapFreeRatio=10 -XX:+CompactStrings -XX:ErrorFile=../logs/hs_err_pid%p.log";
 
 char g_close_signal_file[1000];
 char g_open_from_jar_signal_file[1000];
