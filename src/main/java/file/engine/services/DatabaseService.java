@@ -702,6 +702,9 @@ public class DatabaseService {
                             if (checkIsMatchedAndAddToList(tmpQueryResultsCache[j], priorityStr, searchTask)) {
                                 matchedResultCount.getAndIncrement();
                             }
+                            if (searchTask.shouldStopSearch()) {
+                                return;
+                            }
                         }
                     } finally {
                         submitCount.getAndDecrement();
@@ -932,9 +935,16 @@ public class DatabaseService {
             if (IsDebug.isDebug()) {
                 System.out.println("从缓存中读取 " + key);
             }
-            matchedNum = cache.data.stream()
-                    .filter(e -> checkIsMatchedAndAddToList(e, priority, searchTask))
-                    .count();
+            long count = 0L;
+            for (String e : cache.data) {
+                if (checkIsMatchedAndAddToList(e, priority, searchTask)) {
+                    count++;
+                }
+                if (searchTask.shouldStopSearch()) {
+                    break;
+                }
+            }
+            matchedNum = count;
         } else {
             //格式化是为了以后的拓展性
             String formattedSql = String.format(sql, "PATH");
