@@ -1404,218 +1404,234 @@ public class SearchBar {
                                 currentResultCount.getAndAdd(ret);
                                 currentLabelSelectedPosition.getAndAdd(ret);
                                 switch (mouseOnWhichLabel) {
-                                    case 0 -> {
-                                        if (isLabelNotEmpty(label1)) {
-                                            setLabelChosen(label1);
-                                        }
-                                        if (isLabelNotEmpty(label2)) {
-                                            setLabelNotChosen(label2);
-                                        }
-                                        if (isLabelNotEmpty(label3)) {
-                                            setLabelNotChosen(label3);
-                                        }
-                                        if (isLabelNotEmpty(label4)) {
-                                            setLabelNotChosen(label4);
-                                        }
-                                        if (isLabelNotEmpty(label5)) {
-                                            setLabelNotChosen(label5);
-                                        }
-                                        if (isLabelNotEmpty(label6)) {
-                                            setLabelNotChosen(label6);
-                                        }
-                                        if (isLabelNotEmpty(label7)) {
-                                            setLabelNotChosen(label7);
-                                        }
-                                        if (isLabelNotEmpty(label8)) {
-                                            setLabelNotChosen(label8);
-                                        }
-                                    }
-                                    case 1 -> {
-                                        if (isLabelNotEmpty(label1)) {
-                                            setLabelNotChosen(label1);
-                                        }
-                                        if (isLabelNotEmpty(label2)) {
-                                            setLabelChosen(label2);
-                                        }
-                                        if (isLabelNotEmpty(label3)) {
-                                            setLabelNotChosen(label3);
-                                        }
-                                        if (isLabelNotEmpty(label4)) {
-                                            setLabelNotChosen(label4);
-                                        }
-                                        if (isLabelNotEmpty(label5)) {
-                                            setLabelNotChosen(label5);
-                                        }
-                                        if (isLabelNotEmpty(label6)) {
-                                            setLabelNotChosen(label6);
-                                        }
-                                        if (isLabelNotEmpty(label7)) {
-                                            setLabelNotChosen(label7);
-                                        }
-                                        if (isLabelNotEmpty(label8)) {
-                                            setLabelNotChosen(label8);
-                                        }
-                                    }
-                                    case 2 -> {
-                                        if (isLabelNotEmpty(label1)) {
-                                            setLabelNotChosen(label1);
-                                        }
-                                        if (isLabelNotEmpty(label2)) {
-                                            setLabelNotChosen(label2);
-                                        }
-                                        if (isLabelNotEmpty(label3)) {
-                                            setLabelChosen(label3);
-                                        }
-                                        if (isLabelNotEmpty(label4)) {
-                                            setLabelNotChosen(label4);
-                                        }
-                                        if (isLabelNotEmpty(label5)) {
-                                            setLabelNotChosen(label5);
-                                        }
-                                        if (isLabelNotEmpty(label6)) {
-                                            setLabelNotChosen(label6);
-                                        }
-                                        if (isLabelNotEmpty(label7)) {
-                                            setLabelNotChosen(label7);
-                                        }
-                                        if (isLabelNotEmpty(label8)) {
-                                            setLabelNotChosen(label8);
-                                        }
-                                    }
-                                    case 3 -> {
-                                        if (isLabelNotEmpty(label1)) {
-                                            setLabelNotChosen(label1);
-                                        }
-                                        if (isLabelNotEmpty(label2)) {
-                                            setLabelNotChosen(label2);
-                                        }
-                                        if (isLabelNotEmpty(label3)) {
-                                            setLabelNotChosen(label3);
-                                        }
-                                        if (isLabelNotEmpty(label4)) {
-                                            setLabelChosen(label4);
-                                        }
-                                        if (isLabelNotEmpty(label5)) {
-                                            setLabelNotChosen(label5);
-                                        }
-                                        if (isLabelNotEmpty(label6)) {
-                                            setLabelNotChosen(label6);
-                                        }
-                                        if (isLabelNotEmpty(label7)) {
-                                            setLabelNotChosen(label7);
-                                        }
-                                        if (isLabelNotEmpty(label8)) {
-                                            setLabelNotChosen(label8);
-                                        }
-                                    }
-                                    case 4 -> {
-                                        if (isLabelNotEmpty(label1)) {
-                                            setLabelNotChosen(label1);
-                                        }
-                                        if (isLabelNotEmpty(label2)) {
-                                            setLabelNotChosen(label2);
-                                        }
-                                        if (isLabelNotEmpty(label3)) {
-                                            setLabelNotChosen(label3);
-                                        }
-                                        if (isLabelNotEmpty(label4)) {
-                                            setLabelNotChosen(label4);
-                                        }
-                                        if (isLabelNotEmpty(label5)) {
-                                            setLabelChosen(label5);
-                                        }
-                                        if (isLabelNotEmpty(label6)) {
-                                            setLabelNotChosen(label6);
-                                        }
-                                        if (isLabelNotEmpty(label7)) {
-                                            setLabelNotChosen(label7);
-                                        }
-                                        if (isLabelNotEmpty(label8)) {
-                                            setLabelNotChosen(label8);
-                                        }
-                                    }
-                                    case 5 -> {
-                                        if (isLabelNotEmpty(label1)) {
-                                            setLabelNotChosen(label1);
-                                        }
-                                        if (isLabelNotEmpty(label2)) {
-                                            setLabelNotChosen(label2);
-                                        }
-                                        if (isLabelNotEmpty(label3)) {
-                                            setLabelNotChosen(label3);
-                                        }
-                                        if (isLabelNotEmpty(label4)) {
-                                            setLabelNotChosen(label4);
-                                        }
-                                        if (isLabelNotEmpty(label5)) {
-                                            setLabelNotChosen(label5);
-                                        }
-                                        if (isLabelNotEmpty(label6)) {
-                                            setLabelChosen(label6);
-                                        }
-                                        if (isLabelNotEmpty(label7)) {
-                                            setLabelNotChosen(label7);
-                                        }
-                                        if (isLabelNotEmpty(label8)) {
-                                            setLabelNotChosen(label8);
-                                        }
-                                    }
-                                    case 6 -> {
-                                        if (isLabelNotEmpty(label1)) {
-                                            setLabelNotChosen(label1);
-                                        }
-                                        if (isLabelNotEmpty(label2)) {
-                                            setLabelNotChosen(label2);
-                                        }
-                                        if (isLabelNotEmpty(label3)) {
-                                            setLabelNotChosen(label3);
-                                        }
-                                        if (isLabelNotEmpty(label4)) {
-                                            setLabelNotChosen(label4);
-                                        }
-                                        if (isLabelNotEmpty(label5)) {
-                                            setLabelNotChosen(label5);
-                                        }
-                                        if (isLabelNotEmpty(label6)) {
-                                            setLabelNotChosen(label6);
-                                        }
-                                        if (isLabelNotEmpty(label7)) {
-                                            setLabelChosen(label7);
-                                        }
-                                        if (isLabelNotEmpty(label8)) {
-                                            setLabelNotChosen(label8);
-                                        }
-                                    }
-                                    case 7 -> {
-                                        if (isLabelNotEmpty(label1)) {
-                                            setLabelNotChosen(label1);
-                                        }
-                                        if (isLabelNotEmpty(label2)) {
-                                            setLabelNotChosen(label2);
-                                        }
-                                        if (isLabelNotEmpty(label3)) {
-                                            setLabelNotChosen(label3);
-                                        }
-                                        if (isLabelNotEmpty(label4)) {
-                                            setLabelNotChosen(label4);
-                                        }
-                                        if (isLabelNotEmpty(label5)) {
-                                            setLabelNotChosen(label5);
-                                        }
-                                        if (isLabelNotEmpty(label6)) {
-                                            setLabelNotChosen(label6);
-                                        }
-                                        if (isLabelNotEmpty(label7)) {
-                                            setLabelNotChosen(label7);
-                                        }
-                                        if (isLabelNotEmpty(label8)) {
-                                            setLabelChosen(label8);
-                                        }
-                                    }
+                                    case 0 -> setLabel1ChosenOnMouseMoved();
+                                    case 1 -> setLabel2ChosenOnMouseMoved();
+                                    case 2 -> setLabel3ChosenOnMouseMoved();
+                                    case 3 -> setLabel4ChosenOnMouseMoved();
+                                    case 4 -> setLabel5ChosenOnMouseMoved();
+                                    case 5 -> setLabel6ChosenOnMouseMoved();
+                                    case 6 -> setLabel7ChosenOnMouseMoved();
+                                    case 7 -> setLabel8ChosenOnMouseMoved();
                                 }
                             }
                         }
                     }
+                }
+            }
+
+            private void setLabel8ChosenOnMouseMoved() {
+                if (isLabelNotEmpty(label1)) {
+                    setLabelNotChosen(label1);
+                }
+                if (isLabelNotEmpty(label2)) {
+                    setLabelNotChosen(label2);
+                }
+                if (isLabelNotEmpty(label3)) {
+                    setLabelNotChosen(label3);
+                }
+                if (isLabelNotEmpty(label4)) {
+                    setLabelNotChosen(label4);
+                }
+                if (isLabelNotEmpty(label5)) {
+                    setLabelNotChosen(label5);
+                }
+                if (isLabelNotEmpty(label6)) {
+                    setLabelNotChosen(label6);
+                }
+                if (isLabelNotEmpty(label7)) {
+                    setLabelNotChosen(label7);
+                }
+                if (isLabelNotEmpty(label8)) {
+                    setLabelChosen(label8);
+                }
+            }
+
+            private void setLabel7ChosenOnMouseMoved() {
+                if (isLabelNotEmpty(label1)) {
+                    setLabelNotChosen(label1);
+                }
+                if (isLabelNotEmpty(label2)) {
+                    setLabelNotChosen(label2);
+                }
+                if (isLabelNotEmpty(label3)) {
+                    setLabelNotChosen(label3);
+                }
+                if (isLabelNotEmpty(label4)) {
+                    setLabelNotChosen(label4);
+                }
+                if (isLabelNotEmpty(label5)) {
+                    setLabelNotChosen(label5);
+                }
+                if (isLabelNotEmpty(label6)) {
+                    setLabelNotChosen(label6);
+                }
+                if (isLabelNotEmpty(label7)) {
+                    setLabelChosen(label7);
+                }
+                if (isLabelNotEmpty(label8)) {
+                    setLabelNotChosen(label8);
+                }
+            }
+
+            private void setLabel6ChosenOnMouseMoved() {
+                if (isLabelNotEmpty(label1)) {
+                    setLabelNotChosen(label1);
+                }
+                if (isLabelNotEmpty(label2)) {
+                    setLabelNotChosen(label2);
+                }
+                if (isLabelNotEmpty(label3)) {
+                    setLabelNotChosen(label3);
+                }
+                if (isLabelNotEmpty(label4)) {
+                    setLabelNotChosen(label4);
+                }
+                if (isLabelNotEmpty(label5)) {
+                    setLabelNotChosen(label5);
+                }
+                if (isLabelNotEmpty(label6)) {
+                    setLabelChosen(label6);
+                }
+                if (isLabelNotEmpty(label7)) {
+                    setLabelNotChosen(label7);
+                }
+                if (isLabelNotEmpty(label8)) {
+                    setLabelNotChosen(label8);
+                }
+            }
+
+            private void setLabel5ChosenOnMouseMoved() {
+                if (isLabelNotEmpty(label1)) {
+                    setLabelNotChosen(label1);
+                }
+                if (isLabelNotEmpty(label2)) {
+                    setLabelNotChosen(label2);
+                }
+                if (isLabelNotEmpty(label3)) {
+                    setLabelNotChosen(label3);
+                }
+                if (isLabelNotEmpty(label4)) {
+                    setLabelNotChosen(label4);
+                }
+                if (isLabelNotEmpty(label5)) {
+                    setLabelChosen(label5);
+                }
+                if (isLabelNotEmpty(label6)) {
+                    setLabelNotChosen(label6);
+                }
+                if (isLabelNotEmpty(label7)) {
+                    setLabelNotChosen(label7);
+                }
+                if (isLabelNotEmpty(label8)) {
+                    setLabelNotChosen(label8);
+                }
+            }
+
+            private void setLabel4ChosenOnMouseMoved() {
+                if (isLabelNotEmpty(label1)) {
+                    setLabelNotChosen(label1);
+                }
+                if (isLabelNotEmpty(label2)) {
+                    setLabelNotChosen(label2);
+                }
+                if (isLabelNotEmpty(label3)) {
+                    setLabelNotChosen(label3);
+                }
+                if (isLabelNotEmpty(label4)) {
+                    setLabelChosen(label4);
+                }
+                if (isLabelNotEmpty(label5)) {
+                    setLabelNotChosen(label5);
+                }
+                if (isLabelNotEmpty(label6)) {
+                    setLabelNotChosen(label6);
+                }
+                if (isLabelNotEmpty(label7)) {
+                    setLabelNotChosen(label7);
+                }
+                if (isLabelNotEmpty(label8)) {
+                    setLabelNotChosen(label8);
+                }
+            }
+
+            private void setLabel3ChosenOnMouseMoved() {
+                if (isLabelNotEmpty(label1)) {
+                    setLabelNotChosen(label1);
+                }
+                if (isLabelNotEmpty(label2)) {
+                    setLabelNotChosen(label2);
+                }
+                if (isLabelNotEmpty(label3)) {
+                    setLabelChosen(label3);
+                }
+                if (isLabelNotEmpty(label4)) {
+                    setLabelNotChosen(label4);
+                }
+                if (isLabelNotEmpty(label5)) {
+                    setLabelNotChosen(label5);
+                }
+                if (isLabelNotEmpty(label6)) {
+                    setLabelNotChosen(label6);
+                }
+                if (isLabelNotEmpty(label7)) {
+                    setLabelNotChosen(label7);
+                }
+                if (isLabelNotEmpty(label8)) {
+                    setLabelNotChosen(label8);
+                }
+            }
+
+            private void setLabel2ChosenOnMouseMoved() {
+                if (isLabelNotEmpty(label1)) {
+                    setLabelNotChosen(label1);
+                }
+                if (isLabelNotEmpty(label2)) {
+                    setLabelChosen(label2);
+                }
+                if (isLabelNotEmpty(label3)) {
+                    setLabelNotChosen(label3);
+                }
+                if (isLabelNotEmpty(label4)) {
+                    setLabelNotChosen(label4);
+                }
+                if (isLabelNotEmpty(label5)) {
+                    setLabelNotChosen(label5);
+                }
+                if (isLabelNotEmpty(label6)) {
+                    setLabelNotChosen(label6);
+                }
+                if (isLabelNotEmpty(label7)) {
+                    setLabelNotChosen(label7);
+                }
+                if (isLabelNotEmpty(label8)) {
+                    setLabelNotChosen(label8);
+                }
+            }
+
+            private void setLabel1ChosenOnMouseMoved() {
+                if (isLabelNotEmpty(label1)) {
+                    setLabelChosen(label1);
+                }
+                if (isLabelNotEmpty(label2)) {
+                    setLabelNotChosen(label2);
+                }
+                if (isLabelNotEmpty(label3)) {
+                    setLabelNotChosen(label3);
+                }
+                if (isLabelNotEmpty(label4)) {
+                    setLabelNotChosen(label4);
+                }
+                if (isLabelNotEmpty(label5)) {
+                    setLabelNotChosen(label5);
+                }
+                if (isLabelNotEmpty(label6)) {
+                    setLabelNotChosen(label6);
+                }
+                if (isLabelNotEmpty(label7)) {
+                    setLabelNotChosen(label7);
+                }
+                if (isLabelNotEmpty(label8)) {
+                    setLabelNotChosen(label8);
                 }
             }
         });
@@ -1754,231 +1770,250 @@ public class SearchBar {
             currentLabelSelectedPosition.set(7);
         }
         switch (position) {
-            case 0:
-                int size = listResults.size();
-                if (size == 2) {
-                    setLabelNotChosen(label1);
-                    setLabelChosen(label2);
-                } else if (size == 3) {
-                    setLabelNotChosen(label1);
-                    setLabelChosen(label2);
-                    setLabelNotChosen(label3);
-                } else if (size == 4) {
-                    setLabelNotChosen(label1);
-                    setLabelChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelNotChosen(label4);
-                } else if (size == 5) {
-                    setLabelNotChosen(label1);
-                    setLabelChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelNotChosen(label5);
-                } else if (size == 6) {
-                    setLabelNotChosen(label1);
-                    setLabelChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelNotChosen(label5);
-                    setLabelNotChosen(label6);
-                } else if (size == 7) {
-                    setLabelNotChosen(label1);
-                    setLabelChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelNotChosen(label5);
-                    setLabelNotChosen(label6);
-                    setLabelNotChosen(label7);
-                } else if (size > 7) {
-                    setLabelNotChosen(label1);
-                    setLabelChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelNotChosen(label5);
-                    setLabelNotChosen(label6);
-                    setLabelNotChosen(label7);
-                    setLabelNotChosen(label8);
-                }
-                break;
-            case 1:
-                size = listResults.size();
-                if (size == 3) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelChosen(label3);
-                } else if (size == 4) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelChosen(label3);
-                    setLabelNotChosen(label4);
-                } else if (size == 5) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelNotChosen(label5);
-                } else if (size == 6) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelNotChosen(label5);
-                    setLabelNotChosen(label6);
-                } else if (size == 7) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelNotChosen(label5);
-                    setLabelNotChosen(label6);
-                    setLabelNotChosen(label7);
-                } else if (size > 7) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelNotChosen(label5);
-                    setLabelNotChosen(label6);
-                    setLabelNotChosen(label7);
-                    setLabelNotChosen(label8);
-                }
-                break;
-            case 2:
-                size = listResults.size();
-                if (size == 4) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelChosen(label4);
-                } else if (size == 5) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelChosen(label4);
-                    setLabelNotChosen(label5);
-                } else if (size == 6) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelChosen(label4);
-                    setLabelNotChosen(label5);
-                    setLabelNotChosen(label6);
-                } else if (size == 7) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelChosen(label4);
-                    setLabelNotChosen(label5);
-                    setLabelNotChosen(label6);
-                    setLabelNotChosen(label7);
-                } else if (size > 7) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelChosen(label4);
-                    setLabelNotChosen(label5);
-                    setLabelNotChosen(label6);
-                    setLabelNotChosen(label7);
-                    setLabelNotChosen(label8);
-                }
-                break;
-            case 3:
-                size = listResults.size();
-                if (size == 5) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelChosen(label5);
-                } else if (size == 6) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelChosen(label5);
-                    setLabelNotChosen(label6);
-                } else if (size == 7) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelChosen(label5);
-                    setLabelNotChosen(label6);
-                    setLabelNotChosen(label7);
-                } else if (size > 7) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelChosen(label5);
-                    setLabelNotChosen(label6);
-                    setLabelNotChosen(label7);
-                    setLabelNotChosen(label8);
-                }
-                break;
-            case 4:
-                size = listResults.size();
-                if (size == 6) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelNotChosen(label5);
-                    setLabelChosen(label6);
-                } else if (size == 7) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelNotChosen(label5);
-                    setLabelChosen(label6);
-                    setLabelNotChosen(label7);
-                } else if (size > 7) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelNotChosen(label5);
-                    setLabelChosen(label6);
-                    setLabelNotChosen(label7);
-                    setLabelNotChosen(label8);
-                }
-                break;
-            case 5:
-                size = listResults.size();
-                if (size == 7) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelNotChosen(label5);
-                    setLabelNotChosen(label6);
-                    setLabelChosen(label7);
-                } else if (size > 7) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelNotChosen(label5);
-                    setLabelNotChosen(label6);
-                    setLabelChosen(label7);
-                    setLabelNotChosen(label8);
-                }
-                break;
-            case 6:
-                setLabelNotChosen(label1);
-                setLabelNotChosen(label2);
-                setLabelNotChosen(label3);
-                setLabelNotChosen(label4);
-                setLabelNotChosen(label5);
-                setLabelNotChosen(label6);
-                setLabelNotChosen(label7);
-                setLabelChosen(label8);
-                break;
-            case 7:
+            case 0 -> setLabel2ChosenWhenDownward();
+            case 1 -> setLabel3ChosenWhenDownward();
+            case 2 -> setLabel4ChosenWhenDownward();
+            case 3 -> setLabel5ChosenWhenDownward();
+            case 4 -> setLabel6ChosenWhenDownward();
+            case 5 -> setLabel7ChosenWhenDownward();
+            case 6 -> setLabel8ChosenWhenDownward();
+            case 7 -> {
                 tryToShowResultsAndSetLastChosen();
                 repaint();
-                break;
+            }
+        }
+    }
+
+    private void setLabel8ChosenWhenDownward() {
+        setLabelNotChosen(label1);
+        setLabelNotChosen(label2);
+        setLabelNotChosen(label3);
+        setLabelNotChosen(label4);
+        setLabelNotChosen(label5);
+        setLabelNotChosen(label6);
+        setLabelNotChosen(label7);
+        setLabelChosen(label8);
+    }
+
+    private void setLabel7ChosenWhenDownward() {
+        int size;
+        size = listResults.size();
+        if (size == 7) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelNotChosen(label5);
+            setLabelNotChosen(label6);
+            setLabelChosen(label7);
+        } else if (size > 7) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelNotChosen(label5);
+            setLabelNotChosen(label6);
+            setLabelChosen(label7);
+            setLabelNotChosen(label8);
+        }
+    }
+
+    private void setLabel6ChosenWhenDownward() {
+        int size;
+        size = listResults.size();
+        if (size == 6) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelNotChosen(label5);
+            setLabelChosen(label6);
+        } else if (size == 7) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelNotChosen(label5);
+            setLabelChosen(label6);
+            setLabelNotChosen(label7);
+        } else if (size > 7) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelNotChosen(label5);
+            setLabelChosen(label6);
+            setLabelNotChosen(label7);
+            setLabelNotChosen(label8);
+        }
+    }
+
+    private void setLabel5ChosenWhenDownward() {
+        int size;
+        size = listResults.size();
+        if (size == 5) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelChosen(label5);
+        } else if (size == 6) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelChosen(label5);
+            setLabelNotChosen(label6);
+        } else if (size == 7) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelChosen(label5);
+            setLabelNotChosen(label6);
+            setLabelNotChosen(label7);
+        } else if (size > 7) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelChosen(label5);
+            setLabelNotChosen(label6);
+            setLabelNotChosen(label7);
+            setLabelNotChosen(label8);
+        }
+    }
+
+    private void setLabel4ChosenWhenDownward() {
+        int size;
+        size = listResults.size();
+        if (size == 4) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelChosen(label4);
+        } else if (size == 5) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelChosen(label4);
+            setLabelNotChosen(label5);
+        } else if (size == 6) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelChosen(label4);
+            setLabelNotChosen(label5);
+            setLabelNotChosen(label6);
+        } else if (size == 7) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelChosen(label4);
+            setLabelNotChosen(label5);
+            setLabelNotChosen(label6);
+            setLabelNotChosen(label7);
+        } else if (size > 7) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelChosen(label4);
+            setLabelNotChosen(label5);
+            setLabelNotChosen(label6);
+            setLabelNotChosen(label7);
+            setLabelNotChosen(label8);
+        }
+    }
+
+    private void setLabel3ChosenWhenDownward() {
+        int size;
+        size = listResults.size();
+        if (size == 3) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelChosen(label3);
+        } else if (size == 4) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelChosen(label3);
+            setLabelNotChosen(label4);
+        } else if (size == 5) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelNotChosen(label5);
+        } else if (size == 6) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelNotChosen(label5);
+            setLabelNotChosen(label6);
+        } else if (size == 7) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelNotChosen(label5);
+            setLabelNotChosen(label6);
+            setLabelNotChosen(label7);
+        } else if (size > 7) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelNotChosen(label5);
+            setLabelNotChosen(label6);
+            setLabelNotChosen(label7);
+            setLabelNotChosen(label8);
+        }
+    }
+
+    private void setLabel2ChosenWhenDownward() {
+        int size = listResults.size();
+        if (size == 2) {
+            setLabelNotChosen(label1);
+            setLabelChosen(label2);
+        } else if (size == 3) {
+            setLabelNotChosen(label1);
+            setLabelChosen(label2);
+            setLabelNotChosen(label3);
+        } else if (size == 4) {
+            setLabelNotChosen(label1);
+            setLabelChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelNotChosen(label4);
+        } else if (size == 5) {
+            setLabelNotChosen(label1);
+            setLabelChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelNotChosen(label5);
+        } else if (size == 6) {
+            setLabelNotChosen(label1);
+            setLabelChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelNotChosen(label5);
+            setLabelNotChosen(label6);
+        } else if (size == 7) {
+            setLabelNotChosen(label1);
+            setLabelChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelNotChosen(label5);
+            setLabelNotChosen(label6);
+            setLabelNotChosen(label7);
+        } else if (size > 7) {
+            setLabelNotChosen(label1);
+            setLabelChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelNotChosen(label5);
+            setLabelNotChosen(label6);
+            setLabelNotChosen(label7);
+            setLabelNotChosen(label8);
         }
     }
 
@@ -2248,233 +2283,252 @@ public class SearchBar {
         if (currentLabelSelectedPosition.get() < 0) {
             currentLabelSelectedPosition.set(0);
         }
-        int size;
         switch (position) {
             case 0 -> {
                 tryToShowResultsAndSetFirstChosen();
                 repaint();
             }
-            case 1 -> {
-                size = listResults.size();
-                if (size == 2) {
-                    setLabelChosen(label1);
-                    setLabelNotChosen(label2);
-                } else if (size == 3) {
-                    setLabelChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelNotChosen(label3);
-                } else if (size == 4) {
-                    setLabelChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelNotChosen(label4);
-                } else if (size == 5) {
-                    setLabelChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelNotChosen(label5);
-                } else if (size == 6) {
-                    setLabelChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelNotChosen(label5);
-                    setLabelNotChosen(label6);
-                } else if (size == 7) {
-                    setLabelChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelNotChosen(label5);
-                    setLabelNotChosen(label6);
-                    setLabelNotChosen(label7);
-                } else if (size > 7) {
-                    setLabelChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelNotChosen(label5);
-                    setLabelNotChosen(label6);
-                    setLabelNotChosen(label7);
-                    setLabelNotChosen(label8);
-                }
-            }
-            case 2 -> {
-                size = listResults.size();
-                if (size == 3) {
-                    setLabelNotChosen(label1);
-                    setLabelChosen(label2);
-                    setLabelNotChosen(label3);
-                } else if (size == 4) {
-                    setLabelNotChosen(label1);
-                    setLabelChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelNotChosen(label4);
-                } else if (size == 5) {
-                    setLabelNotChosen(label1);
-                    setLabelChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelNotChosen(label5);
-                } else if (size == 6) {
-                    setLabelNotChosen(label1);
-                    setLabelChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelNotChosen(label5);
-                    setLabelNotChosen(label6);
-                } else if (size == 7) {
-                    setLabelNotChosen(label1);
-                    setLabelChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelNotChosen(label5);
-                    setLabelNotChosen(label6);
-                    setLabelNotChosen(label7);
-                } else if (size > 7) {
-                    setLabelNotChosen(label1);
-                    setLabelChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelNotChosen(label5);
-                    setLabelNotChosen(label6);
-                    setLabelNotChosen(label7);
-                    setLabelNotChosen(label8);
-                }
-            }
-            case 3 -> {
-                size = listResults.size();
-                if (size == 4) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelChosen(label3);
-                    setLabelNotChosen(label4);
-                } else if (size == 5) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelNotChosen(label5);
-                } else if (size == 6) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelNotChosen(label5);
-                    setLabelNotChosen(label6);
-                } else if (size == 7) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelNotChosen(label5);
-                    setLabelNotChosen(label6);
-                    setLabelNotChosen(label7);
-                } else if (size > 7) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelNotChosen(label5);
-                    setLabelNotChosen(label6);
-                    setLabelNotChosen(label7);
-                    setLabelNotChosen(label8);
-                }
-            }
-            case 4 -> {
-                size = listResults.size();
-                if (size == 5) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelChosen(label4);
-                    setLabelNotChosen(label5);
-                } else if (size == 6) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelChosen(label4);
-                    setLabelNotChosen(label5);
-                    setLabelNotChosen(label6);
-                } else if (size == 7) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelChosen(label4);
-                    setLabelNotChosen(label5);
-                    setLabelNotChosen(label6);
-                    setLabelNotChosen(label7);
-                } else if (size > 7) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelChosen(label4);
-                    setLabelNotChosen(label5);
-                    setLabelNotChosen(label6);
-                    setLabelNotChosen(label7);
-                    setLabelNotChosen(label8);
-                }
-            }
-            case 5 -> {
-                size = listResults.size();
-                if (size == 6) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelChosen(label5);
-                    setLabelNotChosen(label6);
-                } else if (size == 7) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelChosen(label5);
-                    setLabelNotChosen(label6);
-                    setLabelNotChosen(label7);
-                } else if (size > 7) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelChosen(label5);
-                    setLabelNotChosen(label6);
-                    setLabelNotChosen(label7);
-                    setLabelNotChosen(label8);
-                }
-            }
-            case 6 -> {
-                size = listResults.size();
-                if (size == 7) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelNotChosen(label5);
-                    setLabelChosen(label6);
-                    setLabelNotChosen(label7);
-                } else if (size > 7) {
-                    setLabelNotChosen(label1);
-                    setLabelNotChosen(label2);
-                    setLabelNotChosen(label3);
-                    setLabelNotChosen(label4);
-                    setLabelNotChosen(label5);
-                    setLabelChosen(label6);
-                    setLabelNotChosen(label7);
-                    setLabelNotChosen(label8);
-                }
-            }
-            case 7 -> {
-                setLabelNotChosen(label1);
-                setLabelNotChosen(label2);
-                setLabelNotChosen(label3);
-                setLabelNotChosen(label4);
-                setLabelNotChosen(label5);
-                setLabelNotChosen(label6);
-                setLabelChosen(label7);
-                setLabelNotChosen(label8);
-            }
+            case 1 -> setLabel1ChosenWhenUpward();
+            case 2 -> setLabel2ChosenWhenUpward();
+            case 3 -> setLabel3ChosenWhenUpward();
+            case 4 -> setLabel4ChosenWhenUpward();
+            case 5 -> setLabel5ChosenWhenUpward();
+            case 6 -> setLabel6ChosenWhenUpward();
+            case 7 -> setLabel7ChosenWhenUpward();
+        }
+    }
+
+    private void setLabel7ChosenWhenUpward() {
+        setLabelNotChosen(label1);
+        setLabelNotChosen(label2);
+        setLabelNotChosen(label3);
+        setLabelNotChosen(label4);
+        setLabelNotChosen(label5);
+        setLabelNotChosen(label6);
+        setLabelChosen(label7);
+        setLabelNotChosen(label8);
+    }
+
+    private void setLabel6ChosenWhenUpward() {
+        int size;
+        size = listResults.size();
+        if (size == 7) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelNotChosen(label5);
+            setLabelChosen(label6);
+            setLabelNotChosen(label7);
+        } else if (size > 7) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelNotChosen(label5);
+            setLabelChosen(label6);
+            setLabelNotChosen(label7);
+            setLabelNotChosen(label8);
+        }
+    }
+
+    private void setLabel5ChosenWhenUpward() {
+        int size;
+        size = listResults.size();
+        if (size == 6) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelChosen(label5);
+            setLabelNotChosen(label6);
+        } else if (size == 7) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelChosen(label5);
+            setLabelNotChosen(label6);
+            setLabelNotChosen(label7);
+        } else if (size > 7) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelChosen(label5);
+            setLabelNotChosen(label6);
+            setLabelNotChosen(label7);
+            setLabelNotChosen(label8);
+        }
+    }
+
+    private void setLabel4ChosenWhenUpward() {
+        int size;
+        size = listResults.size();
+        if (size == 5) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelChosen(label4);
+            setLabelNotChosen(label5);
+        } else if (size == 6) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelChosen(label4);
+            setLabelNotChosen(label5);
+            setLabelNotChosen(label6);
+        } else if (size == 7) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelChosen(label4);
+            setLabelNotChosen(label5);
+            setLabelNotChosen(label6);
+            setLabelNotChosen(label7);
+        } else if (size > 7) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelChosen(label4);
+            setLabelNotChosen(label5);
+            setLabelNotChosen(label6);
+            setLabelNotChosen(label7);
+            setLabelNotChosen(label8);
+        }
+    }
+
+    private void setLabel3ChosenWhenUpward() {
+        int size;
+        size = listResults.size();
+        if (size == 4) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelChosen(label3);
+            setLabelNotChosen(label4);
+        } else if (size == 5) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelNotChosen(label5);
+        } else if (size == 6) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelNotChosen(label5);
+            setLabelNotChosen(label6);
+        } else if (size == 7) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelNotChosen(label5);
+            setLabelNotChosen(label6);
+            setLabelNotChosen(label7);
+        } else if (size > 7) {
+            setLabelNotChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelNotChosen(label5);
+            setLabelNotChosen(label6);
+            setLabelNotChosen(label7);
+            setLabelNotChosen(label8);
+        }
+    }
+
+    private void setLabel2ChosenWhenUpward() {
+        int size;
+        size = listResults.size();
+        if (size == 3) {
+            setLabelNotChosen(label1);
+            setLabelChosen(label2);
+            setLabelNotChosen(label3);
+        } else if (size == 4) {
+            setLabelNotChosen(label1);
+            setLabelChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelNotChosen(label4);
+        } else if (size == 5) {
+            setLabelNotChosen(label1);
+            setLabelChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelNotChosen(label5);
+        } else if (size == 6) {
+            setLabelNotChosen(label1);
+            setLabelChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelNotChosen(label5);
+            setLabelNotChosen(label6);
+        } else if (size == 7) {
+            setLabelNotChosen(label1);
+            setLabelChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelNotChosen(label5);
+            setLabelNotChosen(label6);
+            setLabelNotChosen(label7);
+        } else if (size > 7) {
+            setLabelNotChosen(label1);
+            setLabelChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelNotChosen(label5);
+            setLabelNotChosen(label6);
+            setLabelNotChosen(label7);
+            setLabelNotChosen(label8);
+        }
+    }
+
+    private void setLabel1ChosenWhenUpward() {
+        int size;
+        size = listResults.size();
+        if (size == 2) {
+            setLabelChosen(label1);
+            setLabelNotChosen(label2);
+        } else if (size == 3) {
+            setLabelChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelNotChosen(label3);
+        } else if (size == 4) {
+            setLabelChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelNotChosen(label4);
+        } else if (size == 5) {
+            setLabelChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelNotChosen(label5);
+        } else if (size == 6) {
+            setLabelChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelNotChosen(label5);
+            setLabelNotChosen(label6);
+        } else if (size == 7) {
+            setLabelChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelNotChosen(label5);
+            setLabelNotChosen(label6);
+            setLabelNotChosen(label7);
+        } else if (size > 7) {
+            setLabelChosen(label1);
+            setLabelNotChosen(label2);
+            setLabelNotChosen(label3);
+            setLabelNotChosen(label4);
+            setLabelNotChosen(label5);
+            setLabelNotChosen(label6);
+            setLabelNotChosen(label7);
+            setLabelNotChosen(label8);
         }
     }
 
@@ -3007,11 +3061,10 @@ public class SearchBar {
                 }
                 try {
                     TimeUnit.MILLISECONDS.sleep(10);
-                } catch (InterruptedException ignored) {
-                    // ignored
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
             }
-
             GetHandle.INSTANCE.stop();
         });
     }
@@ -3488,14 +3541,7 @@ public class SearchBar {
         while (isVisible()) {
             String text = getSearchBarText();
             if (text == null || text.isEmpty() || System.currentTimeMillis() - startTime < 300) {
-                clearAllLabelBorder();
-                if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                    chooseAndSetBorder(textField, 1);
-                    chooseAndSetBorder(searchInfoLabel, 2);
-                } else {
-                    chooseAndSetBorder(textField, 2);
-                    chooseAndSetBorder(searchInfoLabel, 1);
-                }
+                setTextFieldBorder();
             } else {
                 if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
                     chooseAndSetBorder(textField, 1);
@@ -3506,148 +3552,191 @@ public class SearchBar {
                 }
                 int resultNum = listResults.size();
                 if (resultNum == 0 || resultNum == 1) {
-                    if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                        chooseAndSetBorder(label1, 2);
-                    } else {
-                        chooseAndSetBorder(label1, 1);
-                    }
-                    label2.setBorder(null);
-                    label3.setBorder(null);
-                    label4.setBorder(null);
-                    label5.setBorder(null);
-                    label6.setBorder(null);
-                    label7.setBorder(null);
-                    label8.setBorder(null);
+                    set1LabelBorder();
                 } else if (resultNum == 2) {
-                    if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                        chooseAndSetBorder(label1, 3);
-                        chooseAndSetBorder(label2, 2);
-                    } else {
-                        chooseAndSetBorder(label1, 1);
-                        chooseAndSetBorder(label2, 3);
-                    }
-                    label3.setBorder(null);
-                    label4.setBorder(null);
-                    label5.setBorder(null);
-                    label6.setBorder(null);
-                    label7.setBorder(null);
-                    label8.setBorder(null);
+                    set2LabelBorder();
                 } else if (resultNum == 3) {
-                    if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                        chooseAndSetBorder(label1, 3);
-                        chooseAndSetBorder(label2, 3);
-                        chooseAndSetBorder(label3, 2);
-                    } else {
-                        chooseAndSetBorder(label1, 1);
-                        chooseAndSetBorder(label2, 3);
-                        chooseAndSetBorder(label3, 3);
-                    }
-                    label4.setBorder(null);
-                    label5.setBorder(null);
-                    label6.setBorder(null);
-                    label7.setBorder(null);
-                    label8.setBorder(null);
+                    set3LabelBorder();
                 } else if (resultNum == 4) {
-                    if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                        chooseAndSetBorder(label1, 3);
-                        chooseAndSetBorder(label2, 3);
-                        chooseAndSetBorder(label3, 3);
-                        chooseAndSetBorder(label4, 2);
-                    } else {
-                        chooseAndSetBorder(label1, 1);
-                        chooseAndSetBorder(label2, 3);
-                        chooseAndSetBorder(label3, 3);
-
-                        label4.setBorder(middleBorder);
-                    }
-                    label5.setBorder(null);
-                    label6.setBorder(null);
-                    label7.setBorder(null);
-                    label8.setBorder(null);
+                    set4LabelBorder();
                 } else if (resultNum == 5) {
-                    if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                        chooseAndSetBorder(label1, 3);
-                        chooseAndSetBorder(label2, 3);
-                        chooseAndSetBorder(label3, 3);
-                        chooseAndSetBorder(label4, 3);
-                        chooseAndSetBorder(label5, 2);
-                    } else {
-                        chooseAndSetBorder(label1, 1);
-                        chooseAndSetBorder(label2, 3);
-                        chooseAndSetBorder(label3, 3);
-                        chooseAndSetBorder(label4, 3);
-                        chooseAndSetBorder(label5, 3);
-                    }
-                    label6.setBorder(null);
-                    label7.setBorder(null);
-                    label8.setBorder(null);
+                    set5LabelBorder();
                 } else if (resultNum == 6) {
-                    if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                        chooseAndSetBorder(label1, 3);
-                        chooseAndSetBorder(label2, 3);
-                        chooseAndSetBorder(label3, 3);
-                        chooseAndSetBorder(label4, 3);
-                        chooseAndSetBorder(label5, 3);
-                        chooseAndSetBorder(label6, 2);
-                    } else {
-                        chooseAndSetBorder(label1, 1);
-                        chooseAndSetBorder(label2, 3);
-                        chooseAndSetBorder(label3, 3);
-                        chooseAndSetBorder(label4, 3);
-                        chooseAndSetBorder(label5, 3);
-                        chooseAndSetBorder(label6, 3);
-                    }
-                    label7.setBorder(null);
-                    label8.setBorder(null);
+                    set6LabelBorder();
                 } else if (resultNum == 7) {
-                    if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                        chooseAndSetBorder(label1, 3);
-                        chooseAndSetBorder(label2, 3);
-                        chooseAndSetBorder(label3, 3);
-                        chooseAndSetBorder(label4, 3);
-                        chooseAndSetBorder(label5, 3);
-                        chooseAndSetBorder(label6, 3);
-                        chooseAndSetBorder(label7, 2);
-                    } else {
-                        chooseAndSetBorder(label1, 1);
-                        chooseAndSetBorder(label2, 3);
-                        chooseAndSetBorder(label3, 3);
-                        chooseAndSetBorder(label4, 3);
-                        chooseAndSetBorder(label5, 3);
-                        chooseAndSetBorder(label6, 3);
-                        chooseAndSetBorder(label7, 3);
-                    }
-                    label8.setBorder(null);
+                    set7LabelBorder();
                 } else {
-                    if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                        chooseAndSetBorder(label1, 3);
-                        chooseAndSetBorder(label2, 3);
-                        chooseAndSetBorder(label3, 3);
-                        chooseAndSetBorder(label4, 3);
-                        chooseAndSetBorder(label5, 3);
-                        chooseAndSetBorder(label6, 3);
-                        chooseAndSetBorder(label7, 3);
-                        chooseAndSetBorder(label8, 2);
-                    } else {
-                        chooseAndSetBorder(label1, 1);
-                        chooseAndSetBorder(label2, 3);
-                        chooseAndSetBorder(label3, 3);
-                        chooseAndSetBorder(label4, 3);
-                        chooseAndSetBorder(label5, 3);
-                        chooseAndSetBorder(label6, 3);
-                        chooseAndSetBorder(label7, 3);
-                        chooseAndSetBorder(label8, 2);
-                    }
+                    setAllLabelBorder();
                 }
             }
             try {
                 TimeUnit.MILLISECONDS.sleep(150);
-            } catch (InterruptedException ignored) {
-                // ignored
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
         }
         clearAllLabelBorder();
         isBorderThreadNotExist.set(true);
+    }
+
+    private void setAllLabelBorder() {
+        if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+            chooseAndSetBorder(label1, 3);
+            chooseAndSetBorder(label2, 3);
+            chooseAndSetBorder(label3, 3);
+            chooseAndSetBorder(label4, 3);
+            chooseAndSetBorder(label5, 3);
+            chooseAndSetBorder(label6, 3);
+            chooseAndSetBorder(label7, 3);
+            chooseAndSetBorder(label8, 2);
+        } else {
+            chooseAndSetBorder(label1, 1);
+            chooseAndSetBorder(label2, 3);
+            chooseAndSetBorder(label3, 3);
+            chooseAndSetBorder(label4, 3);
+            chooseAndSetBorder(label5, 3);
+            chooseAndSetBorder(label6, 3);
+            chooseAndSetBorder(label7, 3);
+            chooseAndSetBorder(label8, 2);
+        }
+    }
+
+    private void set7LabelBorder() {
+        if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+            chooseAndSetBorder(label1, 3);
+            chooseAndSetBorder(label2, 3);
+            chooseAndSetBorder(label3, 3);
+            chooseAndSetBorder(label4, 3);
+            chooseAndSetBorder(label5, 3);
+            chooseAndSetBorder(label6, 3);
+            chooseAndSetBorder(label7, 2);
+        } else {
+            chooseAndSetBorder(label1, 1);
+            chooseAndSetBorder(label2, 3);
+            chooseAndSetBorder(label3, 3);
+            chooseAndSetBorder(label4, 3);
+            chooseAndSetBorder(label5, 3);
+            chooseAndSetBorder(label6, 3);
+            chooseAndSetBorder(label7, 3);
+        }
+        label8.setBorder(null);
+    }
+
+    private void set6LabelBorder() {
+        if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+            chooseAndSetBorder(label1, 3);
+            chooseAndSetBorder(label2, 3);
+            chooseAndSetBorder(label3, 3);
+            chooseAndSetBorder(label4, 3);
+            chooseAndSetBorder(label5, 3);
+            chooseAndSetBorder(label6, 2);
+        } else {
+            chooseAndSetBorder(label1, 1);
+            chooseAndSetBorder(label2, 3);
+            chooseAndSetBorder(label3, 3);
+            chooseAndSetBorder(label4, 3);
+            chooseAndSetBorder(label5, 3);
+            chooseAndSetBorder(label6, 3);
+        }
+        label7.setBorder(null);
+        label8.setBorder(null);
+    }
+
+    private void set5LabelBorder() {
+        if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+            chooseAndSetBorder(label1, 3);
+            chooseAndSetBorder(label2, 3);
+            chooseAndSetBorder(label3, 3);
+            chooseAndSetBorder(label4, 3);
+            chooseAndSetBorder(label5, 2);
+        } else {
+            chooseAndSetBorder(label1, 1);
+            chooseAndSetBorder(label2, 3);
+            chooseAndSetBorder(label3, 3);
+            chooseAndSetBorder(label4, 3);
+            chooseAndSetBorder(label5, 3);
+        }
+        label6.setBorder(null);
+        label7.setBorder(null);
+        label8.setBorder(null);
+    }
+
+    private void set4LabelBorder() {
+        if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+            chooseAndSetBorder(label1, 3);
+            chooseAndSetBorder(label2, 3);
+            chooseAndSetBorder(label3, 3);
+            chooseAndSetBorder(label4, 2);
+        } else {
+            chooseAndSetBorder(label1, 1);
+            chooseAndSetBorder(label2, 3);
+            chooseAndSetBorder(label3, 3);
+
+            label4.setBorder(middleBorder);
+        }
+        label5.setBorder(null);
+        label6.setBorder(null);
+        label7.setBorder(null);
+        label8.setBorder(null);
+    }
+
+    private void set3LabelBorder() {
+        if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+            chooseAndSetBorder(label1, 3);
+            chooseAndSetBorder(label2, 3);
+            chooseAndSetBorder(label3, 2);
+        } else {
+            chooseAndSetBorder(label1, 1);
+            chooseAndSetBorder(label2, 3);
+            chooseAndSetBorder(label3, 3);
+        }
+        label4.setBorder(null);
+        label5.setBorder(null);
+        label6.setBorder(null);
+        label7.setBorder(null);
+        label8.setBorder(null);
+    }
+
+    private void set2LabelBorder() {
+        if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+            chooseAndSetBorder(label1, 3);
+            chooseAndSetBorder(label2, 2);
+        } else {
+            chooseAndSetBorder(label1, 1);
+            chooseAndSetBorder(label2, 3);
+        }
+        label3.setBorder(null);
+        label4.setBorder(null);
+        label5.setBorder(null);
+        label6.setBorder(null);
+        label7.setBorder(null);
+        label8.setBorder(null);
+    }
+
+    private void set1LabelBorder() {
+        if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+            chooseAndSetBorder(label1, 2);
+        } else {
+            chooseAndSetBorder(label1, 1);
+        }
+        label2.setBorder(null);
+        label3.setBorder(null);
+        label4.setBorder(null);
+        label5.setBorder(null);
+        label6.setBorder(null);
+        label7.setBorder(null);
+        label8.setBorder(null);
+    }
+
+    private void setTextFieldBorder() {
+        clearAllLabelBorder();
+        if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+            chooseAndSetBorder(textField, 1);
+            chooseAndSetBorder(searchInfoLabel, 2);
+        } else {
+            chooseAndSetBorder(textField, 2);
+            chooseAndSetBorder(searchInfoLabel, 1);
+        }
     }
 
     /**
@@ -3825,72 +3914,11 @@ public class SearchBar {
                 if ((endTime - startTime > waitForInputAndStartSearchTimeoutInMills) && startSearchSignal.get()) {
                     startSearchSignal.set(false); //开始搜索 计时停止
                     if (runningMode == RunningMode.COMMAND_MODE) {
-                        //去掉冒号
-                        String text = getSearchBarText();
-                        if (text.length() <= 1 || !runInternalCommand(text.substring(1).toLowerCase())) {
-                            LinkedHashSet<String> cmdSet = AllConfigs.getInstance().getCmdSet();
-                            cmdSet.add(":clearbin;" + translateService.getTranslation("Clear the recycle bin"));
-                            cmdSet.add(":update;" + translateService.getTranslation("Update file index"));
-                            cmdSet.add(":clearUpdate;" + translateService.getTranslation("Clear the database and update file index"));
-                            cmdSet.add(":help;" + translateService.getTranslation("View help"));
-                            cmdSet.add(":version;" + translateService.getTranslation("View Version"));
-                            for (String i : cmdSet) {
-                                String[] cmdInfo = RegexUtil.semicolon.split(i);
-                                if (cmdInfo[0].contains(text.substring(1))) {
-                                    String result = translateService.getTranslation("Run command") + i;
-                                    listResults.add(new ResultWrap(null, result));
-                                }
-                                if (cmdInfo[0].equals(text)) {
-                                    detectShowingModeAndClose();
-                                    openWithoutAdmin(cmdInfo[1]);
-                                }
-                            }
-                        }
+                        addAvailableCommands(translateService);
                     } else if (runningMode == RunningMode.NORMAL_MODE) {
-                        String searchBarText = getSearchBarText();
-                        if (!searchBarText.isEmpty() && searchBarText.charAt(0) == '>') {
-                            if (searchBarText.length() > 1) {
-                                searchBarText = searchBarText.substring(1);
-                            } else {
-                                searchBarText = "";
-                            }
-                            var pluginInfos = PluginService.getInstance().searchPluginByKeyword(searchBarText);
-                            for (PluginService.PluginInfo pluginInfo : pluginInfos) {
-                                listResults.add(new ResultWrap(null, pluginInfo.identifier));
-                            }
-                        } else {
-                            DatabaseService databaseService = DatabaseService.getInstance();
-                            if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
-                                setLabelChosen(label1);
-                            } else if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.MANUAL_UPDATE) {
-                                setLabelChosen(label1);
-                                eventManagement.putEvent(new ShowTaskBarMessageEvent(translateService.getTranslation("Info"),
-                                        translateService.getTranslation("Updating file index") + "..."));
-                            } else if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.VACUUM) {
-                                setLabelChosen(label1);
-                                eventManagement.putEvent(new ShowTaskBarMessageEvent(translateService.getTranslation("Info"),
-                                        translateService.getTranslation("Organizing database")));
-                            }
-                        }
+                        addAvailablePlugins(eventManagement, translateService);
                     } else if (runningMode == RunningMode.PLUGIN_MODE) {
-                        String result;
-                        //外层循环不断尝试获取消息
-                        while (runningMode == RunningMode.PLUGIN_MODE) {
-                            while (currentUsingPlugin != null &&
-                                    (result = currentUsingPlugin.pollFromResultQueue()) != null &&
-                                    runningMode == RunningMode.PLUGIN_MODE) {
-                                result = "plugin" + PLUGIN_RESULT_SPLITTER_STR + currentUsingPlugin.identifier + PLUGIN_RESULT_SPLITTER_STR + result;
-                                ResultWrap resultWrap = new ResultWrap(null, result);
-                                if (!listResults.contains(resultWrap)) {
-                                    listResults.add(resultWrap);
-                                }
-                            }
-                            try {
-                                TimeUnit.MILLISECONDS.sleep(10);
-                            } catch (InterruptedException e) {
-                                throw new RuntimeException(e);
-                            }
-                        }
+                        addPluginResults();
                     }
                     if (DatabaseService.getInstance().getStatus() != Constants.Enums.DatabaseStatus.NORMAL) {
                         //开启线程等待搜索完成
@@ -3905,6 +3933,79 @@ public class SearchBar {
                 }
             }
         });
+    }
+
+    private void addPluginResults() {
+        String result;
+        //外层循环不断尝试获取消息
+        while (runningMode == RunningMode.PLUGIN_MODE) {
+            while (currentUsingPlugin != null &&
+                    (result = currentUsingPlugin.pollFromResultQueue()) != null &&
+                    runningMode == RunningMode.PLUGIN_MODE) {
+                result = "plugin" + PLUGIN_RESULT_SPLITTER_STR + currentUsingPlugin.identifier + PLUGIN_RESULT_SPLITTER_STR + result;
+                ResultWrap resultWrap = new ResultWrap(null, result);
+                if (!listResults.contains(resultWrap)) {
+                    listResults.add(resultWrap);
+                }
+            }
+            try {
+                TimeUnit.MILLISECONDS.sleep(10);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    private void addAvailablePlugins(EventManagement eventManagement, TranslateService translateService) {
+        String searchBarText = getSearchBarText();
+        if (!searchBarText.isEmpty() && searchBarText.charAt(0) == '>') {
+            if (searchBarText.length() > 1) {
+                searchBarText = searchBarText.substring(1);
+            } else {
+                searchBarText = "";
+            }
+            var pluginInfos = PluginService.getInstance().searchPluginByKeyword(searchBarText);
+            for (PluginService.PluginInfo pluginInfo : pluginInfos) {
+                listResults.add(new ResultWrap(null, pluginInfo.identifier));
+            }
+        } else {
+            DatabaseService databaseService = DatabaseService.getInstance();
+            if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
+                setLabelChosen(label1);
+            } else if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.MANUAL_UPDATE) {
+                setLabelChosen(label1);
+                eventManagement.putEvent(new ShowTaskBarMessageEvent(translateService.getTranslation("Info"),
+                        translateService.getTranslation("Updating file index") + "..."));
+            } else if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.VACUUM) {
+                setLabelChosen(label1);
+                eventManagement.putEvent(new ShowTaskBarMessageEvent(translateService.getTranslation("Info"),
+                        translateService.getTranslation("Organizing database")));
+            }
+        }
+    }
+
+    private void addAvailableCommands(TranslateService translateService) {
+        //去掉冒号
+        String text = getSearchBarText();
+        if (text.length() <= 1 || !runInternalCommand(text.substring(1).toLowerCase())) {
+            LinkedHashSet<String> cmdSet = AllConfigs.getInstance().getCmdSet();
+            cmdSet.add(":clearbin;" + translateService.getTranslation("Clear the recycle bin"));
+            cmdSet.add(":update;" + translateService.getTranslation("Update file index"));
+            cmdSet.add(":clearUpdate;" + translateService.getTranslation("Clear the database and update file index"));
+            cmdSet.add(":help;" + translateService.getTranslation("View help"));
+            cmdSet.add(":version;" + translateService.getTranslation("View Version"));
+            for (String i : cmdSet) {
+                String[] cmdInfo = RegexUtil.semicolon.split(i);
+                if (cmdInfo[0].contains(text.substring(1))) {
+                    String result = translateService.getTranslation("Run command") + i;
+                    listResults.add(new ResultWrap(null, result));
+                }
+                if (cmdInfo[0].equals(text)) {
+                    detectShowingModeAndClose();
+                    openWithoutAdmin(cmdInfo[1]);
+                }
+            }
+        }
     }
 
     private void searchCaseToLowerAndRemoveConflict() {
