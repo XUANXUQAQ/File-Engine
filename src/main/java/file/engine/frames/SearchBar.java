@@ -3811,13 +3811,13 @@ public class SearchBar {
                 final long endTime = System.currentTimeMillis();
                 long waitForInputAndPrepareSearchTimeoutInMills = advancedConfigs.getWaitForInputAndPrepareSearchTimeoutInMills();
                 if ((endTime - startTime > waitForInputAndPrepareSearchTimeoutInMills) && isCudaSearchNotStarted.get() &&
-                        startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
+                        startSearchSignal.get() && !getSearchBarText().startsWith(">") && runningMode == RunningMode.NORMAL_MODE) {
                     setSearchKeywordsAndSearchCase();
                     searchTask = sendPrepareSearchEvent(isMergeResultsThreadExist);
                 }
                 long waitForInputAndStartSearchTimeoutInMills = advancedConfigs.getWaitForInputAndStartSearchTimeoutInMills();
                 if ((endTime - startTime > waitForInputAndStartSearchTimeoutInMills) && isSearchNotStarted.get() &&
-                        startSearchSignal.get() && !getSearchBarText().startsWith(">")) {
+                        startSearchSignal.get() && !getSearchBarText().startsWith(">") && runningMode == RunningMode.NORMAL_MODE) {
                     setSearchKeywordsAndSearchCase();
                     sendSearchEvent(searchTask, isMergeResultsThreadExist);
                 }
