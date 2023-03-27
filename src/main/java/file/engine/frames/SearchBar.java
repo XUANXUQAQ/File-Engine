@@ -118,6 +118,7 @@ public class SearchBar {
     private int iconSideLength;
     private volatile long visibleStartTime = 0;  //记录窗口开始可见的事件，窗口默认最短可见时间0.5秒，防止窗口快速闪烁
     private volatile long firstResultStartShowingTime = 0;  //记录开始显示结果的时间，用于防止刚开始移动到鼠标导致误触
+    private volatile boolean shouldExitMergeResultThread = false;
     private volatile AtomicInteger labelRefreshFlag = new AtomicInteger(); //记录label是否已经有显示结果，从低位开始，label1-8对应1-8位
     private volatile ArrayList<ResultWrap> listResults = new ArrayList<>();  //保存从数据库中找出符合条件的记录（文件路径）
     private volatile String[] searchCase;
@@ -2628,8 +2629,11 @@ public class SearchBar {
                 changeFontOnDisplayFailed();
                 clearAllLabels();
                 resetStatusOnTextChanged();
+                var allPlugins = PluginService.getInstance().getAllPlugins();
+                for (var allPlugin : allPlugins) {
+                    allPlugin.plugin.clearResultQueue();
+                }
                 if (runningMode == RunningMode.PLUGIN_MODE && currentUsingPlugin != null && isPluginSearchBarClearReady.get()) {
-                    currentUsingPlugin.clearResultQueue();
                     currentUsingPlugin.textChanged(getSearchBarText());
                 }
                 isSendSignal = setRunningMode(isPluginSearchBarClearReady);
@@ -2639,7 +2643,6 @@ public class SearchBar {
                     isSearchNotStarted.set(true);
                     isCudaSearchNotStarted.set(true);
                 }
-//                EventManagement.getInstance().putEvent(new StopSearchEvent());
             }
 
             @Override
@@ -2661,6 +2664,10 @@ public class SearchBar {
                     isSearchNotStarted.set(false);
                     isCudaSearchNotStarted.set(false);
                 } else {
+                    var allPlugins = PluginService.getInstance().getAllPlugins();
+                    for (var allPlugin : allPlugins) {
+                        allPlugin.plugin.clearResultQueue();
+                    }
                     if (runningMode == RunningMode.PLUGIN_MODE && currentUsingPlugin != null && isPluginSearchBarClearReady.get()) {
                         currentUsingPlugin.clearResultQueue();
                         currentUsingPlugin.textChanged(getSearchBarText());
@@ -2673,7 +2680,6 @@ public class SearchBar {
                         isCudaSearchNotStarted.set(true);
                     }
                 }
-//                EventManagement.getInstance().putEvent(new StopSearchEvent());
             }
 
             @Override
@@ -2683,7 +2689,6 @@ public class SearchBar {
                 clearAllLabels();
                 resetStatusOnTextChanged();
                 startTime = System.currentTimeMillis();
-//                EventManagement.getInstance().putEvent(new StopSearchEvent());
             }
         });
     }
@@ -3356,15 +3361,16 @@ public class SearchBar {
         SwingUtilities.invokeLater(searchBar::repaint);
     }
 
-    private void addShowSearchStatusThread(DatabaseService.SearchTask currentTaskRef, ArrayList<ResultWrap> listResultsTemp) {
-        ThreadPoolUtil.getInstance().executeTask(() -> {
+    private Future<Void> addShowSearchStatusThread(DatabaseService.SearchTask currentTaskRef) {
+        Callable<Void> func = () -> {
             var isIconSetObj = new Object() {
                 boolean isIconSet = false;
             };
-            while (isVisible() && !getSearchBarText().isEmpty() && !currentTaskRef.isSearchDone() && listResultsTemp == listResults) {
-                if (runningMode != RunningMode.NORMAL_MODE) {
-                    return;
-                }
+            while (isVisible() &&
+                    !getSearchBarText().isEmpty() &&
+                    !currentTaskRef.isSearchDone() &&
+                    !shouldExitMergeResultThread &&
+                    (runningMode == RunningMode.NORMAL_MODE)) {
                 SwingUtilities.invokeLater(() -> {
                     if (!isIconSetObj.isIconSet) {
                         isIconSetObj.isIconSet = true;
@@ -3382,12 +3388,11 @@ public class SearchBar {
                 }
             }
             final long startShowSearchDoneTime = System.currentTimeMillis();
-            while (isVisible() && !getSearchBarText().isEmpty() &&
-                    System.currentTimeMillis() - startShowSearchDoneTime < 3000 &&
-                    listResultsTemp == listResults) {
-                if (runningMode != RunningMode.NORMAL_MODE) {
-                    return;
-                }
+            while (isVisible() &&
+                    !getSearchBarText().isEmpty() &&
+                    ((System.currentTimeMillis() - startShowSearchDoneTime) < 3000) &&
+                    !shouldExitMergeResultThread &&
+                    (runningMode == RunningMode.NORMAL_MODE)) {
                 SwingUtilities.invokeLater(() -> {
                     searchInfoLabel.setText(TranslateService.INSTANCE.getTranslation("Search Done") + "    " +
                             TranslateService.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
@@ -3401,10 +3406,10 @@ public class SearchBar {
                     throw new RuntimeException(e);
                 }
             }
-            while (isVisible() && !getSearchBarText().isEmpty() && listResultsTemp == listResults) {
-                if (runningMode != RunningMode.NORMAL_MODE) {
-                    return;
-                }
+            while (isVisible() &&
+                    !getSearchBarText().isEmpty() &&
+                    !shouldExitMergeResultThread &&
+                    (runningMode == RunningMode.NORMAL_MODE)) {
                 showSelectInfoOnLabel();
                 try {
                     TimeUnit.MILLISECONDS.sleep(250);
@@ -3412,7 +3417,9 @@ public class SearchBar {
                     throw new RuntimeException(e);
                 }
             }
-        });
+            return null;
+        };
+        return ThreadPoolUtil.getInstance().executeTask(func);
     }
 
     /**
@@ -3429,14 +3436,13 @@ public class SearchBar {
     /**
      * 将tempResults以及插件返回的结果转移到listResults中来显示
      */
-    @SneakyThrows
     private void mergeResults(DatabaseService.SearchTask currentSearchTask,
                               ArrayList<ResultWrap> listResultsTemp) {
         var pluginService = PluginService.getInstance();
         var allPlugins = pluginService.getAllPlugins();
         var eventManagement = EventManagement.getInstance();
         HashSet<String> listSet = new HashSet<>();
-        while (listResultsTemp == listResults && eventManagement.notMainExit()) {
+        while (listResultsTemp == listResults && eventManagement.notMainExit() && !shouldExitMergeResultThread) {
             if (getSearchBarText().isEmpty()) {
                 listResultsTemp.clear();
             } else if (runningMode == RunningMode.NORMAL_MODE) {
@@ -3447,7 +3453,7 @@ public class SearchBar {
                             listResultsTemp.add(resultWrap);
                             listResultsTemp.removeIf(e -> e.searchTask != currentSearchTask);
                         }
-                        if (listResultsTemp != listResults) {
+                        if (listResultsTemp != listResults || shouldExitMergeResultThread) {
                             break;
                         }
                     }
@@ -3462,10 +3468,7 @@ public class SearchBar {
                             listResultsTemp.add(resultWrap);
                             listResultsTemp.removeIf(e -> e.searchTask != currentSearchTask);
                         }
-                        if (listResultsTemp != listResults) {
-                            for (var allPlugin : allPlugins) {
-                                allPlugin.plugin.clearResultQueue();
-                            }
+                        if (listResultsTemp != listResults || shouldExitMergeResultThread) {
                             break out;
                         }
                     }
@@ -3477,13 +3480,17 @@ public class SearchBar {
                             listResultsTemp.add(resultWrap);
                             listResultsTemp.removeIf(e -> e.searchTask != currentSearchTask);
                         }
-                        if (listResultsTemp != listResults) {
+                        if (listResultsTemp != listResults || shouldExitMergeResultThread) {
                             break;
                         }
                     }
                 }
             }
-            TimeUnit.MILLISECONDS.sleep(1);
+            try {
+                TimeUnit.MILLISECONDS.sleep(1);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -3794,19 +3801,6 @@ public class SearchBar {
         EventManagement eventManagement = EventManagement.getInstance();
         var ret = new Object[2];
         if (!getSearchBarText().isEmpty()) {
-            if (isThreadEnded != null) {
-                try {
-                    if (IsDebug.isDebug()) {
-                        System.out.println("等待上一个合并结果线程结束");
-                    }
-                    isThreadEnded.get();
-                    if (IsDebug.isDebug()) {
-                        System.out.println("等待完成");
-                    }
-                } catch (InterruptedException | ExecutionException e) {
-                    throw new RuntimeException(e);
-                }
-            }
             isCudaSearchNotStarted.set(false);
             if (DatabaseService.getInstance().getStatus() == Constants.Enums.DatabaseStatus.NORMAL &&
                     runningMode == RunningMode.NORMAL_MODE) {
@@ -3818,12 +3812,29 @@ public class SearchBar {
                     throw new RuntimeException();
                 }
                 prepareSearchEvent.getReturnValue().ifPresent(res -> {
+                    if (isThreadEnded != null) {
+                        try {
+                            if (IsDebug.isDebug()) {
+                                System.out.println("等待上一个合并结果线程结束");
+                            }
+                            shouldExitMergeResultThread = true;
+                            isThreadEnded.get();
+                            shouldExitMergeResultThread = false;
+                            if (IsDebug.isDebug()) {
+                                System.out.println("等待完成");
+                            }
+                        } catch (InterruptedException | ExecutionException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
                     ret[0] = res;
-                    var listResultsTemp = listResults;
+                    var listResultsTemp = new ArrayList<ResultWrap>();
+                    listResults = listResultsTemp;
                     labelRefreshFlag = new AtomicInteger();
-                    addShowSearchStatusThread((DatabaseService.SearchTask) res, listResultsTemp);
+                    var showSearchStatusFuture = addShowSearchStatusThread((DatabaseService.SearchTask) res);
                     Callable<Void> mergeFunc = () -> {
                         mergeResults((DatabaseService.SearchTask) res, listResultsTemp);
+                        showSearchStatusFuture.get();
                         return null;
                     };
                     ret[1] = ThreadPoolUtil.getInstance().executeTask(mergeFunc);
@@ -3860,7 +3871,9 @@ public class SearchBar {
                             if (IsDebug.isDebug()) {
                                 System.out.println("等待上一个合并结果线程结束");
                             }
+                            shouldExitMergeResultThread = true;
                             isThreadEnded.get();
+                            shouldExitMergeResultThread = false;
                             if (IsDebug.isDebug()) {
                                 System.out.println("等待完成");
                             }
@@ -3871,9 +3884,10 @@ public class SearchBar {
                     var listResultsTemp = new ArrayList<ResultWrap>();
                     listResults = listResultsTemp;
                     labelRefreshFlag = new AtomicInteger();
-                    addShowSearchStatusThread((DatabaseService.SearchTask) res, listResultsTemp);
+                    var showSearchStatusFuture = addShowSearchStatusThread((DatabaseService.SearchTask) res);
                     Callable<Void> mergeResultsFunc = () -> {
                         mergeResults((DatabaseService.SearchTask) res, listResultsTemp);
+                        showSearchStatusFuture.get();
                         return null;
                     };
                     ret[0] = ThreadPoolUtil.getInstance().executeTask(mergeResultsFunc);
