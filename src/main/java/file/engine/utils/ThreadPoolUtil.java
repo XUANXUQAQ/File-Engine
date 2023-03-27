@@ -55,6 +55,13 @@ public enum ThreadPoolUtil {
         return executeTaskPlatform(task);
     }
 
+    public <T> Future<T> executeTask(Callable<T> task) {
+        if (isShutdown.get()) {
+            return null;
+        }
+        return executeTaskPlatform(task);
+    }
+
     /**
      * 提交任务
      *

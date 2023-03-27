@@ -51,12 +51,9 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.atomic.AtomicStampedReference;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -3433,7 +3430,8 @@ public class SearchBar {
      * 将tempResults以及插件返回的结果转移到listResults中来显示
      */
     @SneakyThrows
-    private void mergeResults(DatabaseService.SearchTask currentSearchTask, ArrayList<ResultWrap> listResultsTemp) {
+    private void mergeResults(DatabaseService.SearchTask currentSearchTask,
+                              ArrayList<ResultWrap> listResultsTemp) {
         var pluginService = PluginService.getInstance();
         var allPlugins = pluginService.getAllPlugins();
         var eventManagement = EventManagement.getInstance();
@@ -3442,57 +3440,50 @@ public class SearchBar {
             if (getSearchBarText().isEmpty()) {
                 listResultsTemp.clear();
             } else if (runningMode == RunningMode.NORMAL_MODE) {
-                mergeResultMethod(currentSearchTask, listResultsTemp, listSet, allPlugins);
+                if (currentSearchTask != null) {
+                    for (String each : currentSearchTask.getCacheAndPriorityResults()) {
+                        if (listSet.add(each)) {
+                            ResultWrap resultWrap = new ResultWrap(currentSearchTask, each);
+                            listResultsTemp.add(resultWrap);
+                            listResultsTemp.removeIf(e -> e.searchTask != currentSearchTask);
+                        }
+                        if (listResultsTemp != listResults) {
+                            break;
+                        }
+                    }
+                }
+                out:
+                for (var eachPlugin : allPlugins) {
+                    String each;
+                    while ((each = eachPlugin.plugin.pollFromResultQueue()) != null) {
+                        each = "plugin" + PLUGIN_RESULT_SPLITTER_STR + eachPlugin.plugin.identifier + PLUGIN_RESULT_SPLITTER_STR + each;
+                        if (listSet.add(each)) {
+                            ResultWrap resultWrap = new ResultWrap(currentSearchTask, each);
+                            listResultsTemp.add(resultWrap);
+                            listResultsTemp.removeIf(e -> e.searchTask != currentSearchTask);
+                        }
+                        if (listResultsTemp != listResults) {
+                            for (var allPlugin : allPlugins) {
+                                allPlugin.plugin.clearResultQueue();
+                            }
+                            break out;
+                        }
+                    }
+                }
+                if (currentSearchTask != null) {
+                    for (String each : currentSearchTask.getTempResults()) {
+                        if (listSet.add(each)) {
+                            ResultWrap resultWrap = new ResultWrap(currentSearchTask, each);
+                            listResultsTemp.add(resultWrap);
+                            listResultsTemp.removeIf(e -> e.searchTask != currentSearchTask);
+                        }
+                        if (listResultsTemp != listResults) {
+                            break;
+                        }
+                    }
+                }
             }
             TimeUnit.MILLISECONDS.sleep(1);
-        }
-    }
-
-    private void mergeResultMethod(DatabaseService.SearchTask tempSearchTask,
-                                   ArrayList<ResultWrap> listResultsTemp,
-                                   HashSet<String> listSet,
-                                   Set<PluginService.PluginInfo> allPlugins) {
-        if (tempSearchTask != null) {
-            for (String each : tempSearchTask.getCacheAndPriorityResults()) {
-                if (listSet.add(each)) {
-                    ResultWrap resultWrap = new ResultWrap(tempSearchTask, each);
-                    listResultsTemp.add(resultWrap);
-                    listResultsTemp.removeIf(e -> e.searchTask != tempSearchTask);
-                }
-                if (listResultsTemp != listResults) {
-                    break;
-                }
-            }
-        }
-        out:
-        for (var eachPlugin : allPlugins) {
-            String each;
-            while ((each = eachPlugin.plugin.pollFromResultQueue()) != null) {
-                each = "plugin" + PLUGIN_RESULT_SPLITTER_STR + eachPlugin.plugin.identifier + PLUGIN_RESULT_SPLITTER_STR + each;
-                if (listSet.add(each)) {
-                    ResultWrap resultWrap = new ResultWrap(tempSearchTask, each);
-                    listResultsTemp.add(resultWrap);
-                    listResultsTemp.removeIf(e -> e.searchTask != tempSearchTask);
-                }
-                if (listResultsTemp != listResults) {
-                    for (var allPlugin : allPlugins) {
-                        allPlugin.plugin.clearResultQueue();
-                    }
-                    break out;
-                }
-            }
-        }
-        if (tempSearchTask != null) {
-            for (String each : tempSearchTask.getTempResults()) {
-                if (listSet.add(each)) {
-                    ResultWrap resultWrap = new ResultWrap(tempSearchTask, each);
-                    listResultsTemp.add(resultWrap);
-                    listResultsTemp.removeIf(e -> e.searchTask != tempSearchTask);
-                }
-                if (listResultsTemp != listResults) {
-                    break;
-                }
-            }
         }
     }
 
@@ -3793,25 +3784,29 @@ public class SearchBar {
 //        }
     }
 
-    private DatabaseService.SearchTask sendPrepareSearchEvent(AtomicStampedReference<Boolean> isMergeResultsThreadExist) {
+    /**
+     * ret返回值第一个为DatabaseService.SearchTask，第二个为Future<Void>用于检测结果合并线程是否结束
+     *
+     * @param isThreadEnded 上一个线程是否结束
+     * @return ret
+     */
+    private Object[] sendPrepareSearchEvent(Future<Void> isThreadEnded) {
         EventManagement eventManagement = EventManagement.getInstance();
-        var ret = new AtomicReference<DatabaseService.SearchTask>();
+        var ret = new Object[2];
         if (!getSearchBarText().isEmpty()) {
-            final long startSpin = System.currentTimeMillis();
-            int stamp;
-            do {
-                stamp = isMergeResultsThreadExist.getStamp();
-                if (System.currentTimeMillis() - startSpin > 1000L) {
-                    System.err.println("wait for merge results thread timeout.");
-                    isMergeResultsThreadExist.set(true, 0);
-                    break;
-                }
+            if (isThreadEnded != null) {
                 try {
-                    TimeUnit.MILLISECONDS.sleep(1);
-                } catch (InterruptedException e) {
+                    if (IsDebug.isDebug()) {
+                        System.out.println("等待上一个合并结果线程结束");
+                    }
+                    isThreadEnded.get();
+                    if (IsDebug.isDebug()) {
+                        System.out.println("等待完成");
+                    }
+                } catch (InterruptedException | ExecutionException e) {
                     throw new RuntimeException(e);
                 }
-            } while (!isMergeResultsThreadExist.compareAndSet(false, true, stamp, stamp + 1));
+            }
             isCudaSearchNotStarted.set(false);
             if (DatabaseService.getInstance().getStatus() == Constants.Enums.DatabaseStatus.NORMAL &&
                     runningMode == RunningMode.NORMAL_MODE) {
@@ -3820,68 +3815,75 @@ public class SearchBar {
                 eventManagement.putEvent(prepareSearchEvent);
                 if (eventManagement.waitForEvent(prepareSearchEvent)) {
                     System.err.println("prepare search event failed.");
-                    return null;
+                    throw new RuntimeException();
                 }
                 prepareSearchEvent.getReturnValue().ifPresent(res -> {
-                    ret.set((DatabaseService.SearchTask) res);
+                    ret[0] = res;
                     var listResultsTemp = listResults;
                     labelRefreshFlag = new AtomicInteger();
-                    addShowSearchStatusThread(ret.get(), listResultsTemp);
-                    ThreadPoolUtil.getInstance().executeTask(() -> {
-                        try {
-                            mergeResults(ret.get(), listResultsTemp);
-                        } finally {
-                            int stampRef;
-                            boolean expectRef;
-                            do {
-                                stampRef = isMergeResultsThreadExist.getStamp();
-                                expectRef = isMergeResultsThreadExist.getReference();
-                            } while (!isMergeResultsThreadExist.compareAndSet(expectRef, false, stampRef, stampRef + 1));
-                        }
-                    });
+                    addShowSearchStatusThread((DatabaseService.SearchTask) res, listResultsTemp);
+                    Callable<Void> mergeFunc = () -> {
+                        mergeResults((DatabaseService.SearchTask) res, listResultsTemp);
+                        return null;
+                    };
+                    ret[1] = ThreadPoolUtil.getInstance().executeTask(mergeFunc);
                 });
             }
         }
-        return ret.get();
+        return ret;
     }
 
     /**
      * 发送开始搜索事件
      */
-    private void sendSearchEvent(DatabaseService.SearchTask preparedSearchTasks, AtomicStampedReference<Boolean> isMergeResultsThreadExist) {
+    @SuppressWarnings("unchecked")
+    private Future<Void> sendSearchEvent(DatabaseService.SearchTask preparedSearchTasks, Future<Void> isThreadEnded) {
         EventManagement eventManagement = EventManagement.getInstance();
-        var workingSearchTask = new AtomicReference<>(preparedSearchTasks);
+        var ret = new Object[1];
         if (!getSearchBarText().isEmpty()) {
             isSearchNotStarted.set(false);
             if (DatabaseService.getInstance().getStatus() == Constants.Enums.DatabaseStatus.NORMAL &&
                     runningMode == RunningMode.NORMAL_MODE) {
                 searchCaseToLowerAndRemoveConflict();
                 var startSearchEvent = new StartSearchEvent(() -> searchText, () -> searchCase, () -> keywords);
-                eventManagement.putEvent(startSearchEvent, event -> event.getReturnValue().ifPresent(res -> {
-                    if (preparedSearchTasks != res) {
-                        workingSearchTask.set((DatabaseService.SearchTask) res);
-                        var listResultsTemp = new ArrayList<ResultWrap>();
-                        listResults = listResultsTemp;
-                        labelRefreshFlag = new AtomicInteger();
-                        addShowSearchStatusThread(workingSearchTask.get(), listResultsTemp);
-                        ThreadPoolUtil.getInstance().executeTask(() -> {
-                            try {
-                                mergeResults(workingSearchTask.get(), listResultsTemp);
-                            } finally {
-                                int stampRef;
-                                boolean expectRef;
-                                do {
-                                    stampRef = isMergeResultsThreadExist.getStamp();
-                                    expectRef = isMergeResultsThreadExist.getReference();
-                                } while (!isMergeResultsThreadExist.compareAndSet(expectRef, false, stampRef, stampRef + 1));
-                            }
-                        });
+                eventManagement.putEvent(startSearchEvent);
+                if (eventManagement.waitForEvent(startSearchEvent)) {
+                    System.err.println("send start search event failed.");
+                    throw new RuntimeException();
+                }
+                startSearchEvent.getReturnValue().ifPresent(res -> {
+                    if (preparedSearchTasks == res) {
+                        return;
                     }
-                }), event -> System.err.println("send search event failed."));
+                    if (isThreadEnded != null) {
+                        try {
+                            if (IsDebug.isDebug()) {
+                                System.out.println("等待上一个合并结果线程结束");
+                            }
+                            isThreadEnded.get();
+                            if (IsDebug.isDebug()) {
+                                System.out.println("等待完成");
+                            }
+                        } catch (InterruptedException | ExecutionException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                    var listResultsTemp = new ArrayList<ResultWrap>();
+                    listResults = listResultsTemp;
+                    labelRefreshFlag = new AtomicInteger();
+                    addShowSearchStatusThread((DatabaseService.SearchTask) res, listResultsTemp);
+                    Callable<Void> mergeResultsFunc = () -> {
+                        mergeResults((DatabaseService.SearchTask) res, listResultsTemp);
+                        return null;
+                    };
+                    ret[0] = ThreadPoolUtil.getInstance().executeTask(mergeResultsFunc);
+                });
             }
         }
+        return (Future<Void>) ret[0];
     }
 
+    @SuppressWarnings("unchecked")
     private void sendSignalAndShowCommandThread() {
         ThreadPoolUtil.getInstance().executeTask(() -> {
             //缓存和常用文件夹搜索线程
@@ -3892,8 +3894,8 @@ public class SearchBar {
                 runInternalCommand("help");
             }
             final AtomicBoolean isWaiting = new AtomicBoolean(false);
-            DatabaseService.SearchTask searchTask = null;
-            var isMergeResultsThreadExist = new AtomicStampedReference<>(false, 0);
+            DatabaseService.SearchTask preparedSearchTask = null;
+            Future<Void> mergeResultsThreadFuture = null;
             while (eventManagement.notMainExit()) {
                 var advancedConfigs = AllConfigs.getInstance().getConfigEntity().getAdvancedConfigEntity();
                 final long endTime = System.currentTimeMillis();
@@ -3901,13 +3903,18 @@ public class SearchBar {
                 if ((endTime - startTime > waitForInputAndPrepareSearchTimeoutInMills) && isCudaSearchNotStarted.get() &&
                         startSearchSignal.get() && !getSearchBarText().startsWith(">") && runningMode == RunningMode.NORMAL_MODE) {
                     setSearchKeywordsAndSearchCase();
-                    searchTask = sendPrepareSearchEvent(isMergeResultsThreadExist);
+                    var ret = sendPrepareSearchEvent(mergeResultsThreadFuture);
+                    preparedSearchTask = (DatabaseService.SearchTask) ret[0];
+                    mergeResultsThreadFuture = (Future<Void>) ret[1];
                 }
                 long waitForInputAndStartSearchTimeoutInMills = advancedConfigs.getWaitForInputAndStartSearchTimeoutInMills();
                 if ((endTime - startTime > waitForInputAndStartSearchTimeoutInMills) && isSearchNotStarted.get() &&
                         startSearchSignal.get() && !getSearchBarText().startsWith(">") && runningMode == RunningMode.NORMAL_MODE) {
                     setSearchKeywordsAndSearchCase();
-                    sendSearchEvent(searchTask, isMergeResultsThreadExist);
+                    var ret = sendSearchEvent(preparedSearchTask, mergeResultsThreadFuture);
+                    if (ret != null) {
+                        mergeResultsThreadFuture = ret;
+                    }
                 }
 
                 if ((endTime - startTime > waitForInputAndStartSearchTimeoutInMills) && startSearchSignal.get()) {
