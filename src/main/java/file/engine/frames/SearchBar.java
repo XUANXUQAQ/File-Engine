@@ -49,7 +49,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -3804,7 +3803,7 @@ public class SearchBar {
                 stamp = isMergeResultsThreadExist.getStamp();
                 if (System.currentTimeMillis() - startSpin > 1000L) {
                     System.err.println("wait for merge results thread timeout.");
-                    isMergeResultsThreadExist.set(true, LocalTime.now().toSecondOfDay());
+                    isMergeResultsThreadExist.set(true, 0);
                     break;
                 }
                 try {
@@ -3812,7 +3811,7 @@ public class SearchBar {
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
-            } while (!isMergeResultsThreadExist.compareAndSet(false, true, stamp, LocalTime.now().toSecondOfDay()));
+            } while (!isMergeResultsThreadExist.compareAndSet(false, true, stamp, stamp + 1));
             isCudaSearchNotStarted.set(false);
             if (DatabaseService.getInstance().getStatus() == Constants.Enums.DatabaseStatus.NORMAL &&
                     runningMode == RunningMode.NORMAL_MODE) {
@@ -3837,7 +3836,7 @@ public class SearchBar {
                             do {
                                 stampRef = isMergeResultsThreadExist.getStamp();
                                 expectRef = isMergeResultsThreadExist.getReference();
-                            } while (!isMergeResultsThreadExist.compareAndSet(expectRef, false, stampRef, LocalTime.now().toSecondOfDay()));
+                            } while (!isMergeResultsThreadExist.compareAndSet(expectRef, false, stampRef, stampRef + 1));
                         }
                     });
                 });
@@ -3874,7 +3873,7 @@ public class SearchBar {
                                 do {
                                     stampRef = isMergeResultsThreadExist.getStamp();
                                     expectRef = isMergeResultsThreadExist.getReference();
-                                } while (!isMergeResultsThreadExist.compareAndSet(expectRef, false, stampRef, LocalTime.now().toSecondOfDay()));
+                                } while (!isMergeResultsThreadExist.compareAndSet(expectRef, false, stampRef, stampRef + 1));
                             }
                         });
                     }
@@ -3894,7 +3893,7 @@ public class SearchBar {
             }
             final AtomicBoolean isWaiting = new AtomicBoolean(false);
             DatabaseService.SearchTask searchTask = null;
-            var isMergeResultsThreadExist = new AtomicStampedReference<>(false, LocalTime.now().toSecondOfDay());
+            var isMergeResultsThreadExist = new AtomicStampedReference<>(false, 0);
             while (eventManagement.notMainExit()) {
                 var advancedConfigs = AllConfigs.getInstance().getConfigEntity().getAdvancedConfigEntity();
                 final long endTime = System.currentTimeMillis();
