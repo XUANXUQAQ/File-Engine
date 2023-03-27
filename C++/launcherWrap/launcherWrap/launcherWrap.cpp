@@ -24,16 +24,17 @@
 #define CHECK_TIME_THRESHOLD 1
 
 // TODO 该变量为File-Engine.zip中的File-Engine.jar的md5值
-#define FILE_ENGINE_JAR_MD5 "a07b27af37a41722ecdcffc2a5ad082a"
+#define FILE_ENGINE_JAR_MD5 "291f7f45bbe42abc4eb1f48efaa13877"
 
+const std::string redirect_error_file_option = "-XX:ErrorFile=../logs/hs_err_pid%p.log ";
 const std::string default_jvm_params =
 "-Xms8M "
 "-Xmx256M "
 "-XX:+UseParallelGC "
 "-XX:MaxHeapFreeRatio=20 "
 "-XX:MinHeapFreeRatio=10 "
-"-XX:+CompactStrings "
-"-XX:ErrorFile=../logs/hs_err_pid%p.log ";
+"-XX:+CompactStrings " +
+redirect_error_file_option;
 
 #ifndef TEST
 #pragma comment( linker, "/subsystem:windows /entry:mainCRTStartup" )
@@ -155,6 +156,7 @@ int main()
 
 std::string init_jvm_parameters()
 {
+	// 读取默认jvm启动参数
 	std::unordered_set<std::string> default_jvm_parameters_set;
 	std::string jvm_parameter(default_jvm_params);
 	size_t pos;
@@ -164,9 +166,9 @@ std::string init_jvm_parameters()
 		jvm_parameter.erase(0, pos + 1);
 	}
 	default_jvm_parameters_set.insert(trim(jvm_parameter));
-
-	bool is_all_default = true;
+	// 读取自定义jvm启动参数
 	std::unordered_set<std::string> custom_vm_options;
+	bool is_all_default = true;
 	if (is_file_exist(g_jvm_parameter_file_path))
 	{
 		std::ifstream input_stream(g_jvm_parameter_file_path, std::ios::binary);
@@ -181,26 +183,31 @@ std::string init_jvm_parameters()
 			custom_vm_options.insert(vm_option);
 		}
 		input_stream.close();
+		if (custom_vm_options.find(redirect_error_file_option) == custom_vm_options.end())
+		{
+			custom_vm_options.insert(redirect_error_file_option);
+		}
+	}
+	std::string vm_option_str;
+	if (is_all_default)
+	{
+		vm_option_str = default_jvm_params;
 	}
 	else
 	{
-		std::ofstream output_stream(g_jvm_parameter_file_path, std::ios::binary);
-		for (char each_char : default_jvm_params)
+		for (const auto& custom_vm_option : custom_vm_options)
 		{
-			output_stream.put(each_char == ' ' ? '\n' : each_char);
+			vm_option_str += custom_vm_option;
+			vm_option_str += ' ';
 		}
-		output_stream.close();
 	}
-	if (is_all_default)
+	// 保存到文件
+	std::ofstream output_stream(g_jvm_parameter_file_path, std::ios::binary);
+	for (char each_char : vm_option_str)
 	{
-		return default_jvm_params;
+		output_stream.put(each_char == ' ' ? '\n' : each_char);
 	}
-	std::string vm_option_str;
-	for (const auto & custom_vm_option : custom_vm_options)
-	{
-		vm_option_str += custom_vm_option;
-		vm_option_str += ' ';
-	}
+	output_stream.close();
 	return vm_option_str;
 }
 
