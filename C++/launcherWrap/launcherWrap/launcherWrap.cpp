@@ -12,6 +12,7 @@
 #include <codecvt>
 #include "zip/zip.h"
 #include "md5.h"
+#include <unordered_set>
 #ifdef TEST
 #include <iostream>
 #endif
@@ -23,15 +24,22 @@
 #define CHECK_TIME_THRESHOLD 1
 
 // TODO 该变量为File-Engine.zip中的File-Engine.jar的md5值
-#define FILE_ENGINE_JAR_MD5 "de5b2fec8d1f2b34134d5a7f217d4bec"
+#define FILE_ENGINE_JAR_MD5 "a07b27af37a41722ecdcffc2a5ad082a"
+
+const std::string default_jvm_params =
+"-Xms8M "
+"-Xmx256M "
+"-XX:+UseParallelGC "
+"-XX:MaxHeapFreeRatio=20 "
+"-XX:MinHeapFreeRatio=10 "
+"-XX:+CompactStrings "
+"-XX:ErrorFile=../logs/hs_err_pid%p.log ";
 
 #ifndef TEST
 #pragma comment( linker, "/subsystem:windows /entry:mainCRTStartup" )
 #endif
 
 constexpr auto* g_file_engine_zip_name = "File-Engine.zip";
-std::string g_jvm_parameters =
-"-Xms8M -Xmx256M -XX:+UseParallelGC -XX:MaxHeapFreeRatio=20 -XX:MinHeapFreeRatio=10 -XX:+CompactStrings -XX:ErrorFile=../logs/hs_err_pid%p.log";
 
 char g_close_signal_file[1000];
 char g_open_from_jar_signal_file[1000];
@@ -64,9 +72,10 @@ std::string get_date();
 time_t convert(int year, int month, int day);
 int get_days(const char* from, const char* to);
 void check_logs();
-void init_jvm_parameters();
+std::string init_jvm_parameters();
 tm get_tm();
 std::wstring string2wstring(const std::string& str);
+std::string& trim(std::string& s);
 
 int main()
 {
@@ -144,33 +153,66 @@ int main()
 	return 0;
 }
 
-void init_jvm_parameters()
+std::string init_jvm_parameters()
 {
+	std::unordered_set<std::string> default_jvm_parameters_set;
+	std::string jvm_parameter(default_jvm_params);
+	size_t pos;
+	while ((pos = jvm_parameter.find(' ')) != std::string::npos) {
+		std::string token = jvm_parameter.substr(0, pos);
+		default_jvm_parameters_set.insert(trim(token));
+		jvm_parameter.erase(0, pos + 1);
+	}
+	default_jvm_parameters_set.insert(trim(jvm_parameter));
+
+	bool is_all_default = true;
+	std::unordered_set<std::string> custom_vm_options;
 	if (is_file_exist(g_jvm_parameter_file_path))
 	{
 		std::ifstream input_stream(g_jvm_parameter_file_path, std::ios::binary);
 		std::string line;
-		std::string jvm_parameter;
 		while (std::getline(input_stream, line))
 		{
-			jvm_parameter += line;
-			jvm_parameter += " ";
-		}
-		if (!jvm_parameter.empty())
-		{
-			g_jvm_parameters = jvm_parameter;
+			auto&& vm_option = trim(line);
+			if (is_all_default && default_jvm_parameters_set.find(vm_option) == default_jvm_parameters_set.end())
+			{
+				is_all_default = false;
+			}
+			custom_vm_options.insert(vm_option);
 		}
 		input_stream.close();
 	}
 	else
 	{
 		std::ofstream output_stream(g_jvm_parameter_file_path, std::ios::binary);
-		for (char each_char : g_jvm_parameters)
+		for (char each_char : default_jvm_params)
 		{
 			output_stream.put(each_char == ' ' ? '\n' : each_char);
 		}
 		output_stream.close();
 	}
+	if (is_all_default)
+	{
+		return default_jvm_params;
+	}
+	std::string vm_option_str;
+	for (const auto & custom_vm_option : custom_vm_options)
+	{
+		vm_option_str += custom_vm_option;
+		vm_option_str += ' ';
+	}
+	return vm_option_str;
+}
+
+std::string& trim(std::string& s)
+{
+	if (s.empty())
+	{
+		return s;
+	}
+	s.erase(0, s.find_first_not_of(' '));
+	s.erase(s.find_last_not_of(' ') + 1);
+	return s;
 }
 
 inline void init_path()
@@ -349,7 +391,7 @@ inline void extract_zip()
  */
 void restart_file_engine(const bool is_ignore_close_file)
 {
-	init_jvm_parameters();
+	auto&& vm_options = init_jvm_parameters();
 	if (is_ignore_close_file)
 	{
 		remove(g_close_signal_file);
@@ -401,7 +443,7 @@ void restart_file_engine(const bool is_ignore_close_file)
 	command.append(jre.substr(0, 2));
 	command.append("\"");
 	command.append(jre.substr(2));
-	command.append("bin\\java.exe\" ").append(g_jvm_parameters).append(" -jar File-Engine.jar").append(" 1> normal.log")
+	command.append("bin\\java.exe\" ").append(vm_options).append(" -jar File-Engine.jar").append(" 1> normal.log")
 		.append(" 2>> ").append("\"").append(g_log_file_path).append(get_date()).append(".log").append("\"");
 #ifdef TEST
 	std::cout << "running command: " << command << std::endl;
