@@ -696,7 +696,7 @@ public class DatabaseService {
                 // 向线程池提交搜索任务
                 int realResultCount1 = realResultCount;
                 submitCount.getAndIncrement();
-                searchTask.workStealingPool.submit(() -> {
+                ThreadPoolUtil.getInstance().executeTask(() -> {
                     try {
                         for (int j = 0; j < realResultCount1; ++j) {
                             if (checkIsMatchedAndAddToList(tmpQueryResultsCache[j], priorityStr, searchTask)) {
@@ -1015,30 +1015,46 @@ public class DatabaseService {
      */
     private void startSearch(SearchTask searchTask) {
         var eventManagement = EventManagement.getInstance();
+        ThreadPoolUtil threadPoolUtil = ThreadPoolUtil.getInstance();
         Consumer<ConcurrentLinkedQueue<Runnable>> taskHandler = (taskQueue) -> {
-            ThreadPoolUtil threadPoolUtil = ThreadPoolUtil.getInstance();
             while (!taskQueue.isEmpty() && eventManagement.notMainExit()) {
                 var runnable = taskQueue.poll();
                 if (runnable == null) {
                     continue;
                 }
+                try {
+                    searchThreadCount.incrementAndGet();
+                    runnable.run();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    searchThreadCount.decrementAndGet();
+                }
+            }
+        };
+        int diskNumber = searchTask.taskMap.size();
+        int searchThreadNumber = AllConfigs.getInstance().getConfigEntity().getSearchThreadNumber();
+        int threadNumberPerDisk = Math.max(1, searchThreadNumber / diskNumber);
+        for (var taskQueue : searchTask.taskMap.values()) {
+            for (int i = 0; i < threadNumberPerDisk; i++) {
                 threadPoolUtil.executeTask(() -> {
-                    try {
-                        searchThreadCount.incrementAndGet();
-                        runnable.run();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    } finally {
-                        searchThreadCount.decrementAndGet();
+                    taskHandler.accept(taskQueue);
+                    //自身任务已经完成，开始扫描其他线程的任务
+                    for (var otherTaskQueue : searchTask.taskMap.values()) {
+                        taskHandler.accept(otherTaskQueue);
                     }
                 });
             }
-        };
-        for (var taskQueue : searchTask.taskMap.values()) {
-            taskHandler.accept(taskQueue);
+        }
+        int remainThreads = searchThreadNumber - threadNumberPerDisk * diskNumber;
+        for (int i = 0; i < remainThreads; i++) {
+            threadPoolUtil.executeTask((() -> {
+                for (var taskQueue : searchTask.taskMap.values()) {
+                    taskHandler.accept(taskQueue);
+                }
+            }));
         }
         waitForTasks(searchTask);
-        searchTask.closeThreadPool();
     }
 
     /**
@@ -2274,9 +2290,6 @@ public class DatabaseService {
         private final Set<String> tempResultsSet = ConcurrentHashMap.newKeySet();
         private volatile boolean searchDoneFlag = false;
         private final long taskCreateTimeMills = System.currentTimeMillis();
-        private final ExecutorService workStealingPool = ThreadPoolUtil.getInstance().createNewWorkStealingPool(
-                AllConfigs.getInstance().getConfigEntity().getSearchThreadNumber()
-        );
 
 
         private static final AtomicBoolean isGpuThreadRunning = new AtomicBoolean();
@@ -2288,10 +2301,6 @@ public class DatabaseService {
 
         private boolean shouldStopSearch() {
             return lastSearchTask != this || this.tempResultsSet.size() > MAX_RESULTS;
-        }
-
-        private void closeThreadPool() {
-            workStealingPool.shutdownNow();
         }
     }
 

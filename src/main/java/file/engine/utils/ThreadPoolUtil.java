@@ -36,10 +36,6 @@ public enum ThreadPoolUtil {
         cachedThreadPool.submit(task);
     }
 
-    public ExecutorService createNewWorkStealingPool(int threadNum) {
-        return Executors.newWorkStealingPool(threadNum);
-    }
-
     /**
      * 提交任务
      *
