@@ -135,9 +135,12 @@ void stop_monitor(const std::string& path)
 	{
 		fprintf(stderr, "Create exit monitor file failed.");
 	}
-	if (fclose(fp) != 0)
+	if (fp != nullptr)
 	{
-		fprintf(stderr, "Close exit monitor file failed.");
+		if (fclose(fp) != 0)
+		{
+			fprintf(stderr, "Close exit monitor file failed.");
+		}
 	}
 #ifndef TEST
 	if (remove(exit_file.c_str()) != 0)

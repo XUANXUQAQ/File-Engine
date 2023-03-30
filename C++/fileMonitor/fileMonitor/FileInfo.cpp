@@ -41,7 +41,7 @@ namespace indexer_common {
     char16_t* GetFilename(USN_RECORD& record, unsigned short* name_length) {
         *name_length = static_cast<unsigned short>(record.FileNameLength / 2);
 
-        auto filename = new char16_t[*name_length + 1];
+        auto filename = new char16_t[*name_length + static_cast<size_t>(1)];
         auto* filenameInRecord = reinterpret_cast<char16_t*>(reinterpret_cast<unsigned char*>(&record) +
             record.FileNameOffset);
         memcpy(filename, filenameInRecord, record.FileNameLength);
@@ -69,9 +69,9 @@ namespace indexer_common {
     }
 
     void FileInfo::CopyAndSetName(const char16_t* name, unsigned short name_length) {
-	    const auto filename_copy = new char16_t[name_length + 1];
+	    const auto filename_copy = new char16_t[name_length + static_cast<size_t>(1)];
 
-        memcpy(filename_copy, name, 2 * name_length);
+        memcpy(filename_copy, name, static_cast<size_t>(2) * name_length);
 
         *(filename_copy + name_length) = L'\0';
 

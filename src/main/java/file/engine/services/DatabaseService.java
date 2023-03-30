@@ -1511,6 +1511,7 @@ public class DatabaseService {
         //重新初始化priority
         initPriority();
         casSetStatus(this.status.get(), Constants.Enums.DatabaseStatus.NORMAL);
+        startMonitorDisk();
     }
 
     private static void readSearchUsnOutput(Process searchByUsn) {
@@ -1541,6 +1542,11 @@ public class DatabaseService {
     private boolean updateLists(String ignorePath, boolean isDropPrevious) throws IOException, InterruptedException {
         if (getStatus() == Constants.Enums.DatabaseStatus.MANUAL_UPDATE || ProcessUtil.isProcessExist("fileSearcherUSN.exe")) {
             throw new RuntimeException("already searching");
+        }
+        String availableDisks = AllConfigs.getInstance().getAvailableDisks();
+        String[] disks = RegexUtil.comma.split(availableDisks);
+        for (String disk : disks) {
+            FileMonitor.INSTANCE.stop_monitor(disk);
         }
         // 复制数据库到tmp
         SQLiteUtil.copyDatabases("data", "tmp");

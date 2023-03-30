@@ -58,7 +58,7 @@ bool NTFSChangesWatcher::CreateJournal(HANDLE volume)
 {
 
 	DWORD byte_count;
-	CREATE_USN_JOURNAL_DATA create_journal_data;
+	CREATE_USN_JOURNAL_DATA create_journal_data{};
 
 	const bool ok = DeviceIoControl(volume, // handle to volume
 		FSCTL_CREATE_USN_JOURNAL,     // dwIoControlCode
@@ -139,7 +139,6 @@ USN NTFSChangesWatcher::ReadChangesAndNotify(USN low_usn,
 	if (!ReadJournalRecords(journal_query.get(), buffer, byte_count))
 	{
 		// An error occurred.
-		fprintf(stderr, "Failed to read journal records");
 		return low_usn;
 	}
 
@@ -282,7 +281,6 @@ void NTFSChangesWatcher::showRecord(std::u16string& full_path, USN_RECORD* recor
 		&byte_count,
 		nullptr))
 	{
-		fprintf(stderr, "FSCTL_ENUM_USN_DATA (showRecord): %lu\n", GetLastError());
 		return;
 	}
 

@@ -519,8 +519,8 @@ void volume::get_path(DWORDLONG frn, CString& output_path)
 
 bool volume::get_handle()
 {
-    // 为\\.\C:的形式
-    CString lp_file_name(_T("\\\\.\\c:"));
+    // 为\\?\C:的形式
+    CString lp_file_name(_T("\\\\?\\c:"));
     lp_file_name.SetAt(4, vol);
 
 
@@ -595,10 +595,6 @@ bool volume::get_usn_journal()
     med.StartFileReferenceNumber = 0;
     med.LowUsn = ujd.FirstUsn;
     med.HighUsn = ujd.NextUsn;
-
-    // 根目录
-    CString tmp(_T("C:"));
-    tmp.SetAt(0, vol);
 
     constexpr auto BUF_LEN = sizeof(USN) + 0x100000; // 尽可能地大，提高效率;
 
