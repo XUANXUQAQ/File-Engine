@@ -1,1 +1,1 @@
---enable-preview -Xms8M -Xmx50M -XX:+CompactStrings -DFile_Engine_Debug=true -XX:+UseG1GC
+--enable-preview -Xms8M -Xmx256M -XX:+CompactStrings -DFile_Engine_Debug=true -XX:+UserParallelGC -DFile_Engine_Remote_CORS=true
