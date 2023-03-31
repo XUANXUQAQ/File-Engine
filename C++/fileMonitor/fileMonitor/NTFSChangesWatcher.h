@@ -34,6 +34,8 @@ private:
 
 	void showRecord(std::u16string& full_path, USN_RECORD* record);
 
+	char16_t* GetFilename(USN_RECORD* record);
+
 	char drive_letter_;
 
 	HANDLE volume_;

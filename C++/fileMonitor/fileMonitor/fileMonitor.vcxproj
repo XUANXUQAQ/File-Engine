@@ -164,17 +164,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="FileInfo.h" />
     <ClInclude Include="file_engine_dllInterface_FileMonitor.h" />
     <ClInclude Include="jni.h" />
     <ClInclude Include="jni_md.h" />
-    <ClInclude Include="Macros.h" />
     <ClInclude Include="NTFSChangesWatcher.h" />
     <ClInclude Include="string_wstring_converter.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="FileInfo.cpp" />
     <ClCompile Include="NTFSChangesWatcher.cpp" />
     <ClCompile Include="string_wstring_converter.cpp" />
   </ItemGroup>

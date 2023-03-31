@@ -555,10 +555,11 @@ public class DatabaseService {
     @SneakyThrows
     private void addFileChangesRecords() {
         var eventManagement = EventManagement.getInstance();
+        String tempPath = System.getProperty("java.io.tmpdir");
         while (eventManagement.notMainExit()) {
             String addFilePath = FileMonitor.INSTANCE.pop_add_file();
             String deleteFilePath = FileMonitor.INSTANCE.pop_del_file();
-            if (addFilePath != null) {
+            if (addFilePath != null && !addFilePath.contains(tempPath)) {
                 File addFile = new File(addFilePath);
                 do {
                     if (addFile.getParentFile() != null) {
@@ -573,7 +574,7 @@ public class DatabaseService {
                     }
                 }
             }
-            if (deleteFilePath != null) {
+            if (deleteFilePath != null && !deleteFilePath.contains(tempPath)) {
                 removeFileFromDatabase(deleteFilePath);
             }
             TimeUnit.MILLISECONDS.sleep(1);

@@ -1,6 +1,4 @@
 #include "NTFSChangesWatcher.h"
-
-#include "FileInfo.h"
 #include "string_wstring_converter.h"
 
 const int NTFSChangesWatcher::kBufferSize = 1024 * 1024 / 2;
@@ -145,7 +143,7 @@ void NTFSChangesWatcher::WatchChanges(const bool* flag,
 
 	const auto read_journal_query = GetWaitForNextUsnQuery(last_usn_);
 
-	while (*flag) 
+	while (*flag)
 	{
 		// This function does not return until new USN record created.
 		WaitForNextUsn(read_journal_query.get());
@@ -163,9 +161,10 @@ USN NTFSChangesWatcher::ReadChangesAndNotify(USN low_usn,
 	void(*file_added_callback_func)(const std::u16string&),
 	void(*file_removed_callback_func)(const std::u16string&))
 {
+	static const std::wstring recycle_bin(L"$RECYCLE.BIN");
+	static const std::u16string recycle_bin_u16(recycle_bin.begin(), recycle_bin.end());
 
 	DWORD byte_count;
-
 	const auto journal_query = GetReadJournalQuery(low_usn);
 	memset(buffer, 0, kBufferSize);
 	if (!ReadJournalRecords(journal_query.get(), buffer, byte_count))
@@ -179,7 +178,7 @@ USN NTFSChangesWatcher::ReadChangesAndNotify(USN low_usn,
 
 	std::u16string full_path;
 	for (; record < record_end;
-		record = reinterpret_cast<USN_RECORD*>(reinterpret_cast<BYTE*>(record) + record->RecordLength)) 
+		record = reinterpret_cast<USN_RECORD*>(reinterpret_cast<BYTE*>(record) + record->RecordLength))
 	{
 		const auto reason = record->Reason;
 		full_path.clear();
@@ -188,27 +187,39 @@ USN NTFSChangesWatcher::ReadChangesAndNotify(USN low_usn,
 		{
 			continue;
 		}
-		if ((reason & USN_REASON_FILE_CREATE) && (reason & USN_REASON_CLOSE)) 
+		if ((reason & USN_REASON_FILE_CREATE) && (reason & USN_REASON_CLOSE))
 		{
 			showRecord(full_path, record);
-			file_added_callback_func(full_path);
+			if (full_path.find(recycle_bin_u16) == std::u16string::npos)
+			{
+				file_added_callback_func(full_path);
+			}
 		}
-		else if ((reason & USN_REASON_FILE_DELETE) && (reason & USN_REASON_CLOSE)) 
+		else if ((reason & USN_REASON_FILE_DELETE) && (reason & USN_REASON_CLOSE))
 		{
 			showRecord(full_path, record);
-			file_removed_callback_func(full_path);
+			if (full_path.find(recycle_bin_u16) == std::u16string::npos)
+			{
+				file_removed_callback_func(full_path);
+			}
 		}
-		else if (reason & FILE_CHANGE_BITMASK) 
+		else if (reason & FILE_CHANGE_BITMASK)
 		{
 			if (reason & USN_REASON_RENAME_OLD_NAME)
 			{
 				showRecord(full_path, record);
-				file_removed_callback_func(full_path);
+				if (full_path.find(recycle_bin_u16) == std::u16string::npos)
+				{
+					file_removed_callback_func(full_path);
+				}
 			}
 			else if (reason & USN_REASON_RENAME_NEW_NAME)
 			{
 				showRecord(full_path, record);
-				file_added_callback_func(full_path);
+				if (full_path.find(recycle_bin_u16) == std::u16string::npos)
+				{
+					file_added_callback_func(full_path);
+				}
 			}
 		}
 	}
@@ -281,23 +292,36 @@ std::unique_ptr<READ_USN_JOURNAL_DATA> NTFSChangesWatcher::GetReadJournalQuery(U
 	return query;
 }
 
+char16_t* NTFSChangesWatcher::GetFilename(USN_RECORD* record)
+{
+	const auto name_length = static_cast<unsigned short>(record->FileNameLength / 2);
+
+	const auto filename = new char16_t[name_length + static_cast<size_t>(1)];
+	const auto* filenameInRecord = reinterpret_cast<char16_t*>
+		(reinterpret_cast<unsigned char*>(record) + record->FileNameOffset);
+	memcpy(filename, filenameInRecord, record->FileNameLength);
+	*(filename + record->FileNameLength / 2) = L'\0';
+
+	return filename;
+}
 
 void NTFSChangesWatcher::showRecord(std::u16string& full_path, USN_RECORD* record)
 {
 	static std::wstring sep_wstr(L"\\");
 	static std::u16string sep(sep_wstr.begin(), sep_wstr.end());
 
-	const indexer_common::FileInfo file_info(*record, drive_letter_);
+	const auto file_name = GetFilename(record);
 	if (full_path.empty())
 	{
-		full_path += file_info.GetName();
+		full_path += file_name;
 	}
 	else
 	{
-		full_path = file_info.GetName() + sep + full_path;
+		full_path = file_name + sep + full_path;
 	}
+	delete[] file_name;
 	DWORD byte_count = 1;
-	auto buffer = std::make_unique<char[]>(kBufferSize);
+	const auto buffer = std::make_unique<char[]>(kBufferSize);
 
 	MFT_ENUM_DATA_V0 med;
 	med.StartFileReferenceNumber = record->ParentFileReferenceNumber;
