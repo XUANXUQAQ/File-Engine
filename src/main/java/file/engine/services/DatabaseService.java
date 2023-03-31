@@ -55,7 +55,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
-import java.util.stream.Stream;
 
 public class DatabaseService {
     private static boolean isEnableGPUAccelerate = false;
@@ -567,12 +566,6 @@ public class DatabaseService {
                         addFileToDatabase(fileAbsolutePath);
                     }
                 } while ((addFile = addFile.getParentFile()) != null);
-                if (FileUtil.isDir(addFilePath)) {
-                    Stream<Path> newlyAddedDir = Files.walk(Path.of(addFilePath));
-                    try (newlyAddedDir) {
-                        newlyAddedDir.forEach(eachFile -> addFileToDatabase(eachFile.toAbsolutePath().toString()));
-                    }
-                }
             }
             if (deleteFilePath != null && !deleteFilePath.contains(tempPath)) {
                 removeFileFromDatabase(deleteFilePath);
