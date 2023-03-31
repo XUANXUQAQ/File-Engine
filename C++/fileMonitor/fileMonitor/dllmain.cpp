@@ -30,6 +30,7 @@ void push_del_file(const std::string& record);
 file_record_queue file_added_queue;
 file_record_queue file_del_queue;
 concurrent_unordered_map<std::string, bool*> monitor_thread_status_map;
+const char* file_monitor_exit_flag = "$$__File-Engine-Exit-Monitor__$$";
 
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_monitor
 (JNIEnv* env, jobject, jstring path)
@@ -104,9 +105,23 @@ void push_del_file(const std::u16string& record)
 	file_del_queue.push(str);
 }
 
+inline bool is_file_exist(const std::string& path)
+{
+	struct _stat64i32 buffer;
+	return _wstat(string2wstring(path).c_str(), &buffer) == 0;
+}
+
 void monitor(const char* path)
 {
 	std::string path_str(path);
+	auto&& exit_file = path_str + file_monitor_exit_flag;
+	if (is_file_exist(exit_file))
+	{
+		if (remove(exit_file.c_str()) != 0)
+		{
+			fprintf(stderr, "Delete exit monitor file failed.");
+		}
+	}
 	if (auto&& packaged_task_iter = monitor_thread_status_map.find(path_str); 
 		packaged_task_iter == monitor_thread_status_map.end())
 	{
@@ -129,17 +144,20 @@ void stop_monitor(const std::string& path)
 
 	*packaged_task_iter->second = false;
 
-	auto&& exit_file = path + "$$__File-Engine-Exit-Monitor__$$";
-	FILE* fp = nullptr;
-	if (fopen_s(&fp, exit_file.c_str(), "w") != 0)
+	auto&& exit_file = path + file_monitor_exit_flag;
+	if (!is_file_exist(exit_file))
 	{
-		fprintf(stderr, "Create exit monitor file failed.");
-	}
-	if (fp != nullptr)
-	{
-		if (fclose(fp) != 0)
+		FILE* fp = nullptr;
+		if (fopen_s(&fp, exit_file.c_str(), "w") != 0)
 		{
-			fprintf(stderr, "Close exit monitor file failed.");
+			fprintf(stderr, "Create exit monitor file failed.\n");
+		}
+		if (fp != nullptr)
+		{
+			if (fclose(fp) != 0)
+			{
+				fprintf(stderr, "Close exit monitor file failed.\n");
+			}
 		}
 	}
 #ifndef TEST

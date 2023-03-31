@@ -16,13 +16,23 @@ NTFSChangesWatcher::NTFSChangesWatcher(char drive_letter) :
 	journal_ = std::make_unique<USN_JOURNAL_DATA>();
 
 	if (const bool res = LoadJournal(volume_, journal_.get()); !res) {
-		fprintf(stderr, "Failed to load journal");
+		fprintf(stderr, "Failed to load journal\n");
 		return;
 	}
 	max_usn_ = journal_->MaxUsn;
 	journal_id_ = journal_->UsnJournalID;
 	last_usn_ = journal_->NextUsn;
 }
+
+NTFSChangesWatcher::~NTFSChangesWatcher()
+{
+	if (!DeleteJournal())
+	{
+		fprintf(stderr, "Failed to delete usn journal.\n");
+	}
+	CloseHandle(volume_);
+}
+
 
 HANDLE NTFSChangesWatcher::OpenVolume(const char drive_letter)
 {
@@ -103,6 +113,28 @@ bool NTFSChangesWatcher::LoadJournal(HANDLE volume, USN_JOURNAL_DATA* journal_da
 	}
 
 	return true;
+}
+
+bool NTFSChangesWatcher::DeleteJournal() const
+{
+	DELETE_USN_JOURNAL_DATA dujd;
+	dujd.UsnJournalID = journal_id_;
+	dujd.DeleteFlags = USN_DELETE_FLAG_DELETE;
+	DWORD br;
+
+	if (DeviceIoControl(volume_,
+		FSCTL_DELETE_USN_JOURNAL,
+		&dujd,
+		sizeof(dujd),
+		nullptr,
+		0,
+		&br,
+		nullptr)
+		)
+	{
+		return true;
+	}
+	return false;
 }
 
 void NTFSChangesWatcher::WatchChanges(const bool* flag,

@@ -6,7 +6,7 @@ class NTFSChangesWatcher
 {
 public:
 	NTFSChangesWatcher(char drive_letter);
-	~NTFSChangesWatcher() = default;
+	~NTFSChangesWatcher();
 
 	// Method which runs an infinite loop and waits for new update sequence number in a journal.
 	// The thread is blocked till the new USN record created in the journal.
@@ -16,6 +16,8 @@ private:
 	HANDLE OpenVolume(char drive_letter);
 
 	bool CreateJournal(HANDLE volume);
+
+	bool DeleteJournal() const;
 
 	bool LoadJournal(HANDLE volume, USN_JOURNAL_DATA* journal_data);
 
