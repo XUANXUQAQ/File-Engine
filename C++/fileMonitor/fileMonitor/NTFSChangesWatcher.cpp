@@ -1,5 +1,8 @@
-#include "NTFSChangesWatcher.h"
+﻿#include "NTFSChangesWatcher.h"
+#include <ranges>
 #include "string_wstring_converter.h"
+
+#define MAX_USN_CACHE_SIZE 100000
 
 const int NTFSChangesWatcher::kBufferSize = 1024 * 1024 / 2;
 
@@ -24,6 +27,14 @@ NTFSChangesWatcher::NTFSChangesWatcher(char drive_letter) :
 
 NTFSChangesWatcher::~NTFSChangesWatcher()
 {
+	for (const auto& val : frn_used_count_map_ | std::views::values)
+	{
+		delete val;
+	}
+	for (const auto& [val, _] : frn_record_pfrn_map_ | std::views::values)
+	{
+		delete[] val;
+	}
 	if (!DeleteJournal())
 	{
 		fprintf(stderr, "Failed to delete usn journal.\n");
@@ -310,48 +321,95 @@ void NTFSChangesWatcher::showRecord(std::u16string& full_path, USN_RECORD* recor
 	static std::wstring sep_wstr(L"\\");
 	static std::u16string sep(sep_wstr.begin(), sep_wstr.end());
 
-	const auto file_name = GetFilename(record);
-	if (full_path.empty())
+	auto file_name = GetFilename(record);
+	full_path += file_name;
+	if (record->FileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 	{
-		full_path += file_name;
+		frn_record_pfrn_map_.insert(
+			std::make_pair(record->FileReferenceNumber,
+				std::make_pair(file_name, record->ParentFileReferenceNumber))
+		);
+		frn_used_count_map_.insert(std::make_pair(record->FileReferenceNumber, new DWORDLONG(GetTickCount64())));
 	}
 	else
 	{
-		full_path = file_name + sep + full_path;
+		delete[] file_name;
 	}
-	delete[] file_name;
-	DWORD byte_count = 1;
-	const auto buffer = std::make_unique<char[]>(kBufferSize);
 
-	MFT_ENUM_DATA_V0 med;
-	med.StartFileReferenceNumber = record->ParentFileReferenceNumber;
-	med.LowUsn = 0;
-	med.HighUsn = max_usn_;
-
-	if (!DeviceIoControl(volume_,
-		FSCTL_ENUM_USN_DATA,
-		&med,
-		sizeof(med),
-		buffer.get(),
-		kBufferSize,
-		&byte_count,
-		nullptr))
+	DWORDLONG file_parent_id = record->ParentFileReferenceNumber;
+	const auto usn_buffer = std::make_unique<char[]>(kBufferSize);
+	do
 	{
-		return;
-	}
+		if (frn_record_pfrn_map_.size() > MAX_USN_CACHE_SIZE)
+		{
+			auto&& min_used_cache = std::ranges::min_element(frn_used_count_map_,
+				[&](const std::pair<DWORDLONG, DWORDLONG*> left, const std::pair<DWORDLONG, DWORDLONG*> right)
+				{
+					return *left.second < *right.second;
+				});
 
-	auto* parent_record = reinterpret_cast<USN_RECORD*>(reinterpret_cast<USN*>(buffer.get()) + 1);
+			auto& [usn_name_cache, _] = frn_record_pfrn_map_.at(min_used_cache->first);
+			delete[] usn_name_cache;
+			frn_record_pfrn_map_.erase(min_used_cache->first);
+			delete min_used_cache->second;
+			frn_used_count_map_.erase(min_used_cache->first);
+		}
 
-	if (parent_record->FileReferenceNumber != record->ParentFileReferenceNumber)
-	{
-		static std::wstring colon_wstr(L":");
-		static std::u16string colon(colon_wstr.begin(), colon_wstr.end());
-		std::string drive;
-		drive += drive_letter_;
-		auto&& w_drive = string2wstring(drive);
-		const std::u16string drive_u16(w_drive.begin(), w_drive.end());
-		full_path = drive_u16 + colon + sep + full_path;
-		return;
-	}
-	showRecord(full_path, parent_record);
+		if (auto&& val = frn_record_pfrn_map_.find(file_parent_id);
+			val != frn_record_pfrn_map_.end())
+		{
+			full_path = val->second.first + sep + full_path;
+			auto* cache_count = frn_used_count_map_.at(file_parent_id);
+			*cache_count = GetTickCount64();
+			file_parent_id = val->second.second;
+		}
+		else
+		{
+			MFT_ENUM_DATA_V0 med;
+			med.StartFileReferenceNumber = file_parent_id;
+			med.LowUsn = 0;
+			med.HighUsn = max_usn_;
+			DWORD byte_count = 1;
+			if (!DeviceIoControl(volume_,
+				FSCTL_ENUM_USN_DATA,
+				&med,
+				sizeof(med),
+				usn_buffer.get(),
+				kBufferSize,
+				&byte_count,
+				nullptr))
+			{
+				return;
+			}
+			const auto parent_record = reinterpret_cast<USN_RECORD*>(reinterpret_cast<USN*>(usn_buffer.get()) + 1);
+			if (parent_record->FileReferenceNumber != file_parent_id)
+			{
+				break;
+			}
+			file_name = GetFilename(parent_record);
+			full_path = file_name + sep + full_path;
+			if (parent_record->FileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+			{
+				frn_record_pfrn_map_.insert(
+					std::make_pair(parent_record->FileReferenceNumber,
+						std::make_pair(file_name, parent_record->ParentFileReferenceNumber))
+				);
+				frn_used_count_map_.insert(std::make_pair(parent_record->FileReferenceNumber, new DWORDLONG(GetTickCount64())));
+			}
+			else
+			{
+				delete[] file_name;
+			}
+
+			file_parent_id = parent_record->ParentFileReferenceNumber;
+		}
+	} while (true);
+
+	static std::wstring colon_wstr(L":");
+	static std::u16string colon(colon_wstr.begin(), colon_wstr.end());
+	std::string drive;
+	drive += drive_letter_;
+	auto&& w_drive = string2wstring(drive);
+	const std::u16string drive_u16(w_drive.begin(), w_drive.end());
+	full_path = drive_u16 + colon + sep + full_path;
 }

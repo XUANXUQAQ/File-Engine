@@ -2,6 +2,8 @@
 #include <memory>
 #include <string>
 #include <Windows.h>
+#include <unordered_map>
+
 class NTFSChangesWatcher
 {
 public:
@@ -39,6 +41,10 @@ private:
 	char drive_letter_;
 
 	HANDLE volume_;
+
+	std::unordered_map<DWORDLONG, std::pair<char16_t*, DWORDLONG>> frn_record_pfrn_map_;
+
+	std::unordered_map<DWORDLONG, DWORDLONG*> frn_used_count_map_;
 
 	std::unique_ptr<USN_JOURNAL_DATA> journal_;
 
