@@ -67,7 +67,6 @@ public class DatabaseService {
     //保存每个key所对应的结果数量，数量为0的则直接跳过搜索，不执行SQL查找数据库
     private final ConcurrentHashMap<String, AtomicInteger> databaseResultsCount = new ConcurrentHashMap<>();
     private final AtomicReference<Constants.Enums.DatabaseStatus> status = new AtomicReference<>(Constants.Enums.DatabaseStatus.NORMAL);
-    private final AtomicBoolean isExecuteSqlImmediately = new AtomicBoolean(false);
     // 保存从0-40数据库的表，使用频率和名字对应，使经常使用的表最快被搜索到
     private final Set<TableNameWeightInfo> tableSet = ConcurrentHashMap.newKeySet();
     private final AtomicBoolean isDatabaseUpdated = new AtomicBoolean(false);
@@ -152,30 +151,6 @@ public class DatabaseService {
         if (IsDebug.isDebug()) {
             System.err.println("已更新" + tableName + "权重, 之前为" + origin + "***增加了" + weight);
         }
-    }
-
-    /**
-     * 处理所有sql线程
-     */
-    private void executeSqlCommandsThread() {
-        ThreadPoolUtil.getInstance().executeTask(() -> {
-            EventManagement eventManagement = EventManagement.getInstance();
-            while (eventManagement.notMainExit()) {
-                if (isExecuteSqlImmediately.get()) {
-                    try {
-                        isExecuteSqlImmediately.set(false);
-                        executeAllCommands();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-                try {
-                    TimeUnit.MILLISECONDS.sleep(20);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
     }
 
     /**
@@ -1247,13 +1222,6 @@ public class DatabaseService {
     }
 
     /**
-     * 发送立即执行所有sql信号
-     */
-    private void sendExecuteSQLSignal() {
-        isExecuteSqlImmediately.set(true);
-    }
-
-    /**
      * 执行sql
      */
     @SuppressWarnings("SqlNoDataSourceInspection")
@@ -1473,7 +1441,7 @@ public class DatabaseService {
         // 将在队列中的sql全部执行并等待搜索线程全部完成
         System.out.println("等待所有sql执行完成，并且退出搜索");
         while (searchThreadCount.get() != 0 || !sqlCommandQueue.isEmpty()) {
-            sendExecuteSQLSignal();
+            executeAllCommands();
             TimeUnit.MILLISECONDS.sleep(10);
             if (System.currentTimeMillis() - time > timeoutMills) {
                 System.out.println("等待超时");
@@ -1514,7 +1482,7 @@ public class DatabaseService {
         invalidateAllCache();
         SQLiteUtil.initAllConnections();
         createAllIndex();
-        sendExecuteSQLSignal();
+        ThreadPoolUtil.getInstance().executeTask(this::executeAllCommands);
         waitForCommandSet(SqlTaskIds.CREATE_INDEX);
         // 搜索完成，更新isDatabaseUpdated标志
         isDatabaseUpdated.set(true);
@@ -1679,7 +1647,7 @@ public class DatabaseService {
                         getStatus() == Constants.Enums.DatabaseStatus.NORMAL && sqlCommandQueue.size() > 100;
                 if (isTooManySQLsToExecute || System.currentTimeMillis() - checkTime >= updateTimeLimit) {
                     checkTime = System.currentTimeMillis();
-                    sendExecuteSQLSignal();
+                    executeAllCommands();
                 }
                 try {
                     TimeUnit.SECONDS.sleep(1);
@@ -1738,7 +1706,7 @@ public class DatabaseService {
     @EventListener(listenClass = SearchBarReadyEvent.class)
     private static void searchBarVisibleListener(Event event) {
         SQLiteUtil.openAllConnection();
-        getInstance().sendExecuteSQLSignal();
+        getInstance().executeAllCommands();
     }
 
     @EventRegister(registerClass = CheckDatabaseEmptyEvent.class)
@@ -1928,7 +1896,7 @@ public class DatabaseService {
         }
         databaseService.syncFileChangesThread();
         databaseService.checkTimeAndSendExecuteSqlSignalThread();
-        databaseService.executeSqlCommandsThread();
+        databaseService.executeAllCommands();
         databaseService.saveTableCacheThread();
         databaseService.warmupSearchThread();
     }
