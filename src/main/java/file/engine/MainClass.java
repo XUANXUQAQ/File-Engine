@@ -164,7 +164,6 @@ public class MainClass {
      * -DFile_Engine_Preview=true
      */
     private static void setSystemProperties() {
-        System.setProperty("File_Engine_Preview", "false");
         System.setProperty("file.encoding", "UTF-8");
         System.setProperty("org.sqlite.lib.path", Path.of("user/").toAbsolutePath().toString());
         System.setProperty("org.sqlite.lib.name", "sqliteJDBC.dll");
