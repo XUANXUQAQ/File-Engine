@@ -354,6 +354,7 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 
 	// 复制is_ignore_case
 	gpuErrchk(cudaMemcpy(dev_is_ignore_case, &is_ignore_case, sizeof(bool), cudaMemcpyHostToDevice), true, nullptr);
+
 	unsigned count = 0;
 	const auto map_size = cache_map.size();
 	const auto dev_ptr_arr = new size_t[map_size];
@@ -368,6 +369,11 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 	for (auto&& each : cache_map)
 	{
 		const auto& cache = each.second;
+		if (cache->dev_output_bitmap != nullptr)
+		{
+			gpuErrchk(cudaFree(cache->dev_output_bitmap), false, nullptr);
+			cache->dev_output_bitmap = nullptr;
+		}
 		if (!cache->is_cache_valid)
 		{
 			continue;
@@ -377,7 +383,10 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 			break;
 		}
 		int grid_size, block_size;
-		const auto max_pow_of_2 = find_table_sizeof2(cache->dev_output_bytes);
+		const auto max_pow_of_2 = find_table_sizeof2(cache->str_data.record_num.load());
+		gpuErrchk(cudaMalloc(&cache->dev_output_bitmap, max_pow_of_2), true, nullptr);
+		gpuErrchk(cudaMemset(cache->dev_output_bitmap, 0, max_pow_of_2), true, nullptr);
+		cache->output_bitmap_size = max_pow_of_2;
 		if (cache->str_data.record_num.load() > MAX_THREAD_PER_BLOCK)
 		{
 			block_size = MAX_THREAD_PER_BLOCK;
@@ -392,7 +401,7 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 		size_t* dev_total_number = nullptr;
 		gpuErrchk(cudaMalloc(&dev_total_number, sizeof(size_t)), true, nullptr);
 		dev_ptr_arr[count] = reinterpret_cast<size_t>(dev_total_number);
-		const auto total_number = cache->dev_output_bytes;
+		const auto total_number = cache->str_data.record_num.load();
 		gpuErrchk(cudaMemcpy(dev_total_number, &total_number, sizeof(size_t), cudaMemcpyHostToDevice), true, nullptr);
 
 		check<<<grid_size, block_size, 0, streams[count]>>>
@@ -405,7 +414,7 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 				dev_keywords_lower_case,
 				dev_keywords_length,
 				dev_is_keyword_path,
-				cache->dev_output,
+				cache->dev_output_bitmap,
 				get_dev_stop_signal());
 		gpuErrchk(cudaStreamAddCallback(streams[count], cudaCallback, cache, 0), true, nullptr);
 		++count;

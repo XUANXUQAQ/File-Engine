@@ -2106,7 +2106,7 @@ public class DatabaseService {
             ThreadPoolUtil.getInstance().executeTask(() -> {
                 EventManagement eventManagement = EventManagement.getInstance();
                 DatabaseService databaseService = DatabaseService.getInstance();
-                final int removeRecordsThreshold = 20;
+                final int removeRecordsThreshold = 100;
                 while (eventManagement.notMainExit()) {
                     if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL &&
                             !GetHandle.INSTANCE.isForegroundFullscreen() &&

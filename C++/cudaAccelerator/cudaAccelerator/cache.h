@@ -11,11 +11,13 @@
  */
 using cache_data = struct cache_data
 {
-    char* dev_strs = nullptr;
-    size_t* dev_str_addr = nullptr;
-    size_t* str_length = nullptr;
-    std::atomic_uint64_t remain_blank_num;
+	char* dev_strs = nullptr;
+    size_t str_total_bytes = 0;
+    size_t str_remain_blank_bytes = 0;
     std::atomic_uint64_t record_num;
+    size_t* dev_str_addr = nullptr;
+    size_t str_addr_capacity = 0;
+    size_t* str_length_array = nullptr;
     std::mutex lock;
     concurrency::concurrent_unordered_set<size_t> record_hash;
 };
@@ -32,8 +34,8 @@ using cache_data = struct cache_data
 using list_cache = struct cache_struct
 {
     cache_data str_data;
-    char* dev_output = nullptr;
-    size_t dev_output_bytes = 0;
+    char* dev_output_bitmap = nullptr;
+    size_t output_bitmap_size = 0;
     bool is_cache_valid = false;
     std::atomic_bool is_match_done;
     std::atomic_int is_output_done;

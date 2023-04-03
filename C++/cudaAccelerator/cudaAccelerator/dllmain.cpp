@@ -35,7 +35,8 @@ void release_all();
 int is_dir_or_file(const char* path);
 inline bool is_file_exist(const char* path);
 std::wstring string2wstring(const std::string& str);
-void handle_memory_fragmentation(const list_cache* cache);
+void recreate_cache_on_removing_records(const std::string& key, const list_cache* cache, const std::vector<size_t>& str_need_to_remove);
+void create_and_insert_cache(const std::vector<std::string>& records_vec, size_t total_bytes, const std::string& key);
 
 //lock
 inline void wait_for_clear_cache();
@@ -174,7 +175,6 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_resetAl
 		cache_ptr->is_match_done = false;
 		cache_ptr->is_output_done = 0;
 		cache_ptr->matched_number = 0;
-		// gpuErrchk(cudaMemset(cache_ptr->dev_output, 0, cache_ptr->dev_output_bytes), true, nullptr);
 	}
 	is_results_number_exceed = false;
 }
@@ -205,6 +205,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_match
 		return;
 	}
 	wait_for_clear_cache();
+	wait_for_add_or_remove_record();
 	std::lock_guard lock_guard(modify_cache_lock);
 	//生成搜索条件 search_case_vec
 	std::vector<std::string> search_case_vec;
@@ -297,14 +298,14 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_isM
 {
 	if (is_results_number_exceed.load())
 	{
-		return TRUE;
+		return true;
 	}
 	const auto _key = env->GetStringUTFChars(key_jstring, nullptr);
 	auto iter = cache_map.find(_key);
 	env->ReleaseStringUTFChars(key_jstring, _key);
 	if (iter == cache_map.end())
 	{
-		return FALSE;
+		return false;
 	}
 	return iter->second->is_output_done.load() == 2;
 }
@@ -347,10 +348,9 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_has
 JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_isCacheExist
 (JNIEnv* env, jobject, jstring key_jstring)
 {
-	const auto _key = env->GetStringUTFChars(key_jstring, nullptr);
-	const std::string key(_key);
-	env->ReleaseStringUTFChars(key_jstring, _key);
+	const auto key = env->GetStringUTFChars(key_jstring, nullptr);
 	const bool ret = has_cache(key);
+	env->ReleaseStringUTFChars(key_jstring, key);
 	return ret;
 }
 
@@ -365,7 +365,6 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_initCac
 	const jclass supplier_class = env->GetObjectClass(record_supplier);
 	const jmethodID get_function = env->GetMethodID(supplier_class, "get", "()Ljava/lang/Object;");
 	std::vector<std::string> records_vec;
-	unsigned record_count = 0;
 	size_t total_bytes = 0;
 	while (true)
 	{
@@ -379,64 +378,14 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_initCac
 		if (const auto record_len = strlen(record); record_len < MAX_PATH_LENGTH)
 		{
 			records_vec.emplace_back(record);
-			total_bytes += record_len;
-			++total_bytes; // 每个字符串结尾 '\0'
-			++record_count;
+			total_bytes += record_len + 1; // 每个字符串结尾 '\0'
 		}
 		env->ReleaseStringUTFChars(jstring_val, record);
 		env->DeleteLocalRef(record_from_supplier);
 	}
-	const auto _key = env->GetStringUTFChars(key_jstring, nullptr);
-	std::string key(_key);
-	auto cache = new list_cache;
-	cache->str_data.record_num = record_count;
-	cache->str_data.remain_blank_num = MAX_RECORD_ADD_COUNT;
-
-	const size_t total_results_size = static_cast<size_t>(record_count) + MAX_RECORD_ADD_COUNT;
-
-	const auto alloc_bytes = total_bytes + MAX_RECORD_ADD_COUNT * MAX_PATH_LENGTH;
-	gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&cache->str_data.dev_strs), alloc_bytes), true,
-		get_cache_info(key, cache).c_str());
-	gpuErrchk(cudaMemset(cache->str_data.dev_strs, 0, alloc_bytes), true, nullptr);
-
-	gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&cache->str_data.dev_str_addr), total_results_size * sizeof(size_t)),
-		true, nullptr);
-	gpuErrchk(cudaMemset(cache->str_data.dev_str_addr, 0, total_results_size * sizeof(size_t)), true, nullptr);
-
-	cache->str_data.str_length = new size_t[total_results_size];
-
-	gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&cache->dev_output), total_results_size), true,
-		get_cache_info(key, cache).c_str());
-	cache->dev_output_bytes = total_results_size;
-	cache->is_cache_valid = true;
-	cache->is_match_done = false;
-	cache->is_output_done = 0;
-
-	cudaStream_t stream;
-	gpuErrchk(cudaStreamCreate(&stream), true, nullptr);
-	auto target_addr = cache->str_data.dev_strs;
-	auto save_str_addr_ptr = cache->str_data.dev_str_addr;
-	unsigned i = 0;
-	for (const std::string& record : records_vec)
-	{
-		const auto record_length = record.length();
-		gpuErrchk(cudaMemcpyAsync(target_addr, record.c_str(), record_length, cudaMemcpyHostToDevice, stream), true,
-			nullptr);
-		const auto str_address = reinterpret_cast<size_t>(target_addr);
-		//保存字符串在显存上的地址
-		gpuErrchk(cudaMemcpyAsync(save_str_addr_ptr, &str_address, sizeof(size_t), cudaMemcpyHostToDevice, stream),
-			true, nullptr);
-		cache->str_data.str_length[i] = record_length;
-		target_addr += record_length;
-		++target_addr;
-		++save_str_addr_ptr;
-		++i;
-		cache->str_data.record_hash.insert(hasher(record));
-	}
-	gpuErrchk(cudaStreamSynchronize(stream), true, nullptr);
-	gpuErrchk(cudaStreamDestroy(stream), true, nullptr);
-	cache_map.insert(std::make_pair(key, cache));
-	env->ReleaseStringUTFChars(key_jstring, _key);
+	const auto key = env->GetStringUTFChars(key_jstring, nullptr);
+	create_and_insert_cache(records_vec, total_bytes, key);
+	env->ReleaseStringUTFChars(key_jstring, key);
 	env->DeleteLocalRef(supplier_class);
 }
 
@@ -692,33 +641,33 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 	{
 		//尝试退出
 		all_complete = true;
-		for (const auto& [key, val] : cache_map)
+		for (const auto& [key, cache_struct] : cache_map)
 		{
 			if (stop_func())
 			{
 				break;
 			}
-			if (!val->is_cache_valid)
+			if (!cache_struct->is_cache_valid)
 			{
 				continue;
 			}
-			if (!val->is_match_done.load())
+			if (!cache_struct->is_match_done.load())
 			{
 				//发现仍然有结果未计算完，设置退出标志为false，跳到下一个计算结果
 				all_complete = false;
 				continue;
 			}
-			if (int expected = 0; !val->is_output_done.compare_exchange_strong(expected, 1))
+			if (int expected = 0; !cache_struct->is_output_done.compare_exchange_strong(expected, 1))
 			{
 				continue;
 			}
 			unsigned matched_number = 0;
 			//复制结果数组到host，dev_output下标对应dev_cache中的下标，若dev_output[i]中的值为1，则对应dev_cache[i]字符串匹配成功
-			const auto output_ptr = new char[val->dev_output_bytes];
+			const auto output_ptr = new char[cache_struct->output_bitmap_size]();
 			//将dev_output拷贝到output_ptr
-			gpuErrchk(cudaMemcpy(output_ptr, val->dev_output, val->str_data.record_num, cudaMemcpyDeviceToHost), false,
-				"collect results failed");
-			for (size_t i = 0; i < val->str_data.record_num.load(); ++i)
+			gpuErrchk(cudaMemcpy(output_ptr, cache_struct->dev_output_bitmap, cache_struct->output_bitmap_size, cudaMemcpyDeviceToHost),
+				true, nullptr);
+			for (size_t i = 0; i < cache_struct->output_bitmap_size; ++i)
 			{
 				if (stop_func())
 				{
@@ -728,12 +677,12 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 				if (static_cast<bool>(output_ptr[i]))
 				{
 					char matched_record_str[MAX_PATH_LENGTH]{ 0 };
-					char* str_address;
-					gpuErrchk(
-						cudaMemcpy(&str_address, val->str_data.dev_str_addr + i, sizeof(size_t), cudaMemcpyDeviceToHost
-						), false, nullptr);
+					char* str_address = nullptr;
+					gpuErrchk(cudaMemcpy(&str_address, cache_struct->str_data.dev_str_addr + i, sizeof(size_t),
+						cudaMemcpyDeviceToHost), false, nullptr);
 					//拷贝GPU中的字符串到host
-					gpuErrchk(cudaMemcpy(matched_record_str, str_address, val->str_data.str_length[i],
+					const auto str_len = cache_struct->str_data.str_length_array[i];
+					gpuErrchk(cudaMemcpy(matched_record_str, str_address, str_len,
 						cudaMemcpyDeviceToHost), false, "collect results failed");
 					// 判断文件和文件夹
 					if (search_case_vec.empty())
@@ -770,8 +719,8 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 					}
 				}
 			}
-			val->matched_number = matched_number;
-			val->is_output_done = 2;
+			cache_struct->matched_number = matched_number;
+			cache_struct->is_output_done = 2;
 			delete[] output_ptr;
 		}
 	} while (!all_complete && !stop_func());
@@ -825,7 +774,9 @@ std::wstring string2wstring(const std::string& str)
 void wait_for_clear_cache()
 {
 	while (clear_cache_flag.load())
+	{
 		std::this_thread::yield();
+	}
 }
 
 /**
@@ -917,22 +868,23 @@ void add_records_to_cache(const std::string& key, const std::vector<std::string>
 		std::lock_guard lock_guard(cache->str_data.lock);
 		cudaStream_t stream;
 		gpuErrchk(cudaStreamCreate(&stream), true, nullptr);
-		for (auto&& record : records)
+		if (cache->is_cache_valid)
 		{
-			if (exit_flag.load())
+			for (auto&& record : records)
 			{
-				break;
-			}
-			const auto record_len = record.length();
-			if (record_len >= MAX_PATH_LENGTH)
-			{
-				continue;
-			}
-			if (cache->is_cache_valid)
-			{
+				if (exit_flag.load())
+				{
+					break;
+				}
+				const auto record_len = record.length();
+				if (record_len >= MAX_PATH_LENGTH)
+				{
+					continue;
+				}
+
 				if (const bool is_repeat = is_record_repeat(record, cache); !is_repeat)
 				{
-					if (cache->str_data.remain_blank_num.load() > 0)
+					if (cache->str_data.str_remain_blank_bytes >= record_len + 1)
 					{
 						const auto index = cache->str_data.record_num.load();
 						//计算上一个字符串的内存地址
@@ -943,14 +895,14 @@ void add_records_to_cache(const std::string& key, const std::vector<std::string>
 								sizeof(size_t), cudaMemcpyDeviceToHost), true, nullptr);
 #ifdef DEBUG_OUTPUT
 							std::cout << "last str address: " << std::hex << "0x" << reinterpret_cast<size_t>(last_str_addr);
-							std::cout << "  last str length: 0x" << cache->str_data.str_length[index - 1] << std::endl;
+							std::cout << "  last str length: 0x" << cache->str_data.str_length_array[index - 1] << std::endl;
 #endif
 						}
 						char* target_address;
 						if (last_str_addr != nullptr)
 						{
 							//字符串尾的下一位即为新字符串起始地址
-							target_address = last_str_addr + cache->str_data.str_length[index - 1] + 1;
+							target_address = last_str_addr + cache->str_data.str_length_array[index - 1] + 1;
 						}
 						else
 						{
@@ -962,33 +914,65 @@ void add_records_to_cache(const std::string& key, const std::vector<std::string>
 						gpuErrchk(cudaMemcpyAsync(target_address, record.c_str(), record_len,
 							cudaMemcpyHostToDevice, stream), true, get_cache_info(key, cache).c_str());
 						//记录内存地址到dev_str_addr
+						if (cache->str_data.str_addr_capacity <= index)
+						{
+#ifdef DEBUG_OUTPUT
+							std::cout << "start to enlarge dev_str_addr and str_lenght_array" << std::endl;
+#endif
+							auto new_str_addr_capacity = cache->str_data.str_addr_capacity + 10;
+							auto new_str_addr_alloc_size = new_str_addr_capacity * sizeof(size_t);
+							size_t* new_dev_str_addr;
+							gpuErrchk(cudaMalloc(&new_dev_str_addr, new_str_addr_alloc_size), true, nullptr);
+							gpuErrchk(cudaMemset(new_dev_str_addr, 0, new_str_addr_alloc_size), true, nullptr);
+							gpuErrchk(cudaMemcpy(new_dev_str_addr,
+								cache->str_data.dev_str_addr,
+								cache->str_data.str_addr_capacity * sizeof size_t,
+								cudaMemcpyDeviceToDevice), true, nullptr);
+							gpuErrchk(cudaFree(cache->str_data.dev_str_addr), true, nullptr);
+							cache->str_data.dev_str_addr = new_dev_str_addr;
+#ifdef DEBUG_OUTPUT
+							std::cout << "copy dev_str_addr complete." << std::endl;
+#endif
+							auto* new_str_length_array = new size_t[new_str_addr_capacity]();
+							for (size_t i = 0; i < cache->str_data.str_addr_capacity; ++i)
+							{
+								new_str_length_array[i] = cache->str_data.str_length_array[i];
+							}
+							delete[] cache->str_data.str_length_array;
+							cache->str_data.str_length_array = new_str_length_array;
+
+							cache->str_data.str_addr_capacity = new_str_addr_capacity;
+#ifdef DEBUG_OUTPUT
+							std::cout << "enlarge complete." << std::endl;
+#endif
+						}
 						gpuErrchk(cudaMemcpyAsync(cache->str_data.dev_str_addr + index, &target_address,
 							sizeof(size_t), cudaMemcpyHostToDevice, stream), true, nullptr);
 						//记录字符串长度
-						cache->str_data.str_length[index] = record.length();
+						cache->str_data.str_length_array[index] = record.length();
 #ifdef DEBUG_OUTPUT
 						std::cout << "target address: " << std::hex << "0x" << reinterpret_cast<size_t>(target_address) << std::endl;
 						std::cout << "successfully add record: " << record << "  key: " << key << std::endl;
 #endif
 						++cache->str_data.record_num;
-						--cache->str_data.remain_blank_num;
+						cache->str_data.str_remain_blank_bytes -= record_len + 1;
 						cache->str_data.record_hash.insert(hasher(record));
-					}
+						}
 					else
 					{
 						// 无空位，有文件丢失，使cache无效
 						cache->is_cache_valid = false;
 						break;
 					}
+						}
+					}
 				}
-			}
-		}
 		gpuErrchk(cudaStreamSynchronize(stream), true, nullptr);
 		gpuErrchk(cudaStreamDestroy(stream), true, nullptr);
-	}
+			}
 	//释放clear_cache锁
 	free_clear_cache(add_record_thread_count);
-}
+		}
 
 /**
  * \brief 从key对应的record中删除一个记录
@@ -1002,13 +986,11 @@ void remove_records_from_cache(const std::string& key, std::vector<std::string>&
 	{
 		const auto& cache = cache_map.at(key);
 		std::lock_guard lock_guard(cache->str_data.lock);
-		bool has_memory_fragments = false;
-		cudaStream_t stream;
-		gpuErrchk(cudaStreamCreate(&stream), true, nullptr);
 		if (cache->is_cache_valid)
 		{
+			std::vector<size_t> str_need_to_remove;
 			char tmp[MAX_PATH_LENGTH]{ 0 };
-			for (size_t i = 0; i < cache->str_data.record_num; ++i)
+			for (size_t i = 0; i < cache->str_data.record_num.load(); ++i)
 			{
 				if (exit_flag.load())
 				{
@@ -1019,154 +1001,120 @@ void remove_records_from_cache(const std::string& key, std::vector<std::string>&
 					sizeof(size_t), cudaMemcpyDeviceToHost), true, nullptr);
 				//拷贝GPU中的字符串到tmp
 				gpuErrchk(cudaMemcpy(tmp, str_address,
-					cache->str_data.str_length[i], cudaMemcpyDeviceToHost), true,
+					cache->str_data.str_length_array[i], cudaMemcpyDeviceToHost), true,
 					get_cache_info(key, cache).c_str());
 				if (auto&& record = std::find(records.begin(), records.end(), tmp);
-					record != records.end())
+					record == records.end())
 				{
-#ifdef DEBUG_OUTPUT
-					printf("removing record: %s\n", tmp);
-#endif
-					//成功找到字符串
-					//判断是否已经是最后一个字符串，如果是，直接将record_num - 1即可，不需要操作内存
-					if (const auto last_index = cache->str_data.record_num - 1; last_index != i)
-					{
-						const char* last_str_address;
-						gpuErrchk(cudaMemcpy(&last_str_address, cache->str_data.dev_str_addr + last_index,
-							sizeof(size_t), cudaMemcpyDeviceToHost), true, nullptr);
-						//判断字符串长度是否合适
-						if (const auto str_to_copy_len = cache->str_data.str_length[last_index];
-							cache->str_data.str_length[i] >= str_to_copy_len)
-						{
-#ifdef DEBUG_OUTPUT
-							std::cout << "str to remove address: " << std::hex << "0x" << reinterpret_cast<size_t>(str_address) << std::endl;
-							std::cout << "str to copy address: " << std::hex << "0x" << reinterpret_cast<size_t>(last_str_address) << std::endl;
-#endif
-							gpuErrchk(cudaMemsetAsync(str_address, 0, cache->str_data.str_length[i], stream), true,
-								nullptr);
-							//复制最后一个结果到当前空位
-							gpuErrchk(cudaMemcpyAsync(str_address, last_str_address,
-								str_to_copy_len, cudaMemcpyDeviceToDevice, stream),
-								true, get_cache_info(key, cache).c_str());
-							//记录字符串长度
-							cache->str_data.str_length[i] = cache->str_data.str_length[last_index];
-						}
-						else
-						{
-							// 不删除字符串，只更新字符串地址
-#ifdef DEBUG_OUTPUT
-							std::cout << "str length not enough, copy address " << std::hex <<
-								"0x" << reinterpret_cast<size_t>(str_address) << "  address removed: "
-								"0x" << reinterpret_cast<size_t>(last_str_address)
-								<< std::endl;
-#endif
-							has_memory_fragments = true;
-							gpuErrchk(
-								cudaMemcpyAsync(cache->str_data.dev_str_addr + i, cache->str_data.dev_str_addr +
-									last_index,
-									sizeof(size_t), cudaMemcpyDeviceToDevice, stream), true, nullptr);
-							//记录字符串长度
-							cache->str_data.str_length[i] = cache->str_data.str_length[last_index];
-						}
-					}
-					--cache->str_data.record_num;
-					++cache->str_data.remain_blank_num;
-					cache->str_data.record_hash.unsafe_erase(hasher(*record));
+					continue;
 				}
+#ifdef DEBUG_OUTPUT
+				std::cout << "removing: " << tmp << "  index: " << i << std::endl;
+#endif
+				str_need_to_remove.emplace_back(i);
 			}
-		}
-		gpuErrchk(cudaStreamSynchronize(stream), true, nullptr);
-		gpuErrchk(cudaStreamDestroy(stream), true, nullptr);
-		// 处理内存碎片
-		if (has_memory_fragments)
-		{
-			printf("Start to handle memory fragments\n");
-			handle_memory_fragmentation(cache);
-			printf("Memory fragmentation cleanup completed\n");
+			recreate_cache_on_removing_records(key, cache, str_need_to_remove);
 		}
 	}
 	//释放clear_cache锁
 	free_clear_cache(remove_record_thread_count);
 }
 
-/**
- * \brief 处理cache中缓存的内存碎片
- * \param cache 缓存
- */
-void handle_memory_fragmentation(const list_cache* cache)
+void create_and_insert_cache(const std::vector<std::string>& records_vec, const size_t total_bytes, const std::string& key)
 {
-	std::vector<std::string> records;
-#ifdef DEBUG_OUTPUT
-	char* last_addr = nullptr;
-#endif
-	for (size_t i = 0; i < cache->str_data.record_num; ++i)
-	{
-		char* str_address_in_device;
-		gpuErrchk(cudaMemcpy(&str_address_in_device, cache->str_data.dev_str_addr + i,
-			sizeof(size_t), cudaMemcpyDeviceToHost), true, nullptr);
-#ifdef DEBUG_OUTPUT
-		if (last_addr != nullptr)
-		{
-			if (last_addr > str_address_in_device)
-			{
-				std::cout << "address: " << std::hex << "0x" << reinterpret_cast<size_t>(last_addr) <<
-					" is higher than " << "0x" << reinterpret_cast<size_t>(str_address_in_device) << std::endl;
-			}
-		}
-		last_addr = str_address_in_device;
-#endif
-		char tmp[MAX_PATH_LENGTH]{ 0 };
-		gpuErrchk(cudaMemcpy(tmp, str_address_in_device, cache->str_data.str_length[i], cudaMemcpyDeviceToHost), true,
-			nullptr);
-		records.emplace_back(tmp);
-	}
-	auto target_addr = cache->str_data.dev_strs;
-	auto save_str_addr_ptr = cache->str_data.dev_str_addr;
+	const auto record_count = records_vec.size();
+	auto cache = new list_cache;
+	cache->str_data.record_num = record_count;
+
+	const auto alloc_bytes = total_bytes + CACHE_REMAIN_BLANK_SIZE_IN_BYTES;
+	gpuErrchk(cudaMalloc(&cache->str_data.dev_strs, alloc_bytes), true, nullptr);
+	gpuErrchk(cudaMemset(cache->str_data.dev_strs, 0, alloc_bytes), true, nullptr);
+	cache->str_data.str_total_bytes = alloc_bytes;
+	cache->str_data.str_remain_blank_bytes = CACHE_REMAIN_BLANK_SIZE_IN_BYTES;
+
+	auto str_addr_capacity = record_count + CACHE_REMAIN_BLANK_SIZE_IN_BYTES / MAX_PATH_LENGTH;
+	auto str_addr_alloc_size = str_addr_capacity * sizeof(size_t);
+	gpuErrchk(cudaMalloc(&cache->str_data.dev_str_addr, str_addr_alloc_size), true, nullptr);
+	gpuErrchk(cudaMemset(cache->str_data.dev_str_addr, 0, str_addr_alloc_size), true, nullptr);
+	cache->str_data.str_addr_capacity = str_addr_capacity;
+
+	cache->str_data.str_length_array = new size_t[str_addr_capacity]();
+
+	cache->is_cache_valid = true;
+	cache->is_match_done = false;
+	cache->is_output_done = 0;
+
 	cudaStream_t stream;
 	gpuErrchk(cudaStreamCreate(&stream), true, nullptr);
+	auto target_addr = cache->str_data.dev_strs;
+	auto save_str_addr_ptr = cache->str_data.dev_str_addr;
 	unsigned i = 0;
-	for (const std::string& record : records)
+	for (const std::string& record : records_vec)
 	{
 		const auto record_length = record.length();
-		gpuErrchk(cudaMemsetAsync(target_addr, 0, record_length + 1, stream), true, nullptr);
 		gpuErrchk(cudaMemcpyAsync(target_addr, record.c_str(), record_length, cudaMemcpyHostToDevice, stream), true,
 			nullptr);
 		const auto str_address = reinterpret_cast<size_t>(target_addr);
 		//保存字符串在显存上的地址
 		gpuErrchk(cudaMemcpyAsync(save_str_addr_ptr, &str_address, sizeof(size_t), cudaMemcpyHostToDevice, stream),
 			true, nullptr);
-		//保存字符串长度
-		cache->str_data.str_length[i] = record_length;
-		target_addr += record_length;
-		++target_addr;
+		cache->str_data.str_length_array[i] = record_length;
+		target_addr += record_length + 1;
 		++save_str_addr_ptr;
 		++i;
+		cache->str_data.record_hash.insert(hasher(record));
 	}
 	gpuErrchk(cudaStreamSynchronize(stream), true, nullptr);
 	gpuErrchk(cudaStreamDestroy(stream), true, nullptr);
-#ifdef DEBUG_OUTPUT
+	cache_map.insert(std::make_pair(key, cache));
+}
+
+/**
+ * \brief 重新创建缓存，但是忽略需要删除的数据
+ * \param key cache key
+ * \param cache 缓存
+ * \param str_need_to_remove 需要删除数据的下标
+ */
+void recreate_cache_on_removing_records(const std::string& key, const list_cache* cache, const std::vector<size_t>& str_need_to_remove)
+{
+	std::vector<std::string> records;
+	size_t total_bytes = 0;
+	char tmp[MAX_PATH_LENGTH]{ 0 };
+	for (size_t i = 0; i < cache->str_data.record_num.load(); ++i)
 	{
-		std::cout << "address check" << std::endl;
-		char* p_last_addr = nullptr;
-		for (size_t j = 0; j < cache->str_data.record_num; ++j)
+		if (auto&& find_val = std::find(str_need_to_remove.begin(), str_need_to_remove.end(), i);
+			find_val != str_need_to_remove.end())
 		{
-			char* str_address_in_device;
-			gpuErrchk(cudaMemcpy(&str_address_in_device, cache->str_data.dev_str_addr + j,
+#ifdef DEBUG_OUTPUT
+			char* str_address_in_device_debug;
+			gpuErrchk(cudaMemcpy(&str_address_in_device_debug, cache->str_data.dev_str_addr + i,
 				sizeof(size_t), cudaMemcpyDeviceToHost), true, nullptr);
-			if (p_last_addr != nullptr)
-			{
-				if (p_last_addr > str_address_in_device)
-				{
-					std::cout << "address: " << std::hex << "0x" << reinterpret_cast<size_t>(p_last_addr) <<
-						" is higher than " << "0x" << reinterpret_cast<size_t>(str_address_in_device) << std::endl;
-					std::cout << "check failed." << std::endl;
-					std::quick_exit(1);
-				}
-			}
-			p_last_addr = str_address_in_device;
-		}
-	}
+			gpuErrchk(cudaMemcpy(tmp, str_address_in_device_debug,
+				cache->str_data.str_length_array[i],
+				cudaMemcpyDeviceToHost),
+				true,
+				nullptr);
+			std::cout << "Found removing record: " << tmp << "  index: " << i << "  Skipping." << std::endl;
 #endif
+			continue;
+		}
+		char* str_address_in_device;
+		gpuErrchk(cudaMemcpy(&str_address_in_device, cache->str_data.dev_str_addr + i,
+			sizeof(size_t), cudaMemcpyDeviceToHost), true, nullptr);
+		gpuErrchk(cudaMemcpy(tmp, str_address_in_device,
+			cache->str_data.str_length_array[i],
+			cudaMemcpyDeviceToHost),
+			true,
+			nullptr);
+		records.emplace_back(tmp);
+		total_bytes += strlen(tmp) + 1;
+	}
+	gpuErrchk(cudaFree(cache->str_data.dev_strs), false, nullptr);
+	gpuErrchk(cudaFree(cache->str_data.dev_str_addr), false, nullptr);
+	delete[] cache->str_data.str_length_array;
+	delete cache;
+	cache_map.unsafe_erase(key);
+	create_and_insert_cache(records, total_bytes, key);
 }
 
 /**
@@ -1175,7 +1123,9 @@ void handle_memory_fragmentation(const list_cache* cache)
 void wait_for_add_or_remove_record()
 {
 	while (add_record_thread_count.load() != 0 || remove_record_thread_count.load() != 0)
+	{
 		std::this_thread::yield();
+	}
 }
 
 /**
@@ -1208,9 +1158,8 @@ void clear_cache(const std::string& key)
 			//对当前cache加锁
 			std::lock_guard lock_guard(cache->str_data.lock);
 			gpuErrchk(cudaFree(cache->str_data.dev_strs), false, get_cache_info(key, cache).c_str());
-			gpuErrchk(cudaFree(cache->dev_output), false, get_cache_info(key, cache).c_str());
 			gpuErrchk(cudaFree(cache->str_data.dev_str_addr), false, nullptr);
-			delete cache->str_data.str_length;
+			delete[] cache->str_data.str_length_array;
 		}
 		delete cache;
 		cache_map.unsafe_erase(key);
