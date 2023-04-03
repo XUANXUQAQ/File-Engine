@@ -573,14 +573,33 @@ public class DatabaseService {
      * 从缓存中搜索结果并将匹配的放入listResults
      */
     private void searchCache(SearchTask searchTask) {
+        var eventManagement = EventManagement.getInstance();
+        HashSet<String> dirs = new HashSet<>();
         for (String each : databaseCacheSet) {
-            if (Files.exists(Path.of(each))) {
+            if (FileUtil.isFileNotExist(each)) {
+                eventManagement.putEvent(new DeleteFromCacheEvent(each));
+            } else {
+                if (FileUtil.isDir(each)) {
+                    dirs.add(each);
+                } else {
+                    var priorityStr = String.valueOf(getPriorityBySuffix(getSuffixByPath(each)));
+                    if (checkIsMatchedAndAddToList(each, priorityStr, searchTask)) {
+                        searchTask.cacheAndPriorityResults.add(each);
+                    }
+                }
+            }
+            if (searchTask.shouldStopSearch()) {
+                return;
+            }
+        }
+        for (String each : dirs) {
+            if (FileUtil.isFileNotExist(each)) {
+                eventManagement.putEvent(new DeleteFromCacheEvent(each));
+            } else {
                 var priorityStr = String.valueOf(getPriorityBySuffix(getSuffixByPath(each)));
                 if (checkIsMatchedAndAddToList(each, priorityStr, searchTask)) {
                     searchTask.cacheAndPriorityResults.add(each);
                 }
-            } else {
-                EventManagement.getInstance().putEvent(new DeleteFromCacheEvent(each));
             }
             if (searchTask.shouldStopSearch()) {
                 return;
@@ -2179,12 +2198,6 @@ public class DatabaseService {
             }
             GPURemoveRecordEvent gpuRemoveRecordEvent = (GPURemoveRecordEvent) event;
             removeRecord(gpuRemoveRecordEvent.key, gpuRemoveRecordEvent.record);
-        }
-
-        @EventRegister(registerClass = IsCacheExistEvent.class)
-        private static void isCacheExistEvent(Event event) {
-            IsCacheExistEvent cacheExist = (IsCacheExistEvent) event;
-            event.setReturnValue(getInstance().databaseCacheSet.contains(cacheExist.cache));
         }
 
         @EventRegister(registerClass = GPUClearCacheEvent.class)

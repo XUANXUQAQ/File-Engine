@@ -4427,16 +4427,7 @@ public class SearchBar {
         AllConfigs allConfigs = AllConfigs.getInstance();
         EventManagement eventManagement = EventManagement.getInstance();
         if (DatabaseService.getInstance().getDatabaseCacheNum() < allConfigs.getConfigEntity().getCacheNumLimit()) {
-            //检查缓存是否已存在
-            eventManagement.putEvent(new IsCacheExistEvent(content), event -> {
-                Optional<Boolean> ret = event.getReturnValue();
-                ret.ifPresent(isCacheExist -> {
-                    if (!isCacheExist) {
-                        //不存在则添加
-                        eventManagement.putEvent(new AddToCacheEvent(content));
-                    }
-                });
-            }, null);
+            eventManagement.putEvent(new AddToCacheEvent(content));
         }
     }
 
