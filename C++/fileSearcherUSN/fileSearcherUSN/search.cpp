@@ -46,9 +46,9 @@ void volume::init_volume()
         // 4.获取USN日志信息
         get_usn_info() &&
         // 5.获取 USN Journal 文件的基本信息
-        get_usn_journal() &&
+        get_usn_journal()
         // 06. 删除 USN 日志文件 ( 也可以不删除 ) 
-        delete_usn()
+        // delete_usn()
     )
     {
         using namespace std;
@@ -103,7 +103,7 @@ void volume::init_volume()
     }
     else
     {
-        fprintf(stderr, "fileSearcherUSN: init usn journal failed.");
+        fprintf(stderr, "fileSearcherUSN: init usn journal failed.\n");
     }
     auto&& info = std::string("disk ") + this->getDiskPath() + " complete";
     printf("%s\n", info.c_str());
@@ -562,7 +562,7 @@ bool volume::create_usn()
     {
         return true;
     }
-    auto&& info = "create usn error. Error code: " + std::to_string(GetLastError());
+    auto&& info = std::string("create usn error. Disk: ") + getDiskPath() + " Error code: " + std::to_string(GetLastError());
     fprintf(stderr, "fileSearcherUSN: %s\n", info.c_str());
     return false;
 }
@@ -584,7 +584,7 @@ bool volume::get_usn_info()
     {
         return true;
     }
-    auto&& info = "query usn error. Error code: " + std::to_string(GetLastError());
+    auto&& info = "query usn error. Error code: " + getDiskPath() + std::to_string(GetLastError());
     fprintf(stderr, "fileSearcherUSN: %s\n", info.c_str());
     return false;
 }

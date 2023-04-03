@@ -35,10 +35,6 @@ NTFSChangesWatcher::~NTFSChangesWatcher()
 	{
 		delete[] val;
 	}
-	if (!DeleteJournal())
-	{
-		fprintf(stderr, "Failed to delete usn journal.\n");
-	}
 	CloseHandle(volume_);
 }
 

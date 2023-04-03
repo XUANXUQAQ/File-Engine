@@ -30,6 +30,7 @@ void push_del_file(const std::string& record);
 file_record_queue file_added_queue;
 file_record_queue file_del_queue;
 concurrent_unordered_map<std::string, bool*> monitor_thread_status_map;
+concurrent_unordered_map<std::string, bool> is_delete_usn_flag;
 const char* file_monitor_exit_flag = "$$__File-Engine-Exit-Monitor__$$";
 
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_monitor
@@ -41,9 +42,10 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_monitor
 }
 
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_stop_1monitor
-(JNIEnv* env, jobject, jstring path)
+(JNIEnv* env, jobject, jstring path, jboolean is_delete_usn)
 {
 	const char* str = env->GetStringUTFChars(path, nullptr);
+	is_delete_usn_flag.insert(std::make_pair(str, is_delete_usn));
 	stop_monitor(str);
 	env->ReleaseStringUTFChars(path, str);
 }
@@ -175,4 +177,16 @@ void monitor_path(const std::string& path, const bool* flag)
 {
 	NTFSChangesWatcher watcher(path[0]);
 	watcher.WatchChanges(flag, push_add_file, push_del_file);
+	auto&& delete_usn_flag = is_delete_usn_flag.find(path);
+	if (delete_usn_flag == is_delete_usn_flag.end())
+	{
+		return;
+	}
+	if (delete_usn_flag->second)
+	{
+		if (!watcher.DeleteJournal())
+		{
+			fprintf(stderr, "Failed to delete usn journal.\n");
+		}
+	}
 }

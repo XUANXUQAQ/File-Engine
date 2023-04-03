@@ -11,7 +11,7 @@ public enum FileMonitor {
 
     public native void monitor(String path);
 
-    public native void stop_monitor(String path);
+    public native void stop_monitor(String path, boolean isDeleteUsn);
 
     public native String pop_add_file();
 

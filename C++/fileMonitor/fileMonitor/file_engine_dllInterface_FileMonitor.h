@@ -18,10 +18,10 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_monitor
 /*
  * Class:     file_engine_dllInterface_FileMonitor
  * Method:    stop_monitor
- * Signature: (Ljava/lang/String;)V
+ * Signature: (Ljava/lang/String;Z)V
  */
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_stop_1monitor
-  (JNIEnv *, jobject, jstring);
+  (JNIEnv *, jobject, jstring, jboolean);
 
 /*
  * Class:     file_engine_dllInterface_FileMonitor
