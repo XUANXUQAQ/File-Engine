@@ -1,6 +1,5 @@
 ﻿#pragma once
 #include <atomic>
-#include <mutex>
 #include <concurrent_unordered_set.h>
 #include "opencl.hpp"
 
@@ -17,7 +16,6 @@ using cache_data = struct cache_data
     std::atomic_uint64_t remain_blank_num;
     std::atomic_uint64_t record_num;
     Memory<size_t>* dev_total_number = nullptr;
-    std::mutex lock;
     concurrency::concurrent_unordered_set<size_t> record_hash;
 };
 

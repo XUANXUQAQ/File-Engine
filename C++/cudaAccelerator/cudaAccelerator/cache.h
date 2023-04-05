@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include <atomic>
-#include <mutex>
+#include <string>
 #include <concurrent_unordered_set.h>
 
 /**
@@ -18,7 +18,6 @@ using cache_data = struct cache_data
     size_t* dev_str_addr = nullptr;
     size_t str_addr_capacity = 0;
     size_t* str_length_array = nullptr;
-    std::mutex lock;
     concurrency::concurrent_unordered_set<size_t> record_hash;
 };
 

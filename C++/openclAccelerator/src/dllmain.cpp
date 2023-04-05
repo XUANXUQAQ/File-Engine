@@ -14,6 +14,7 @@
 #include <stdexcept>
 #include <string>
 #include <array>
+#include <shared_mutex>
 #include <d3d.h>
 #include <dxgi.h>
 #include <pdh.h>
@@ -42,19 +43,8 @@ void start_kernel(const std::vector<std::string>& search_case,
 size_t get_device_memory_used();
 void send_restart_event();
 
-//lock
-inline void wait_for_clear_cache();
-inline void wait_for_add_or_remove_record();
-inline void lock_clear_cache(std::atomic_uint& thread_counter);
-inline void free_clear_cache(std::atomic_uint& thread_counter);
-inline void lock_add_or_remove_result();
-inline void free_add_or_remove_results();
-
 concurrency::concurrent_unordered_map<std::string, list_cache*> cache_map;
-std::atomic_bool clear_cache_flag(false);
-std::atomic_uint add_record_thread_count(0);
-std::atomic_uint remove_record_thread_count(0);
-std::mutex modify_cache_lock;
+std::shared_mutex cache_lock;
 std::hash<std::string> hasher;
 std::atomic_bool exit_flag = false;
 Device current_device;
@@ -103,6 +93,7 @@ JNIEXPORT jobjectArray JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerat
 JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_setDevice
 (JNIEnv*, jobject, jint device_number_jint)
 {
+	std::unique_lock ulck(cache_lock);
 	release_all();
 	return set_using_device(device_number_jint);
 }
@@ -115,6 +106,7 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_s
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_release
 (JNIEnv*, jobject)
 {
+	std::unique_lock ulck(cache_lock);
 	exit_flag = true;
 	p_stop_signal[0] = 1;
 	p_stop_signal.write_to_device();
@@ -162,6 +154,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_initi
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_resetAllResultStatus
 (JNIEnv*, jobject)
 {
+	std::unique_lock ulck(cache_lock);
 	p_stop_signal[0] = 0;
 	p_stop_signal.write_to_device();
 	// 初始化is_match_done is_output_done为false
@@ -201,8 +194,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_match
 	{
 		return;
 	}
-	wait_for_clear_cache();
-	std::lock_guard lock_guard(modify_cache_lock);
+	std::unique_lock ulck(cache_lock);
 	//生成搜索条件 search_case_vec
 	std::vector<std::string> search_case_vec;
 	if (search_case != nullptr)
@@ -297,6 +289,7 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_i
 	{
 		return JNI_TRUE;
 	}
+	std::shared_lock lck(cache_lock);
 	const auto _key = env->GetStringUTFChars(key_jstring, nullptr);
 	auto iter = cache_map.find(_key);
 	env->ReleaseStringUTFChars(key_jstring, _key);
@@ -315,6 +308,7 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_i
 JNIEXPORT jint JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_matchedNumber
 (JNIEnv* env, jobject, jstring key_jstring)
 {
+	std::shared_lock lck(cache_lock);
 	const auto key = env->GetStringUTFChars(key_jstring, nullptr);
 	auto&& matched_number_iter = cache_map.find(key);
 	env->ReleaseStringUTFChars(key_jstring, key);
@@ -345,6 +339,7 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_h
 JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_isCacheExist
 (JNIEnv* env, jobject, jstring key_jstring)
 {
+	std::shared_lock lck(cache_lock);
 	const auto _key = env->GetStringUTFChars(key_jstring, nullptr);
 	const std::string key(_key);
 	env->ReleaseStringUTFChars(key_jstring, _key);
@@ -424,6 +419,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_initC
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_addRecordsToCache
 (JNIEnv* env, jobject, jstring key_jstring, jobjectArray records)
 {
+	std::unique_lock ulck(cache_lock);
 	const auto _key = env->GetStringUTFChars(key_jstring, nullptr);
 	const std::string key(_key);
 	env->ReleaseStringUTFChars(key_jstring, _key);
@@ -448,6 +444,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_addRe
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_removeRecordsFromCache
 (JNIEnv* env, jobject, jstring key_jstring, jobjectArray records)
 {
+	std::unique_lock ulck(cache_lock);
 	const auto _key = env->GetStringUTFChars(key_jstring, nullptr);
 	const std::string key(_key);
 	env->ReleaseStringUTFChars(key_jstring, _key);
@@ -472,6 +469,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_remov
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_clearCache
 (JNIEnv* env, jobject, jstring key_jstring)
 {
+	std::unique_lock ulck(cache_lock);
 	const auto _key = env->GetStringUTFChars(key_jstring, nullptr);
 	clear_cache(_key);
 	env->ReleaseStringUTFChars(key_jstring, _key);
@@ -510,6 +508,7 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_i
 JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_isCacheValid
 (JNIEnv* env, jobject, jstring key_jstring)
 {
+	std::shared_lock lck(cache_lock);
 	const auto _key = env->GetStringUTFChars(key_jstring, nullptr);
 	auto iter = cache_map.find(_key);
 	if (iter == cache_map.end())
@@ -527,6 +526,7 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_i
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_clearAllCache
 (JNIEnv*, jobject)
 {
+	std::unique_lock ulck(cache_lock);
 	clear_all_cache();
 }
 
@@ -666,17 +666,6 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 }
 
 /**
- * \brief 等待clear_cache执行完成，用于add_one_record_to_cache以及remove_one_record_from_cache方法，防止在缓存被删除后读取到空指针
- */
-void wait_for_clear_cache()
-{
-	while (clear_cache_flag.load())
-	{
-		Sleep(1);
-	}
-}
-
-/**
  * \brief 根据java数组search_case构建search_case_vector
  * \param env java运行环境指针
  * \param search_case_vec output
@@ -705,42 +694,7 @@ void generate_search_case(JNIEnv* env, std::vector<std::string>& search_case_vec
  */
 bool has_cache(const std::string& key)
 {
-	wait_for_clear_cache();
 	return cache_map.find(key) != cache_map.end();
-}
-
-/**
- * \brief 锁住clear_cache方法，用于all_one_record_to_cache和remove_one_record_from_cache中
- * \param thread_counter 记录当前有多少线程调用该方法
- */
-void lock_clear_cache(std::atomic_uint& thread_counter)
-{
-	std::lock_guard lock_guard(modify_cache_lock);
-	wait_for_clear_cache();
-	while (true)
-	{
-		if (unsigned val = thread_counter.load();
-			thread_counter.compare_exchange_strong(val, val + 1))
-		{
-			break;
-		}
-	}
-}
-
-/**
- * \brief 方法最后调用，代表当前线程退出
- * \param thread_counter 记录线程数量
- */
-void free_clear_cache(std::atomic_uint& thread_counter)
-{
-	while (true)
-	{
-		if (unsigned val = thread_counter.load();
-			thread_counter.compare_exchange_strong(val, val - 1))
-		{
-			break;
-		}
-	}
 }
 
 bool is_record_repeat(const std::string& record, const list_cache* cache)
@@ -756,13 +710,10 @@ bool is_record_repeat(const std::string& record, const list_cache* cache)
  */
 void add_records_to_cache(const std::string& key, const std::vector<std::string>& records)
 {
-	//锁住clear_cache，防止添加时缓存被清除
-	lock_clear_cache(add_record_thread_count);
-	if (cache_map.find(key) != cache_map.end())
+	auto&& cache_iter = cache_map.find(key);
+	if (cache_iter != cache_map.end())
 	{
-		const auto& cache = cache_map.at(key);
-		//对当前cache加锁，防止一边add一边remove导致脏数据产生
-		std::lock_guard lock_guard(cache->str_data.lock);
+		const auto& cache = cache_iter->second;
 		const auto cl_queue = current_device.get_cl_queue();
 		for (auto&& record : records)
 		{
@@ -801,8 +752,6 @@ void add_records_to_cache(const std::string& key, const std::vector<std::string>
 		}
 		cl_queue.finish();
 	}
-	//释放clear_cache锁
-	free_clear_cache(add_record_thread_count);
 }
 
 /**
@@ -812,12 +761,10 @@ void add_records_to_cache(const std::string& key, const std::vector<std::string>
  */
 void remove_records_from_cache(const std::string& key, std::vector<std::string>& records)
 {
-	lock_clear_cache(remove_record_thread_count);
-	if (cache_map.find(key) != cache_map.end())
+	auto&& cache_iter = cache_map.find(key);
+	if (cache_iter != cache_map.end())
 	{
-		const auto& cache = cache_map.at(key);
-		std::lock_guard lock_guard(cache->str_data.lock);
-		if (cache->is_cache_valid)
+		if (const auto& cache = cache_iter->second; cache->is_cache_valid)
 		{
 			char tmp[MAX_PATH_LENGTH]{ 0 };
 			const auto cl_queue = current_device.get_cl_queue();
@@ -854,43 +801,10 @@ void remove_records_from_cache(const std::string& key, std::vector<std::string>&
 			cl_queue.finish();
 		}
 	}
-	//释放clear_cache锁
-	free_clear_cache(remove_record_thread_count);
-}
-
-/**
- * \brief 等待add_one_record_to_cache和remove_one_record_from_cache方法全部退出
- */
-void wait_for_add_or_remove_record()
-{
-	while (add_record_thread_count.load() != 0 || remove_record_thread_count.load() != 0)
-	{
-		Sleep(1);
-	}
-}
-
-/**
- * \brief 对add_one_record_to_cache和remove_one_record_from_cache方法加锁
- */
-void lock_add_or_remove_result()
-{
-	std::lock_guard lock_guard(modify_cache_lock);
-	wait_for_add_or_remove_record();
-	clear_cache_flag = true;
-}
-
-void free_add_or_remove_results()
-{
-	clear_cache_flag = false;
 }
 
 void clear_cache(const std::string& key)
 {
-	//对自身加锁，防止多个线程同时清除cache
-	static std::mutex clear_cache_lock;
-	std::lock_guard clear_cache_lock_guard(clear_cache_lock);
-	//对add_one_record_to_cache和remove_one_record_from_cache方法加锁
-	lock_add_or_remove_result();
 	try
 	{
 		const auto cache = cache_map.at(key);
@@ -908,7 +822,6 @@ void clear_cache(const std::string& key)
 	{
 		fprintf(stderr, "clear cache failed: %s\n", e.what());
 	}
-	free_add_or_remove_results();
 }
 
 void clear_all_cache()

@@ -13,6 +13,7 @@
 #include <unordered_map>
 #include <d3d.h>
 #include <dxgi.h>
+#include <shared_mutex>
 #ifdef DEBUG_OUTPUT
 #include <iostream>
 #endif
@@ -38,20 +39,9 @@ std::wstring string2wstring(const std::string& str);
 void recreate_cache_on_removing_records(const std::string& key, const list_cache* cache, const std::vector<size_t>& str_need_to_remove);
 void create_and_insert_cache(const std::vector<std::string>& records_vec, size_t total_bytes, const std::string& key);
 
-//lock
-inline void wait_for_clear_cache();
-inline void wait_for_add_or_remove_record();
-inline void lock_clear_cache(std::atomic_uint& thread_counter);
-inline void free_clear_cache(std::atomic_uint& thread_counter);
-inline void lock_add_or_remove_result();
-inline void free_add_or_remove_results();
-
+std::shared_mutex cache_lock;
 concurrency::concurrent_unordered_map<std::wstring, DXGI_ADAPTER_DESC> gpu_name_adapter_map;
 concurrency::concurrent_unordered_map<std::string, list_cache*> cache_map;
-std::atomic_bool clear_cache_flag(false);
-std::atomic_uint add_record_thread_count(0);
-std::atomic_uint remove_record_thread_count(0);
-std::mutex modify_cache_lock;
 std::hash<std::string> hasher;
 std::atomic_bool exit_flag = false;
 static int current_using_device = 0;
@@ -101,6 +91,7 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_set
 	{
 		return true;
 	}
+	std::unique_lock ulck(cache_lock);
 	release_all();
 	if (set_using_device(device_number_jint))
 	{
@@ -121,6 +112,7 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_set
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_release
 (JNIEnv*, jobject)
 {
+	std::unique_lock ulck(cache_lock);
 	exit_flag = true;
 	release_all();
 }
@@ -168,6 +160,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_initial
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_resetAllResultStatus
 (JNIEnv*, jobject)
 {
+	std::unique_lock ulck(cache_lock);
 	set_stop(false);
 	// 初始化is_match_done is_output_done为false
 	for (auto& [_, cache_ptr] : cache_map)
@@ -204,9 +197,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_match
 	{
 		return;
 	}
-	wait_for_clear_cache();
-	wait_for_add_or_remove_record();
-	std::lock_guard lock_guard(modify_cache_lock);
+	std::unique_lock ulck(cache_lock);
 	//生成搜索条件 search_case_vec
 	std::vector<std::string> search_case_vec;
 	if (search_case != nullptr)
@@ -300,6 +291,7 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_isM
 	{
 		return true;
 	}
+	std::shared_lock lck(cache_lock);
 	const auto _key = env->GetStringUTFChars(key_jstring, nullptr);
 	auto iter = cache_map.find(_key);
 	env->ReleaseStringUTFChars(key_jstring, _key);
@@ -318,6 +310,7 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_isM
 JNIEXPORT jint JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_matchedNumber
 (JNIEnv* env, jobject, jstring key_jstring)
 {
+	std::shared_lock lck(cache_lock);
 	const auto key = env->GetStringUTFChars(key_jstring, nullptr);
 	auto&& matched_number_iter = cache_map.find(key);
 	env->ReleaseStringUTFChars(key_jstring, key);
@@ -348,6 +341,7 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_has
 JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_isCacheExist
 (JNIEnv* env, jobject, jstring key_jstring)
 {
+	std::shared_lock lck(cache_lock);
 	const auto key = env->GetStringUTFChars(key_jstring, nullptr);
 	const bool ret = has_cache(key);
 	env->ReleaseStringUTFChars(key_jstring, key);
@@ -397,6 +391,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_initCac
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_addRecordsToCache
 (JNIEnv* env, jobject, jstring key_jstring, jobjectArray records)
 {
+	std::unique_lock ulck(cache_lock);
 	const auto _key = env->GetStringUTFChars(key_jstring, nullptr);
 	const std::string key(_key);
 	env->ReleaseStringUTFChars(key_jstring, _key);
@@ -421,6 +416,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_addReco
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_removeRecordsFromCache
 (JNIEnv* env, jobject, jstring key_jstring, jobjectArray records)
 {
+	std::unique_lock ulck(cache_lock);
 	const auto _key = env->GetStringUTFChars(key_jstring, nullptr);
 	const std::string key(_key);
 	env->ReleaseStringUTFChars(key_jstring, _key);
@@ -445,6 +441,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_removeR
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_clearCache
 (JNIEnv* env, jobject, jstring key_jstring)
 {
+	std::unique_lock ulck(cache_lock);
 	const auto _key = env->GetStringUTFChars(key_jstring, nullptr);
 	clear_cache(_key);
 	env->ReleaseStringUTFChars(key_jstring, _key);
@@ -491,6 +488,7 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_isC
 JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_isCacheValid
 (JNIEnv* env, jobject, jstring key_jstring)
 {
+	std::shared_lock lck(cache_lock);
 	const auto _key = env->GetStringUTFChars(key_jstring, nullptr);
 	auto iter = cache_map.find(_key);
 	if (iter == cache_map.end())
@@ -508,6 +506,7 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_isC
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_CudaAccelerator_clearAllCache
 (JNIEnv*, jobject)
 {
+	std::unique_lock ulck(cache_lock);
 	clear_all_cache();
 }
 
@@ -769,17 +768,6 @@ std::wstring string2wstring(const std::string& str)
 }
 
 /**
- * \brief 等待clear_cache执行完成，用于add_one_record_to_cache以及remove_one_record_from_cache方法，防止在缓存被删除后读取到空指针
- */
-void wait_for_clear_cache()
-{
-	while (clear_cache_flag.load())
-	{
-		std::this_thread::yield();
-	}
-}
-
-/**
  * \brief 根据java数组search_case构建search_case_vector
  * \param env java运行环境指针
  * \param search_case_vec output
@@ -808,42 +796,7 @@ void generate_search_case(JNIEnv* env, std::vector<std::string>& search_case_vec
  */
 bool has_cache(const std::string& key)
 {
-	wait_for_clear_cache();
 	return cache_map.find(key) != cache_map.end();
-}
-
-/**
- * \brief 锁住clear_cache方法，用于all_one_record_to_cache和remove_one_record_from_cache中
- * \param thread_counter 记录当前有多少线程调用该方法
- */
-void lock_clear_cache(std::atomic_uint& thread_counter)
-{
-	std::lock_guard lock_guard(modify_cache_lock);
-	wait_for_clear_cache();
-	while (true)
-	{
-		if (unsigned val = thread_counter.load();
-			thread_counter.compare_exchange_strong(val, val + 1))
-		{
-			break;
-		}
-	}
-}
-
-/**
- * \brief 方法最后调用，代表当前线程退出
- * \param thread_counter 记录线程数量
- */
-void free_clear_cache(std::atomic_uint& thread_counter)
-{
-	while (true)
-	{
-		if (unsigned val = thread_counter.load();
-			thread_counter.compare_exchange_strong(val, val - 1))
-		{
-			break;
-		}
-	}
 }
 
 bool is_record_repeat(const std::string& record, const list_cache* cache)
@@ -859,13 +812,10 @@ bool is_record_repeat(const std::string& record, const list_cache* cache)
  */
 void add_records_to_cache(const std::string& key, const std::vector<std::string>& records)
 {
-	//锁住clear_cache，防止添加时缓存被清除
-	lock_clear_cache(add_record_thread_count);
-	if (cache_map.find(key) != cache_map.end())
+	auto&& cache_iter = cache_map.find(key);
+	if (cache_iter != cache_map.end())
 	{
-		const auto& cache = cache_map.at(key);
-		//对当前cache加锁，防止一边add一边remove导致脏数据产生
-		std::lock_guard lock_guard(cache->str_data.lock);
+		const auto& cache = cache_iter->second;
 		cudaStream_t stream;
 		gpuErrchk(cudaStreamCreate(&stream), true, nullptr);
 		if (cache->is_cache_valid)
@@ -957,22 +907,20 @@ void add_records_to_cache(const std::string& key, const std::vector<std::string>
 						++cache->str_data.record_num;
 						cache->str_data.str_remain_blank_bytes -= record_len + 1;
 						cache->str_data.record_hash.insert(hasher(record));
-						}
+					}
 					else
 					{
 						// 无空位，有文件丢失，使cache无效
 						cache->is_cache_valid = false;
 						break;
 					}
-						}
-					}
 				}
+			}
+		}
 		gpuErrchk(cudaStreamSynchronize(stream), true, nullptr);
 		gpuErrchk(cudaStreamDestroy(stream), true, nullptr);
-			}
-	//释放clear_cache锁
-	free_clear_cache(add_record_thread_count);
-		}
+	}
+}
 
 /**
  * \brief 从key对应的record中删除一个记录
@@ -981,12 +929,10 @@ void add_records_to_cache(const std::string& key, const std::vector<std::string>
  */
 void remove_records_from_cache(const std::string& key, std::vector<std::string>& records)
 {
-	lock_clear_cache(remove_record_thread_count);
-	if (cache_map.find(key) != cache_map.end())
+	auto&& cache_iter = cache_map.find(key);
+	if (cache_iter != cache_map.end())
 	{
-		const auto& cache = cache_map.at(key);
-		std::lock_guard lock_guard(cache->str_data.lock);
-		if (cache->is_cache_valid)
+		if (const auto& cache = cache_iter->second; cache->is_cache_valid)
 		{
 			std::vector<size_t> str_need_to_remove;
 			char tmp[MAX_PATH_LENGTH]{ 0 };
@@ -1016,8 +962,6 @@ void remove_records_from_cache(const std::string& key, std::vector<std::string>&
 			recreate_cache_on_removing_records(key, cache, str_need_to_remove);
 		}
 	}
-	//释放clear_cache锁
-	free_clear_cache(remove_record_thread_count);
 }
 
 void create_and_insert_cache(const std::vector<std::string>& records_vec, const size_t total_bytes, const std::string& key)
@@ -1117,50 +1061,15 @@ void recreate_cache_on_removing_records(const std::string& key, const list_cache
 	create_and_insert_cache(records, total_bytes, key);
 }
 
-/**
- * \brief 等待add_one_record_to_cache和remove_one_record_from_cache方法全部退出
- */
-void wait_for_add_or_remove_record()
-{
-	while (add_record_thread_count.load() != 0 || remove_record_thread_count.load() != 0)
-	{
-		std::this_thread::yield();
-	}
-}
-
-/**
- * \brief 对add_one_record_to_cache和remove_one_record_from_cache方法加锁
- */
-void lock_add_or_remove_result()
-{
-	std::lock_guard lock_guard(modify_cache_lock);
-	wait_for_add_or_remove_record();
-	clear_cache_flag = true;
-}
-
-void free_add_or_remove_results()
-{
-	clear_cache_flag = false;
-}
-
 void clear_cache(const std::string& key)
 {
-	//对自身加锁，防止多个线程同时清除cache
-	static std::mutex clear_cache_lock;
-	std::lock_guard clear_cache_lock_guard(clear_cache_lock);
-	//对add_one_record_to_cache和remove_one_record_from_cache方法加锁
-	lock_add_or_remove_result();
 	try
 	{
 		const auto cache = cache_map.at(key);
 		cache->is_cache_valid = false;
-		{
-			//对当前cache加锁
-			std::lock_guard lock_guard(cache->str_data.lock);
-			gpuErrchk(cudaFree(cache->str_data.dev_strs), false, get_cache_info(key, cache).c_str());
-			gpuErrchk(cudaFree(cache->str_data.dev_str_addr), false, nullptr);
-			delete[] cache->str_data.str_length_array;
-		}
+		gpuErrchk(cudaFree(cache->str_data.dev_strs), false, get_cache_info(key, cache).c_str());
+		gpuErrchk(cudaFree(cache->str_data.dev_str_addr), false, get_cache_info(key, cache).c_str());
+		delete[] cache->str_data.str_length_array;
 		delete cache;
 		cache_map.unsafe_erase(key);
 	}
@@ -1171,7 +1080,6 @@ void clear_cache(const std::string& key)
 	{
 		fprintf(stderr, "clear cache failed: %s\n", e.what());
 	}
-	free_add_or_remove_results();
 }
 
 void clear_all_cache()

@@ -2142,34 +2142,37 @@ public class DatabaseService {
         }
 
         private static void addRecord(String key, String fileRecord) {
-            if (GPUAccelerator.INSTANCE.isCacheExist(key) && !GPUAccelerator.INSTANCE.isCacheValid(key)) {
+            if (!GPUAccelerator.INSTANCE.isCacheExist(key)) {
+                return;
+            }
+            if (GPUAccelerator.INSTANCE.isCacheValid(key)) {
+                Set<String> container;
+                container = recordsToAdd.get(key);
+                if (container == null) {
+                    synchronized (recordsToAdd) {
+                        container = recordsToAdd.computeIfAbsent(key, k -> ConcurrentHashMap.newKeySet());
+                    }
+                }
+                container.add(fileRecord);
+            } else {
                 if (IsDebug.isDebug()) {
                     System.out.println("GPU缓存 key: " + key + "不再有效");
                 }
                 invalidCacheKeys.add(key);
-            } else {
-                Set<String> container;
-                if (recordsToAdd.containsKey(key)) {
-                    container = recordsToAdd.get(key);
-                    container.add(fileRecord);
-                } else {
-                    container = ConcurrentHashMap.newKeySet();
-                    container.add(fileRecord);
-                    recordsToAdd.put(key, container);
-                }
             }
         }
 
         private static void removeRecord(String key, String fileRecord) {
-            Set<String> container;
-            if (recordsToRemove.containsKey(key)) {
-                container = recordsToRemove.get(key);
-                container.add(fileRecord);
-            } else {
-                container = ConcurrentHashMap.newKeySet();
-                container.add(fileRecord);
-                recordsToRemove.put(key, container);
+            if (!GPUAccelerator.INSTANCE.isCacheExist(key)) {
+                return;
             }
+            Set<String> container = recordsToRemove.get(key);
+            if (container==null) {
+                synchronized (recordsToRemove) {
+                    container = recordsToRemove.computeIfAbsent(key, k -> ConcurrentHashMap.newKeySet());
+                }
+            }
+            container.add(fileRecord);
         }
 
         @EventListener(listenClass = BootSystemEvent.class)
