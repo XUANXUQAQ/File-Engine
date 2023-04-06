@@ -22,13 +22,11 @@ public class BeanUtil {
                             || t.getType() == int.class || t.getType() == Integer.class
                             || t.getType() == char.class || t.getType() == Character.class) {
                         f.setAccessible(true);
-                        t.setAccessible(true);
                         t.set(toObj, f.get(fromObj));
                     } else if (t.getType() == Date.class) {
                         // dates are not immutable, so clone non-null dates into the destination object
                         Date d = (Date) f.get(fromObj);
                         f.setAccessible(true);
-                        t.setAccessible(true);
                         t.set(toObj, d != null ? d.clone() : null);
                     }
                 }

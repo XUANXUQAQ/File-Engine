@@ -7,9 +7,9 @@ import java.util.function.Supplier;
 enum OpenclAccelerator implements IGPUAccelerator {
     INSTANCE;
 
-    private static boolean isOpenclLoaded;
+    private volatile boolean isOpenclLoaded;
 
-    static {
+    OpenclAccelerator() {
         try {
             System.load(Path.of("user/openclAccelerator.dll").toAbsolutePath().toString());
             isOpenclLoaded = true;

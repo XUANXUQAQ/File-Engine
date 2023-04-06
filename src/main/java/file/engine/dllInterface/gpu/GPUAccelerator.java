@@ -14,8 +14,6 @@ import java.util.function.Supplier;
 public enum GPUAccelerator {
     INSTANCE;
     private static IGPUAccelerator gpuAccelerator;
-    private static final CudaAccelerator cudaAccelerator = CudaAccelerator.INSTANCE;
-    private static final OpenclAccelerator openclAccelerator = OpenclAccelerator.INSTANCE;
 
     /**
      * 之所以采用双重检验锁机制，是由于要实现懒加载，并且不能在加载类的时候进行加载
@@ -39,7 +37,7 @@ public enum GPUAccelerator {
         }
     }
 
-    enum Category {
+    private enum Category {
         CUDA("cuda"), OPENCL("opencl");
         final String category;
 
@@ -101,7 +99,7 @@ public enum GPUAccelerator {
     }
 
     public boolean isGPUAvailableOnSystem() {
-        return cudaAccelerator.isGPUAvailableOnSystem() || openclAccelerator.isGPUAvailableOnSystem();
+        return CudaAccelerator.INSTANCE.isGPUAvailableOnSystem() || OpenclAccelerator.INSTANCE.isGPUAvailableOnSystem();
     }
 
     public boolean hasCache() {
@@ -176,8 +174,8 @@ public enum GPUAccelerator {
      */
     public Map<String, String> getDevices() {
         LinkedHashMap<String, String> deviceMap = new LinkedHashMap<>();
-        getDeviceToMap(cudaAccelerator, deviceMap, Category.CUDA);
-        getDeviceToMap(openclAccelerator, deviceMap, Category.OPENCL);
+        getDeviceToMap(CudaAccelerator.INSTANCE, deviceMap, Category.CUDA);
+        getDeviceToMap(OpenclAccelerator.INSTANCE, deviceMap, Category.OPENCL);
         return deviceMap;
     }
 
@@ -211,18 +209,18 @@ public enum GPUAccelerator {
         if (!IsEnabledWrapper.getInstance().isEnableGpuAccelerate()) {
             return false;
         }
-        if (deviceCategoryAndId.isEmpty()) {
-            if (cudaAccelerator.isGPUAvailableOnSystem()) {
-                cudaAccelerator.initialize();
-                if (cudaAccelerator.setDevice(0)) {
-                    gpuAccelerator = cudaAccelerator;
+        if (deviceCategoryAndId == null || deviceCategoryAndId.isEmpty()) {
+            if (CudaAccelerator.INSTANCE.isGPUAvailableOnSystem()) {
+                CudaAccelerator.INSTANCE.initialize();
+                if (CudaAccelerator.INSTANCE.setDevice(0)) {
+                    gpuAccelerator = CudaAccelerator.INSTANCE;
                     return true;
                 }
             }
-            if (openclAccelerator.isGPUAvailableOnSystem()) {
-                openclAccelerator.initialize();
-                if (openclAccelerator.setDevice(0)) {
-                    gpuAccelerator = openclAccelerator;
+            if (OpenclAccelerator.INSTANCE.isGPUAvailableOnSystem()) {
+                OpenclAccelerator.INSTANCE.initialize();
+                if (OpenclAccelerator.INSTANCE.setDevice(0)) {
+                    gpuAccelerator = OpenclAccelerator.INSTANCE;
                     return true;
                 }
             }
@@ -235,18 +233,18 @@ public enum GPUAccelerator {
         if (category != null) {
             switch (category) {
                 case CUDA:
-                    if (cudaAccelerator.isGPUAvailableOnSystem()) {
-                        cudaAccelerator.initialize();
-                        if (cudaAccelerator.setDevice(id)) {
-                            gpuAccelerator = cudaAccelerator;
+                    if (CudaAccelerator.INSTANCE.isGPUAvailableOnSystem()) {
+                        CudaAccelerator.INSTANCE.initialize();
+                        if (CudaAccelerator.INSTANCE.setDevice(id)) {
+                            gpuAccelerator = CudaAccelerator.INSTANCE;
                             return true;
                         }
                     }
                 case OPENCL:
-                    if (openclAccelerator.isGPUAvailableOnSystem()) {
-                        openclAccelerator.initialize();
-                        if (openclAccelerator.setDevice(id)) {
-                            gpuAccelerator = openclAccelerator;
+                    if (OpenclAccelerator.INSTANCE.isGPUAvailableOnSystem()) {
+                        OpenclAccelerator.INSTANCE.initialize();
+                        if (OpenclAccelerator.INSTANCE.setDevice(id)) {
+                            gpuAccelerator = OpenclAccelerator.INSTANCE;
                             return true;
                         }
                     }

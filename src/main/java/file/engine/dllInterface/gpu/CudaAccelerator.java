@@ -7,9 +7,9 @@ import java.util.function.Supplier;
 enum CudaAccelerator implements IGPUAccelerator {
     INSTANCE;
 
-    private static boolean isCudaLoaded;
+    private volatile boolean isCudaLoaded;
 
-    static {
+    CudaAccelerator() {
         try {
             System.load(Path.of("user/cudaAccelerator.dll").toAbsolutePath().toString());
             isCudaLoaded = true;
@@ -29,12 +29,14 @@ enum CudaAccelerator implements IGPUAccelerator {
                              boolean[] isKeywordPath,
                              int maxResultNumber,
                              BiConsumer<String, String> resultCollector);
+
     public boolean isGPUAvailableOnSystem() {
         if (isCudaLoaded) {
-          return isCudaAvailable();
+            return isCudaAvailable();
         }
         return false;
     }
+
     private native boolean isCudaAvailable();
 
     public native boolean isMatchDone(String key);
