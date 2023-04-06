@@ -17,10 +17,11 @@ inline time_t getCurrentMills();
 inline int isVirtualKeyPressed(int vk);
 void checkHotkeyAndAddCounter(int hotkey, unsigned& counter);
 bool getKeyPressedStatus(const int& hotkey);
+unsigned getTotalKeyPressedCount();
 
 using DoubleClickKeyStateSaver = struct KeySaver
 {
-	int isKeyReleasedAfterPress = false;
+	bool isKeyReleasedAfterPress = false;
 	time_t keyPressedTime = 0;
 };
 
@@ -82,19 +83,19 @@ void stopListen()
 	isStop = true;
 }
 
-bool doubleClickCheck(int vk, DoubleClickKeyStateSaver& saver)
+bool doubleClickCheck(const int vk, DoubleClickKeyStateSaver& saver)
 {
 	bool ret = false;
-	if (isVirtualKeyPressed(vk))
+	const auto keyPressed = getTotalKeyPressedCount();
+	if (isVirtualKeyPressed(vk) && keyPressed == 2)
 	{
-		//ctrl 被点击
 		if (getCurrentMills() - saver.keyPressedTime < 300 && saver.isKeyReleasedAfterPress)
 		{
 			ret = true;
 		}
 		else
 		{
-			saver.isKeyReleasedAfterPress = FALSE;
+			saver.isKeyReleasedAfterPress = false;
 		}
 		saver.keyPressedTime = getCurrentMills();
 	}
@@ -118,25 +119,7 @@ void startListen()
 		const bool isKey3Pressed = getKeyPressedStatus(hotkey3);
 		const bool isKey4Pressed = getKeyPressedStatus(hotkey4);
 		const bool isKey5Pressed = getKeyPressedStatus(hotkey5);
-		BYTE allKeyState[256]{ 0 };
-		GetKeyboardState(allKeyState);
-		
-		unsigned pressedKeyCount = 0;
-		for (unsigned i = 0; i <= sizeof allKeyState; ++i)
-		{
-			const BYTE keyState = allKeyState[i];
-			if ((0x30 <= i && i <= 0x5A) || 
-				(VK_F1 <= i && i <= VK_F12) || 
-				i == VK_SHIFT || i == VK_LSHIFT || i == VK_RSHIFT ||
-				i == VK_CONTROL || i == VK_LCONTROL || i == VK_RCONTROL ||
-				i == VK_MENU || i == VK_LMENU || i == VK_RMENU)
-			{
-				if (keyState & static_cast<BYTE>(0x80))
-				{
-					++pressedKeyCount;
-				}
-			}
-		}
+		const auto pressedKeyCount = getTotalKeyPressedCount();
 		if (isKey1Pressed &&
 			isKey2Pressed &&
 			isKey3Pressed &&
@@ -152,6 +135,30 @@ void startListen()
 		}
 		Sleep(1);
 	}
+}
+
+unsigned getTotalKeyPressedCount()
+{
+	BYTE allKeyState[256]{ 0 };
+	GetKeyboardState(allKeyState);
+
+	unsigned pressedKeyCount = 0;
+	for (unsigned i = 0; i <= sizeof allKeyState; ++i)
+	{
+		const BYTE keyState = allKeyState[i];
+		if ((0x30 <= i && i <= 0x5A) ||
+			(VK_F1 <= i && i <= VK_F12) ||
+			i == VK_SHIFT || i == VK_LSHIFT || i == VK_RSHIFT ||
+			i == VK_CONTROL || i == VK_LCONTROL || i == VK_RCONTROL ||
+			i == VK_MENU || i == VK_LMENU || i == VK_RMENU)
+		{
+			if (keyState & static_cast<BYTE>(0x80))
+			{
+				++pressedKeyCount;
+			}
+		}
+	}
+	return pressedKeyCount;
 }
 
 bool getKeyPressedStatus(const int& hotkey)
