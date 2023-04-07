@@ -6,8 +6,8 @@
 #include <WinUser.h>
 #include "file_engine_dllInterface_HotkeyListener.h"
 #include <fstream>
-#pragma comment(lib, "User32.lib")
 
+#pragma comment(lib, "User32.lib")
 
 void registerHotKey(int key1, int key2, int key3, int key4, int key5);
 bool getKeyStatus();
@@ -16,7 +16,7 @@ void stopListen();
 inline time_t getCurrentMills();
 inline int isVirtualKeyPressed(int vk);
 void checkHotkeyAndAddCounter(int hotkey, unsigned& counter);
-bool getKeyPressedStatus(const int& hotkey);
+bool getKeyPressedStatus(int hotkey);
 unsigned getTotalKeyPressedCount();
 
 using DoubleClickKeyStateSaver = struct KeySaver
@@ -73,7 +73,7 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_HotkeyListener_isShiftD
 	return isShiftDoubleClicked;
 }
 
-inline int isVirtualKeyPressed(int vk)
+inline int isVirtualKeyPressed(const int vk)
 {
 	return GetKeyState(vk) < 0;
 }
@@ -161,7 +161,7 @@ unsigned getTotalKeyPressedCount()
 	return pressedKeyCount;
 }
 
-bool getKeyPressedStatus(const int& hotkey)
+bool getKeyPressedStatus(const int hotkey)
 {
 	if (hotkey > 0)
 	{
@@ -170,7 +170,7 @@ bool getKeyPressedStatus(const int& hotkey)
 	return true;
 }
 
-void checkHotkeyAndAddCounter(int hotkey, unsigned& counter)
+void checkHotkeyAndAddCounter(const int hotkey, unsigned& counter)
 {
 	if (hotkey < 0)
 	{
