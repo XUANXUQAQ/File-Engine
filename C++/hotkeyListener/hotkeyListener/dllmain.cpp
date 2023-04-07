@@ -86,22 +86,29 @@ void stopListen()
 bool doubleClickCheck(const int vk, DoubleClickKeyStateSaver& saver)
 {
 	bool ret = false;
-	const auto keyPressed = getTotalKeyPressedCount();
-	if (isVirtualKeyPressed(vk) && keyPressed == 2)
+	constexpr unsigned timeout = 120;
+	if (isVirtualKeyPressed(vk))
 	{
-		if (getCurrentMills() - saver.keyPressedTime < 300 && saver.isKeyReleasedAfterPress)
+		if (getTotalKeyPressedCount() == 2)
 		{
-			ret = true;
+			if (getCurrentMills() - saver.keyPressedTime < timeout && saver.isKeyReleasedAfterPress)
+			{
+				ret = true;
+			}
+			else
+			{
+				saver.isKeyReleasedAfterPress = false;
+			}
+			saver.keyPressedTime = getCurrentMills();
 		}
-		else
-		{
-			saver.isKeyReleasedAfterPress = false;
-		}
-		saver.keyPressedTime = getCurrentMills();
 	}
 	else
 	{
-		saver.isKeyReleasedAfterPress = getCurrentMills() - saver.keyPressedTime < 300;
+		saver.isKeyReleasedAfterPress = getCurrentMills() - saver.keyPressedTime < timeout;
+	}
+	if (saver.isKeyReleasedAfterPress)
+	{
+		saver.isKeyReleasedAfterPress = getCurrentMills() - saver.keyPressedTime < timeout;
 	}
 	return ret;
 }
