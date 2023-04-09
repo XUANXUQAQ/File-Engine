@@ -186,7 +186,7 @@ kernel void check(global const char* str_address_ptr_array,
 	global const char* is_stop_collect_var,
 	global const unsigned short* p_utf162gbk)
 {
-	const unsigned thread_id = get_global_id(0);
+	const unsigned long thread_id = get_global_id(0);
 	if (thread_id >= *total_num)
 	{
 		return;

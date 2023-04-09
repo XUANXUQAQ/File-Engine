@@ -37,28 +37,6 @@ public enum GPUAccelerator {
         }
     }
 
-    private enum Category {
-        CUDA("cuda"), OPENCL("opencl");
-        final String category;
-
-        Category(String category) {
-            this.category = category;
-        }
-
-        @Override
-        public String toString() {
-            return this.category;
-        }
-
-        static Category categoryFromString(String c) {
-            return switch (c) {
-                case "cuda" -> CUDA;
-                case "opencl" -> OPENCL;
-                default -> null;
-            };
-        }
-    }
-
     public void resetAllResultStatus() {
         if (gpuAccelerator != null) {
             gpuAccelerator.resetAllResultStatus();
@@ -99,7 +77,7 @@ public enum GPUAccelerator {
     }
 
     public boolean isGPUAvailableOnSystem() {
-        return CudaAccelerator.INSTANCE.isGPUAvailableOnSystem() || OpenclAccelerator.INSTANCE.isGPUAvailableOnSystem();
+        return CudaAccelerator.INSTANCE.isGPUAvailableOnSystem();
     }
 
     public boolean hasCache() {
@@ -167,6 +145,7 @@ public enum GPUAccelerator {
     }
 
     /**
+     * TODO 添加其他API
      * key: 设备名
      * value: [设备种类(cuda, opencl)];[设备id]
      *
@@ -174,12 +153,11 @@ public enum GPUAccelerator {
      */
     public Map<String, String> getDevices() {
         LinkedHashMap<String, String> deviceMap = new LinkedHashMap<>();
-        getDeviceToMap(CudaAccelerator.INSTANCE, deviceMap, Category.CUDA);
-        getDeviceToMap(OpenclAccelerator.INSTANCE, deviceMap, Category.OPENCL);
+        getDeviceToMap(CudaAccelerator.INSTANCE, deviceMap, GPUApiCategory.CUDA);
         return deviceMap;
     }
 
-    private void getDeviceToMap(IGPUAccelerator igpuAccelerator, HashMap<String, String> deviceMap, Category category) {
+    private void getDeviceToMap(IGPUAccelerator igpuAccelerator, HashMap<String, String> deviceMap, GPUApiCategory category) {
         if (igpuAccelerator.isGPUAvailableOnSystem()) {
             var devices = igpuAccelerator.getDevices();
             if (devices == null || devices.length == 0) {
@@ -201,6 +179,12 @@ public enum GPUAccelerator {
         }
     }
 
+    /**
+     * TODO 添加其他API
+     *
+     * @param deviceCategoryAndId 设备类型及id，如cuda;0
+     * @return 是否设置成功
+     */
     public boolean setDevice(String deviceCategoryAndId) {
         if (gpuAccelerator != null) {
             // 切换GPU设备重启生效，运行中不允许切换
@@ -217,19 +201,12 @@ public enum GPUAccelerator {
                     return true;
                 }
             }
-            if (OpenclAccelerator.INSTANCE.isGPUAvailableOnSystem()) {
-                OpenclAccelerator.INSTANCE.initialize();
-                if (OpenclAccelerator.INSTANCE.setDevice(0)) {
-                    gpuAccelerator = OpenclAccelerator.INSTANCE;
-                    return true;
-                }
-            }
             return false;
         }
         String[] info = RegexUtil.semicolon.split(deviceCategoryAndId);
         String deviceCategory = info[0];
         int id = Integer.parseInt(info[1]);
-        var category = Category.categoryFromString(deviceCategory);
+        var category = GPUApiCategory.categoryFromString(deviceCategory);
         if (category != null) {
             switch (category) {
                 case CUDA:
@@ -237,14 +214,6 @@ public enum GPUAccelerator {
                         CudaAccelerator.INSTANCE.initialize();
                         if (CudaAccelerator.INSTANCE.setDevice(id)) {
                             gpuAccelerator = CudaAccelerator.INSTANCE;
-                            return true;
-                        }
-                    }
-                case OPENCL:
-                    if (OpenclAccelerator.INSTANCE.isGPUAvailableOnSystem()) {
-                        OpenclAccelerator.INSTANCE.initialize();
-                        if (OpenclAccelerator.INSTANCE.setDevice(id)) {
-                            gpuAccelerator = OpenclAccelerator.INSTANCE;
                             return true;
                         }
                     }

@@ -34,7 +34,7 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 bool is_record_repeat(const std::string& record, const list_cache* cache);
 void release_all();
 bool set_using_device(unsigned device_num);
-void start_kernel(const std::vector<std::string>& search_case,
+std::vector<cl::Event*> start_kernel(const std::vector<std::string>& search_case,
 	bool is_ignore_case,
 	const char* search_text,
 	const std::vector<std::string>& keywords,
@@ -257,7 +257,11 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_match
 		collect_threads_vec.emplace_back(collect_func);
 	}
 	//GPU并行计算
-	start_kernel(search_case_vec, is_ignore_case, search_text_chars, keywords_vec, keywords_lower_vec,
+	auto&& events_vec = start_kernel(search_case_vec,
+		is_ignore_case, 
+		search_text_chars,
+		keywords_vec,
+		keywords_lower_vec,
 		is_keyword_path_ptr);
 	collect_results(env, result_collector, result_counter, max_results, search_case_vec);
 	for (auto&& each : collect_threads_vec)
@@ -267,14 +271,11 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_match
 			each.join();
 		}
 	}
-	for (auto& [_, cache_val] : cache_map)
-	{
-		if (cache_val->is_output_done.load() != 2)
-		{
-			cache_val->is_output_done = 2;
-		}
-	}
 	env->ReleaseStringUTFChars(search_text, search_text_chars);
+	for (const auto event_ptr : events_vec)
+	{
+		delete event_ptr;
+	}
 }
 
 /*
@@ -583,46 +584,55 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 		++* matched_number;
 	};
 	const auto cl_queue = current_device.get_cl_queue();
+#ifdef DEBUG_OUTPUT
+	std::cout << "start to collect results. " << std::endl;
+#endif
 	do
 	{
 		//尝试退出
 		all_complete = true;
-		for (const auto& [key, val] : cache_map)
+		for (const auto& [key, cache_struct] : cache_map)
 		{
 			if (stop_func())
 			{
 				break;
 			}
-			if (!val->is_cache_valid)
+			if (!cache_struct->is_cache_valid)
 			{
 				continue;
 			}
-			if (!val->is_match_done.load())
+			if (!cache_struct->is_match_done.load())
 			{
 				//发现仍然有结果未计算完，设置退出标志为false，跳到下一个计算结果
 				all_complete = false;
 				continue;
 			}
-			if (int expected = 0; !val->is_output_done.compare_exchange_strong(expected, 1))
+			if (int expected = 0; !cache_struct->is_output_done.compare_exchange_weak(expected, 1))
 			{
 				continue;
 			}
 			unsigned matched_number = 0;
-			val->dev_output->read_from_device();
-			for (size_t i = 0; i < val->str_data.record_num.load(); ++i)
+			cache_struct->dev_output->read_from_device();
+#ifdef DEBUG_OUTPUT
+			std::cout << "collecting key: " << key << std::endl;
+#endif
+			for (size_t i = 0; i < cache_struct->str_data.record_num.load(); ++i)
 			{
 				if (stop_func())
 				{
 					break;
 				}
 				//dev_cache[i]字符串匹配成功
-				if ((*val->dev_output)[i])
+				if (static_cast<bool>((*(cache_struct->dev_output))[i]))
 				{
 					char matched_record_str[MAX_PATH_LENGTH]{ 0 };
-					auto&& cl_buffer = val->str_data.dev_cache_str->get_cl_buffer();
+					auto&& cl_buffer = cache_struct->str_data.dev_cache_str->get_cl_buffer();
 					cl_queue.enqueueReadBuffer(cl_buffer, true,
 						i * MAX_PATH_LENGTH, MAX_PATH_LENGTH, matched_record_str);
 					cl_queue.finish();
+#ifdef DEBUG_OUTPUT
+					std::cout << "collecting: " << matched_record_str << std::endl;
+#endif
 					// 判断文件和文件夹
 					if (search_case_vec.empty())
 					{
@@ -658,10 +668,13 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 					}
 				}
 			}
-			val->matched_number = matched_number;
-			val->is_output_done = 2;
+			cache_struct->matched_number = matched_number;
+			cache_struct->is_output_done = 2;
 		}
 	} while (!all_complete && !stop_func());
+#ifdef DEBUG_OUTPUT
+	std::cout << "stop collect." << std::endl;
+#endif
 	thread_env->DeleteLocalRef(biconsumer_class);
 }
 
@@ -855,13 +868,14 @@ bool set_using_device(const unsigned device_num)
 	return false;
 }
 
-void start_kernel(const std::vector<std::string>& search_case,
+std::vector<cl::Event*> start_kernel(const std::vector<std::string>& search_case,
 	bool is_ignore_case,
 	const char* search_text,
 	const std::vector<std::string>& keywords,
 	const std::vector<std::string>& keywords_lower_case,
 	const bool* is_keyword_path)
 {
+	vector<cl::Event*> events_vec;
 	const auto utf162gbk = get_p_utf162gbk();
 	cl_int error = 0;
 	auto p_utf162gbk = cl::Buffer(current_device.get_cl_context(), CL_MEM_READ_ONLY, sizeof(unsigned short) * 0x10000,
@@ -869,7 +883,7 @@ void start_kernel(const std::vector<std::string>& search_case,
 	if (error)
 	{
 		fprintf(stderr, "init utf82gbk failed. Error code: %d", error);
-		return;
+		return events_vec;
 	}
 	auto task_queue = current_device.get_cl_queue();
 	task_queue.enqueueWriteBuffer(p_utf162gbk, true, 0, 0x10000 * sizeof(unsigned short), utf162gbk);
@@ -897,17 +911,17 @@ void start_kernel(const std::vector<std::string>& search_case,
 
 	// 复制keywords
 	Memory<char> dev_keywords(current_device, keywords_num * MAX_PATH_LENGTH);
-	for (unsigned i = 0; i < keywords_num; ++i)
+	for (size_t i = 0; i < keywords_num; ++i)
 	{
-		strcpy_s(&dev_keywords[i * MAX_PATH_LENGTH], MAX_PATH_LENGTH, keywords[i].c_str());
+		strcpy_s(&(dev_keywords[i * MAX_PATH_LENGTH]), MAX_PATH_LENGTH, keywords[i].c_str());
 	}
 	dev_keywords.write_to_device();
 
 	// 复制keywords_lower_case
 	Memory<char> dev_keywords_lower_case(current_device, keywords_num * MAX_PATH_LENGTH);
-	for (unsigned i = 0; i < keywords_num; ++i)
+	for (size_t i = 0; i < keywords_num; ++i)
 	{
-		strcpy_s(&dev_keywords_lower_case[i * MAX_PATH_LENGTH], MAX_PATH_LENGTH, keywords_lower_case[i].c_str());
+		strcpy_s(&(dev_keywords_lower_case[i * MAX_PATH_LENGTH]), MAX_PATH_LENGTH, keywords_lower_case[i].c_str());
 	}
 	dev_keywords_lower_case.write_to_device();
 
@@ -928,7 +942,6 @@ void start_kernel(const std::vector<std::string>& search_case,
 	Memory<bool> dev_is_ignore_case(current_device, 1);
 	dev_is_ignore_case[0] = is_ignore_case;
 	dev_is_ignore_case.write_to_device();
-	vector<cl::Event*> events_vec;
 
 	void CL_CALLBACK match_callback(cl_event, cl_int, void* user_data);
 	for (auto& [_, cache] : cache_map)
@@ -944,21 +957,9 @@ void start_kernel(const std::vector<std::string>& search_case,
 		const auto total = cache->str_data.record_num.load() + cache->str_data.remain_blank_num.load();
 		cl_int ret = 0;
 		// kernel function
-		/*kernel void check(global const char* str_address_ptr_array,
-			global const unsigned int* total_num,
-			global const int* search_case,
-			global const char* is_ignore_case,
-			global const char* search_text,
-			global const char* keywords,
-			global const char* keywords_lower_case,
-			global const unsigned* keywords_length,
-			global const char* is_keyword_path,
-			global char* output,
-			global const char* is_stop_collect_var,
-			global const unsigned short* p_utf162gbk)*/
 		Kernel search_kernel(current_device, total, "check", &ret,
-			*(cache->str_data.dev_cache_str),
-			*(cache->str_data.dev_total_number),
+			cache->str_data.dev_cache_str->get_cl_buffer(),
+			cache->str_data.dev_total_number->get_cl_buffer(),
 			dev_search_case,
 			dev_is_ignore_case,
 			dev_search_text,
@@ -966,7 +967,7 @@ void start_kernel(const std::vector<std::string>& search_case,
 			dev_keywords_lower_case,
 			dev_keywords_length,
 			dev_is_keyword_path,
-			*(cache->dev_output),
+			cache->dev_output->get_cl_buffer(),
 			p_stop_signal,
 			p_utf162gbk);
 		if (ret != CL_SUCCESS)
@@ -990,22 +991,12 @@ void start_kernel(const std::vector<std::string>& search_case,
 #ifdef DEBUG_OUTPUT
 	std::cout << "all finished" << std::endl;
 #endif
-	for (auto& [_, cache] : cache_map)
-	{
-		cache->is_match_done = true;
-	}
-	for (cl::Event* each_ptr : events_vec)
-	{
-		delete each_ptr;
-	}
+	return events_vec;
 }
 
 void CL_CALLBACK match_callback(cl_event, cl_int, void* user_data)
 {
-	auto&& cache = static_cast<list_cache*>(user_data);
-#ifdef DEBUG_OUTPUT
-	std::cout << "callback executed." << std::endl;
-#endif // DEBUG_OUTPUT
+	auto* cache = static_cast<list_cache*>(user_data);
 	cache->is_match_done = true;
 }
 
