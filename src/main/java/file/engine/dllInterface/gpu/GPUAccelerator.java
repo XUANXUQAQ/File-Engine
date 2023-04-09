@@ -209,7 +209,7 @@ public enum GPUAccelerator {
         var category = GPUApiCategory.categoryFromString(deviceCategory);
         if (category != null) {
             switch (category) {
-                case CUDA:
+                case CUDA -> {
                     if (CudaAccelerator.INSTANCE.isGPUAvailableOnSystem()) {
                         CudaAccelerator.INSTANCE.initialize();
                         if (CudaAccelerator.INSTANCE.setDevice(id)) {
@@ -217,6 +217,7 @@ public enum GPUAccelerator {
                             return true;
                         }
                     }
+                }
             }
         }
         return false;
