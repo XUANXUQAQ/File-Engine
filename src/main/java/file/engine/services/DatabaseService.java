@@ -535,24 +535,28 @@ public class DatabaseService {
             String deleteFilePath = FileMonitor.INSTANCE.pop_del_file();
             if (addFilePath != null && !addFilePath.contains(tempPath)) {
                 File addFile = new File(addFilePath);
-                ArrayDeque<File> dirs = new ArrayDeque<>();
-                dirs.add(addFile);
+                var dirs = new ArrayDeque<File>();
+                if (addFile.isDirectory()) {
+                    dirs.add(addFile);
+                }
                 do {
                     if (addFile.getParentFile() != null) {
-                        var fileAbsolutePath = addFile.getAbsolutePath();
-                        addFileToDatabase(fileAbsolutePath);
+                        addFileToDatabase(addFile.getAbsolutePath());
                     }
                 } while ((addFile = addFile.getParentFile()) != null);
                 File remain;
                 while ((remain = dirs.poll()) != null) {
                     addFileToDatabase(remain.getAbsolutePath());
-                    if (remain.isDirectory()) {
-                        File[] subFiles = remain.listFiles();
-                        if (subFiles != null) {
-                            List<File> subFilesList = List.of(subFiles);
-                            dirs.addAll(subFilesList);
-                        }
+                    File[] subFiles = remain.listFiles();
+                    if (subFiles == null) {
+                        continue;
                     }
+                    Arrays.stream(subFiles).forEach(eachFile -> {
+                        addFileToDatabase(eachFile.getAbsolutePath());
+                        if (eachFile.isDirectory()) {
+                            dirs.add(eachFile);
+                        }
+                    });
                 }
             }
             if (deleteFilePath != null && !deleteFilePath.contains(tempPath)) {
