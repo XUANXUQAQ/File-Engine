@@ -506,15 +506,23 @@ public class DatabaseService {
         ThreadPoolUtil.getInstance().executeTask(() -> {
             EventManagement eventManagement = EventManagement.getInstance();
             long startTime = System.currentTimeMillis();
+            String[] searchCaseTemp = {PathMatchUtil.SearchCase.D, PathMatchUtil.SearchCase.F, PathMatchUtil.SearchCase.FULL, PathMatchUtil.SearchCase.CASE};
+            Random random = new Random();
             while (eventManagement.notMainExit()) {
                 if (System.currentTimeMillis() - startTime > AllConfigs.getInstance()
                         .getConfigEntity()
                         .getAdvancedConfigEntity()
                         .getSearchWarmupTimeoutInMills()) {
                     if (!GetHandle.INSTANCE.isForegroundFullscreen()) {
-                        String[] warmupKeywords = {WARMUP_SEARCH_TEXT_PREFIX + getRandomString(20)};
+                        String keywordsTemp = WARMUP_SEARCH_TEXT_PREFIX + getRandomString(2) + ";" +
+                                WARMUP_SEARCH_TEXT_PREFIX + getRandomString(2) + ";" +
+                                WARMUP_SEARCH_TEXT_PREFIX + getRandomString(2);
+                        String[] warmupKeywords = RegexUtil.semicolon.split(keywordsTemp);
                         startTime = System.currentTimeMillis();
-                        eventManagement.putEvent(new StartSearchEvent(() -> warmupKeywords[0], () -> null, () -> warmupKeywords));
+                        int randomSearchCase = random.nextInt(searchCaseTemp.length);
+                        eventManagement.putEvent(new StartSearchEvent(() -> warmupKeywords[0],
+                                () -> new String[]{searchCaseTemp[randomSearchCase]},
+                                () -> warmupKeywords));
                     }
                 }
                 try {
