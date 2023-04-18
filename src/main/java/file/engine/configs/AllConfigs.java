@@ -448,11 +448,13 @@ public class AllConfigs {
         long waitForInputAndStartSearchTimeoutInMills = Long.parseLong(getFromJson(advancedConfigs, "waitForInputAndStartSearchTimeoutInMills", (long) 350).toString());
         long waitForSearchTasksTimeoutInMills = Long.parseLong(getFromJson(advancedConfigs, "waitForSearchTasksTimeoutInMills", (long) 5 * 60 * 1000).toString());
         long clearIconCacheTimeoutInMills = Long.parseLong(getFromJson(advancedConfigs, "clearIconCacheTimeoutInMills", (long) 60 * 1000).toString());
+        boolean isDeleteUsnOnExit = Boolean.parseBoolean(getFromJson(advancedConfigs, "isDeleteUsnOnExit", false).toString());
         configEntity.setAdvancedConfigEntity(new AdvancedConfigEntity(searchWarmupTimeoutInMills,
                 waitForInputAndPrepareSearchTimeoutInMills,
                 waitForInputAndStartSearchTimeoutInMills,
                 waitForSearchTasksTimeoutInMills,
-                clearIconCacheTimeoutInMills));
+                clearIconCacheTimeoutInMills,
+                isDeleteUsnOnExit));
     }
 
     private void readSearchThreadNumber(Map<String, Object> settingsInJson) {

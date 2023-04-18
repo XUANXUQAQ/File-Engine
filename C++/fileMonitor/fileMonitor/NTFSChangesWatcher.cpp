@@ -30,7 +30,6 @@ NTFSChangesWatcher::NTFSChangesWatcher(char drive_letter) :
 	last_usn_ = journal_->NextUsn;
 	stop_flag = false;
 	is_stopped = false;
-	is_delete_usn_on_exit = false;
 	auto&& exit_file = drive_letter_ + file_monitor_exit_flag;
 	if (is_file_exist(exit_file))
 	{

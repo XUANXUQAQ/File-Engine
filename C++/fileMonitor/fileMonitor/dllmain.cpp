@@ -19,9 +19,9 @@ using namespace concurrency;
 
 using file_record_queue = concurrent_queue<std::string>;
 
-NTFSChangesWatcher* monitor(const char* path);
+void monitor(const char* path);
 void stop_monitor(const std::string& path);
-NTFSChangesWatcher* monitor_path(const std::string& path);
+void monitor_path(const std::string& path);
 bool pop_del_file(std::string& record);
 bool pop_add_file(std::string& record);
 void push_add_file(const std::string& record);
@@ -35,14 +35,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_monitor
 (JNIEnv* env, jobject, jstring path)
 {
 	const char* str = env->GetStringUTFChars(path, nullptr);
-	const auto watcher = monitor(str);
-	if (watcher != nullptr && watcher->isDeleteUsnOnExit())
-	{
-		if (!watcher->DeleteJournal())
-		{
-			fprintf(stderr, "Error deleting usn journal.\n");
-		}
-	}
+	monitor(str);
 	env->ReleaseStringUTFChars(path, str);
 }
 
@@ -81,7 +74,10 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_delete_1usn
 	if (auto&& watcher = ntfs_changes_watcher_map.find(str);
 		watcher != ntfs_changes_watcher_map.end())
 	{
-		watcher->second->deleteUsnOnExit();
+		if (!watcher->second->DeleteJournal())
+		{
+			fprintf(stderr, "Failed to delete journal %s\n", str);
+		}
 	}
 	env->ReleaseStringUTFChars(path, str);
 }
@@ -123,17 +119,18 @@ void push_del_file(const std::u16string& record)
 	file_del_queue.push(str);
 }
 
-NTFSChangesWatcher* monitor(const char* path)
+void monitor(const char* path)
 {
 	const std::string path_str(path);
 	auto&& watcher_iter = ntfs_changes_watcher_map.find(path_str);
 	if (watcher_iter == ntfs_changes_watcher_map.end())
 	{
-		return monitor_path(path_str);
+		monitor_path(path_str);
+		return;
 	}
 	stop_monitor(path_str);
 	delete watcher_iter->second;
-	return monitor_path(path_str);
+	monitor_path(path_str);
 }
 
 void stop_monitor(const std::string& path)
@@ -143,12 +140,8 @@ void stop_monitor(const std::string& path)
 	{
 		return;
 	}
-	static std::mutex lock;
-	std::lock_guard lock_guard(lock);
-	ntfs_changes_watcher_map.unsafe_erase(path);
-
 	watcher_iter->second->stopWatch();
-
+	Sleep(100);
 	unsigned count = 0;
 	while (!watcher_iter->second->isStopWatch())
 	{
@@ -166,7 +159,7 @@ void stop_monitor(const std::string& path)
 /**
  * 开始监控文件夹
  */
-NTFSChangesWatcher* monitor_path(const std::string& path)
+void monitor_path(const std::string& path)
 {
 #ifdef TEST
 	std::cout << "monitoring " << path << std::endl;
@@ -174,5 +167,4 @@ NTFSChangesWatcher* monitor_path(const std::string& path)
 	auto watcher = new NTFSChangesWatcher(path[0]);
 	ntfs_changes_watcher_map.insert(std::make_pair(path, watcher));
 	watcher->WatchChanges(push_add_file, push_del_file);
-	return watcher;
 }

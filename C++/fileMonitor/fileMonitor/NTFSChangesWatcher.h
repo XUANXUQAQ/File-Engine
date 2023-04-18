@@ -23,16 +23,6 @@ public:
 		return is_stopped;
 	}
 
-	void deleteUsnOnExit()
-	{
-		is_delete_usn_on_exit = true;
-	}
-
-	bool isDeleteUsnOnExit() const
-	{
-		return is_delete_usn_on_exit;
-	}
-
 private:
 	HANDLE OpenVolume(char drive_letter);
 
@@ -62,8 +52,6 @@ private:
 	bool stop_flag;
 
 	bool is_stopped;
-
-	bool is_delete_usn_on_exit;
 
 	std::unordered_map<DWORDLONG, std::pair<char16_t*, DWORDLONG>> frn_record_pfrn_map_;
 

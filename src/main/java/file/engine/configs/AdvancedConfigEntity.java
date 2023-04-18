@@ -16,4 +16,6 @@ public class AdvancedConfigEntity {
     private long waitForSearchTasksTimeoutInMills;
 
     private long clearIconCacheTimeoutInMills;
+
+    private boolean isDeleteUsnOnExit;
 }

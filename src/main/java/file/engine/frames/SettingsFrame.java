@@ -2593,7 +2593,7 @@ public class SettingsFrame {
         labelTinyPinyin.setText("5.promeG/TinyPinyin");
         labelLombok.setText("6.projectlombok/Lombok");
         labelZip.setText("7.kuba--/zip");
-        labelOpenclWrapper.setText("8.ProjectPhysX/OpenCL-Wrapper");
+        labelOpenclWrapper.setText("8.com.intellij/forms_rt");
         labelOshi.setText("9.oshi/oshi");
         labelPluginNum.setText(String.valueOf(PluginService.getInstance().getInstalledPluginNum()));
         ImageIcon imageIcon = new ImageIcon(Objects.requireNonNull(SettingsFrame.class.getResource("/icons/frame.png")));

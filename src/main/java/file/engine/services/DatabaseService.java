@@ -2068,6 +2068,12 @@ public class DatabaseService {
         String[] disks = RegexUtil.comma.split(availableDisks);
         for (String disk : disks) {
             FileMonitor.INSTANCE.stop_monitor(disk);
+            if (AllConfigs.getInstance().
+                    getConfigEntity().
+                    getAdvancedConfigEntity().
+                    isDeleteUsnOnExit()) {
+                FileMonitor.INSTANCE.delete_usn(disk);
+            }
         }
         DatabaseService databaseService = getInstance();
         databaseService.executeAllCommands();
