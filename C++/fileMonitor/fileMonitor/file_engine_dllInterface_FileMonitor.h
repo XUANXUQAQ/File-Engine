@@ -18,10 +18,10 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_monitor
 /*
  * Class:     file_engine_dllInterface_FileMonitor
  * Method:    stop_monitor
- * Signature: (Ljava/lang/String;Z)V
+ * Signature: (Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_stop_1monitor
-  (JNIEnv *, jobject, jstring, jboolean);
+  (JNIEnv *, jobject, jstring);
 
 /*
  * Class:     file_engine_dllInterface_FileMonitor
@@ -38,6 +38,14 @@ JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_FileMonitor_pop_1add_1fi
  */
 JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_FileMonitor_pop_1del_1file
   (JNIEnv *, jobject);
+
+/*
+ * Class:     file_engine_dllInterface_FileMonitor
+ * Method:    delete_usn
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_delete_1usn
+  (JNIEnv *, jobject, jstring);
 
 #ifdef __cplusplus
 }

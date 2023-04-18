@@ -5,9 +5,14 @@
 #define MAX_USN_CACHE_SIZE 100000
 
 const int NTFSChangesWatcher::kBufferSize = 1024 * 1024 / 2;
-
 const int NTFSChangesWatcher::FILE_CHANGE_BITMASK = USN_REASON_RENAME_NEW_NAME | USN_REASON_RENAME_OLD_NAME;
+const std::string file_monitor_exit_flag = "$$__File-Engine-Exit-Monitor__$$";
 
+inline bool is_file_exist(const std::string& path)
+{
+	struct _stat64i32 buffer;
+	return _wstat(string2wstring(path).c_str(), &buffer) == 0;
+}
 
 NTFSChangesWatcher::NTFSChangesWatcher(char drive_letter) :
 	drive_letter_(drive_letter)
@@ -17,12 +22,23 @@ NTFSChangesWatcher::NTFSChangesWatcher(char drive_letter) :
 	journal_ = std::make_unique<USN_JOURNAL_DATA>();
 
 	if (const bool res = LoadJournal(volume_, journal_.get()); !res) {
-		fprintf(stderr, "Failed to load journal\n");
+		fprintf(stderr, "Failed to load journal, Error code: %lu\n", GetLastError());
 		return;
 	}
 	max_usn_ = journal_->MaxUsn;
 	journal_id_ = journal_->UsnJournalID;
 	last_usn_ = journal_->NextUsn;
+	stop_flag = false;
+	is_stopped = false;
+	is_delete_usn_on_exit = false;
+	auto&& exit_file = drive_letter_ + file_monitor_exit_flag;
+	if (is_file_exist(exit_file))
+	{
+		if (remove(exit_file.c_str()) != 0)
+		{
+			fprintf(stderr, "Delete exit monitor file failed.");
+		}
+	}
 }
 
 NTFSChangesWatcher::~NTFSChangesWatcher()
@@ -120,11 +136,36 @@ bool NTFSChangesWatcher::LoadJournal(HANDLE volume, USN_JOURNAL_DATA* journal_da
 	return true;
 }
 
+void NTFSChangesWatcher::stopWatch()
+{
+	stop_flag = true;
+	auto&& exit_file = drive_letter_ + std::string(":\\") + file_monitor_exit_flag;
+	if (!is_file_exist(exit_file))
+	{
+		FILE* fp = nullptr;
+		if (fopen_s(&fp, exit_file.c_str(), "w") != 0)
+		{
+			fprintf(stderr, "Create exit monitor file failed.\n");
+		}
+		if (fp != nullptr)
+		{
+			if (fclose(fp) != 0)
+			{
+				fprintf(stderr, "Close exit monitor file failed.\n");
+			}
+		}
+	}
+	if (remove(exit_file.c_str()) != 0)
+	{
+		fprintf(stderr, "Delete exit monitor file failed.");
+	}
+}
+
 bool NTFSChangesWatcher::DeleteJournal() const
 {
 	DELETE_USN_JOURNAL_DATA dujd;
 	dujd.UsnJournalID = journal_id_;
-	dujd.DeleteFlags = USN_DELETE_FLAG_DELETE;
+	dujd.DeleteFlags = USN_DELETE_FLAG_DELETE | USN_DELETE_FLAG_NOTIFY;
 	DWORD br;
 
 	if (DeviceIoControl(volume_,
@@ -142,15 +183,17 @@ bool NTFSChangesWatcher::DeleteJournal() const
 	return false;
 }
 
-void NTFSChangesWatcher::WatchChanges(const bool* flag,
+void NTFSChangesWatcher::WatchChanges(
 	void(*file_added_callback_func)(const std::u16string&),
 	void(*file_removed_callback_func)(const std::u16string&))
 {
+	is_stopped = false;
+	stop_flag = false;
 	const auto u_buffer = std::make_unique<char[]>(kBufferSize);
 
 	const auto read_journal_query = GetWaitForNextUsnQuery(last_usn_);
 
-	while (*flag)
+	while (!stop_flag)
 	{
 		// This function does not return until new USN record created.
 		WaitForNextUsn(read_journal_query.get());
@@ -160,7 +203,7 @@ void NTFSChangesWatcher::WatchChanges(const bool* flag,
 			file_removed_callback_func);
 		read_journal_query->StartUsn = last_usn_;
 	}
-	delete flag;
+	is_stopped = true;
 }
 
 USN NTFSChangesWatcher::ReadChangesAndNotify(USN low_usn,

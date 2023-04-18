@@ -1568,7 +1568,7 @@ public class DatabaseService {
         String availableDisks = AllConfigs.getInstance().getAvailableDisks();
         String[] disks = RegexUtil.comma.split(availableDisks);
         for (String disk : disks) {
-            FileMonitor.INSTANCE.stop_monitor(disk, false);
+            FileMonitor.INSTANCE.stop_monitor(disk);
         }
         // 复制数据库到tmp
         SQLiteUtil.copyDatabases("data", "tmp");
@@ -2067,7 +2067,7 @@ public class DatabaseService {
         String availableDisks = AllConfigs.getInstance().getAvailableDisks();
         String[] disks = RegexUtil.comma.split(availableDisks);
         for (String disk : disks) {
-            FileMonitor.INSTANCE.stop_monitor(disk, true);
+            FileMonitor.INSTANCE.stop_monitor(disk);
         }
         DatabaseService databaseService = getInstance();
         databaseService.executeAllCommands();

@@ -19,9 +19,9 @@ using namespace concurrency;
 
 using file_record_queue = concurrent_queue<std::string>;
 
-void monitor(const char* path);
+NTFSChangesWatcher* monitor(const char* path);
 void stop_monitor(const std::string& path);
-void monitor_path(const std::string& path, const bool* flag);
+NTFSChangesWatcher* monitor_path(const std::string& path);
 bool pop_del_file(std::string& record);
 bool pop_add_file(std::string& record);
 void push_add_file(const std::string& record);
@@ -29,23 +29,27 @@ void push_del_file(const std::string& record);
 
 file_record_queue file_added_queue;
 file_record_queue file_del_queue;
-concurrent_unordered_map<std::string, bool*> monitor_thread_status_map;
-concurrent_unordered_map<std::string, bool> is_delete_usn_flag;
-const char* file_monitor_exit_flag = "$$__File-Engine-Exit-Monitor__$$";
+concurrent_unordered_map<std::string, NTFSChangesWatcher*> ntfs_changes_watcher_map;
 
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_monitor
 (JNIEnv* env, jobject, jstring path)
 {
 	const char* str = env->GetStringUTFChars(path, nullptr);
-	monitor(str);
+	const auto watcher = monitor(str);
+	if (watcher != nullptr && watcher->isDeleteUsnOnExit())
+	{
+		if (!watcher->DeleteJournal())
+		{
+			fprintf(stderr, "Error deleting usn journal.\n");
+		}
+	}
 	env->ReleaseStringUTFChars(path, str);
 }
 
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_stop_1monitor
-(JNIEnv* env, jobject, jstring path, jboolean is_delete_usn)
+(JNIEnv* env, jobject, jstring path)
 {
 	const char* str = env->GetStringUTFChars(path, nullptr);
-	is_delete_usn_flag.insert(std::make_pair(str, is_delete_usn));
 	stop_monitor(str);
 	env->ReleaseStringUTFChars(path, str);
 }
@@ -68,6 +72,18 @@ JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_FileMonitor_pop_1del_1fi
 		return env->NewStringUTF(record.c_str());
 	}
 	return nullptr;
+}
+
+JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_delete_1usn
+(JNIEnv* env, jobject, jstring path)
+{
+	const char* str = env->GetStringUTFChars(path, nullptr);
+	if (auto&& watcher = ntfs_changes_watcher_map.find(str);
+		watcher != ntfs_changes_watcher_map.end())
+	{
+		watcher->second->deleteUsnOnExit();
+	}
+	env->ReleaseStringUTFChars(path, str);
 }
 
 /**
@@ -107,86 +123,56 @@ void push_del_file(const std::u16string& record)
 	file_del_queue.push(str);
 }
 
-inline bool is_file_exist(const std::string& path)
+NTFSChangesWatcher* monitor(const char* path)
 {
-	struct _stat64i32 buffer;
-	return _wstat(string2wstring(path).c_str(), &buffer) == 0;
-}
-
-void monitor(const char* path)
-{
-	std::string path_str(path);
-	auto&& exit_file = path_str + file_monitor_exit_flag;
-	if (is_file_exist(exit_file))
+	const std::string path_str(path);
+	auto&& watcher_iter = ntfs_changes_watcher_map.find(path_str);
+	if (watcher_iter == ntfs_changes_watcher_map.end())
 	{
-		if (remove(exit_file.c_str()) != 0)
-		{
-			fprintf(stderr, "Delete exit monitor file failed.");
-		}
+		return monitor_path(path_str);
 	}
-	if (auto&& packaged_task_iter = monitor_thread_status_map.find(path_str); 
-		packaged_task_iter == monitor_thread_status_map.end())
-	{
-		auto* flag = new bool(true);
-		monitor_thread_status_map.insert(std::make_pair(path_str, flag));
-		monitor_path(path_str, flag);
-	}
+	stop_monitor(path_str);
+	delete watcher_iter->second;
+	return monitor_path(path_str);
 }
 
 void stop_monitor(const std::string& path)
 {
-	auto&& packaged_task_iter = monitor_thread_status_map.find(path);
-	if (packaged_task_iter == monitor_thread_status_map.end())
+	auto&& watcher_iter = ntfs_changes_watcher_map.find(path);
+	if (watcher_iter == ntfs_changes_watcher_map.end())
 	{
 		return;
 	}
 	static std::mutex lock;
 	std::lock_guard lock_guard(lock);
-	monitor_thread_status_map.unsafe_erase(path);
+	ntfs_changes_watcher_map.unsafe_erase(path);
 
-	*packaged_task_iter->second = false;
+	watcher_iter->second->stopWatch();
 
-	auto&& exit_file = path + file_monitor_exit_flag;
-	if (!is_file_exist(exit_file))
+	unsigned count = 0;
+	while (!watcher_iter->second->isStopWatch())
 	{
-		FILE* fp = nullptr;
-		if (fopen_s(&fp, exit_file.c_str(), "w") != 0)
+		watcher_iter->second->stopWatch();
+		if (count > 100)
 		{
-			fprintf(stderr, "Create exit monitor file failed.\n");
+			printf("%s\n", "Error wait for ntfs watcher timeout");
+			break;
 		}
-		if (fp != nullptr)
-		{
-			if (fclose(fp) != 0)
-			{
-				fprintf(stderr, "Close exit monitor file failed.\n");
-			}
-		}
+		++count;
+		Sleep(100);
 	}
-#ifndef TEST
-	if (remove(exit_file.c_str()) != 0)
-	{
-		fprintf(stderr, "Delete exit monitor file failed.");
-	}
-#endif
 }
 
 /**
  * 开始监控文件夹
  */
-void monitor_path(const std::string& path, const bool* flag)
+NTFSChangesWatcher* monitor_path(const std::string& path)
 {
-	NTFSChangesWatcher watcher(path[0]);
-	watcher.WatchChanges(flag, push_add_file, push_del_file);
-	auto&& delete_usn_flag = is_delete_usn_flag.find(path);
-	if (delete_usn_flag == is_delete_usn_flag.end())
-	{
-		return;
-	}
-	if (delete_usn_flag->second)
-	{
-		if (!watcher.DeleteJournal())
-		{
-			fprintf(stderr, "Failed to delete usn journal.\n");
-		}
-	}
+#ifdef TEST
+	std::cout << "monitoring " << path << std::endl;
+#endif
+	auto watcher = new NTFSChangesWatcher(path[0]);
+	ntfs_changes_watcher_map.insert(std::make_pair(path, watcher));
+	watcher->WatchChanges(push_add_file, push_del_file);
+	return watcher;
 }

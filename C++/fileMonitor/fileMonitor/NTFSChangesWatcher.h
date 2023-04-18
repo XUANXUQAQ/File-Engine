@@ -12,9 +12,26 @@ public:
 
 	// Method which runs an infinite loop and waits for new update sequence number in a journal.
 	// The thread is blocked till the new USN record created in the journal.
-	void WatchChanges(const bool* flag, void(*)(const std::u16string&), void(*)(const std::u16string&));
+	void WatchChanges(void(*)(const std::u16string&), void(*)(const std::u16string&));
 
 	bool DeleteJournal() const;
+
+	void stopWatch();
+
+	bool isStopWatch() const
+	{
+		return is_stopped;
+	}
+
+	void deleteUsnOnExit()
+	{
+		is_delete_usn_on_exit = true;
+	}
+
+	bool isDeleteUsnOnExit() const
+	{
+		return is_delete_usn_on_exit;
+	}
 
 private:
 	HANDLE OpenVolume(char drive_letter);
@@ -41,6 +58,12 @@ private:
 	char drive_letter_;
 
 	HANDLE volume_;
+
+	bool stop_flag;
+
+	bool is_stopped;
+
+	bool is_delete_usn_on_exit;
 
 	std::unordered_map<DWORDLONG, std::pair<char16_t*, DWORDLONG>> frn_record_pfrn_map_;
 
