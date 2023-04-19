@@ -77,7 +77,7 @@ public enum GPUAccelerator {
     }
 
     public boolean isGPUAvailableOnSystem() {
-        return CudaAccelerator.INSTANCE.isGPUAvailableOnSystem();
+        return CudaAccelerator.INSTANCE.isGPUAvailableOnSystem() || OpenclAccelerator.INSTANCE.isGPUAvailableOnSystem();
     }
 
     public boolean hasCache() {
