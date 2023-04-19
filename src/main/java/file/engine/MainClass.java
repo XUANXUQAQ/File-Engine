@@ -343,6 +343,7 @@ public class MainClass {
         checkMd5AndReplace("user/sqliteJDBC.dll", "/win32-native/sqliteJDBC.dll");
         checkMd5AndReplace("user/emptyRecycleBin.dll", "/win32-native/emptyRecycleBin.dll");
         checkMd5AndReplace("user/cudaAccelerator.dll", "/win32-native/cudaAccelerator.dll");
+        checkMd5AndReplace("user/openclAccelerator.dll", "/win32-native/openclAccelerator.dll");
         checkMd5AndReplace("cudart64_110.dll", "/win32-native/cudart64_110.dll");
         checkMd5AndReplace("user/systemThemeInfo.dll", "/win32-native/systemThemeInfo.dll");
     }

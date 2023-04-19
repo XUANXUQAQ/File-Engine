@@ -154,6 +154,7 @@ public enum GPUAccelerator {
     public Map<String, String> getDevices() {
         LinkedHashMap<String, String> deviceMap = new LinkedHashMap<>();
         getDeviceToMap(CudaAccelerator.INSTANCE, deviceMap, GPUApiCategory.CUDA);
+        getDeviceToMap(OpenclAccelerator.INSTANCE, deviceMap, GPUApiCategory.OPENCL);
         return deviceMap;
     }
 
@@ -201,6 +202,13 @@ public enum GPUAccelerator {
                     return true;
                 }
             }
+            if (OpenclAccelerator.INSTANCE.isGPUAvailableOnSystem()) {
+                OpenclAccelerator.INSTANCE.initialize();
+                if (OpenclAccelerator.INSTANCE.setDevice(0)) {
+                    gpuAccelerator = OpenclAccelerator.INSTANCE;
+                    return true;
+                }
+            }
             return false;
         }
         String[] info = RegexUtil.semicolon.split(deviceCategoryAndId);
@@ -214,6 +222,15 @@ public enum GPUAccelerator {
                         CudaAccelerator.INSTANCE.initialize();
                         if (CudaAccelerator.INSTANCE.setDevice(id)) {
                             gpuAccelerator = CudaAccelerator.INSTANCE;
+                            return true;
+                        }
+                    }
+                }
+                case OPENCL -> {
+                    if (OpenclAccelerator.INSTANCE.isGPUAvailableOnSystem()) {
+                        OpenclAccelerator.INSTANCE.initialize();
+                        if (OpenclAccelerator.INSTANCE.setDevice(id)) {
+                            gpuAccelerator = OpenclAccelerator.INSTANCE;
                             return true;
                         }
                     }

@@ -607,7 +607,8 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 				all_complete = false;
 				continue;
 			}
-			if (int expected = 0; !cache_struct->is_output_done.compare_exchange_weak(expected, 1))
+			if (int expected = 0; 
+				!cache_struct->is_output_done.compare_exchange_weak(expected, 1))
 			{
 				continue;
 			}
@@ -616,7 +617,8 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 #ifdef DEBUG_OUTPUT
 			std::cout << "collecting key: " << key << std::endl;
 #endif
-			for (size_t i = 0; i < cache_struct->str_data.record_num.load(); ++i)
+			for (size_t i = 0; i < cache_struct->str_data.record_num.load() + 
+				cache_struct->str_data.remain_blank_num.load(); ++i)
 			{
 				if (stop_func())
 				{
@@ -636,10 +638,7 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 					// 判断文件和文件夹
 					if (search_case_vec.empty())
 					{
-						if (is_file_exist(matched_record_str))
-						{
-							_collect_func(key, matched_record_str, &matched_number);
-						}
+						_collect_func(key, matched_record_str, &matched_number);
 					}
 					else
 					{
@@ -660,10 +659,7 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 						}
 						else
 						{
-							if (is_file_exist(matched_record_str))
-							{
-								_collect_func(key, matched_record_str, &matched_number);
-							}
+							_collect_func(key, matched_record_str, &matched_number);
 						}
 					}
 				}
@@ -753,6 +749,7 @@ void add_records_to_cache(const std::string& key, const std::vector<std::string>
 						++cache->str_data.record_num;
 						--cache->str_data.remain_blank_num;
 						cache->str_data.record_hash.insert(hasher(record));
+						current_device.finish_queue();
 					}
 					else
 					{
@@ -763,7 +760,6 @@ void add_records_to_cache(const std::string& key, const std::vector<std::string>
 				}
 			}
 		}
-		cl_queue.finish();
 	}
 }
 
@@ -805,13 +801,13 @@ void remove_records_from_cache(const std::string& key, std::vector<std::string>&
 					//复制最后一个结果到当前空位
 					auto&& cl_buffer = cache->str_data.dev_cache_str->get_cl_buffer();
 					cl_queue.enqueueCopyBuffer(cl_buffer, cl_buffer,
-						i * MAX_PATH_LENGTH, last_index * MAX_PATH_LENGTH, MAX_PATH_LENGTH);
+						last_index * MAX_PATH_LENGTH, i * MAX_PATH_LENGTH, MAX_PATH_LENGTH);
 					--cache->str_data.record_num;
 					++cache->str_data.remain_blank_num;
 					cache->str_data.record_hash.unsafe_erase(hasher(*record));
+					current_device.finish_queue();
 				}
 			}
-			cl_queue.finish();
 		}
 	}
 }
@@ -906,11 +902,13 @@ std::vector<cl::Event*> start_kernel(const std::vector<std::string>& search_case
 
 	// 复制search text
 	Memory<char> dev_search_text(current_device, MAX_PATH_LENGTH);
+	dev_search_text.reset();
 	strcpy_s(dev_search_text.data(), MAX_PATH_LENGTH, search_text);
 	dev_search_text.write_to_device();
 
 	// 复制keywords
 	Memory<char> dev_keywords(current_device, keywords_num * MAX_PATH_LENGTH);
+	dev_keywords.reset();
 	for (size_t i = 0; i < keywords_num; ++i)
 	{
 		strcpy_s(&(dev_keywords[i * MAX_PATH_LENGTH]), MAX_PATH_LENGTH, keywords[i].c_str());
@@ -919,6 +917,7 @@ std::vector<cl::Event*> start_kernel(const std::vector<std::string>& search_case
 
 	// 复制keywords_lower_case
 	Memory<char> dev_keywords_lower_case(current_device, keywords_num * MAX_PATH_LENGTH);
+	dev_keywords_lower_case.reset();
 	for (size_t i = 0; i < keywords_num; ++i)
 	{
 		strcpy_s(&(dev_keywords_lower_case[i * MAX_PATH_LENGTH]), MAX_PATH_LENGTH, keywords_lower_case[i].c_str());

@@ -200,7 +200,6 @@ kernel void check(global const char* str_address_ptr_array,
 	{
 		return;
 	}
-	
 	if (not_matched(path, *is_ignore_case, keywords, keywords_lower_case, *keywords_length, is_keyword_path, p_utf162gbk))
 	{
 		return;
@@ -263,7 +262,7 @@ char not_matched(global const char* path,
 		{
 			continue;
 		}
-		char each_keyword_local[MAX_PATH_LENGTH];
+		char each_keyword_local[MAX_PATH_LENGTH] = { 0 };
 		copy_from_global(each_keyword_local, each_keyword, strlen_global(each_keyword));
 		if (strstr(match_str, each_keyword_local) == NULL)
 		{
