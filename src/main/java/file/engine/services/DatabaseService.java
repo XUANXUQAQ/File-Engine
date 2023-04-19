@@ -21,6 +21,7 @@ import file.engine.event.handler.impl.database.gpu.GPURemoveRecordEvent;
 import file.engine.event.handler.impl.frame.searchBar.SearchBarCloseEvent;
 import file.engine.event.handler.impl.frame.searchBar.SearchBarReadyEvent;
 import file.engine.event.handler.impl.monitor.disk.StartMonitorDiskEvent;
+import file.engine.event.handler.impl.stop.CloseEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.services.utils.AdminUtil;
@@ -2071,11 +2072,12 @@ public class DatabaseService {
             if (AllConfigs.getInstance().
                     getConfigEntity().
                     getAdvancedConfigEntity().
-                    isDeleteUsnOnExit()) {
+                    isDeleteUsnOnExit() &&
+                    event instanceof CloseEvent) {
                 FileMonitor.INSTANCE.delete_usn(disk);
             }
         }
-        DatabaseService databaseService = getInstance();
+        var databaseService = getInstance();
         databaseService.executeAllCommands();
         databaseService.stopAllSearch();
         SQLiteUtil.closeAll();
