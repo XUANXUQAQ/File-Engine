@@ -20,13 +20,14 @@
 #pragma comment(lib, "shell32.lib")
 #pragma comment(lib, "Ole32.lib")
 #pragma comment(lib, "User32.lib")
-#define MAX_LOG_PRESERVE_DAYS 5
-#define CHECK_TIME_THRESHOLD 1
 
 // TODO 该变量为File-Engine.zip中的File-Engine.jar的md5值
-#define FILE_ENGINE_JAR_MD5 "0c8cd3792034d1287ec96e2aba164e73"
+#define FILE_ENGINE_JAR_MD5 "3a87268ebacfd70c5c61939b8186bd13"
 
-const std::string redirect_error_file_option = "-XX:ErrorFile=../logs/hs_err_pid%p.log ";
+constexpr auto MAX_LOG_PRESERVE_DAYS = 5;
+constexpr auto CHECK_TIME_THRESHOLD = 1;
+
+const std::string redirect_error_file_option = "-XX:ErrorFile=../logs/hs_err_pid%p.log";
 const std::string default_jvm_params =
 "-Xms8M "
 "-Xmx256M "

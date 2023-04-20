@@ -2,7 +2,7 @@
 #include <ranges>
 #include "string_wstring_converter.h"
 
-#define MAX_USN_CACHE_SIZE 100000
+constexpr auto MAX_USN_CACHE_SIZE = 100000;
 
 const int NTFSChangesWatcher::kBufferSize = 1024 * 1024 / 2;
 const int NTFSChangesWatcher::FILE_CHANGE_BITMASK = USN_REASON_RENAME_NEW_NAME | USN_REASON_RENAME_OLD_NAME;
@@ -142,9 +142,10 @@ void NTFSChangesWatcher::stopWatch()
 	if (!is_file_exist(exit_file))
 	{
 		FILE* fp = nullptr;
-		if (fopen_s(&fp, exit_file.c_str(), "w") != 0)
+		const auto ret_val = fopen_s(&fp, exit_file.c_str(), "w");
+		if (ret_val != 0)
 		{
-			fprintf(stderr, "Create exit monitor file failed.\n");
+			fprintf(stderr, "Create exit monitor file failed. Error code: %d\n", ret_val);
 		}
 		if (fp != nullptr)
 		{
@@ -154,9 +155,10 @@ void NTFSChangesWatcher::stopWatch()
 			}
 		}
 	}
-	if (remove(exit_file.c_str()) != 0)
+	const auto ret = remove(exit_file.c_str());
+	if (ret != 0)
 	{
-		fprintf(stderr, "Delete exit monitor file failed.");
+		fprintf(stderr, "Delete exit monitor file failed. Error code: %d\n", ret);
 	}
 }
 
