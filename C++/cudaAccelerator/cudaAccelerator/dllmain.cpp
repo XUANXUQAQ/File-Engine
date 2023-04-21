@@ -820,10 +820,10 @@ void add_records_to_cache(const std::string& key, const std::vector<std::string>
 	if (cache_iter != cache_map.end())
 	{
 		const auto& cache = cache_iter->second;
-		cudaStream_t stream;
-		gpuErrchk(cudaStreamCreate(&stream), true, nullptr);
 		if (cache->is_cache_valid)
 		{
+			cudaStream_t stream;
+			gpuErrchk(cudaStreamCreate(&stream), true, nullptr);
 			for (auto&& record : records)
 			{
 				if (exit_flag.load())
@@ -845,12 +845,10 @@ void add_records_to_cache(const std::string& key, const std::vector<std::string>
 						char* last_str_addr = nullptr;
 						if (index != 0)
 						{
-							gpuErrchk(cudaMemcpy(&last_str_addr, cache->str_data.dev_str_addr + index - 1,
-								          sizeof(size_t), cudaMemcpyDeviceToHost), true, nullptr);
-#ifdef DEBUG_OUTPUT
-							std::cout << "last str address: " << std::hex << "0x" << reinterpret_cast<size_t>(last_str_addr);
-							std::cout << "  last str length: 0x" << cache->str_data.str_length_array[index - 1] << std::endl;
-#endif
+							gpuErrchk(cudaMemcpy(&last_str_addr, 
+								cache->str_data.dev_str_addr + index - 1,
+								sizeof(size_t), cudaMemcpyDeviceToHost), 
+								true, nullptr);
 						}
 						char* target_address;
 						if (last_str_addr != nullptr)
@@ -863,10 +861,16 @@ void add_records_to_cache(const std::string& key, const std::vector<std::string>
 							target_address = cache->str_data.dev_strs;
 						}
 						//记录到下一空位内存地址target_address
-						gpuErrchk(cudaMemsetAsync(target_address, 0, record_len + 1, stream), true,
-						          get_cache_info(key, cache).c_str());
-						gpuErrchk(cudaMemcpyAsync(target_address, record.c_str(), record_len,
-							          cudaMemcpyHostToDevice, stream), true, get_cache_info(key, cache).c_str());
+						gpuErrchk(cudaMemsetAsync(target_address,
+							0, 
+							record_len + 1, 
+							stream), true,
+							get_cache_info(key, cache).c_str());
+						gpuErrchk(cudaMemcpyAsync(target_address,
+							record.c_str(), 
+							record_len,
+							cudaMemcpyHostToDevice, stream), true,
+							get_cache_info(key, cache).c_str());
 						//记录内存地址到dev_str_addr
 						if (cache->str_data.str_addr_capacity <= index)
 						{
@@ -900,8 +904,10 @@ void add_records_to_cache(const std::string& key, const std::vector<std::string>
 							std::cout << "enlarge complete." << std::endl;
 #endif
 						}
-						gpuErrchk(cudaMemcpyAsync(cache->str_data.dev_str_addr + index, &target_address,
-							          sizeof(size_t), cudaMemcpyHostToDevice, stream), true, nullptr);
+						gpuErrchk(cudaMemcpyAsync(cache->str_data.dev_str_addr + index,
+							&target_address,
+							sizeof(size_t), 
+							cudaMemcpyHostToDevice, stream), true, nullptr);
 						//记录字符串长度
 						cache->str_data.str_length_array[index] = record.length();
 #ifdef DEBUG_OUTPUT
@@ -920,9 +926,9 @@ void add_records_to_cache(const std::string& key, const std::vector<std::string>
 					}
 				}
 			}
+			gpuErrchk(cudaStreamSynchronize(stream), true, nullptr);
+			gpuErrchk(cudaStreamDestroy(stream), true, nullptr);
 		}
-		gpuErrchk(cudaStreamSynchronize(stream), true, nullptr);
-		gpuErrchk(cudaStreamDestroy(stream), true, nullptr);
 	}
 }
 
@@ -947,13 +953,17 @@ void remove_records_from_cache(const std::string& key, std::vector<std::string>&
 					break;
 				}
 				char* str_address;
-				gpuErrchk(cudaMemcpy(&str_address, cache->str_data.dev_str_addr + i,
-					          sizeof(size_t), cudaMemcpyDeviceToHost), true, nullptr);
+				gpuErrchk(cudaMemcpy(&str_address, 
+					cache->str_data.dev_str_addr + i,
+					sizeof(size_t), 
+					cudaMemcpyDeviceToHost), 
+					true, nullptr);
 				//拷贝GPU中的字符串到tmp
 				gpuErrchk(cudaMemcpy(tmp, str_address,
-					          cache->str_data.str_length_array[i], cudaMemcpyDeviceToHost), true,
-				          get_cache_info(key, cache).c_str());
-				if (auto&& record = std::find(records.begin(), records.end(), tmp);
+					cache->str_data.str_length_array[i], 
+					cudaMemcpyDeviceToHost), true,
+					get_cache_info(key, cache).c_str());
+				if (auto&& record = std::find(records.begin(),records.end(), tmp);
 					record == records.end())
 				{
 					continue;
