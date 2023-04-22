@@ -24,8 +24,8 @@ void stop_monitor(const std::string& path);
 void monitor_path(const std::string& path);
 bool pop_del_file(std::string& record);
 bool pop_add_file(std::string& record);
-void push_add_file(const std::string& record);
-void push_del_file(const std::string& record);
+void push_add_file(const std::u16string& record);
+void push_del_file(const std::u16string& record);
 
 file_record_queue file_added_queue;
 file_record_queue file_del_queue;
@@ -129,7 +129,8 @@ void monitor(const char* path)
 		return;
 	}
 	stop_monitor(path_str);
-	delete watcher_iter->second;
+	const auto watcher_ptr = watcher_iter->second;
+	delete watcher_ptr;
 	monitor_path(path_str);
 }
 
@@ -149,7 +150,7 @@ void stop_monitor(const std::string& path)
 		if (count > 100)
 		{
 			printf("%s\n", "Error wait for ntfs watcher timeout");
-			break;
+			return;
 		}
 		++count;
 		Sleep(100);

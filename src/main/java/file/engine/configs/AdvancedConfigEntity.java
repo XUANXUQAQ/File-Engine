@@ -18,4 +18,6 @@ public class AdvancedConfigEntity {
     private long clearIconCacheTimeoutInMills;
 
     private boolean isDeleteUsnOnExit;
+
+    private long restartMonitorDiskThreadTimeoutInMills;
 }

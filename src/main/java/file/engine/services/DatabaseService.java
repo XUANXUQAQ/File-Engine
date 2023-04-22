@@ -71,6 +71,7 @@ public class DatabaseService {
     // 保存从0-40数据库的表，使用频率和名字对应，使经常使用的表最快被搜索到
     private final Set<TableNameWeightInfo> tableSet = ConcurrentHashMap.newKeySet();
     private final AtomicBoolean isDatabaseUpdated = new AtomicBoolean(false);
+    private final AtomicBoolean isCheckUnavailableDiskThreadNotExist = new AtomicBoolean(false);
     private final ConcurrentLinkedQueue<SuffixPriorityPair> priorityMap = new ConcurrentLinkedQueue<>();
     //tableCache 数据表缓存，在初始化时将会放入所有的key和一个空的cache，后续需要缓存直接放入空的cache中，不再创建新的cache实例
     private final ConcurrentHashMap<String, Cache> tableCache = new ConcurrentHashMap<>();
@@ -154,73 +155,64 @@ public class DatabaseService {
         }
     }
 
-    private static void monitorDiskAndSetRestartMonitorDiskTimer() {
-        ThreadPoolUtil.getInstance().executeTask(() -> {
-            var counter = startMonitorDisks();
-            var eventManagement = EventManagement.getInstance();
-            long startTime = System.currentTimeMillis();
-            var databaseService = getInstance();
-            while (eventManagement.notMainExit() &&
-                    databaseService.status.get() == Constants.Enums.DatabaseStatus.NORMAL) {
-                if (System.currentTimeMillis() - startTime > 10 * 60 * 1000) {
-                    startTime = System.currentTimeMillis();
-                    stopMonitorDisks(false);
-                    var startSpin = System.currentTimeMillis();
-                    while (counter.get() != 0 && System.currentTimeMillis() - startSpin < 3000) {
-                        try {
-                            TimeUnit.MILLISECONDS.sleep(1);
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-                    counter = startMonitorDisks();
-                }
-                try {
-                    TimeUnit.MILLISECONDS.sleep(100);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
-    }
-
     /**
      * 开始监控磁盘文件变化
      */
-    private static synchronized AtomicInteger startMonitorDisks() {
+    private static synchronized void startMonitorDisks() {
         var threadPoolUtil = ThreadPoolUtil.getInstance();
         var eventManagement = EventManagement.getInstance();
         var translateService = TranslateService.getInstance();
         var allConfigs = AllConfigs.getInstance();
-        var monitorCounter = new AtomicInteger();
+        var databaseService = getInstance();
         if (AdminUtil.isAdmin()) {
             String disks = allConfigs.getAvailableDisks();
             String[] splitDisks = RegexUtil.comma.split(disks);
             for (String root : splitDisks) {
                 threadPoolUtil.executeTask(() -> {
-                    monitorCounter.getAndIncrement();
                     FileMonitor.INSTANCE.monitor(root);
                     System.out.println("停止监听 " + root + " 的文件变化");
                 }, false);
             }
-            threadPoolUtil.executeTask(() -> {
-                Set<String> unAvailableDiskSet = allConfigs.getUnAvailableDiskSet();
-                while (eventManagement.notMainExit()) {
-                    if (!unAvailableDiskSet.isEmpty()) {
-                        for (String unAvailableDisk : unAvailableDiskSet) {
-                            if (Files.exists(Path.of(unAvailableDisk)) &&
-                                    IsLocalDisk.INSTANCE.isDiskNTFS(unAvailableDisk)) {
-                                threadPoolUtil.executeTask(() -> {
-                                    monitorCounter.getAndIncrement();
-                                    FileMonitor.INSTANCE.monitor(unAvailableDisk);
-                                    System.out.println("停止监听 " + unAvailableDisk + " 的文件变化");
-                                }, false);
-                                unAvailableDiskSet.remove(unAvailableDisk);
+            if (databaseService.isCheckUnavailableDiskThreadNotExist.compareAndSet(false, true)) {
+                threadPoolUtil.executeTask(() -> {
+                    Set<String> unAvailableDiskSet = allConfigs.getUnAvailableDiskSet();
+                    while (eventManagement.notMainExit()) {
+                        if (!unAvailableDiskSet.isEmpty()) {
+                            for (String unAvailableDisk : unAvailableDiskSet) {
+                                if (Files.exists(Path.of(unAvailableDisk)) &&
+                                        IsLocalDisk.INSTANCE.isDiskNTFS(unAvailableDisk)) {
+                                    threadPoolUtil.executeTask(() -> {
+                                        FileMonitor.INSTANCE.monitor(unAvailableDisk);
+                                        System.out.println("停止监听 " + unAvailableDisk + " 的文件变化");
+                                    }, false);
+                                    unAvailableDiskSet.remove(unAvailableDisk);
+                                }
                             }
                         }
+                        try {
+                            TimeUnit.SECONDS.sleep(1);
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                    boolean expect;
+                    do {
+                        expect = databaseService.isCheckUnavailableDiskThreadNotExist.get();
+                    } while (!databaseService.isCheckUnavailableDiskThreadNotExist.compareAndSet(expect, false));
+                });
+            }
+            threadPoolUtil.executeTask(() -> {
+                var startTime = System.currentTimeMillis();
+                while (eventManagement.notMainExit()) {
+                    if (System.currentTimeMillis() - startTime > AllConfigs.getInstance().
+                            getConfigEntity().
+                            getAdvancedConfigEntity().
+                            getRestartMonitorDiskThreadTimeoutInMills()) {
+                        startTime = System.currentTimeMillis();
+                        eventManagement.putEvent(new StartMonitorDiskEvent());
                     }
                     try {
-                        TimeUnit.SECONDS.sleep(1);
+                        TimeUnit.MILLISECONDS.sleep(10);
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }
@@ -231,7 +223,6 @@ public class DatabaseService {
                     translateService.getTranslation("Warning"),
                     translateService.getTranslation("Not administrator, file monitoring function is turned off")));
         }
-        return monitorCounter;
     }
 
     private void searchFolder(String folder, SearchTask searchTask) {
@@ -1579,7 +1570,7 @@ public class DatabaseService {
         //重新初始化priority
         initPriority();
         casSetStatus(this.status.get(), Constants.Enums.DatabaseStatus.NORMAL);
-        monitorDiskAndSetRestartMonitorDiskTimer();
+        startMonitorDisks();
     }
 
     private static void readSearchUsnOutput(Process searchByUsn) {
@@ -1819,7 +1810,8 @@ public class DatabaseService {
 
     @EventRegister(registerClass = StartMonitorDiskEvent.class)
     private static void startMonitorDiskEvent(Event event) {
-        monitorDiskAndSetRestartMonitorDiskTimer();
+        stopMonitorDisks(false);
+        startMonitorDisks();
     }
 
     @EventListener(listenClass = SetConfigsEvent.class)
