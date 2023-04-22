@@ -24,26 +24,26 @@ public:
 	}
 
 private:
-	HANDLE OpenVolume(char drive_letter);
+	static HANDLE OpenVolume(char drive_letter);
 
-	bool CreateJournal(HANDLE volume);
+	static bool CreateJournal(HANDLE volume);
 
 	bool LoadJournal(HANDLE volume, USN_JOURNAL_DATA* journal_data);
 
 	bool WaitForNextUsn(PREAD_USN_JOURNAL_DATA read_journal_data) const;
 
-	std::unique_ptr<READ_USN_JOURNAL_DATA> GetWaitForNextUsnQuery(USN start_usn);
+	std::unique_ptr<READ_USN_JOURNAL_DATA> GetWaitForNextUsnQuery(USN start_usn) const;
 
 	bool ReadJournalRecords(PREAD_USN_JOURNAL_DATA journal_query, LPVOID buffer,
 		DWORD& byte_count) const;
 
 	USN ReadChangesAndNotify(USN low_usn, char* buffer, void(*)(const std::u16string&), void(*)(const std::u16string&));
 
-	std::unique_ptr<READ_USN_JOURNAL_DATA> GetReadJournalQuery(USN low_usn);
+	std::unique_ptr<READ_USN_JOURNAL_DATA> GetReadJournalQuery(USN low_usn) const;
 
 	void showRecord(std::u16string& full_path, USN_RECORD* record);
 
-	char16_t* GetFilename(USN_RECORD* record);
+	static char16_t* GetFilename(USN_RECORD* record);
 
 	char drive_letter_;
 

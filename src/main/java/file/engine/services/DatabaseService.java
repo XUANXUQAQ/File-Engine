@@ -201,23 +201,6 @@ public class DatabaseService {
                     } while (!databaseService.isCheckUnavailableDiskThreadNotExist.compareAndSet(expect, false));
                 });
             }
-            threadPoolUtil.executeTask(() -> {
-                var startTime = System.currentTimeMillis();
-                while (eventManagement.notMainExit()) {
-                    if (System.currentTimeMillis() - startTime > AllConfigs.getInstance().
-                            getConfigEntity().
-                            getAdvancedConfigEntity().
-                            getRestartMonitorDiskThreadTimeoutInMills()) {
-                        startTime = System.currentTimeMillis();
-                        eventManagement.putEvent(new StartMonitorDiskEvent());
-                    }
-                    try {
-                        TimeUnit.MILLISECONDS.sleep(10);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            });
         } else {
             eventManagement.putEvent(new ShowTaskBarMessageEvent(
                     translateService.getTranslation("Warning"),
@@ -512,6 +495,27 @@ public class DatabaseService {
                 }
             }
         }
+    }
+
+    private void addRestartMonitorThread() {
+        ThreadPoolUtil.getInstance().executeTask(() -> {
+            var eventManagement = EventManagement.getInstance();
+            var startTime = System.currentTimeMillis();
+            while (eventManagement.notMainExit()) {
+                if (System.currentTimeMillis() - startTime > AllConfigs.getInstance().
+                        getConfigEntity().
+                        getAdvancedConfigEntity().
+                        getRestartMonitorDiskThreadTimeoutInMills()) {
+                    startTime = System.currentTimeMillis();
+                    eventManagement.putEvent(new StartMonitorDiskEvent());
+                }
+                try {
+                    TimeUnit.MILLISECONDS.sleep(10);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
     }
 
     private void syncFileChangesThread() {
@@ -1810,7 +1814,6 @@ public class DatabaseService {
 
     @EventRegister(registerClass = StartMonitorDiskEvent.class)
     private static void startMonitorDiskEvent(Event event) {
-        stopMonitorDisks(false);
         startMonitorDisks();
     }
 
@@ -1988,6 +1991,7 @@ public class DatabaseService {
         databaseService.executeAllCommands();
         databaseService.saveTableCacheThread();
         databaseService.warmupSearchThread();
+        databaseService.addRestartMonitorThread();
     }
 
     @EventRegister(registerClass = AddToCacheEvent.class)

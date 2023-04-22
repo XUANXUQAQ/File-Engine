@@ -142,8 +142,7 @@ void NTFSChangesWatcher::stopWatch()
 	if (!is_file_exist(exit_file))
 	{
 		FILE* fp = nullptr;
-		const auto ret_val = fopen_s(&fp, exit_file.c_str(), "w");
-		if (ret_val != 0)
+		if (const auto ret_val = fopen_s(&fp, exit_file.c_str(), "w"); ret_val != 0)
 		{
 			fprintf(stderr, "Create exit monitor file failed. Error code: %d\n", ret_val);
 		}
@@ -155,8 +154,7 @@ void NTFSChangesWatcher::stopWatch()
 			}
 		}
 	}
-	const auto ret = remove(exit_file.c_str());
-	if (ret != 0)
+	if (const auto ret = remove(exit_file.c_str()); ret != 0)
 	{
 		fprintf(stderr, "Delete exit monitor file failed. Error code: %d\n", ret);
 	}
@@ -294,7 +292,7 @@ bool NTFSChangesWatcher::WaitForNextUsn(PREAD_USN_JOURNAL_DATA read_journal_data
 	return ok;
 }
 
-std::unique_ptr<READ_USN_JOURNAL_DATA> NTFSChangesWatcher::GetWaitForNextUsnQuery(USN start_usn)
+std::unique_ptr<READ_USN_JOURNAL_DATA> NTFSChangesWatcher::GetWaitForNextUsnQuery(USN start_usn) const
 {
 
 	auto query = std::make_unique<READ_USN_JOURNAL_DATA>();
@@ -326,7 +324,7 @@ bool NTFSChangesWatcher::ReadJournalRecords(PREAD_USN_JOURNAL_DATA journal_query
 		nullptr) != 0;
 }
 
-std::unique_ptr<READ_USN_JOURNAL_DATA> NTFSChangesWatcher::GetReadJournalQuery(USN low_usn)
+std::unique_ptr<READ_USN_JOURNAL_DATA> NTFSChangesWatcher::GetReadJournalQuery(USN low_usn) const
 {
 
 	auto query = std::make_unique<READ_USN_JOURNAL_DATA>();
