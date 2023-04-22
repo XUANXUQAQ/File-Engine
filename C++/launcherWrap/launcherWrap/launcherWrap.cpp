@@ -22,7 +22,7 @@
 #pragma comment(lib, "User32.lib")
 
 // TODO 该变量为File-Engine.zip中的File-Engine.jar的md5值
-#define FILE_ENGINE_JAR_MD5 "3a87268ebacfd70c5c61939b8186bd13"
+#define FILE_ENGINE_JAR_MD5 "0958ab6232b4b9101c374516b22cd908"
 
 constexpr auto MAX_LOG_PRESERVE_DAYS = 5;
 constexpr auto CHECK_TIME_THRESHOLD = 1;
@@ -34,6 +34,7 @@ const std::string default_jvm_params =
 "-XX:+UseParallelGC "
 "-XX:MaxHeapFreeRatio=20 "
 "-XX:MinHeapFreeRatio=10 "
+"-Dsun.java2d.noddraw=true "
 "-XX:+CompactStrings " +
 redirect_error_file_option;
 
