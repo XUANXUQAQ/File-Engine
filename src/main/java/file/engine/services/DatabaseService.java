@@ -154,29 +154,64 @@ public class DatabaseService {
         }
     }
 
+    private static void monitorDiskAndSetRestartMonitorDiskTimer() {
+        ThreadPoolUtil.getInstance().executeTask(() -> {
+            var counter = startMonitorDisks();
+            var eventManagement = EventManagement.getInstance();
+            long startTime = System.currentTimeMillis();
+            var databaseService = getInstance();
+            while (eventManagement.notMainExit() &&
+                    databaseService.status.get() == Constants.Enums.DatabaseStatus.NORMAL) {
+                if (System.currentTimeMillis() - startTime > 10 * 60 * 1000) {
+                    startTime = System.currentTimeMillis();
+                    stopMonitorDisks(false);
+                    var startSpin = System.currentTimeMillis();
+                    while (counter.get() != 0 && System.currentTimeMillis() - startSpin < 3000) {
+                        try {
+                            TimeUnit.MILLISECONDS.sleep(1);
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                    counter = startMonitorDisks();
+                }
+                try {
+                    TimeUnit.MILLISECONDS.sleep(100);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+    }
+
     /**
      * 开始监控磁盘文件变化
      */
-    private static void startMonitorDisk() {
-        ThreadPoolUtil threadPoolUtil = ThreadPoolUtil.getInstance();
-        EventManagement eventManagement = EventManagement.getInstance();
-        TranslateService translateService = TranslateService.getInstance();
-        String disks = AllConfigs.getInstance().getAvailableDisks();
-        String[] splitDisks = RegexUtil.comma.split(disks);
+    private static synchronized AtomicInteger startMonitorDisks() {
+        var threadPoolUtil = ThreadPoolUtil.getInstance();
+        var eventManagement = EventManagement.getInstance();
+        var translateService = TranslateService.getInstance();
+        var allConfigs = AllConfigs.getInstance();
+        var monitorCounter = new AtomicInteger();
         if (AdminUtil.isAdmin()) {
+            String disks = allConfigs.getAvailableDisks();
+            String[] splitDisks = RegexUtil.comma.split(disks);
             for (String root : splitDisks) {
                 threadPoolUtil.executeTask(() -> {
+                    monitorCounter.getAndIncrement();
                     FileMonitor.INSTANCE.monitor(root);
                     System.out.println("停止监听 " + root + " 的文件变化");
                 }, false);
             }
             threadPoolUtil.executeTask(() -> {
-                Set<String> unAvailableDiskSet = AllConfigs.getInstance().getUnAvailableDiskSet();
+                Set<String> unAvailableDiskSet = allConfigs.getUnAvailableDiskSet();
                 while (eventManagement.notMainExit()) {
                     if (!unAvailableDiskSet.isEmpty()) {
                         for (String unAvailableDisk : unAvailableDiskSet) {
-                            if (Files.exists(Path.of(unAvailableDisk)) && IsLocalDisk.INSTANCE.isDiskNTFS(unAvailableDisk)) {
+                            if (Files.exists(Path.of(unAvailableDisk)) &&
+                                    IsLocalDisk.INSTANCE.isDiskNTFS(unAvailableDisk)) {
                                 threadPoolUtil.executeTask(() -> {
+                                    monitorCounter.getAndIncrement();
                                     FileMonitor.INSTANCE.monitor(unAvailableDisk);
                                     System.out.println("停止监听 " + unAvailableDisk + " 的文件变化");
                                 }, false);
@@ -196,6 +231,7 @@ public class DatabaseService {
                     translateService.getTranslation("Warning"),
                     translateService.getTranslation("Not administrator, file monitoring function is turned off")));
         }
+        return monitorCounter;
     }
 
     private void searchFolder(String folder, SearchTask searchTask) {
@@ -488,7 +524,13 @@ public class DatabaseService {
     }
 
     private void syncFileChangesThread() {
-        ThreadPoolUtil.getInstance().executeTask(this::addFileChangesRecords);
+        ThreadPoolUtil.getInstance().executeTask(() -> {
+            try {
+                addFileChangesRecords();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -535,7 +577,6 @@ public class DatabaseService {
         });
     }
 
-    @SneakyThrows
     private void addFileChangesRecords() {
         var eventManagement = EventManagement.getInstance();
         String tempPath = System.getProperty("java.io.tmpdir");
@@ -571,7 +612,11 @@ public class DatabaseService {
             if (deleteFilePath != null && !deleteFilePath.contains(tempPath)) {
                 removeFileFromDatabase(deleteFilePath);
             }
-            TimeUnit.MILLISECONDS.sleep(1);
+            try {
+                TimeUnit.MILLISECONDS.sleep(1);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -1534,7 +1579,7 @@ public class DatabaseService {
         //重新初始化priority
         initPriority();
         casSetStatus(this.status.get(), Constants.Enums.DatabaseStatus.NORMAL);
-        startMonitorDisk();
+        monitorDiskAndSetRestartMonitorDiskTimer();
     }
 
     private static void readSearchUsnOutput(Process searchByUsn) {
@@ -1556,6 +1601,17 @@ public class DatabaseService {
         }
     }
 
+    private static synchronized void stopMonitorDisks(boolean isDeleteUsn) {
+        String availableDisks = AllConfigs.getInstance().getAvailableDisks();
+        String[] disks = RegexUtil.comma.split(availableDisks);
+        for (String disk : disks) {
+            FileMonitor.INSTANCE.stop_monitor(disk);
+            if (isDeleteUsn) {
+                FileMonitor.INSTANCE.delete_usn(disk);
+            }
+        }
+    }
+
     /**
      * 关闭数据库连接并更新数据库
      *
@@ -1566,11 +1622,7 @@ public class DatabaseService {
         if (getStatus() == Constants.Enums.DatabaseStatus.MANUAL_UPDATE || ProcessUtil.isProcessExist("fileSearcherUSN.exe")) {
             throw new RuntimeException("already searching");
         }
-        String availableDisks = AllConfigs.getInstance().getAvailableDisks();
-        String[] disks = RegexUtil.comma.split(availableDisks);
-        for (String disk : disks) {
-            FileMonitor.INSTANCE.stop_monitor(disk);
-        }
+        stopMonitorDisks(false);
         // 复制数据库到tmp
         SQLiteUtil.copyDatabases("data", "tmp");
         if (!casSetStatus(status.get(), Constants.Enums.DatabaseStatus.MANUAL_UPDATE)) {
@@ -1767,7 +1819,7 @@ public class DatabaseService {
 
     @EventRegister(registerClass = StartMonitorDiskEvent.class)
     private static void startMonitorDiskEvent(Event event) {
-        startMonitorDisk();
+        monitorDiskAndSetRestartMonitorDiskTimer();
     }
 
     @EventListener(listenClass = SetConfigsEvent.class)
@@ -2065,18 +2117,11 @@ public class DatabaseService {
 
     @EventListener(listenClass = RestartEvent.class)
     private static void restartEvent(Event event) {
-        String availableDisks = AllConfigs.getInstance().getAvailableDisks();
-        String[] disks = RegexUtil.comma.split(availableDisks);
-        for (String disk : disks) {
-            FileMonitor.INSTANCE.stop_monitor(disk);
-            if (AllConfigs.getInstance().
-                    getConfigEntity().
-                    getAdvancedConfigEntity().
-                    isDeleteUsnOnExit() &&
-                    event instanceof CloseEvent) {
-                FileMonitor.INSTANCE.delete_usn(disk);
-            }
-        }
+        stopMonitorDisks(AllConfigs.getInstance().
+                getConfigEntity().
+                getAdvancedConfigEntity().
+                isDeleteUsnOnExit() &&
+                event instanceof CloseEvent);
         var databaseService = getInstance();
         databaseService.executeAllCommands();
         databaseService.stopAllSearch();
