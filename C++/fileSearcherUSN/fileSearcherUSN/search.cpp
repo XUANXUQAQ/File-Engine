@@ -47,8 +47,6 @@ void volume::init_volume()
         get_usn_info() &&
         // 5.获取 USN Journal 文件的基本信息
         get_usn_journal()
-        // 06. 删除 USN 日志文件 ( 也可以不删除 ) 
-        // delete_usn()
     )
     {
         using namespace std;
@@ -637,9 +635,8 @@ bool volume::get_usn_journal()
 
 bool volume::delete_usn() const
 {
-    DELETE_USN_JOURNAL_DATA dujd;
-    dujd.UsnJournalID = ujd.UsnJournalID;
-    dujd.DeleteFlags = USN_DELETE_FLAG_DELETE;
+    DELETE_USN_JOURNAL_DATA dujd
+	{ ujd.UsnJournalID , USN_DELETE_FLAG_DELETE | USN_DELETE_FLAG_NOTIFY };
     DWORD br;
 
     if (DeviceIoControl(hVol,
