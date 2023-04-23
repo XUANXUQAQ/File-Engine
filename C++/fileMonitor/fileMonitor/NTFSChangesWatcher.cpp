@@ -42,14 +42,6 @@ NTFSChangesWatcher::NTFSChangesWatcher(char drive_letter) :
 
 NTFSChangesWatcher::~NTFSChangesWatcher()
 {
-	for (const auto& val : frn_used_count_map_ | std::views::values)
-	{
-		delete val;
-	}
-	for (const auto& [val, _] : frn_record_pfrn_map_ | std::views::values)
-	{
-		delete[] val;
-	}
 	CloseHandle(volume_);
 }
 
@@ -341,17 +333,17 @@ std::unique_ptr<READ_USN_JOURNAL_DATA> NTFSChangesWatcher::GetReadJournalQuery(U
 	return query;
 }
 
-char16_t* NTFSChangesWatcher::GetFilename(USN_RECORD* record)
+std::u16string NTFSChangesWatcher::GetFilename(USN_RECORD* record)
 {
 	const auto name_length = static_cast<unsigned short>(record->FileNameLength / 2);
-
-	const auto filename = new char16_t[name_length + static_cast<size_t>(1)];
-	const auto* filenameInRecord = reinterpret_cast<char16_t*>
+	const auto filename = new char16_t[name_length + static_cast<size_t>(1)]();
+	const auto* filename_in_record = reinterpret_cast<char16_t*>
 		(reinterpret_cast<unsigned char*>(record) + record->FileNameOffset);
-	memcpy(filename, filenameInRecord, record->FileNameLength);
+	memcpy(filename, filename_in_record, record->FileNameLength);
 	*(filename + record->FileNameLength / 2) = L'\0';
-
-	return filename;
+	std::u16string file_name(filename);
+	delete[] filename;
+	return file_name;
 }
 
 void NTFSChangesWatcher::showRecord(std::u16string& full_path, USN_RECORD* record)
@@ -363,15 +355,12 @@ void NTFSChangesWatcher::showRecord(std::u16string& full_path, USN_RECORD* recor
 	full_path += file_name;
 	if (record->FileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 	{
-		frn_record_pfrn_map_.insert(
-			std::make_pair(record->FileReferenceNumber,
-				std::make_pair(file_name, record->ParentFileReferenceNumber))
-		);
-		frn_used_count_map_.insert(std::make_pair(record->FileReferenceNumber, new DWORDLONG(GetTickCount64())));
-	}
-	else
-	{
-		delete[] file_name;
+		auto&& path_using_count_pair = std::make_pair(file_name, GetTickCount64());
+		auto&& path_usn_record_pair = std::make_pair(path_using_count_pair, 
+			record->ParentFileReferenceNumber);
+		
+		frn_record_pfrn_map_.insert(std::make_pair(record->FileReferenceNumber, 
+			path_usn_record_pair));
 	}
 
 	DWORDLONG file_parent_id = record->ParentFileReferenceNumber;
@@ -380,25 +369,24 @@ void NTFSChangesWatcher::showRecord(std::u16string& full_path, USN_RECORD* recor
 	{
 		if (frn_record_pfrn_map_.size() > MAX_USN_CACHE_SIZE)
 		{
-			auto&& min_used_cache = std::ranges::min_element(frn_used_count_map_,
-				[&](const std::pair<DWORDLONG, DWORDLONG*> left, const std::pair<DWORDLONG, DWORDLONG*> right)
+			auto&& min_used_cache = std::ranges::min_element(frn_record_pfrn_map_,
+				[&](const std::pair<DWORDLONG, 
+					std::pair<std::pair<std::u16string, DWORDLONG>, DWORDLONG>>& left, 
+					const std::pair<DWORDLONG, 
+					std::pair<std::pair<std::u16string, DWORDLONG>, DWORDLONG>>& right)
 				{
-					return *left.second < *right.second;
+					return left.second.first.second < right.second.first.second;
 				});
 
-			auto& [usn_name_cache, _] = frn_record_pfrn_map_.at(min_used_cache->first);
-			delete[] usn_name_cache;
 			frn_record_pfrn_map_.erase(min_used_cache->first);
-			delete min_used_cache->second;
-			frn_used_count_map_.erase(min_used_cache->first);
 		}
 
 		if (auto&& val = frn_record_pfrn_map_.find(file_parent_id);
 			val != frn_record_pfrn_map_.end())
 		{
-			full_path = val->second.first + sep + full_path;
-			auto* cache_count = frn_used_count_map_.at(file_parent_id);
-			*cache_count = GetTickCount64();
+			full_path = val->second.first.first + sep + full_path;
+			auto& cache_count = val->second.first.second;
+			cache_count = GetTickCount64();
 			file_parent_id = val->second.second;
 		}
 		else
@@ -428,15 +416,13 @@ void NTFSChangesWatcher::showRecord(std::u16string& full_path, USN_RECORD* recor
 			full_path = file_name + sep + full_path;
 			if (parent_record->FileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 			{
+				auto&& path_using_count_pair = std::make_pair(file_name, GetTickCount64());
+				auto&& path_usn_record_pair = std::make_pair(path_using_count_pair,
+					parent_record->ParentFileReferenceNumber);
+
 				frn_record_pfrn_map_.insert(
-					std::make_pair(parent_record->FileReferenceNumber,
-						std::make_pair(file_name, parent_record->ParentFileReferenceNumber))
+					std::make_pair(parent_record->FileReferenceNumber, path_usn_record_pair)
 				);
-				frn_used_count_map_.insert(std::make_pair(parent_record->FileReferenceNumber, new DWORDLONG(GetTickCount64())));
-			}
-			else
-			{
-				delete[] file_name;
 			}
 
 			file_parent_id = parent_record->ParentFileReferenceNumber;

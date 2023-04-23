@@ -43,7 +43,7 @@ private:
 
 	void showRecord(std::u16string& full_path, USN_RECORD* record);
 
-	static char16_t* GetFilename(USN_RECORD* record);
+	static std::u16string GetFilename(USN_RECORD* record);
 
 	char drive_letter_;
 
@@ -53,9 +53,7 @@ private:
 
 	bool is_stopped;
 
-	std::unordered_map<DWORDLONG, std::pair<char16_t*, DWORDLONG>> frn_record_pfrn_map_;
-
-	std::unordered_map<DWORDLONG, DWORDLONG*> frn_used_count_map_;
+	std::unordered_map<DWORDLONG, std::pair<std::pair<std::u16string, DWORDLONG>, DWORDLONG>> frn_record_pfrn_map_;
 
 	std::unique_ptr<USN_JOURNAL_DATA> journal_;
 
