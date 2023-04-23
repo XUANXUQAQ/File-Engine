@@ -34,7 +34,6 @@ std::mutex modify_map_lock;
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_monitor
 (JNIEnv* env, jobject, jstring path)
 {
-	std::lock_guard lock_guard(modify_map_lock);
 	const char* str = env->GetStringUTFChars(path, nullptr);
 	monitor(str);
 	env->ReleaseStringUTFChars(path, str);
@@ -43,7 +42,6 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_monitor
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_stop_1monitor
 (JNIEnv* env, jobject, jstring path)
 {
-	std::lock_guard lock_guard(modify_map_lock);
 	const char* str = env->GetStringUTFChars(path, nullptr);
 	stop_monitor(str);
 	env->ReleaseStringUTFChars(path, str);
@@ -72,7 +70,6 @@ JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_FileMonitor_pop_1del_1fi
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_delete_1usn
 (JNIEnv* env, jobject, jstring path)
 {
-	std::lock_guard lock_guard(modify_map_lock);
 	const char* str = env->GetStringUTFChars(path, nullptr);
 	if (auto&& watcher = ntfs_changes_watcher_map.find(str);
 		watcher != ntfs_changes_watcher_map.end())
@@ -131,10 +128,13 @@ void monitor(const char* path)
 		monitor_path(path_str);
 		return;
 	}
-	stop_monitor(path_str);
-	const auto watcher_ptr = watcher_iter->second;
-	ntfs_changes_watcher_map.erase(path_str);
-	delete watcher_ptr;
+	{
+		std::lock_guard lock_guard(modify_map_lock);
+		stop_monitor(path_str);
+		const auto watcher_ptr = watcher_iter->second;
+		ntfs_changes_watcher_map.erase(path_str);
+		delete watcher_ptr;
+	}
 	monitor_path(path_str);
 }
 
@@ -170,6 +170,9 @@ void monitor_path(const std::string& path)
 	std::cout << "monitoring " << path << std::endl;
 #endif
 	auto watcher = new NTFSChangesWatcher(path[0]);
-	ntfs_changes_watcher_map.insert(std::make_pair(path, watcher));
+	{
+		std::lock_guard lock_guard(modify_map_lock);
+		ntfs_changes_watcher_map.insert(std::make_pair(path, watcher));
+	}
 	watcher->WatchChanges(push_add_file, push_del_file);
 }
