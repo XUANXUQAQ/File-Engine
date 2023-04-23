@@ -3,7 +3,6 @@
 #include <iomanip>
 #include <string>
 #include <concurrent_queue.h>
-#include <concurrent_unordered_map.h>
 #include <mutex>
 #include "string_wstring_converter.h"
 #include "file_engine_dllInterface_FileMonitor.h"
@@ -29,11 +28,13 @@ void push_del_file(const std::u16string& record);
 
 file_record_queue file_added_queue;
 file_record_queue file_del_queue;
-concurrent_unordered_map<std::string, NTFSChangesWatcher*> ntfs_changes_watcher_map;
+std::unordered_map<std::string, NTFSChangesWatcher*> ntfs_changes_watcher_map;
+std::mutex modify_map_lock;
 
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_monitor
 (JNIEnv* env, jobject, jstring path)
 {
+	std::lock_guard lock_guard(modify_map_lock);
 	const char* str = env->GetStringUTFChars(path, nullptr);
 	monitor(str);
 	env->ReleaseStringUTFChars(path, str);
@@ -42,6 +43,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_monitor
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_stop_1monitor
 (JNIEnv* env, jobject, jstring path)
 {
+	std::lock_guard lock_guard(modify_map_lock);
 	const char* str = env->GetStringUTFChars(path, nullptr);
 	stop_monitor(str);
 	env->ReleaseStringUTFChars(path, str);
@@ -70,6 +72,7 @@ JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_FileMonitor_pop_1del_1fi
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_delete_1usn
 (JNIEnv* env, jobject, jstring path)
 {
+	std::lock_guard lock_guard(modify_map_lock);
 	const char* str = env->GetStringUTFChars(path, nullptr);
 	if (auto&& watcher = ntfs_changes_watcher_map.find(str);
 		watcher != ntfs_changes_watcher_map.end())
@@ -129,8 +132,9 @@ void monitor(const char* path)
 		return;
 	}
 	stop_monitor(path_str);
-	ntfs_changes_watcher_map.unsafe_erase(path_str);
-	delete watcher_iter->second;
+	const auto watcher_ptr = watcher_iter->second;
+	ntfs_changes_watcher_map.erase(path_str);
+	delete watcher_ptr;
 	monitor_path(path_str);
 }
 
