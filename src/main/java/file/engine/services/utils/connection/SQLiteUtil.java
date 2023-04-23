@@ -323,10 +323,15 @@ public class SQLiteUtil {
             malformedFiles.add(weight);
         }
         if (!malformedFiles.isEmpty()) {
-            try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("user/malformedDB"), StandardCharsets.UTF_8))) {
-                for (File file : malformedFiles) {
-                    writer.write(file.getAbsolutePath());
-                    writer.newLine();
+            try {
+                var fileOutputStream = new FileOutputStream("user/malformedDB");
+                var outputStreamWriter = new OutputStreamWriter(fileOutputStream, StandardCharsets.UTF_8);
+                var writer = new BufferedWriter(outputStreamWriter);
+                try (writer) {
+                    for (File file : malformedFiles) {
+                        writer.write(file.getAbsolutePath());
+                        writer.newLine();
+                    }
                 }
             } catch (IOException e) {
                 e.printStackTrace();

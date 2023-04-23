@@ -173,7 +173,8 @@ public class DatabaseService {
                     System.out.println("停止监听 " + root + " 的文件变化");
                 }, false);
             }
-            if (databaseService.isCheckUnavailableDiskThreadNotExist.compareAndSet(false, true)) {
+            var isCheckUnavailableDiskThreadNotExist = databaseService.isCheckUnavailableDiskThreadNotExist;
+            if (isCheckUnavailableDiskThreadNotExist.compareAndSet(false, true)) {
                 threadPoolUtil.executeTask(() -> {
                     Set<String> unAvailableDiskSet = allConfigs.getUnAvailableDiskSet();
                     while (eventManagement.notMainExit()) {
@@ -197,8 +198,8 @@ public class DatabaseService {
                     }
                     boolean expect;
                     do {
-                        expect = databaseService.isCheckUnavailableDiskThreadNotExist.get();
-                    } while (!databaseService.isCheckUnavailableDiskThreadNotExist.compareAndSet(expect, false));
+                        expect = isCheckUnavailableDiskThreadNotExist.get();
+                    } while (!isCheckUnavailableDiskThreadNotExist.compareAndSet(expect, false));
                 });
             }
         } else {
@@ -1315,7 +1316,7 @@ public class DatabaseService {
             LinkedHashSet<SQLWithTaskId> tempCommandSet = new LinkedHashSet<>(sqlCommandQueue);
             HashMap<String, Statement> statementHashMap = new HashMap<>();
 
-            tempCommandSet.forEach(sqlWithTaskId -> {
+            for (var sqlWithTaskId : tempCommandSet) {
                 Statement stmt;
                 try {
                     if (statementHashMap.containsKey(sqlWithTaskId.diskStr)) {
@@ -1335,7 +1336,8 @@ public class DatabaseService {
                         if (sqlWithTaskId.key != null && updateCount != -1 && updateCount != 0) {
                             if (databaseResultsCount.containsKey(sqlWithTaskId.key)) {
                                 var recordsNumber = databaseResultsCount.get(sqlWithTaskId.key);
-                                updateCount = sqlWithTaskId.taskId == SqlTaskIds.INSERT_TO_LIST ? updateCount : -updateCount;
+                                updateCount = sqlWithTaskId.taskId == SqlTaskIds.INSERT_TO_LIST ?
+                                        updateCount : -updateCount;
                                 recordsNumber.addAndGet(updateCount);
                             }
                         }
@@ -1343,15 +1345,16 @@ public class DatabaseService {
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
-            });
-            statementHashMap.forEach((k, v) -> {
+            }
+            for (var entry : statementHashMap.entrySet()) {
+                Statement v = entry.getValue();
                 try {
                     v.execute("COMMIT;");
                     v.close();
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
-            });
+            }
             sqlCommandQueue.removeAll(tempCommandSet);
         }
     }

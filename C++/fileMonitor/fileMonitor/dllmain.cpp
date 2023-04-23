@@ -129,8 +129,8 @@ void monitor(const char* path)
 		return;
 	}
 	stop_monitor(path_str);
-	delete watcher_iter->second;
 	ntfs_changes_watcher_map.unsafe_erase(path_str);
+	delete watcher_iter->second;
 	monitor_path(path_str);
 }
 
