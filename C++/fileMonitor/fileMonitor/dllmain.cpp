@@ -1,6 +1,5 @@
 ﻿// dllmain.cpp : 定义 DLL 应用程序的入口点。
 #include <Windows.h>
-#include <iomanip>
 #include <string>
 #include <concurrent_queue.h>
 #include <shared_mutex>
@@ -34,52 +33,58 @@ std::shared_mutex watcher_map_lock;
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_monitor
 (JNIEnv* env, jobject, jstring path)
 {
-	const char* str = env->GetStringUTFChars(path, nullptr);
-	monitor(str);
-	env->ReleaseStringUTFChars(path, str);
+    const char* str = env->GetStringUTFChars(path, nullptr);
+    monitor(str);
+    env->ReleaseStringUTFChars(path, str);
 }
 
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_stop_1monitor
 (JNIEnv* env, jobject, jstring path)
 {
-	const char* str = env->GetStringUTFChars(path, nullptr);
-	stop_monitor(str);
-	env->ReleaseStringUTFChars(path, str);
+    const char* str = env->GetStringUTFChars(path, nullptr);
+    stop_monitor(str);
+    env->ReleaseStringUTFChars(path, str);
 }
 
 JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_FileMonitor_pop_1add_1file
 (JNIEnv* env, jobject)
 {
-	if (std::string record; pop_add_file(record))
-	{
-		return env->NewStringUTF(record.c_str());
-	}
-	return nullptr;
+    if (std::string record; pop_add_file(record))
+    {
+        return env->NewStringUTF(record.c_str());
+    }
+    return nullptr;
+}
+
+JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_FileMonitor_is_1monitor_1stopped
+(JNIEnv* env, jobject, jstring path)
+{
+    const char* str = env->GetStringUTFChars(path, nullptr);
+    const auto&& ret = ntfs_changes_watcher_map.find(str);
+    env->ReleaseStringUTFChars(path, str);
+    return ret == ntfs_changes_watcher_map.end();
 }
 
 JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_FileMonitor_pop_1del_1file
 (JNIEnv* env, jobject)
 {
-	if (std::string record; pop_del_file(record))
-	{
-		return env->NewStringUTF(record.c_str());
-	}
-	return nullptr;
+    if (std::string record; pop_del_file(record))
+    {
+        return env->NewStringUTF(record.c_str());
+    }
+    return nullptr;
 }
 
-JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_delete_1usn
+JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_delete_1usn_1on_1exit
 (JNIEnv* env, jobject, jstring path)
 {
-	const char* str = env->GetStringUTFChars(path, nullptr);
-	if (auto&& watcher = ntfs_changes_watcher_map.find(str);
-		watcher != ntfs_changes_watcher_map.end())
-	{
-		if (!watcher->second->DeleteJournal())
-		{
-			fprintf(stderr, "Failed to delete journal %s\n", str);
-		}
-	}
-	env->ReleaseStringUTFChars(path, str);
+    const char* str = env->GetStringUTFChars(path, nullptr);
+    if (auto&& watcher = ntfs_changes_watcher_map.find(str);
+        watcher != ntfs_changes_watcher_map.end())
+    {
+        watcher->second->DeleteUsnOnExit();
+    }
+    env->ReleaseStringUTFChars(path, str);
 }
 
 /**
@@ -87,7 +92,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_delete_1usn
  */
 bool pop_del_file(std::string& record)
 {
-	return file_del_queue.try_pop(record);
+    return file_del_queue.try_pop(record);
 }
 
 /**
@@ -95,75 +100,57 @@ bool pop_del_file(std::string& record)
  */
 bool pop_add_file(std::string& record)
 {
-	return file_added_queue.try_pop(record);
+    return file_added_queue.try_pop(record);
 }
 
 void push_add_file(const std::u16string& record)
 {
-	const std::wstring wstr(reinterpret_cast<LPCWSTR>(record.c_str()));
-	auto&& str = wstring2string(wstr);
+    const std::wstring wstr(reinterpret_cast<LPCWSTR>(record.c_str()));
+    auto&& str = wstring2string(wstr);
 #ifdef TEST
 	std::cout << "file added: " << str << std::endl;
 #endif
-	file_added_queue.push(str);
+    file_added_queue.push(str);
 }
 
 
 void push_del_file(const std::u16string& record)
 {
-	const std::wstring wstr(reinterpret_cast<LPCWSTR>(record.c_str()));
-	auto&& str = wstring2string(wstr);
+    const std::wstring wstr(reinterpret_cast<LPCWSTR>(record.c_str()));
+    auto&& str = wstring2string(wstr);
 #ifdef TEST
 	std::cout << "file removed: " << str << std::endl;
 #endif
-	file_del_queue.push(str);
+    file_del_queue.push(str);
 }
 
 void monitor(const char* path)
 {
-	const std::string path_str(path);
-	std::unordered_map<std::string, NTFSChangesWatcher*>::iterator watcher_iter;
-	{
-		std::shared_lock sl(watcher_map_lock);
-		watcher_iter = ntfs_changes_watcher_map.find(path_str);
-	}
-	if (watcher_iter == ntfs_changes_watcher_map.end())
-	{
-		monitor_path(path_str);
-		return;
-	}
-	stop_monitor(path_str);
-	{
-		const auto watcher_ptr = watcher_iter->second;
-		std::unique_lock ul(watcher_map_lock);
-		ntfs_changes_watcher_map.erase(path_str);
-		delete watcher_ptr;
-	}
-	monitor_path(path_str);
+    bool is_start_monitor = false;
+    const std::string path_str(path);
+    {
+        std::shared_lock sl(watcher_map_lock);
+        auto&& watcher_iter = ntfs_changes_watcher_map.find(path_str);
+        if (watcher_iter == ntfs_changes_watcher_map.end())
+        {
+            is_start_monitor = true;
+        }
+    }
+    if (is_start_monitor)
+    {
+        monitor_path(path_str);
+    }
 }
 
 void stop_monitor(const std::string& path)
 {
-	std::shared_lock sl(watcher_map_lock);
-	auto&& watcher_iter = ntfs_changes_watcher_map.find(path);
-	if (watcher_iter == ntfs_changes_watcher_map.end())
-	{
-		return;
-	}
-	watcher_iter->second->stopWatch();
-	Sleep(100);
-	unsigned count = 0;
-	while (!watcher_iter->second->isStopWatch())
-	{
-		watcher_iter->second->stopWatch();
-		if (count > 100)
-		{
-			printf("%s\n", "Error wait for ntfs watcher timeout");
-			return;
-		}
-		++count;
-		Sleep(100);
-	}
+    std::shared_lock sl(watcher_map_lock);
+    auto&& watcher_iter = ntfs_changes_watcher_map.find(path);
+    if (watcher_iter == ntfs_changes_watcher_map.end())
+    {
+        return;
+    }
+    watcher_iter->second->StopWatch();
 }
 
 /**
@@ -174,10 +161,14 @@ void monitor_path(const std::string& path)
 #ifdef TEST
 	std::cout << "monitoring " << path << std::endl;
 #endif
-	auto watcher = new NTFSChangesWatcher(path[0]);
-	{
-		std::unique_lock ul(watcher_map_lock);
-		ntfs_changes_watcher_map.insert(std::make_pair(path, watcher));
-	}
-	watcher->WatchChanges(push_add_file, push_del_file);
+    NTFSChangesWatcher watcher(path[0]);
+    {
+        std::unique_lock ul(watcher_map_lock);
+        ntfs_changes_watcher_map.insert(std::make_pair(path, &watcher));
+    }
+    watcher.WatchChanges(push_add_file, push_del_file);
+    {
+        std::unique_lock ul(watcher_map_lock);
+        ntfs_changes_watcher_map.erase(path);
+    }
 }

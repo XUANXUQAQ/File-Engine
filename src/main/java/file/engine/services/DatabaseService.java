@@ -167,6 +167,15 @@ public class DatabaseService {
             String disks = allConfigs.getAvailableDisks();
             String[] splitDisks = RegexUtil.comma.split(disks);
             for (String root : splitDisks) {
+                FileMonitor.INSTANCE.stop_monitor(root);
+                while (!FileMonitor.INSTANCE.is_monitor_stopped(root)) {
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(100);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                    FileMonitor.INSTANCE.stop_monitor(root);
+                }
                 threadPoolUtil.executeTask(() -> {
                     FileMonitor.INSTANCE.monitor(root);
                     System.out.println("停止监听 " + root + " 的文件变化");
@@ -181,6 +190,15 @@ public class DatabaseService {
                             for (String unAvailableDisk : unAvailableDiskSet) {
                                 if (Files.exists(Path.of(unAvailableDisk)) &&
                                         IsLocalDisk.INSTANCE.isDiskNTFS(unAvailableDisk)) {
+                                    FileMonitor.INSTANCE.stop_monitor(unAvailableDisk);
+                                    while (!FileMonitor.INSTANCE.is_monitor_stopped(unAvailableDisk)) {
+                                        try {
+                                            TimeUnit.MILLISECONDS.sleep(100);
+                                        } catch (InterruptedException e) {
+                                            throw new RuntimeException(e);
+                                        }
+                                        FileMonitor.INSTANCE.stop_monitor(unAvailableDisk);
+                                    }
                                     threadPoolUtil.executeTask(() -> {
                                         FileMonitor.INSTANCE.monitor(unAvailableDisk);
                                         System.out.println("停止监听 " + unAvailableDisk + " 的文件变化");
@@ -1602,10 +1620,10 @@ public class DatabaseService {
         String availableDisks = AllConfigs.getInstance().getAvailableDisks();
         String[] disks = RegexUtil.comma.split(availableDisks);
         for (String disk : disks) {
-            FileMonitor.INSTANCE.stop_monitor(disk);
             if (isDeleteUsn) {
-                FileMonitor.INSTANCE.delete_usn(disk);
+                FileMonitor.INSTANCE.delete_usn_on_exit(disk);
             }
+            FileMonitor.INSTANCE.stop_monitor(disk);
         }
     }
 

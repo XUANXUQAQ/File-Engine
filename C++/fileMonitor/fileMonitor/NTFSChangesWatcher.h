@@ -7,64 +7,62 @@
 class NTFSChangesWatcher
 {
 public:
-	NTFSChangesWatcher(char drive_letter);
-	~NTFSChangesWatcher();
+    NTFSChangesWatcher(char drive_letter);
+    ~NTFSChangesWatcher();
 
-	// Method which runs an infinite loop and waits for new update sequence number in a journal.
-	// The thread is blocked till the new USN record created in the journal.
-	void WatchChanges(void(*)(const std::u16string&), void(*)(const std::u16string&));
+    // Method which runs an infinite loop and waits for new update sequence number in a journal.
+    // The thread is blocked till the new USN record created in the journal.
+    void WatchChanges(void (*)(const std::u16string&), void (*)(const std::u16string&));
 
-	bool DeleteJournal() const;
+    void StopWatch();
 
-	void stopWatch();
-
-	bool isStopWatch() const
-	{
-		return is_stopped;
-	}
+    void DeleteUsnOnExit();
 
 private:
-	static HANDLE OpenVolume(char drive_letter);
+    static HANDLE OpenVolume(char drive_letter);
 
-	static bool CreateJournal(HANDLE volume);
+    static bool CreateJournal(HANDLE volume);
 
-	bool LoadJournal(HANDLE volume, USN_JOURNAL_DATA* journal_data);
+    static bool LoadJournal(HANDLE volume, USN_JOURNAL_DATA* journal_data);
 
-	bool WaitForNextUsn(PREAD_USN_JOURNAL_DATA read_journal_data) const;
+    bool DeleteJournal() const;
 
-	std::unique_ptr<READ_USN_JOURNAL_DATA> GetWaitForNextUsnQuery(USN start_usn) const;
+    bool WaitForNextUsn(PREAD_USN_JOURNAL_DATA read_journal_data) const;
 
-	bool ReadJournalRecords(PREAD_USN_JOURNAL_DATA journal_query, LPVOID buffer,
-		DWORD& byte_count) const;
+    std::unique_ptr<READ_USN_JOURNAL_DATA> GetWaitForNextUsnQuery(USN start_usn) const;
 
-	USN ReadChangesAndNotify(USN low_usn, char* buffer, void(*)(const std::u16string&), void(*)(const std::u16string&));
+    bool ReadJournalRecords(PREAD_USN_JOURNAL_DATA journal_query, LPVOID buffer,
+                            DWORD& byte_count) const;
 
-	std::unique_ptr<READ_USN_JOURNAL_DATA> GetReadJournalQuery(USN low_usn) const;
+    USN ReadChangesAndNotify(USN low_usn, char* buffer, void (*)(const std::u16string&),
+                             void (*)(const std::u16string&));
 
-	void showRecord(std::u16string& full_path, USN_RECORD* record);
+    std::unique_ptr<READ_USN_JOURNAL_DATA> GetReadJournalQuery(USN low_usn) const;
 
-	static std::u16string GetFilename(USN_RECORD* record);
+    void showRecord(std::u16string& full_path, USN_RECORD* record);
 
-	char drive_letter_;
+    static std::u16string GetFilename(USN_RECORD* record);
 
-	HANDLE volume_;
+    char drive_letter_;
 
-	bool stop_flag;
+    volatile bool is_delete_usn_on_exit_;
 
-	bool is_stopped;
+    HANDLE volume_;
 
-	std::unordered_map<DWORDLONG, std::pair<std::pair<std::u16string, DWORDLONG>, DWORDLONG>> frn_record_pfrn_map_;
+    volatile bool stop_flag;
 
-	std::unique_ptr<USN_JOURNAL_DATA> journal_;
+    std::unordered_map<DWORDLONG, std::pair<std::pair<std::u16string, DWORDLONG>, DWORDLONG>> frn_record_pfrn_map_;
 
-	DWORDLONG journal_id_;
+    std::unique_ptr<USN_JOURNAL_DATA> journal_;
 
-	USN last_usn_;
+    DWORDLONG journal_id_;
 
-	USN max_usn_;
+    USN last_usn_;
 
-	// Flags, which indicate which types of changes you want to listen.
-	static const int FILE_CHANGE_BITMASK;
+    USN max_usn_;
 
-	static const int kBufferSize;
+    // Flags, which indicate which types of changes you want to listen.
+    static const int FILE_CHANGE_BITMASK;
+
+    static const int kBufferSize;
 };
