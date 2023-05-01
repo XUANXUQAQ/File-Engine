@@ -3,7 +3,7 @@
 #include <iomanip>
 #include <string>
 #include <concurrent_queue.h>
-#include <mutex>
+#include <shared_mutex>
 #include "string_wstring_converter.h"
 #include "file_engine_dllInterface_FileMonitor.h"
 #include "NTFSChangesWatcher.h"
@@ -29,7 +29,7 @@ void push_del_file(const std::u16string& record);
 file_record_queue file_added_queue;
 file_record_queue file_del_queue;
 std::unordered_map<std::string, NTFSChangesWatcher*> ntfs_changes_watcher_map;
-std::mutex modify_map_lock;
+std::shared_mutex watcher_map_lock;
 
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_monitor
 (JNIEnv* env, jobject, jstring path)
@@ -122,16 +122,20 @@ void push_del_file(const std::u16string& record)
 void monitor(const char* path)
 {
 	const std::string path_str(path);
-	auto&& watcher_iter = ntfs_changes_watcher_map.find(path_str);
+	std::unordered_map<std::string, NTFSChangesWatcher*>::iterator watcher_iter;
+	{
+		std::shared_lock sl(watcher_map_lock);
+		watcher_iter = ntfs_changes_watcher_map.find(path_str);
+	}
 	if (watcher_iter == ntfs_changes_watcher_map.end())
 	{
 		monitor_path(path_str);
 		return;
 	}
+	stop_monitor(path_str);
 	{
-		std::lock_guard lock_guard(modify_map_lock);
-		stop_monitor(path_str);
 		const auto watcher_ptr = watcher_iter->second;
+		std::unique_lock ul(watcher_map_lock);
 		ntfs_changes_watcher_map.erase(path_str);
 		delete watcher_ptr;
 	}
@@ -140,6 +144,7 @@ void monitor(const char* path)
 
 void stop_monitor(const std::string& path)
 {
+	std::shared_lock sl(watcher_map_lock);
 	auto&& watcher_iter = ntfs_changes_watcher_map.find(path);
 	if (watcher_iter == ntfs_changes_watcher_map.end())
 	{
@@ -171,7 +176,7 @@ void monitor_path(const std::string& path)
 #endif
 	auto watcher = new NTFSChangesWatcher(path[0]);
 	{
-		std::lock_guard lock_guard(modify_map_lock);
+		std::unique_lock ul(watcher_map_lock);
 		ntfs_changes_watcher_map.insert(std::make_pair(path, watcher));
 	}
 	watcher->WatchChanges(push_add_file, push_del_file);
