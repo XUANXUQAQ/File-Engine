@@ -82,7 +82,6 @@ public class DatabaseService {
     private static final int MAX_CACHED_RECORD_NUM = 10240 * 5;
     private static final int MAX_SQL_NUM = 5000;
     private static final int MAX_RESULTS = 200;
-    private static final String WARMUP_SEARCH_TEXT_PREFIX = "warmup";
 
     private static volatile DatabaseService INSTANCE = null;
 
@@ -238,34 +237,31 @@ public class DatabaseService {
         if (null == files || files.length == 0) {
             return;
         }
-        List<File> filesList = List.of(files);
+        var remainFiles = new ArrayDeque<>(List.of(files));
         ArrayList<File> dirsToSearch = new ArrayList<>();
-        ArrayDeque<File> listRemainFiles = new ArrayDeque<>(filesList);
         do {
-            File remain = listRemainFiles.poll();
-            if (remain == null) {
+            var eachFile = remainFiles.poll();
+            if (eachFile == null) {
                 continue;
             }
-            if (remain.isDirectory()) {
-                dirsToSearch.add(remain);
-                File[] subFiles = remain.listFiles();
+            if (eachFile.isDirectory()) {
+                dirsToSearch.add(eachFile);
+                File[] subFiles = eachFile.listFiles();
                 if (subFiles != null) {
-                    List<File> subFilesList = List.of(subFiles);
-                    listRemainFiles.addAll(subFilesList);
-                    dirsToSearch.addAll(subFilesList);
+                    List<File> subFileList = List.of(subFiles);
+                    remainFiles.addAll(subFileList);
+                    dirsToSearch.addAll(subFileList);
                 }
             } else {
-                var pathToCheck = remain.getAbsolutePath();
-                String priorityStr = String.valueOf(getPriorityBySuffix(getSuffixByPath(pathToCheck)));
-                if (checkIsMatchedAndAddToList(pathToCheck, priorityStr, searchTask)) {
+                var pathToCheck = eachFile.getAbsolutePath();
+                if (checkIsMatchedAndAddToList(pathToCheck, searchTask)) {
                     searchTask.cacheAndPriorityResults.add(pathToCheck);
                 }
             }
-        } while (!listRemainFiles.isEmpty() && !searchTask.shouldStopSearch());
-        for (File eachDir : dirsToSearch) {
+        } while (!remainFiles.isEmpty() && !searchTask.shouldStopSearch());
+        for (var eachDir : dirsToSearch) {
             var pathToCheck = eachDir.getAbsolutePath();
-            String priorityStr = String.valueOf(getPriorityBySuffix(getSuffixByPath(pathToCheck)));
-            if (checkIsMatchedAndAddToList(pathToCheck, priorityStr, searchTask)) {
+            if (checkIsMatchedAndAddToList(pathToCheck, searchTask)) {
                 searchTask.cacheAndPriorityResults.add(pathToCheck);
             }
         }
@@ -570,9 +566,9 @@ public class DatabaseService {
                         .getAdvancedConfigEntity()
                         .getSearchWarmupTimeoutInMills()) {
                     if (!GetHandle.INSTANCE.isForegroundFullscreen()) {
-                        String keywordsTemp = WARMUP_SEARCH_TEXT_PREFIX + getRandomString(2) + ";" +
-                                WARMUP_SEARCH_TEXT_PREFIX + getRandomString(2) + ";" +
-                                WARMUP_SEARCH_TEXT_PREFIX + getRandomString(2);
+                        String keywordsTemp = getRandomString(2) + ";" +
+                                getRandomString(2) + ";" +
+                                getRandomString(2);
                         String[] warmupKeywords = RegexUtil.semicolon.split(keywordsTemp);
                         startTime = System.currentTimeMillis();
                         int randomSearchCase = random.nextInt(searchCaseTemp.length);
@@ -666,8 +662,7 @@ public class DatabaseService {
                 if (FileUtil.isDir(each)) {
                     dirs.add(each);
                 } else {
-                    var priorityStr = String.valueOf(getPriorityBySuffix(getSuffixByPath(each)));
-                    if (checkIsMatchedAndAddToList(each, priorityStr, searchTask)) {
+                    if (checkIsMatchedAndAddToList(each, searchTask)) {
                         searchTask.cacheAndPriorityResults.add(each);
                     }
                 }
@@ -680,8 +675,7 @@ public class DatabaseService {
             if (FileUtil.isFileNotExist(each)) {
                 eventManagement.putEvent(new DeleteFromCacheEvent(each));
             } else {
-                var priorityStr = String.valueOf(getPriorityBySuffix(getSuffixByPath(each)));
-                if (checkIsMatchedAndAddToList(each, priorityStr, searchTask)) {
+                if (checkIsMatchedAndAddToList(each, searchTask)) {
                     searchTask.cacheAndPriorityResults.add(each);
                 }
             }
@@ -698,7 +692,6 @@ public class DatabaseService {
      * @return true如果匹配成功
      */
     private boolean checkIsMatchedAndAddToList(String path,
-                                               @SuppressWarnings("unused") String priorityStr,
                                                SearchTask searchTask) {
         boolean ret = false;
         if (PathMatchUtil.check(path,
@@ -726,7 +719,6 @@ public class DatabaseService {
      */
     private int searchAndAddToTempResults(String sql,
                                           Statement stmt,
-                                          String priorityStr,
                                           SearchTask searchTask,
                                           String key) {
         //结果太多则不再进行搜索
@@ -771,7 +763,7 @@ public class DatabaseService {
                 ThreadPoolUtil.getInstance().executeTask(() -> {
                     try {
                         for (int j = 0; j < realResultCount1; ++j) {
-                            if (checkIsMatchedAndAddToList(tmpQueryResultsCache[j], priorityStr, searchTask)) {
+                            if (checkIsMatchedAndAddToList(tmpQueryResultsCache[j], searchTask)) {
                                 matchedResultCount.getAndIncrement();
                             }
                             if (searchTask.shouldStopSearch()) {
@@ -961,11 +953,11 @@ public class DatabaseService {
                                 throw new RuntimeException(e);
                             }
                         }
-                        matchedNum = fallbackToSearchDatabase(searchTask, stmt, eachSql, priority, key);
+                        matchedNum = fallbackToSearchDatabase(searchTask, stmt, eachSql, key);
                     }
                 }
                 final long weight = Math.min(matchedNum, 5);
-                if (weight != 0L && !searchTask.searchInfo.searchText.startsWith(WARMUP_SEARCH_TEXT_PREFIX)) {
+                if (weight != 0L) {
                     //更新表的权重，每次搜索将会按照各个表的权重排序
                     updateTableWeight(tableName, weight);
                 }
@@ -985,8 +977,8 @@ public class DatabaseService {
         });
     }
 
-    private long fallbackToSearchDatabase(SearchTask searchTask, Statement stmt, String eachSql, String priority, String key) {
-        return searchFromDatabaseOrCache(stmt, eachSql, key, priority, searchTask);
+    private long fallbackToSearchDatabase(SearchTask searchTask, Statement stmt, String eachSql, String key) {
+        return searchFromDatabaseOrCache(stmt, eachSql, key, searchTask);
     }
 
     /**
@@ -997,7 +989,7 @@ public class DatabaseService {
      * @param key  查询key，例如 [C,list10,-1]
      * @return 查询的结果数量
      */
-    private long searchFromDatabaseOrCache(Statement stmt, String sql, String key, String priority, SearchTask searchTask) {
+    private long searchFromDatabaseOrCache(Statement stmt, String sql, String key, SearchTask searchTask) {
         if (searchTask.shouldStopSearch()) {
             return 0;
         }
@@ -1009,7 +1001,7 @@ public class DatabaseService {
             }
             long count = 0L;
             for (String e : cache.data) {
-                if (checkIsMatchedAndAddToList(e, priority, searchTask)) {
+                if (checkIsMatchedAndAddToList(e, searchTask)) {
                     count++;
                 }
                 if (searchTask.shouldStopSearch()) {
@@ -1021,7 +1013,7 @@ public class DatabaseService {
             //格式化是为了以后的拓展性
             String formattedSql = String.format(sql, "PATH");
             //当前数据库表中有多少个结果匹配成功
-            matchedNum = searchAndAddToTempResults(formattedSql, stmt, priority, searchTask, key);
+            matchedNum = searchAndAddToTempResults(formattedSql, stmt, searchTask, key);
         }
         return matchedNum;
     }
@@ -1976,7 +1968,7 @@ public class DatabaseService {
             }, false);
         }
         try {
-            if (!countDownLatch.await(2, TimeUnit.SECONDS)) {
+            if (!countDownLatch.await(5, TimeUnit.SECONDS)) {
                 System.out.println("等待优先搜索文件夹超时");
             }
         } catch (InterruptedException e) {
