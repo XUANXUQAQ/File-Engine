@@ -34,20 +34,12 @@ volume::~volume()
         }
         delete table_list_ptr;
     }
+    CloseHandle(hVol);
 }
 
 void volume::init_volume()
 {
-    if (
-        // 2.获取驱动盘句柄
-        get_handle() &&
-        // 3.创建USN日志
-        create_usn() &&
-        // 4.获取USN日志信息
-        get_usn_info() &&
-        // 5.获取 USN Journal 文件的基本信息
-        get_usn_journal()
-    )
+    if (get_handle() && create_usn() && get_usn_info() && get_usn_journal())
     {
         using namespace std;
         auto collect_internal = [this](const Frn_Pfrn_Name_Map::iterator& map_iterator)
@@ -527,9 +519,8 @@ bool volume::get_handle()
                       FILE_SHARE_READ | FILE_SHARE_WRITE, // 必须包含有FILE_SHARE_WRITE
                       nullptr,
                       OPEN_EXISTING, // 必须包含OPEN_EXISTING, CREATE_ALWAYS可能会导致错误
-                      FILE_ATTRIBUTE_READONLY, // FILE_ATTRIBUTE_NORMAL可能会导致错误
+                      0, // FILE_ATTRIBUTE_NORMAL可能会导致错误
                       nullptr);
-
 
     if (INVALID_HANDLE_VALUE != hVol)
     {
@@ -541,30 +532,29 @@ bool volume::get_handle()
     return false;
 }
 
-bool volume::create_usn()
+bool volume::create_usn() const
 {
-    cujd.MaximumSize = 0; // 0表示使用默认值  
-    cujd.AllocationDelta = 0; // 0表示使用默认值
+    NTFS_VOLUME_DATA_BUFFER ntfsVolData;
+    DWORD dwWritten = 0;
 
-    DWORD br;
     if (
-        DeviceIoControl(hVol, // handle to volume
-                        FSCTL_CREATE_USN_JOURNAL, // dwIoControlCode
-                        &cujd, // input buffer
-                        sizeof(cujd), // size of input buffer
-                        nullptr, // lpOutBuffer
-                        0, // nOutBufferSize
-                        &br, // number of bytes returned
-                        nullptr) // OVERLAPPED structure	
+        DeviceIoControl(hVol,
+                        FSCTL_GET_NTFS_VOLUME_DATA,
+                        nullptr,
+                        0,
+                        &ntfsVolData,
+                        sizeof(ntfsVolData),
+                        &dwWritten,
+                        nullptr)
     )
     {
         return true;
     }
-    auto&& info = std::string("create usn error. Disk: ") + getDiskPath() + " Error code: " + std::to_string(GetLastError());
+    auto&& info = std::string("create usn error. Disk: ") +
+        getDiskPath() + " Error code: " + std::to_string(GetLastError());
     fprintf(stderr, "fileSearcherUSN: %s\n", info.c_str());
     return false;
 }
-
 
 bool volume::get_usn_info()
 {
@@ -591,7 +581,7 @@ bool volume::get_usn_journal()
 {
     MFT_ENUM_DATA med;
     med.StartFileReferenceNumber = 0;
-    med.LowUsn = ujd.FirstUsn;
+    med.LowUsn = 0;
     med.HighUsn = ujd.NextUsn;
 
     constexpr auto BUF_LEN = sizeof(USN) + 0x100000; // 尽可能地大，提高效率;
@@ -600,15 +590,20 @@ bool volume::get_usn_journal()
     DWORD usn_data_size;
     pfrn_name pfrn_name;
 
-    while (0 != DeviceIoControl(hVol,
-                                FSCTL_ENUM_USN_DATA,
-                                &med,
-                                sizeof med,
-                                buffer,
-                                BUF_LEN,
-                                &usn_data_size,
-                                nullptr))
+    while (true)
     {
+        memset(buffer, 0, BUF_LEN);
+        if (0 == DeviceIoControl(hVol,
+                                 FSCTL_ENUM_USN_DATA,
+                                 &med,
+                                 sizeof med,
+                                 buffer,
+                                 BUF_LEN,
+                                 &usn_data_size,
+                                 nullptr))
+        {
+            break;
+        }
         DWORD dw_ret_bytes = usn_data_size - sizeof(USN);
         // 找到第一个 USN 记录  
         auto usn_record = reinterpret_cast<PUSN_RECORD>(buffer + sizeof(USN));
@@ -636,7 +631,7 @@ bool volume::get_usn_journal()
 bool volume::delete_usn() const
 {
     DELETE_USN_JOURNAL_DATA dujd
-	{ ujd.UsnJournalID , USN_DELETE_FLAG_DELETE | USN_DELETE_FLAG_NOTIFY };
+        {ujd.UsnJournalID, USN_DELETE_FLAG_DELETE | USN_DELETE_FLAG_NOTIFY};
     DWORD br;
 
     if (DeviceIoControl(hVol,
@@ -649,10 +644,8 @@ bool volume::delete_usn() const
                         nullptr)
     )
     {
-        CloseHandle(hVol);
         return true;
     }
-    CloseHandle(hVol);
     return false;
 }
 

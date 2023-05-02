@@ -85,14 +85,13 @@ private:
     sqlite3_stmt* stmt40 = nullptr;
 
     USN_JOURNAL_DATA ujd{};
-    CREATE_USN_JOURNAL_DATA cujd{};
 
     std::vector<std::string>* ignore_path_vector_ = nullptr;
     PriorityMap* priority_map_ = nullptr;
     CONCURRENT_MAP<std::string, CONCURRENT_MAP<int, CONCURRENT_SET<std::string>*>*> all_results_map;
 
     bool get_handle();
-    bool create_usn();
+    bool create_usn() const;
     bool get_usn_info();
     bool get_usn_journal();
     bool delete_usn() const;
