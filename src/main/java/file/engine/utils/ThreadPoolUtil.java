@@ -16,7 +16,8 @@ public enum ThreadPoolUtil {
                 60,
                 TimeUnit.SECONDS,
                 new SynchronousQueue<>(),
-                Executors.defaultThreadFactory()
+                Executors.defaultThreadFactory(),
+                new ThreadPoolExecutor.CallerRunsPolicy()
         );
     }
 

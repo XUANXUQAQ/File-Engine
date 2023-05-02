@@ -11,7 +11,7 @@
  */
 using cache_data = struct cache_data
 {
-	char* dev_strs = nullptr;
+    char* dev_strs = nullptr;
     size_t str_total_bytes = 0;
     size_t str_remain_blank_bytes = 0;
     std::atomic_uint64_t record_num;
