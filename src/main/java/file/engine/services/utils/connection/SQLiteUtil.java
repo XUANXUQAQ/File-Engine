@@ -303,6 +303,7 @@ public class SQLiteUtil {
                 initConnection("jdbc:sqlite:" + data.getAbsolutePath(), String.valueOf(eachDisk.charAt(0)));
                 initTables(String.valueOf(eachDisk.charAt(0)));
             } catch (Exception e) {
+                e.printStackTrace();
                 malformedFiles.add(data);
             }
         }
@@ -313,13 +314,15 @@ public class SQLiteUtil {
             createCacheTable();
             createPriorityTable();
         } catch (SQLException e) {
+            e.printStackTrace();
             malformedFiles.add(cache);
         }
         File weight = new File(dir, "weight.db");
         try {
             initConnection("jdbc:sqlite:" + weight.getAbsolutePath(), "weight");
             createWeightTable();
-        } catch (SQLException exception) {
+        } catch (SQLException e) {
+            e.printStackTrace();
             malformedFiles.add(weight);
         }
         if (!malformedFiles.isEmpty()) {
