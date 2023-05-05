@@ -6,7 +6,7 @@
 
     <groupId>github.fileengine</groupId>
     <artifactId>File-Engine</artifactId>
-    <version>4.0</version>
+    <version>4.1</version>
     <repositories>
         <repository>
             <id>mulesoft</id>
