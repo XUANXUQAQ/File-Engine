@@ -2205,6 +2205,9 @@ public class DatabaseService {
                             for (Object record : records) {
                                 container.remove((String) record);
                             }
+                            if (GPUAccelerator.INSTANCE.isCacheExist(k) && !GPUAccelerator.INSTANCE.isCacheValid(k)) {
+                                invalidCacheKeys.add(k);
+                            }
                         }
                         for (var entry : recordsToRemove.entrySet()) {
                             String key = entry.getKey();
@@ -2214,6 +2217,9 @@ public class DatabaseService {
                             GPUAccelerator.INSTANCE.removeRecordsFromCache(key, records);
                             for (Object record : records) {
                                 container.remove((String) record);
+                            }
+                            if (GPUAccelerator.INSTANCE.isCacheExist(key) && !GPUAccelerator.INSTANCE.isCacheValid(key)) {
+                                invalidCacheKeys.add(key);
                             }
                         }
                     }
@@ -2227,30 +2233,17 @@ public class DatabaseService {
         }
 
         private static void addRecord(String key, String fileRecord) {
-            if (!GPUAccelerator.INSTANCE.isCacheExist(key)) {
-                return;
-            }
-            if (GPUAccelerator.INSTANCE.isCacheValid(key)) {
-                Set<String> container;
-                container = recordsToAdd.get(key);
-                if (container == null) {
-                    synchronized (recordsToAdd) {
-                        container = recordsToAdd.computeIfAbsent(key, k -> ConcurrentHashMap.newKeySet());
-                    }
+            Set<String> container;
+            container = recordsToAdd.get(key);
+            if (container == null) {
+                synchronized (recordsToAdd) {
+                    container = recordsToAdd.computeIfAbsent(key, k -> ConcurrentHashMap.newKeySet());
                 }
-                container.add(fileRecord);
-            } else {
-                if (IsDebug.isDebug()) {
-                    System.out.println("GPU缓存 key: " + key + "不再有效");
-                }
-                invalidCacheKeys.add(key);
             }
+            container.add(fileRecord);
         }
 
         private static void removeRecord(String key, String fileRecord) {
-            if (!GPUAccelerator.INSTANCE.isCacheExist(key)) {
-                return;
-            }
             Set<String> container = recordsToRemove.get(key);
             if (container == null) {
                 synchronized (recordsToRemove) {
