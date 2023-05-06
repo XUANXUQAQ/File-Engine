@@ -990,8 +990,8 @@ void create_and_insert_cache(const std::vector<std::string>& records_vec, const 
     cache->str_data.str_total_bytes = alloc_bytes;
     cache->str_data.str_remain_blank_bytes = CACHE_REMAIN_BLANK_SIZE_IN_BYTES;
 
-    auto str_addr_capacity = record_count + CACHE_REMAIN_BLANK_SIZE_IN_BYTES / MAX_PATH_LENGTH;
-    auto str_addr_alloc_size = str_addr_capacity * sizeof(size_t);
+    const auto str_addr_capacity = record_count + CACHE_REMAIN_BLANK_SIZE_IN_BYTES / MAX_PATH_LENGTH;
+    const auto str_addr_alloc_size = str_addr_capacity * sizeof(size_t);
     gpuErrchk(cudaMalloc(&cache->str_data.dev_str_addr, str_addr_alloc_size), true, nullptr);
     gpuErrchk(cudaMemset(cache->str_data.dev_str_addr, 0, str_addr_alloc_size), true, nullptr);
     cache->str_data.str_addr_capacity = str_addr_capacity;

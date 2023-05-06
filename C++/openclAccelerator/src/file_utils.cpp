@@ -25,7 +25,7 @@ std::wstring string2wstring(const std::string& str)
 int is_dir_or_file(const char* path)
 {
     const auto w_path = string2wstring(path);
-    DWORD dwAttrib = GetFileAttributes(w_path.c_str());
+    const DWORD dwAttrib = GetFileAttributes(w_path.c_str());
     if (dwAttrib != INVALID_FILE_ATTRIBUTES)
     {
         if (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)
