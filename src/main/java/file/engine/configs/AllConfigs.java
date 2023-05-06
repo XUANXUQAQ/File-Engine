@@ -137,6 +137,10 @@ public class AllConfigs {
                 configEntity.getProxyType());
     }
 
+    /**
+     * 获取在配置文件中但是实际不存在的磁盘（如移动硬盘）
+     * @return set
+     */
     public Set<String> getUnAvailableDiskSet() {
         String disks = configEntity.getDisks();
         String[] splitDisks = RegexUtil.comma.split(disks);
@@ -149,6 +153,10 @@ public class AllConfigs {
         return set;
     }
 
+    /**
+     * 获取可搜索磁盘
+     * @return 每个磁盘使用逗号隔开，如[C:\,D:\]
+     */
     public String getAvailableDisks() {
         String disks = configEntity.getDisks();
         String[] splitDisks = RegexUtil.comma.split(disks);
@@ -161,12 +169,17 @@ public class AllConfigs {
         return stringBuilder.toString();
     }
 
+    /**
+     * 判断磁盘是否存在且为NTFS文件系统
+     * @param root 磁盘路径，C:\  D:\
+     * @return true如果存在且是NTFS磁盘
+     */
     private boolean isDiskAvailable(String root) {
         return Files.exists(Path.of(root)) && IsLocalDisk.INSTANCE.isDiskNTFS(root);
     }
 
     /**
-     * 初始化cmdSet
+     * 初始化cmdSet，在搜索框中输入":"，进入命令模式显示的内容
      */
     private void initCmdSetSettings() {
         //获取所有自定义命令
@@ -182,6 +195,8 @@ public class AllConfigs {
 
     /**
      * 更新服务器地址
+     * 第一个地址为File-Engine本体更新文件的位置
+     * 第二个地址为插件的获取地址
      */
     private void initUpdateAddress() {
         //todo 添加更新服务器地址
@@ -668,7 +683,7 @@ public class AllConfigs {
     }
 
     /**
-     * 讲配置保存到文件
+     * 将配置保存到文件user/settings.json
      */
     private void saveAllSettings() {
         try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("user/settings.json"), StandardCharsets.UTF_8))) {
@@ -701,6 +716,10 @@ public class AllConfigs {
         return true;
     }
 
+    /**
+     * 修改无效的配置，如线程数为负数等
+     * @param config 配置实体
+     */
     private void correctInvalidConfigs(ConfigEntity config) {
         if (config.isEnableGpuAccelerate()) {
             config.setEnableGpuAccelerate(GPUAccelerator.INSTANCE.isGPUAvailableOnSystem());
@@ -772,6 +791,10 @@ public class AllConfigs {
         return GsonUtil.getInstance().getGson().fromJson(strBuilder.toString(), Map.class);
     }
 
+    /**
+     * 添加自定义命令，在设置-自定义命令添加后将会触发该事件
+     * @param event 添加自定义命令事件
+     */
     @EventRegister(registerClass = AddCmdEvent.class)
     private static void addCmdEvent(Event event) {
         AllConfigs allConfigs = getInstance();
@@ -790,6 +813,10 @@ public class AllConfigs {
         }
     }
 
+    /**
+     * 删除自定义命令，在设置-自定义命令删除后将会触发该事件
+     * @param event 删除自定义命令事件
+     */
     @EventRegister(registerClass = DeleteCmdEvent.class)
     private static void deleteCmdEvent(Event event) {
         AllConfigs allConfigs = AllConfigs.getInstance();
@@ -808,6 +835,10 @@ public class AllConfigs {
         }
     }
 
+    /**
+     * 检查配置错误
+     * @param event 检查配置事件
+     */
     @EventRegister(registerClass = CheckConfigsEvent.class)
     private static void checkConfigsEvent(Event event) {
         StringBuilder stringBuilder = new StringBuilder();
@@ -822,6 +853,10 @@ public class AllConfigs {
         event.setReturnValue(stringBuilder.toString());
     }
 
+    /**
+     * 系统启动事件，当此事件发出将会进行初始化
+     * @param event 启动事件
+     */
     @EventRegister(registerClass = BootSystemEvent.class)
     private static void bootSystemEvent(Event event) {
         EventManagement eventManagement = EventManagement.getInstance();
@@ -834,6 +869,10 @@ public class AllConfigs {
         }
     }
 
+    /**
+     * 读取所有配置
+     * @param event 读取配置事件
+     */
     @EventRegister(registerClass = SetConfigsEvent.class)
     private static void setAllConfigsEvent(Event event) {
         SetConfigsEvent setConfigsEvent = (SetConfigsEvent) event;
@@ -860,6 +899,10 @@ public class AllConfigs {
         }
     }
 
+    /**
+     * 设置swing主题
+     * @param event 事件
+     */
     @EventRegister(registerClass = SetSwingLaf.class)
     private static void setSwingLafEvent(Event event) {
         AllConfigs instance = getInstance();
@@ -867,6 +910,10 @@ public class AllConfigs {
         setSwingLaf(instance.swingThemesMapper(theme));
     }
 
+    /**
+     * 在系统启动后添加一个钩子，在Windows关闭时自动退出
+     * @param event 事件
+     */
     @EventListener(listenClass = BootSystemEvent.class)
     private static void shutdownListener(Event event) {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> EventManagement.getInstance().putEvent(new CloseEvent())));

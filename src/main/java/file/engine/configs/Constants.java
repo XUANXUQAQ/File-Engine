@@ -10,31 +10,45 @@ import java.util.Properties;
 
 import static file.engine.utils.BeanUtil.copyMatchingFields;
 
+/**
+ * 项目使用到的常量
+ */
 public class Constants {
     public static String version;
 
     public static String buildVersion;
 
+    // 数据库中所有表的数量
     public static final int ALL_TABLE_NUM = 40;
 
+    // 搜索框最短应该显示的时间，单位毫秒
     public static final int MIN_FRAME_VISIBLE_TIME = 500;
 
+    // 关闭数据库连接超时时间
     public static final int CLOSE_DATABASE_TIMEOUT_MILLS = 60 * 1000;
 
+    // 启动文件名
     public static final String FILE_NAME = "File-Engine.jar";
 
+    // 启动器文件（进程）名
     public static final String LAUNCH_WRAPPER_NAME = "File-Engine.exe";
 
+    // 插件API版本
     public static final int API_VERSION = 6;
 
+    // 兼容的插件API版本
     public static final int[] COMPATIBLE_API_VERSIONS = {3, 4, 5, 6};
 
+    // 默认swing主题
     public static final String DEFAULT_SWING_THEME = "MaterialLighter";
 
     static {
         version = "0";
         buildVersion = "Debug";
         if (!IsDebug.isDebug()) {
+            /*
+             * 读取maven自动生成的版本信息
+             */
             Properties properties = new Properties();
             try (InputStream projectInfo = Constants.class.getResourceAsStream("/project-info.properties")) {
                 properties.load(projectInfo);
@@ -52,24 +66,45 @@ public class Constants {
 
     public static class Enums {
 
+        /**
+         * 数据库运行状态
+         * NORMAL：正常
+         * _TEMP：正在搜索中，已经切换到临时数据库
+         * VACUUM：正在整理数据库
+         * MANUAL_UPDATE：正在搜索中，未切换到临时数据库
+         */
         public enum DatabaseStatus {
             NORMAL, _TEMP, VACUUM, MANUAL_UPDATE
         }
 
+        /**
+         * 文件下载状态
+         */
         public enum DownloadStatus {
             DOWNLOAD_DONE, DOWNLOAD_ERROR, DOWNLOAD_DOWNLOADING, DOWNLOAD_INTERRUPTED, DOWNLOAD_NO_TASK
         }
 
+        /**
+         * 搜索框显示状态
+         * NORMAL_SHOWING：正常显示
+         * EXPLORER_ATTACH：贴靠在资源管理器右下方
+         */
         public enum ShowingSearchBarMode {
             NORMAL_SHOWING, EXPLORER_ATTACH
         }
 
+        /**
+         * 设置代理，HTTP，SOCKS，直连
+         */
         public static class ProxyType {
             public static final int PROXY_HTTP = 0x100;
             public static final int PROXY_SOCKS = 0x200;
             public static final int PROXY_DIRECT = 0x300;
         }
 
+        /**
+         * 所有可用的Swing主题
+         */
         public enum SwingThemes {
             CoreFlatDarculaLaf, CoreFlatDarkLaf, CoreFlatLightLaf, CoreFlatIntelliJLaf,
             Arc, ArcDark, ArcDarkOrange, Carbon,
@@ -79,11 +114,17 @@ public class Constants {
             Spacegray, Vuesion, XcodeDark, SystemDefault
         }
 
+        /**
+         * 搜索框边框类型
+         */
         public enum BorderType {
             EMPTY, AROUND, FULL
         }
     }
 
+    /**
+     * 默认亮色主题以及暗色主题
+     */
     public static class DefaultColors {
         private static final SearchBarColor dark;
         private static final SearchBarColor light;
