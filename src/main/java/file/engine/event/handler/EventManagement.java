@@ -114,7 +114,7 @@ public class EventManagement {
     }
 
     /**
-     * 根据buildEventRequest中的信息创建任务
+     * 根据buildEventRequest中的信息创建任务，用于插件发送事件
      *
      * @param buildEventRequestEvent build event request
      * @return true如果构建失败，false构建成功

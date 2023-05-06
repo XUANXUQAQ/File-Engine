@@ -37,12 +37,28 @@ public enum GPUAccelerator {
         }
     }
 
+    /**
+     * 清除搜索状态，为下一次搜索做准备
+     */
     public void resetAllResultStatus() {
         if (gpuAccelerator != null) {
             gpuAccelerator.resetAllResultStatus();
         }
     }
 
+    /**
+     * 开始搜索
+     *
+     * @param searchCase        搜索条件
+     * @param isIgnoreCase      是否忽略大小写
+     * @param searchText        搜索关键字（全字匹配）
+     * @param keywords          搜索关键字
+     * @param keywordsLowerCase 搜索关键字（小写字母）防止重复计算
+     * @param isKeywordPath     与上方的搜索关键字一一对应，记录关键字是文件名关键字还是文件路径关键字
+     * @param maxResultNumber   最多匹配数量
+     * @param resultCollector   匹配回调函数
+     * @see file.engine.services.utils.PathMatchUtil
+     */
     public void match(String[] searchCase,
                       boolean isIgnoreCase,
                       String searchText,
@@ -56,6 +72,12 @@ public enum GPUAccelerator {
         }
     }
 
+    /**
+     * 判断某个缓存是否搜索完成
+     *
+     * @param key 缓存key
+     * @return true如果搜索完成
+     */
     public boolean isMatchDone(String key) {
         if (gpuAccelerator != null) {
             return gpuAccelerator.isMatchDone(key);
@@ -63,6 +85,12 @@ public enum GPUAccelerator {
         return false;
     }
 
+    /**
+     * 缓存搜索成功匹配关键字的数量
+     *
+     * @param key 缓存key
+     * @return int
+     */
     public int matchedNumber(String key) {
         if (gpuAccelerator != null) {
             return gpuAccelerator.matchedNumber(key);
@@ -70,16 +98,29 @@ public enum GPUAccelerator {
         return 0;
     }
 
+    /**
+     * 手动停止搜索
+     */
     public void stopCollectResults() {
         if (gpuAccelerator != null) {
             gpuAccelerator.stopCollectResults();
         }
     }
 
+    /**
+     * GPU加速是否可用
+     *
+     * @return true如果GPU加速可用，CUDA或者OpenCL
+     */
     public boolean isGPUAvailableOnSystem() {
         return CudaAccelerator.INSTANCE.isGPUAvailableOnSystem() || OpenclAccelerator.INSTANCE.isGPUAvailableOnSystem();
     }
 
+    /**
+     * 是否存在缓存
+     *
+     * @return true如果有一个以上缓存
+     */
     public boolean hasCache() {
         if (gpuAccelerator != null) {
             return gpuAccelerator.hasCache();
@@ -87,6 +128,12 @@ public enum GPUAccelerator {
         return false;
     }
 
+    /**
+     * 缓存是否存在
+     *
+     * @param key 缓存key
+     * @return true如果存在
+     */
     public boolean isCacheExist(String key) {
         if (gpuAccelerator != null) {
             return gpuAccelerator.isCacheExist(key);
@@ -94,36 +141,68 @@ public enum GPUAccelerator {
         return false;
     }
 
+    /**
+     * 添加一个缓存
+     *
+     * @param key            缓存key
+     * @param recordSupplier supplier
+     */
     public void initCache(String key, Supplier<String> recordSupplier) {
         if (gpuAccelerator != null) {
             gpuAccelerator.initCache(key, recordSupplier);
         }
     }
 
+    /**
+     * 向缓存添加记录
+     *
+     * @param key     缓存key
+     * @param records 需要添加的记录，类型为String[]
+     */
     public void addRecordsToCache(String key, Object[] records) {
         if (gpuAccelerator != null) {
             gpuAccelerator.addRecordsToCache(key, records);
         }
     }
 
+    /**
+     * 从缓存中删除记录
+     *
+     * @param key     缓存key
+     * @param records 需要删除的记录
+     */
     public void removeRecordsFromCache(String key, Object[] records) {
         if (gpuAccelerator != null) {
             gpuAccelerator.removeRecordsFromCache(key, records);
         }
     }
 
+    /**
+     * 删除一个缓存
+     *
+     * @param key 缓存key
+     */
     public void clearCache(String key) {
         if (gpuAccelerator != null) {
             gpuAccelerator.clearCache(key);
         }
     }
 
+    /**
+     * 删除所有缓存
+     */
     public void clearAllCache() {
         if (gpuAccelerator != null) {
             gpuAccelerator.clearAllCache();
         }
     }
 
+    /**
+     * 缓存是否有效，当addRecordsToCache函数调用，发现缓存已经无法再添加更多记录，则会使缓存失效
+     *
+     * @param key 缓存key
+     * @return true如果缓存有效，否则返回false
+     */
     public boolean isCacheValid(String key) {
         if (gpuAccelerator != null) {
             return gpuAccelerator.isCacheValid(key);
@@ -131,6 +210,11 @@ public enum GPUAccelerator {
         return false;
     }
 
+    /**
+     * 获取显存占用状态
+     *
+     * @return 0-100的值，对应百分比
+     */
     public int getGPUMemUsage() {
         if (gpuAccelerator != null) {
             return gpuAccelerator.getGPUMemUsage();
@@ -138,6 +222,9 @@ public enum GPUAccelerator {
         return 100;
     }
 
+    /**
+     * 释放所有缓存以及预分配的内存，用于最后退出程序
+     */
     public void release() {
         if (gpuAccelerator != null) {
             gpuAccelerator.release();

@@ -53,6 +53,7 @@ public class SQLiteUtil {
             }
         };
         ThreadPoolUtil threadPoolUtil = ThreadPoolUtil.getInstance();
+        // 超时关闭数据库连接检测线程
         threadPoolUtil.executeTask(() -> {
             long checkTimeMills = 0;
             final long threshold = 10_000; // 10s
@@ -80,6 +81,9 @@ public class SQLiteUtil {
         sqLiteConfig.setLockingMode(SQLiteConfig.LockingMode.NORMAL);
     }
 
+    /**
+     * 打开所有连接
+     */
     public static void openAllConnection() {
         ThreadPoolUtil.getInstance().executeTask(() -> {
             for (ConnectionWrapper conn : connectionPool.values()) {
@@ -186,6 +190,9 @@ public class SQLiteUtil {
         connectionPool.clear();
     }
 
+    /**
+     * 删除有问题的数据库文件，有问题的数据库被记录在user/malformedDB文件中
+     */
     private static void deleteMalFormedFile() {
         Path malformedDB = Path.of("user/malformedDB");
         if (Files.exists(malformedDB)) {

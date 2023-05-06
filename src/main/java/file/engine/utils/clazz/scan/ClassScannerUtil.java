@@ -57,8 +57,11 @@ public class ClassScannerUtil {
         }
     }
 
+    /**
+     * 将扫描的类名保存到classes.list，在File_Engine_Debug属性被设置为true时将会扫描所有类的注解，false时将会直接读取该文件启动
+     */
     public static void saveToClassListFile() {
-        File classListFile = new File( "src/main/resources/classes.list");
+        File classListFile = new File("src/main/resources/classes.list");
         if (!classListFile.exists()) {
             return;
         }
