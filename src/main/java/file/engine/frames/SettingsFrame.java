@@ -2726,7 +2726,7 @@ public class SettingsFrame {
     private void setComboBoxGui() {
         int availableProcessors = Runtime.getRuntime().availableProcessors();
         ArrayList<Integer> threads = new ArrayList<>();
-        for (int i = 1; i <= availableProcessors; i++) {
+        for (int i = 1; i <= availableProcessors * 2; i++) {
             threads.add(i);
         }
         var configs = allConfigs.getConfigEntity();
@@ -3444,7 +3444,7 @@ public class SettingsFrame {
         String selectedCudaDevice = (String) comboBoxCudaDevice.getSelectedItem();
         configEntity.setGpuDevice(cudaDeviceMap.getOrDefault(selectedCudaDevice, ""));
         var threadNum = (Integer) comboBoxSearchThread.getSelectedItem();
-        configEntity.setSearchThreadNumber(threadNum == null ? Runtime.getRuntime().availableProcessors() : threadNum);
+        configEntity.setSearchThreadNumber(threadNum == null ? Runtime.getRuntime().availableProcessors() * 2 : threadNum);
         return configEntity;
     }
 

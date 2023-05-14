@@ -475,10 +475,10 @@ public class AllConfigs {
     }
 
     private void readSearchThreadNumber(Map<String, Object> settingsInJson) {
-        int availableProcessors = Runtime.getRuntime().availableProcessors();
-        int searchThreadNumber = getFromJson(settingsInJson, "searchThreadNumber", availableProcessors);
-        if (searchThreadNumber > availableProcessors || searchThreadNumber < 1) {
-            searchThreadNumber = availableProcessors;
+        int maxThreadNumber = Runtime.getRuntime().availableProcessors() * 2;
+        int searchThreadNumber = getFromJson(settingsInJson, "searchThreadNumber", maxThreadNumber);
+        if (searchThreadNumber > maxThreadNumber || searchThreadNumber < 1) {
+            searchThreadNumber = maxThreadNumber;
         }
         configEntity.setSearchThreadNumber(searchThreadNumber);
     }
@@ -725,9 +725,10 @@ public class AllConfigs {
             config.setEnableGpuAccelerate(GPUAccelerator.INSTANCE.isGPUAvailableOnSystem());
         }
         int availableProcessors = Runtime.getRuntime().availableProcessors();
+        int maxThreadNumber = availableProcessors * 2;
         int searchThreadNumber = config.getSearchThreadNumber();
-        if (searchThreadNumber > availableProcessors || searchThreadNumber < 1) {
-            config.setSearchThreadNumber(availableProcessors);
+        if (searchThreadNumber > maxThreadNumber || searchThreadNumber < 1) {
+            config.setSearchThreadNumber(maxThreadNumber);
         }
     }
 
