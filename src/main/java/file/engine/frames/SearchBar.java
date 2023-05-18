@@ -2016,12 +2016,28 @@ public class SearchBar {
     }
 
     private void tryToShowResultsAndSetLastChosen() {
+        enum ShowResultsMethods {
+            INSTANCE;
+            final Method showResultOnLabelMethod;
+            final Method showCommandOnLabelMethod;
+            final Method showPluginResultOnLabelMethod;
+
+            ShowResultsMethods() {
+                try {
+                    showResultOnLabelMethod = SearchBar.class.getDeclaredMethod("showResultOnLabel", String.class, JLabel.class, boolean.class);
+                    showCommandOnLabelMethod = SearchBar.class.getDeclaredMethod("showCommandOnLabel", String.class, JLabel.class, boolean.class);
+                    showPluginResultOnLabelMethod = SearchBar.class.getDeclaredMethod("showPluginResultOnLabel", String.class, JLabel.class, boolean.class);
+                } catch (NoSuchMethodException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
         var listResultsTemp = listResults;
         int size = listResultsTemp.size();
         if (runningMode == RunningMode.NORMAL_MODE) {
             //到达最下端，刷新显示
             try {
-                Method showResultOnLabelMethod = this.getClass().getMethod("showResultOnLabel", String.class, JLabel.class, boolean.class);
+                var showResultOnLabelMethod = ShowResultsMethods.INSTANCE.showResultOnLabelMethod;
                 showResultsWrapMethod(listResultsTemp, size, currentResultCount.get() - 7, label1, false, showResultOnLabelMethod);
                 showResultsWrapMethod(listResultsTemp, size, currentResultCount.get() - 6, label2, false, showResultOnLabelMethod);
                 showResultsWrapMethod(listResultsTemp, size, currentResultCount.get() - 5, label3, false, showResultOnLabelMethod);
@@ -2030,13 +2046,13 @@ public class SearchBar {
                 showResultsWrapMethod(listResultsTemp, size, currentResultCount.get() - 2, label6, false, showResultOnLabelMethod);
                 showResultsWrapMethod(listResultsTemp, size, currentResultCount.get() - 1, label7, false, showResultOnLabelMethod);
                 showResultsWrapMethod(listResultsTemp, size, currentResultCount.get(), label8, true, showResultOnLabelMethod);
-            } catch (ArrayIndexOutOfBoundsException | NoSuchMethodException e) {
+            } catch (ArrayIndexOutOfBoundsException e) {
                 e.printStackTrace();
             }
         } else if (runningMode == RunningMode.COMMAND_MODE) {
             //到达了最下端，刷新显示
             try {
-                Method showCommandOnLabelMethod = this.getClass().getMethod("showCommandOnLabel", String.class, JLabel.class, boolean.class);
+                var showCommandOnLabelMethod = ShowResultsMethods.INSTANCE.showCommandOnLabelMethod;
                 showResultsWrapMethod(listResultsTemp, size, currentResultCount.get() - 7, label1, false, showCommandOnLabelMethod);
                 showResultsWrapMethod(listResultsTemp, size, currentResultCount.get() - 6, label2, false, showCommandOnLabelMethod);
                 showResultsWrapMethod(listResultsTemp, size, currentResultCount.get() - 5, label3, false, showCommandOnLabelMethod);
@@ -2045,12 +2061,12 @@ public class SearchBar {
                 showResultsWrapMethod(listResultsTemp, size, currentResultCount.get() - 2, label6, false, showCommandOnLabelMethod);
                 showResultsWrapMethod(listResultsTemp, size, currentResultCount.get() - 1, label7, false, showCommandOnLabelMethod);
                 showResultsWrapMethod(listResultsTemp, size, currentResultCount.get(), label8, true, showCommandOnLabelMethod);
-            } catch (ArrayIndexOutOfBoundsException | NoSuchMethodException e) {
+            } catch (ArrayIndexOutOfBoundsException e) {
                 e.printStackTrace();
             }
         } else if (runningMode == RunningMode.PLUGIN_MODE) {
             try {
-                Method showPluginResultOnLabelMethod = this.getClass().getMethod("showPluginResultOnLabel", String.class, JLabel.class, boolean.class);
+                var showPluginResultOnLabelMethod = ShowResultsMethods.INSTANCE.showPluginResultOnLabelMethod;
                 showResultsWrapMethod(listResultsTemp, size, currentResultCount.get() - 7, label1, false, showPluginResultOnLabelMethod);
                 showResultsWrapMethod(listResultsTemp, size, currentResultCount.get() - 6, label2, false, showPluginResultOnLabelMethod);
                 showResultsWrapMethod(listResultsTemp, size, currentResultCount.get() - 5, label3, false, showPluginResultOnLabelMethod);
@@ -2059,7 +2075,7 @@ public class SearchBar {
                 showResultsWrapMethod(listResultsTemp, size, currentResultCount.get() - 2, label6, false, showPluginResultOnLabelMethod);
                 showResultsWrapMethod(listResultsTemp, size, currentResultCount.get() - 1, label7, false, showPluginResultOnLabelMethod);
                 showResultsWrapMethod(listResultsTemp, size, currentResultCount.get(), label8, true, showPluginResultOnLabelMethod);
-            } catch (ArrayIndexOutOfBoundsException | NoSuchMethodException e) {
+            } catch (ArrayIndexOutOfBoundsException e) {
                 e.printStackTrace();
             }
         }
