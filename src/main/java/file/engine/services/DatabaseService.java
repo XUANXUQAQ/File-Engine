@@ -1874,6 +1874,10 @@ public class DatabaseService {
 
     @EventRegister(registerClass = StartSearchEvent.class)
     private static void startSearchEvent(Event event) {
+        if (((StartSearchEvent) event).searchText.get().length() > Constants.MAX_SEARCH_TEXT_LENGTH) {
+            System.err.println("关键字太长，取消搜索");
+            return;
+        }
         DatabaseService databaseService = getInstance();
         final long startWaiting = System.currentTimeMillis();
         final long timeout = 3000;

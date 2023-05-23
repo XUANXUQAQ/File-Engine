@@ -42,6 +42,8 @@ public class Constants {
     // 默认swing主题
     public static final String DEFAULT_SWING_THEME = "MaterialLighter";
 
+    public static final int MAX_SEARCH_TEXT_LENGTH = 300;
+
     static {
         version = "0";
         buildVersion = "Debug";
