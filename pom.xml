@@ -85,17 +85,17 @@
         <dependency>
             <groupId>com.github.oshi</groupId>
             <artifactId>oshi-core-java11</artifactId>
-            <version>6.4.0</version>
+            <version>6.4.2</version>
         </dependency>
         <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
-            <version>3.41.2.1</version>
+            <version>3.42.0.0</version>
         </dependency>
         <dependency>
             <groupId>com.formdev</groupId>
             <artifactId>flatlaf</artifactId>
-            <version>3.0</version>
+            <version>3.1.1</version>
         </dependency>
 <!--    mvn install:install-file -Dfile=libs/forms_rt.jar -DgroupId=com.intellij -DartifactId=forms_rt -Dversion=1.0 -Dpackaging=jar    -->
         <dependency>
