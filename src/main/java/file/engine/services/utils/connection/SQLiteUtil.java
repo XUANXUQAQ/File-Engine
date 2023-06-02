@@ -2,6 +2,7 @@ package file.engine.services.utils.connection;
 
 import file.engine.configs.AllConfigs;
 import file.engine.configs.Constants;
+import file.engine.dllInterface.IsLocalDisk;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.utils.ThreadPoolUtil;
@@ -57,18 +58,19 @@ public class SQLiteUtil {
         threadPoolUtil.executeTask(() -> {
             long checkTimeMills = 0;
             final long threshold = 10_000; // 10s
-            try {
-                while (!threadPoolUtil.isShutdown()) {
-                    if (System.currentTimeMillis() - checkTimeMills > threshold) {
-                        checkTimeMills = System.currentTimeMillis();
-                        for (ConnectionWrapper conn : connectionPool.values()) {
-                            checkConnectionAndClose.accept(conn);
-                        }
+            while (!threadPoolUtil.isShutdown()) {
+                if (System.currentTimeMillis() - checkTimeMills > threshold) {
+                    checkTimeMills = System.currentTimeMillis();
+                    for (ConnectionWrapper conn : connectionPool.values()) {
+                        checkConnectionAndClose.accept(conn);
                     }
-                    TimeUnit.MILLISECONDS.sleep(50);
                 }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                try {
+                    TimeUnit.MILLISECONDS.sleep(50);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    throw new RuntimeException(e);
+                }
             }
         });
     }
@@ -129,8 +131,13 @@ public class SQLiteUtil {
      */
     public static PreparedStatement getPreparedStatement(String sql, String key) throws SQLException {
         if (isConnectionNotInitialized(key)) {
-            File data = new File(currentDatabaseDir, key + ".db");
-            initConnection("jdbc:sqlite:" + data.getAbsolutePath(), key);
+            var root = key + ":\\";
+            if (FileUtil.isFileNotExist(root) || !IsLocalDisk.INSTANCE.isDiskNTFS(root)) {
+                throw new SQLException(root + " disk is invalid.");
+            } else {
+                File data = new File(currentDatabaseDir, key + ".db");
+                initConnection("jdbc:sqlite:" + data.getAbsolutePath(), key);
+            }
         }
         ConnectionWrapper connectionWrapper = getFromConnectionPool(key);
         return new PreparedStatementWrapper((SQLiteConnection) connectionWrapper.connection, sql, connectionWrapper.connectionUsingCounter);
@@ -144,8 +151,13 @@ public class SQLiteUtil {
      */
     public static Statement getStatement(String key) throws SQLException {
         if (isConnectionNotInitialized(key)) {
-            File data = new File(currentDatabaseDir, key + ".db");
-            initConnection("jdbc:sqlite:" + data.getAbsolutePath(), key);
+            var root = key + ":\\";
+            if (FileUtil.isFileNotExist(root) || !IsLocalDisk.INSTANCE.isDiskNTFS(root)) {
+                throw new SQLException(root + " disk is invalid.");
+            } else {
+                File data = new File(currentDatabaseDir, key + ".db");
+                initConnection("jdbc:sqlite:" + data.getAbsolutePath(), key);
+            }
         }
         ConnectionWrapper wrapper = getFromConnectionPool(key);
         return new StatementWrapper((SQLiteConnection) wrapper.connection, wrapper.connectionUsingCounter);
