@@ -465,8 +465,8 @@ public class PluginService {
     private static void checkOldApiPlugin() {
         EventManagement eventManagement = EventManagement.getInstance();
         TranslateService translateService = TranslateService.getInstance();
-        if (PluginService.getInstance().hasPluginTooOld()) {
-            String oldPlugins = PluginService.getInstance().getAllOldPluginsName();
+        if (getInstance().hasPluginTooOld() && AllConfigs.isFirstRun()) {
+            String oldPlugins = getInstance().getAllOldPluginsName();
             eventManagement.putEvent(new ShowTaskBarMessageEvent(
                     translateService.getTranslation("Warning"),
                     oldPlugins + "\n" + translateService.getTranslation("Plugin Api is too old"),
