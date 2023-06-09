@@ -459,8 +459,8 @@ public class AllConfigs {
     private void readAdvancedConfigs(Map<String, Object> settingsInJson) {
         Map<String, Object> advancedConfigs = (Map<String, Object>) settingsInJson.getOrDefault("advancedConfigs", new HashMap<String, Object>());
         long searchWarmupTimeoutInMills = Long.parseLong(getFromJson(advancedConfigs, "searchWarmupTimeoutInMills", (long) 10 * 60 * 1000).toString());
-        long waitForInputAndPrepareSearchTimeoutInMills = Long.parseLong(getFromJson(advancedConfigs, "waitForInputAndPrepareSearchTimeoutInMills", (long) 150).toString());
-        long waitForInputAndStartSearchTimeoutInMills = Long.parseLong(getFromJson(advancedConfigs, "waitForInputAndStartSearchTimeoutInMills", (long) 350).toString());
+        long waitForInputAndPrepareSearchTimeoutInMills = Long.parseLong(getFromJson(advancedConfigs, "waitForInputAndPrepareSearchTimeoutInMills", (long) 350).toString());
+        long waitForInputAndStartSearchTimeoutInMills = Long.parseLong(getFromJson(advancedConfigs, "waitForInputAndStartSearchTimeoutInMills", (long) 450).toString());
         long waitForSearchTasksTimeoutInMills = Long.parseLong(getFromJson(advancedConfigs, "waitForSearchTasksTimeoutInMills", (long) 5 * 60 * 1000).toString());
         long clearIconCacheTimeoutInMills = Long.parseLong(getFromJson(advancedConfigs, "clearIconCacheTimeoutInMills", (long) 60 * 1000).toString());
         boolean isDeleteUsnOnExit = Boolean.parseBoolean(getFromJson(advancedConfigs, "isDeleteUsnOnExit", false).toString());

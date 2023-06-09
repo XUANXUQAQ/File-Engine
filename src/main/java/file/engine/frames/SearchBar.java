@@ -3358,7 +3358,7 @@ public class SearchBar {
         SwingUtilities.invokeLater(searchBar::repaint);
     }
 
-    private Future<Void> addShowSearchStatusThread(DatabaseService.SearchTask currentTaskRef) {
+    private Future<Void> addShowSearchStatusThread(DatabaseService.SearchTask currentTaskRef, ArrayList<ResultWrap> listResultsTemp) {
         Callable<Void> func = () -> {
             var isIconSetObj = new Object() {
                 boolean isIconSet = false;
@@ -3367,7 +3367,8 @@ public class SearchBar {
                     !getSearchBarText().isEmpty() &&
                     !currentTaskRef.isSearchDone() &&
                     !shouldExitMergeResultThread &&
-                    (runningMode == RunningMode.NORMAL_MODE)) {
+                    (runningMode == RunningMode.NORMAL_MODE) &&
+                    listResultsTemp == listResults) {
                 SwingUtilities.invokeLater(() -> {
                     if (!isIconSetObj.isIconSet) {
                         isIconSetObj.isIconSet = true;
@@ -3389,7 +3390,8 @@ public class SearchBar {
                     !getSearchBarText().isEmpty() &&
                     ((System.currentTimeMillis() - startShowSearchDoneTime) < 3000) &&
                     !shouldExitMergeResultThread &&
-                    (runningMode == RunningMode.NORMAL_MODE)) {
+                    (runningMode == RunningMode.NORMAL_MODE) &&
+                    listResultsTemp == listResults) {
                 SwingUtilities.invokeLater(() -> {
                     searchInfoLabel.setText(TranslateService.INSTANCE.getTranslation("Search Done") + "    " +
                             TranslateService.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
@@ -3406,7 +3408,8 @@ public class SearchBar {
             while (isVisible() &&
                     !getSearchBarText().isEmpty() &&
                     !shouldExitMergeResultThread &&
-                    (runningMode == RunningMode.NORMAL_MODE)) {
+                    (runningMode == RunningMode.NORMAL_MODE) &&
+                    listResultsTemp == listResults) {
                 showSelectInfoOnLabel();
                 try {
                     TimeUnit.MILLISECONDS.sleep(250);
@@ -3438,7 +3441,7 @@ public class SearchBar {
         var pluginService = PluginService.getInstance();
         var allPlugins = pluginService.getAllPlugins();
         var eventManagement = EventManagement.getInstance();
-        HashSet<String> listSet = new HashSet<>();
+        var listSet = new HashSet<>();
         while (listResultsTemp == listResults && eventManagement.notMainExit() && !shouldExitMergeResultThread) {
             if (getSearchBarText().isEmpty()) {
                 listResultsTemp.clear();
@@ -3828,7 +3831,7 @@ public class SearchBar {
                     var listResultsTemp = new ArrayList<ResultWrap>();
                     listResults = listResultsTemp;
                     labelRefreshFlag = new AtomicInteger();
-                    var showSearchStatusFuture = addShowSearchStatusThread((DatabaseService.SearchTask) res);
+                    var showSearchStatusFuture = addShowSearchStatusThread((DatabaseService.SearchTask) res, listResultsTemp);
                     Callable<Void> mergeFunc = () -> {
                         mergeResults((DatabaseService.SearchTask) res, listResultsTemp);
                         showSearchStatusFuture.get();
@@ -3881,7 +3884,7 @@ public class SearchBar {
                     var listResultsTemp = new ArrayList<ResultWrap>();
                     listResults = listResultsTemp;
                     labelRefreshFlag = new AtomicInteger();
-                    var showSearchStatusFuture = addShowSearchStatusThread((DatabaseService.SearchTask) res);
+                    var showSearchStatusFuture = addShowSearchStatusThread((DatabaseService.SearchTask) res, listResultsTemp);
                     Callable<Void> mergeResultsFunc = () -> {
                         mergeResults((DatabaseService.SearchTask) res, listResultsTemp);
                         showSearchStatusFuture.get();
