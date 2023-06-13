@@ -628,7 +628,12 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
     auto _collect_func = [&](const std::string& _key, char _matched_record_str[MAX_PATH_LENGTH],
                              unsigned* matched_number)
     {
-        if (++result_counter >= max_results)
+        auto expect = result_counter.load();
+        while (!result_counter.compare_exchange_weak(expect, expect + 1))
+        {
+            expect = result_counter.load();
+        }
+        if (result_counter.load() > max_results)
         {
             is_results_number_exceed = true;
         }
