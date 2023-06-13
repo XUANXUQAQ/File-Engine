@@ -48,10 +48,7 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
@@ -59,7 +56,6 @@ import java.util.regex.Matcher;
 public class DatabaseService {
     private static boolean isEnableGPUAccelerate = false;
     // 搜索任务队列
-    private static volatile SearchTask lastSearchTask;
     // 预搜索任务map，当发送PrepareSearchEvent后，将会创建预搜索任务，并放入该map中。
     // 发送StartSearchEvent后将会先寻找预搜索任务，成功找到则直接添加进入searchTasksQueue中，不重新创建搜索任务。
     private static final ConcurrentHashMap<SearchInfo, SearchTask> prepareTasksMap = new ConcurrentHashMap<>();
@@ -479,7 +475,7 @@ public class DatabaseService {
                 final int vacancy = 1000;
                 //当前表可以被缓存
                 if (tableCacheCount.get() + tableNeedCache.get(key) < MAX_CACHED_RECORD_NUM - vacancy && !cache.isCacheValid()) {
-                    cache.data = new ConcurrentLinkedQueue<>();
+                    cache.data = new CopyOnWriteArrayList<>();
                     String[] info = RegexUtil.comma.split(key);
                     try (Statement stmt = SQLiteUtil.getStatement(info[0]);
                          ResultSet resultSet = stmt.executeQuery("SELECT PATH FROM " + info[1] + " " + "WHERE PRIORITY=" + info[2])) {
@@ -705,6 +701,7 @@ public class DatabaseService {
             if (FileUtil.isFileNotExist(path)) {
                 removeFileFromDatabase(path);
             } else if (searchTask.tempResultsSet.add(path)) {
+                searchTask.resultCounter.getAndIncrement();
                 ret = true;
                 searchTask.tempResults.add(path);
             }
@@ -727,14 +724,14 @@ public class DatabaseService {
         }
         AtomicInteger matchedResultCount = new AtomicInteger();
         EventManagement eventManagement = EventManagement.getInstance();
-        AtomicInteger submitCount = new AtomicInteger();
-        final boolean[] isGPUMatchDone = {false};
+        boolean isGPUMatchDone = false;
+        ArrayList<Future<Void>> futures = new ArrayList<>();
         try (ResultSet resultSet = stmt.executeQuery(sql)) {
             boolean noMoreRecords = false;
             out:
             while (!noMoreRecords && !searchTask.shouldStopSearch() && eventManagement.notMainExit()) {
                 if (isEnableGPUAccelerate && GPUAccelerator.INSTANCE.isMatchDone(key)) {
-                    isGPUMatchDone[0] = true;
+                    isGPUMatchDone = true;
                     break;
                 }
                 // 查询数据库，分配String数组
@@ -743,7 +740,7 @@ public class DatabaseService {
                 // 先将结果查询出来，再进行字符串匹配，提高吞吐量
                 while (realResultCount < MAX_TEMP_QUERY_RESULT_CACHE) {
                     if (isEnableGPUAccelerate && GPUAccelerator.INSTANCE.isMatchDone(key)) {
-                        isGPUMatchDone[0] = true;
+                        isGPUMatchDone = true;
                         break out;
                     }
                     if (searchTask.shouldStopSearch() || !eventManagement.notMainExit()) {
@@ -758,35 +755,32 @@ public class DatabaseService {
                     }
                 }
                 // 向线程池提交搜索任务
-                int realResultCount1 = realResultCount;
-                submitCount.getAndIncrement();
-                ThreadPoolUtil.getInstance().executeTask(() -> {
-                    try {
-                        for (int j = 0; j < realResultCount1; ++j) {
-                            if (checkIsMatchedAndAddToList(tmpQueryResultsCache[j], searchTask)) {
-                                matchedResultCount.getAndIncrement();
-                            }
-                            if (searchTask.shouldStopSearch()) {
-                                return;
-                            }
+                final int realResultCount1 = realResultCount;
+                Future<Void> taskFuture = ThreadPoolUtil.getInstance().executeTask(() -> {
+                    for (int j = 0; j < realResultCount1; ++j) {
+                        if (checkIsMatchedAndAddToList(tmpQueryResultsCache[j], searchTask)) {
+                            matchedResultCount.getAndIncrement();
                         }
-                    } finally {
-                        submitCount.getAndDecrement();
+                        if (searchTask.shouldStopSearch()) {
+                            return null;
+                        }
                     }
+                    return null;
                 });
+                futures.add(taskFuture);
             }
         } catch (SQLException e) {
             System.err.println("error sql : " + sql);
             e.printStackTrace();
         }
-        while (submitCount.get() > 0) {
+        for (Future<Void> future : futures) {
             try {
-                TimeUnit.MILLISECONDS.sleep(1);
-            } catch (InterruptedException e) {
-                break;
+                future.get();
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
             }
         }
-        if (isGPUMatchDone[0]) {
+        if (isGPUMatchDone) {
             return GPUAccelerator.INSTANCE.matchedNumber(key);
         } else {
             return matchedResultCount.get();
@@ -950,6 +944,7 @@ public class DatabaseService {
                             try {
                                 stmt = SQLiteUtil.getStatement(diskStr);
                             } catch (SQLException e) {
+                                e.printStackTrace();
                                 throw new RuntimeException(e);
                             }
                         }
@@ -1287,9 +1282,8 @@ public class DatabaseService {
         Cache cache = tableCache.get(key);
         if (cache != null && cache.isCacheValid()) {
             if (tableCacheCount.get() < MAX_CACHED_RECORD_NUM) {
-                if (cache.data.add(path)) {
-                    tableCacheCount.incrementAndGet();
-                }
+                cache.data.add(path);
+                tableCacheCount.incrementAndGet();
             } else {
                 cache.isFileLost.set(true);
             }
@@ -1548,7 +1542,6 @@ public class DatabaseService {
     }
 
     private void stopAllSearch() {
-        lastSearchTask = null;
     }
 
     /**
@@ -1907,7 +1900,6 @@ public class DatabaseService {
     private static SearchTask prepareSearch(SearchInfo searchInfo) {
         var databaseService = getInstance();
         var searchTask = new SearchTask(searchInfo);
-        lastSearchTask = searchTask;
 
         var threadPoolUtil = ThreadPoolUtil.getInstance();
         databaseService.searchCache(searchTask);
@@ -1965,6 +1957,7 @@ public class DatabaseService {
                                 return;
                             }
                             if (searchTask.tempResultsSet.add(path)) {
+                                searchTask.resultCounter.getAndIncrement();
                                 searchTask.tempResults.add(path);
                             }
                         });
@@ -2305,7 +2298,7 @@ public class DatabaseService {
     private static class Cache {
         private final AtomicBoolean isCached = new AtomicBoolean(false);
         private final AtomicBoolean isFileLost = new AtomicBoolean(false);
-        private ConcurrentLinkedQueue<String> data = null;
+        private CopyOnWriteArrayList<String> data = null;
 
         private boolean isCacheValid() {
             return isCached.get() && !isFileLost.get();
@@ -2348,6 +2341,7 @@ public class DatabaseService {
         @Getter
         private final ConcurrentLinkedQueue<String> cacheAndPriorityResults = new ConcurrentLinkedQueue<>();
         private final Set<String> tempResultsSet = ConcurrentHashMap.newKeySet();
+        private final AtomicInteger resultCounter = new AtomicInteger();
         private volatile boolean searchDoneFlag = false;
         private final long taskCreateTimeMills = System.currentTimeMillis();
 
@@ -2360,7 +2354,7 @@ public class DatabaseService {
         }
 
         private boolean shouldStopSearch() {
-            return lastSearchTask != this || this.tempResultsSet.size() > MAX_RESULTS;
+            return resultCounter.get() > MAX_RESULTS;
         }
     }
 
