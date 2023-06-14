@@ -567,7 +567,7 @@ void collect_results(JNIEnv* thread_env, jobject result_collector, std::atomic_u
 	bool all_complete;
 	const auto stop_func = [&]
 	{
-		return p_stop_signal[0] || result_counter.load() >= max_results;
+		return p_stop_signal[0] || result_counter.load() > max_results;
 	};
 	auto _collect_func = [&](const std::string& _key, char _matched_record_str[MAX_PATH_LENGTH],
 		unsigned* matched_number)
