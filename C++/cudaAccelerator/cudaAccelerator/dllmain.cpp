@@ -884,13 +884,16 @@ void add_records_to_cache(const std::string& key, const std::vector<std::string>
                             const auto new_str_addr_capacity = cache->str_data.str_addr_capacity + 10;
                             const auto new_str_addr_alloc_size = new_str_addr_capacity * sizeof(size_t);
                             size_t* new_dev_str_addr;
-                            gpuErrchk(cudaMalloc(&new_dev_str_addr, new_str_addr_alloc_size), true, nullptr);
-                            gpuErrchk(cudaMemset(new_dev_str_addr, 0, new_str_addr_alloc_size), true, nullptr);
-                            gpuErrchk(cudaMemcpy(new_dev_str_addr,
+                            gpuErrchk(cudaMallocAsync(&new_dev_str_addr, new_str_addr_alloc_size, stream), true,
+                                      nullptr);
+                            gpuErrchk(cudaMemsetAsync(new_dev_str_addr, 0, new_str_addr_alloc_size, stream), true,
+                                      nullptr);
+                            gpuErrchk(cudaMemcpyAsync(new_dev_str_addr,
                                           cache->str_data.dev_str_addr,
                                           cache->str_data.str_addr_capacity * sizeof size_t,
-                                          cudaMemcpyDeviceToDevice), true, nullptr);
-                            gpuErrchk(cudaFree(cache->str_data.dev_str_addr), true, nullptr);
+                                          cudaMemcpyDeviceToDevice,
+                                          stream), true, nullptr);
+                            gpuErrchk(cudaFreeAsync(cache->str_data.dev_str_addr, stream), true, nullptr);
                             cache->str_data.dev_str_addr = new_dev_str_addr;
 #ifdef DEBUG_OUTPUT
 							std::cout << "copy dev_str_addr complete." << std::endl;
@@ -911,7 +914,9 @@ void add_records_to_cache(const std::string& key, const std::vector<std::string>
                         gpuErrchk(cudaMemcpyAsync(cache->str_data.dev_str_addr + index,
                                       &target_address,
                                       sizeof(size_t),
-                                      cudaMemcpyHostToDevice, stream), true, nullptr);
+                                      cudaMemcpyHostToDevice,
+                                      stream),
+                                  true, nullptr);
                         //记录字符串长度
                         cache->str_data.str_length_array[index] = record.length();
 #ifdef DEBUG_OUTPUT
