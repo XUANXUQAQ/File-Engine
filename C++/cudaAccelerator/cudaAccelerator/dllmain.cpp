@@ -37,7 +37,7 @@ int is_dir_or_file(const char* path);
 inline bool is_file_exist(const char* path);
 std::wstring string2wstring(const std::string& str);
 void recreate_cache_on_removing_records(const std::string& key, const list_cache* cache,
-                                        const std::vector<size_t>& str_need_to_remove);
+                                        const concurrency::concurrent_unordered_set<size_t>& str_need_to_remove);
 void create_and_insert_cache(const std::vector<std::string>& records_vec, size_t total_bytes, const std::string& key);
 
 std::shared_mutex cache_lock;
@@ -948,8 +948,10 @@ void remove_records_from_cache(const std::string& key, std::vector<std::string>&
     {
         if (const auto& cache = cache_iter->second; cache->is_cache_valid)
         {
-            std::vector<size_t> str_need_to_remove;
-            char tmp[MAX_PATH_LENGTH]{0};
+            concurrency::concurrent_unordered_set<size_t> str_need_to_remove;
+            const auto tmp_records = new char[MAX_PATH_LENGTH * cache->str_data.record_num.load()]();
+            cudaStream_t stream;
+            gpuErrchk(cudaStreamCreate(&stream), true, nullptr);
             for (size_t i = 0; i < cache->str_data.record_num.load(); ++i)
             {
                 if (exit_flag.load())
@@ -957,15 +959,21 @@ void remove_records_from_cache(const std::string& key, std::vector<std::string>&
                     break;
                 }
                 char* str_address;
-                gpuErrchk(cudaMemcpy(&str_address,
+                char* tmp = tmp_records + MAX_PATH_LENGTH * i;
+                gpuErrchk(cudaMemcpyAsync(&str_address,
                               cache->str_data.dev_str_addr + i,
                               sizeof(size_t),
-                              cudaMemcpyDeviceToHost),
-                          true, nullptr);
+                              cudaMemcpyDeviceToHost,
+                              stream),
+                          true,
+                          get_cache_info(key, cache).c_str());
                 //拷贝GPU中的字符串到tmp
-                gpuErrchk(cudaMemcpy(tmp, str_address,
+                gpuErrchk(cudaMemcpyAsync(tmp,
+                              str_address,
                               cache->str_data.str_length_array[i],
-                              cudaMemcpyDeviceToHost), true,
+                              cudaMemcpyDeviceToHost,
+                              stream),
+                          true,
                           get_cache_info(key, cache).c_str());
                 if (auto&& record = std::find(records.begin(), records.end(), tmp);
                     record == records.end())
@@ -975,8 +983,11 @@ void remove_records_from_cache(const std::string& key, std::vector<std::string>&
 #ifdef DEBUG_OUTPUT
 				std::cout << "removing: " << tmp << "  index: " << i << std::endl;
 #endif
-                str_need_to_remove.emplace_back(i);
+                str_need_to_remove.insert(i);
             }
+            gpuErrchk(cudaStreamSynchronize(stream), true, nullptr);
+            gpuErrchk(cudaStreamDestroy(stream), true, nullptr);
+            delete[] tmp_records;
             recreate_cache_on_removing_records(key, cache, str_need_to_remove);
         }
     }
@@ -1039,11 +1050,13 @@ void create_and_insert_cache(const std::vector<std::string>& records_vec, const 
  * \param str_need_to_remove 需要删除数据的下标
  */
 void recreate_cache_on_removing_records(const std::string& key, const list_cache* cache,
-                                        const std::vector<size_t>& str_need_to_remove)
+                                        const concurrency::concurrent_unordered_set<size_t>& str_need_to_remove)
 {
     std::vector<std::string> records;
     size_t total_bytes = 0;
-    char tmp[MAX_PATH_LENGTH]{0};
+    cudaStream_t stream;
+    gpuErrchk(cudaStreamCreate(&stream), true, nullptr);
+    const auto tmp_records = new char[MAX_PATH_LENGTH * cache->str_data.record_num.load()]();
     for (size_t i = 0; i < cache->str_data.record_num.load(); ++i)
     {
         if (auto&& find_val = std::find(str_need_to_remove.begin(), str_need_to_remove.end(), i);
@@ -1063,20 +1076,21 @@ void recreate_cache_on_removing_records(const std::string& key, const list_cache
             continue;
         }
         char* str_address_in_device;
-        gpuErrchk(cudaMemcpy(&str_address_in_device, cache->str_data.dev_str_addr + i,
-                      sizeof(size_t), cudaMemcpyDeviceToHost), true, nullptr);
-        gpuErrchk(cudaMemcpy(tmp, str_address_in_device,
-                      cache->str_data.str_length_array[i],
-                      cudaMemcpyDeviceToHost),
-                  true,
-                  nullptr);
-        records.emplace_back(tmp);
-        total_bytes += strlen(tmp) + 1;
+        char* str_address = tmp_records + i * MAX_PATH_LENGTH;
+        gpuErrchk(cudaMemcpyAsync(&str_address_in_device, cache->str_data.dev_str_addr + i,
+                      sizeof(size_t), cudaMemcpyDeviceToHost, stream), true, nullptr);
+        gpuErrchk(cudaMemcpyAsync(str_address, str_address_in_device, cache->str_data.str_length_array[i],
+                      cudaMemcpyDeviceToHost, stream), true, nullptr);
+        records.emplace_back(str_address);
+        total_bytes += strlen(str_address) + 1;
     }
+    gpuErrchk(cudaStreamSynchronize(stream), true, nullptr);
+    gpuErrchk(cudaStreamDestroy(stream), true, nullptr);
     gpuErrchk(cudaFree(cache->str_data.dev_strs), false, nullptr);
     gpuErrchk(cudaFree(cache->str_data.dev_str_addr), false, nullptr);
     delete[] cache->str_data.str_length_array;
     delete cache;
+    delete[] tmp_records;
     cache_map.unsafe_erase(key);
     create_and_insert_cache(records, total_bytes, key);
 }
