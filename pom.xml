@@ -85,7 +85,7 @@
         <dependency>
             <groupId>com.github.oshi</groupId>
             <artifactId>oshi-core-java11</artifactId>
-            <version>6.4.2</version>
+            <version>6.4.3</version>
         </dependency>
         <dependency>
             <groupId>org.xerial</groupId>
@@ -116,7 +116,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.26</version>
+            <version>1.18.28</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
