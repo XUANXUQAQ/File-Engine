@@ -153,7 +153,7 @@ public class Constants {
         private static class Light {
             int DEFAULT_LABEL_COLOR = 0xff9933;
             int DEFAULT_WINDOW_BACKGROUND_COLOR = 0xf6f6f6;
-            int DEFAULT_BORDER_COLOR = 0xf6f6f6;
+            int DEFAULT_BORDER_COLOR = 0x999999;
             int DEFAULT_FONT_COLOR = 0;
             int DEFAULT_FONT_COLOR_WITH_COVERAGE = 0xff3333;
             int DEFAULT_SEARCHBAR_COLOR = 0xf6f6f6;
@@ -164,7 +164,7 @@ public class Constants {
         private static class Dark {
             int DEFAULT_LABEL_COLOR = 0x9999ff;
             int DEFAULT_WINDOW_BACKGROUND_COLOR = 0x333333;
-            int DEFAULT_BORDER_COLOR = 0x333333;
+            int DEFAULT_BORDER_COLOR = 0x999999;
             int DEFAULT_FONT_COLOR = 0xffffff;
             int DEFAULT_FONT_COLOR_WITH_COVERAGE = 0xff3333;
             int DEFAULT_SEARCHBAR_COLOR = 0x333333;
