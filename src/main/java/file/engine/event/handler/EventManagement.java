@@ -35,7 +35,7 @@ import java.util.function.Consumer;
 
 public class EventManagement {
     private static volatile EventManagement instance = null;
-    private final AtomicBoolean exit = new AtomicBoolean(false);
+    private static volatile boolean exit = false;
     private final ConcurrentLinkedQueue<Event> blockEventQueue = new ConcurrentLinkedQueue<>();
     private final ConcurrentHashMap<String, Method> EVENT_HANDLER_MAP = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, ConcurrentLinkedQueue<Method>> EVENT_LISTENER_MAP = new ConcurrentHashMap<>();
@@ -104,7 +104,7 @@ public class EventManagement {
      * @param event Restart
      */
     private void handleRestart(RestartEvent event) {
-        exit.set(true);
+        exit = true;
         doAllMethod(RestartEvent.class.getName(), event);
         if (event instanceof CloseEvent) {
             DaemonUtil.stopDaemon();
@@ -300,13 +300,13 @@ public class EventManagement {
         if (methodChains == null) {
             return;
         }
-        for (Method each : methodChains) {
+        methodChains.forEach(each -> {
             try {
                 each.invoke(null, event);
             } catch (IllegalAccessException | InvocationTargetException e) {
                 e.printStackTrace();
             }
-        }
+        });
     }
 
     /**
@@ -320,7 +320,7 @@ public class EventManagement {
         if (isDebug) {
             System.err.println("尝试放入任务" + event.toString() + "---来自" + getStackTraceElement().toString());
         }
-        if (!exit.get()) {
+        if (notMainExit()) {
             if (event.isBlock()) {
                 blockEventQueue.add(event);
             } else {
@@ -353,7 +353,7 @@ public class EventManagement {
      * @return true如果系统未退出
      */
     public boolean notMainExit() {
-        return !exit.get();
+        return !exit;
     }
 
     /**
@@ -441,9 +441,11 @@ public class EventManagement {
     }
 
     public void readClassList() {
-        try (BufferedReader reader = new BufferedReader(
+        try (var reader = new BufferedReader(
                 new InputStreamReader(
-                        Objects.requireNonNull(EventManagement.class.getResourceAsStream("/classes.list")), StandardCharsets.UTF_8))) {
+                        Objects.requireNonNull(EventManagement.class.getResourceAsStream("/classes.list")),
+                        StandardCharsets.UTF_8
+                ))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 if (!line.isBlank()) {
@@ -500,7 +502,7 @@ public class EventManagement {
      * @return boolean
      */
     private boolean isEventHandlerNotExit() {
-        return !(exit.get() && blockEventQueue.isEmpty());
+        return !(exit && blockEventQueue.isEmpty());
     }
 
     /**
