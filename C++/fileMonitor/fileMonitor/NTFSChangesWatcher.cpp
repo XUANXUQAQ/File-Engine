@@ -1,8 +1,10 @@
 ﻿#include "NTFSChangesWatcher.h"
+
+#include <chrono>
 #include <ranges>
 #include "string_wstring_converter.h"
 
-constexpr auto MAX_USN_CACHE_SIZE = 100000;
+constexpr unsigned MAX_USN_CACHE_SIZE = 100000;
 
 const int NTFSChangesWatcher::kBufferSize = 1024 * 1024 / 2;
 const int NTFSChangesWatcher::FILE_CHANGE_BITMASK = USN_REASON_RENAME_NEW_NAME | USN_REASON_RENAME_OLD_NAME;
@@ -371,23 +373,30 @@ void NTFSChangesWatcher::showRecord(std::u16string& full_path, USN_RECORD* recor
 
     DWORDLONG file_parent_id = record->ParentFileReferenceNumber;
     const auto usn_buffer = std::make_unique<char[]>(kBufferSize);
+    const auto start_loop = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch()
+    );
+    int remain_cache_size = static_cast<int>(MAX_USN_CACHE_SIZE) - static_cast<int>(frn_record_pfrn_map_.size());
     do
     {
-        if (frn_record_pfrn_map_.size() > MAX_USN_CACHE_SIZE)
+        if (remain_cache_size <= 0)
         {
-            auto&& min_used_cache = std::ranges::min_element(frn_record_pfrn_map_,
-                                                             [&](const std::pair<DWORDLONG,
-                                                                     std::pair<std::pair<std::u16string, DWORDLONG>,
-                                                                               DWORDLONG>>& left,
-                                                                 const std::pair<DWORDLONG,
-                                                                     std::pair<std::pair<std::u16string, DWORDLONG>,
-                                                                               DWORDLONG>>& right)
-                                                             {
-                                                                 return left.second.first.second < right.second.first.
-                                                                     second;
-                                                             });
-
-            frn_record_pfrn_map_.erase(min_used_cache->first);
+            for (unsigned i = 0; i < MAX_USN_CACHE_SIZE / 1000; ++i)
+            {
+                auto&& min_used_cache = std::ranges::min_element(frn_record_pfrn_map_,
+                                                                 [&](const std::pair<DWORDLONG,
+                                                                         std::pair<std::pair<std::u16string, DWORDLONG>,
+                                                                             DWORDLONG>>& left,
+                                                                     const std::pair<DWORDLONG,
+                                                                         std::pair<std::pair<std::u16string, DWORDLONG>,
+                                                                             DWORDLONG>>& right)
+                                                                 {
+                                                                     return left.second.first.second <
+                                                                         right.second.first.second;
+                                                                 });
+                frn_record_pfrn_map_.erase(min_used_cache->first);
+                ++remain_cache_size;
+            }
         }
 
         if (auto&& val = frn_record_pfrn_map_.find(file_parent_id);
@@ -432,9 +441,16 @@ void NTFSChangesWatcher::showRecord(std::u16string& full_path, USN_RECORD* recor
                 frn_record_pfrn_map_.insert(
                     std::make_pair(parent_record->FileReferenceNumber, path_usn_record_pair)
                 );
+                --remain_cache_size;
             }
 
             file_parent_id = parent_record->ParentFileReferenceNumber;
+        }
+        if (const auto loop_time = std::chrono::duration_cast<std::chrono::milliseconds>
+            (std::chrono::system_clock::now().time_since_epoch()) -
+            start_loop; loop_time.count() > 10000)
+        {
+            return;
         }
     }
     while (true);
