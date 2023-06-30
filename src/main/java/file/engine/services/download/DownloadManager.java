@@ -66,25 +66,26 @@ public class DownloadManager {
     }
 
     public boolean waitFor(int maxWaitingMills) throws IOException {
-        try {
-            long startTime = System.currentTimeMillis();
-            final int sleepMills = 10;
-            EventManagement instance = EventManagement.getInstance();
-            while (instance.notMainExit()) {
-                if (System.currentTimeMillis() - startTime > maxWaitingMills) {
-                    throw new IOException("download failed");
-                }
-                Constants.Enums.DownloadStatus downloadStatus = this.getDownloadStatus();
-                if (downloadStatus == Constants.Enums.DownloadStatus.DOWNLOAD_DONE) {
-                    return true;
-                } else if (downloadStatus == Constants.Enums.DownloadStatus.DOWNLOAD_ERROR) {
-                    throw new IOException("download failed");
-                } else if (downloadStatus == Constants.Enums.DownloadStatus.DOWNLOAD_INTERRUPTED) {
-                    return false;
-                }
-                TimeUnit.MILLISECONDS.sleep(sleepMills);
+        long startTime = System.currentTimeMillis();
+        final int sleepMills = 10;
+        EventManagement instance = EventManagement.getInstance();
+        while (instance.notMainExit()) {
+            if (System.currentTimeMillis() - startTime > maxWaitingMills) {
+                throw new IOException("download failed");
             }
-        } catch (InterruptedException ignored) {
+            Constants.Enums.DownloadStatus downloadStatus = this.getDownloadStatus();
+            if (downloadStatus == Constants.Enums.DownloadStatus.DOWNLOAD_DONE) {
+                return true;
+            } else if (downloadStatus == Constants.Enums.DownloadStatus.DOWNLOAD_ERROR) {
+                throw new IOException("download failed");
+            } else if (downloadStatus == Constants.Enums.DownloadStatus.DOWNLOAD_INTERRUPTED) {
+                return false;
+            }
+            try {
+                TimeUnit.MILLISECONDS.sleep(sleepMills);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
         return false;
     }

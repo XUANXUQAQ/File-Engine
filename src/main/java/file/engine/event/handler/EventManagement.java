@@ -12,6 +12,7 @@ import file.engine.utils.ThreadPoolUtil;
 import file.engine.utils.clazz.scan.ClassScannerUtil;
 import file.engine.utils.system.properties.IsDebug;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -22,10 +23,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
@@ -40,7 +38,14 @@ public class EventManagement {
     private final ConcurrentHashMap<String, Method> EVENT_HANDLER_MAP = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, ConcurrentLinkedQueue<Method>> EVENT_LISTENER_MAP = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, BiConsumer<Class<?>, Object>> PLUGIN_EVENT_HANDLER_MAP = new ConcurrentHashMap<>();
+    private final Map<String, Map<String, ConcurrentLinkedQueue<ListenerPair>>> PLUGIN_EVENT_LISTENER_MAP = new ConcurrentHashMap<>();
     private HashSet<String> classesList = new HashSet<>();
+
+    @RequiredArgsConstructor
+    private static class ListenerPair {
+        private final String listenerName;
+        private final BiConsumer<Class<?>, Object> listener;
+    }
 
     private EventManagement() {
         startBlockEventHandler();
@@ -61,8 +66,37 @@ public class EventManagement {
         PLUGIN_EVENT_HANDLER_MAP.remove(className);
     }
 
+    public void removePluginListener(String className, String pluginIdentifier, String listenerName) {
+        var pluginListenerMap = PLUGIN_EVENT_LISTENER_MAP.get(className);
+        if (pluginListenerMap == null || pluginListenerMap.isEmpty()) {
+            return;
+        }
+        var biConsumers = pluginListenerMap.get(pluginIdentifier);
+        if (biConsumers == null || biConsumers.isEmpty()) {
+            return;
+        }
+        biConsumers.removeIf(each -> each.listenerName.equals(listenerName));
+    }
+
     public void registerPluginHandler(String className, BiConsumer<Class<?>, Object> handler) {
         PLUGIN_EVENT_HANDLER_MAP.put(className, handler);
+    }
+
+    public synchronized void registerPluginListener(String className, String pluginIdentifier, String listenerName, BiConsumer<Class<?>, Object> listener) {
+        if (!PLUGIN_EVENT_LISTENER_MAP.containsKey(className)) {
+            PLUGIN_EVENT_LISTENER_MAP.put(className, new ConcurrentHashMap<>());
+        }
+        var listenerMap = PLUGIN_EVENT_LISTENER_MAP.get(className);
+        if (!listenerMap.containsKey(pluginIdentifier)) {
+            listenerMap.put(pluginIdentifier, new ConcurrentLinkedQueue<>());
+        }
+        var listenersPerPlugin = listenerMap.get(pluginIdentifier);
+        boolean isListenerNameRepeat = listenersPerPlugin.stream().anyMatch(eachListener -> listenerName.equals(eachListener.listenerName));
+        if (isListenerNameRepeat) {
+            System.err.println("插件" + pluginIdentifier + "注册事件 " + className + " 监听器重复，名称为：" + listenerName);
+            return;
+        }
+        listenersPerPlugin.add(new ListenerPair(listenerName, listener));
     }
 
     /**
@@ -296,17 +330,20 @@ public class EventManagement {
      * @param event     任务
      */
     private void doAllMethod(String eventType, Event event) {
-        ConcurrentLinkedQueue<Method> methodChains = EVENT_LISTENER_MAP.get(eventType);
-        if (methodChains == null) {
-            return;
+        var methodChains = EVENT_LISTENER_MAP.get(eventType);
+        if (methodChains != null) {
+            methodChains.forEach(each -> {
+                try {
+                    each.invoke(null, event);
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    e.printStackTrace();
+                }
+            });
         }
-        methodChains.forEach(each -> {
-            try {
-                each.invoke(null, event);
-            } catch (IllegalAccessException | InvocationTargetException e) {
-                e.printStackTrace();
-            }
-        });
+        var classObjectBiConsumer = PLUGIN_EVENT_LISTENER_MAP.get(eventType);
+        if (classObjectBiConsumer != null) {
+            classObjectBiConsumer.forEach((pluginName, listeners) -> listeners.forEach(listener -> listener.listener.accept(event.getClass(), event)));
+        }
     }
 
     /**

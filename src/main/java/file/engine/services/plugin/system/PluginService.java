@@ -74,9 +74,21 @@ public class PluginService {
                         //noinspection unchecked
                         eventManagement.registerPluginHandler((String) registerEventHandler[0], (BiConsumer<Class<?>, Object>) registerEventHandler[1]);
                     }
+                    Object[] registerEventListener = plugin.pollFromEventListenerQueue();
+                    if (registerEventListener != null) {
+                        //noinspection unchecked
+                        eventManagement.registerPluginListener((String) registerEventListener[0],
+                                plugin.identifier,
+                                (String) registerEventListener[1],
+                                (BiConsumer<Class<?>, Object>) registerEventListener[2]);
+                    }
                     String className = plugin.restoreFileEngineEventHandler();
                     if (!(className == null || className.isEmpty())) {
                         eventManagement.unregisterPluginHandler(className);
+                    }
+                    String[] listenerToBeRemoved = plugin.removeFileEngineEventListener();
+                    if (listenerToBeRemoved != null) {
+                        eventManagement.removePluginListener(listenerToBeRemoved[0], plugin.identifier, listenerToBeRemoved[1]);
                     }
                 }
                 if (System.currentTimeMillis() - lastCheckEventTime > 1000) {

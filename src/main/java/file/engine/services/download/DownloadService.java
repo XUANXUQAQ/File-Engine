@@ -3,7 +3,9 @@ package file.engine.services.download;
 import file.engine.annotation.EventRegister;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.impl.download.StartDownloadEvent;
+import file.engine.event.handler.impl.download.StartDownloadEvent2;
 import file.engine.event.handler.impl.download.StopDownloadEvent;
+import file.engine.event.handler.impl.download.StopDownloadEvent2;
 import file.engine.utils.ThreadPoolUtil;
 
 public class DownloadService {
@@ -29,10 +31,22 @@ public class DownloadService {
         getInstance().downLoadFromUrl(startDownloadTask.downloadManager);
     }
 
+    @EventRegister(registerClass = StartDownloadEvent2.class)
+    private static void startDownloadEvent2(Event event) {
+        StartDownloadEvent2 startDownloadEvent2 = (StartDownloadEvent2) event;
+        getInstance().downLoadFromUrl(startDownloadEvent2.downloadManager);
+    }
+
     @EventRegister(registerClass = StopDownloadEvent.class)
     private static void stopDownloadEvent(Event event) {
         StopDownloadEvent stopDownloadTask = (StopDownloadEvent) event;
         getInstance().cancelDownload(stopDownloadTask.downloadManager);
+    }
+
+    @EventRegister(registerClass = StopDownloadEvent2.class)
+    private static void stopDownloadEvent2(Event event) {
+        StopDownloadEvent2 stopDownloadEvent2 = (StopDownloadEvent2) event;
+        getInstance().cancelDownload(stopDownloadEvent2.downloadManager);
     }
 
     /**

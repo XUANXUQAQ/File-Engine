@@ -45,6 +45,8 @@ public class Plugin {
         methodList.add("pollFromEventQueue");
         methodList.add("pollFromEventHandlerQueue");
         methodList.add("restoreFileEngineEventHandler");
+        methodList.add("pollFromEventListenerQueue");
+        methodList.add("removeFileEngineEventListener");
     }
 
     public Plugin(String name, String identifier, PluginClassAndInstanceInfo pluginClassAndInstanceInfo) {
@@ -85,6 +87,14 @@ public class Plugin {
             }
         }
         return null;
+    }
+
+    public Object[] pollFromEventListenerQueue() {
+        return invokeByKeyNoExcept("pollFromEventListenerQueue[]");
+    }
+
+    public String[] removeFileEngineEventListener() {
+        return invokeByKeyNoExcept("removeFileEngineEventListener[]");
     }
 
     public String restoreFileEngineEventHandler() {
