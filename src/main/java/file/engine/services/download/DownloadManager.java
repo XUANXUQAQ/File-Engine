@@ -2,6 +2,7 @@ package file.engine.services.download;
 
 import file.engine.configs.Constants;
 import file.engine.event.handler.EventManagement;
+import file.engine.event.handler.impl.download.DownloadDoneEvent;
 import file.engine.utils.system.properties.IsDebug;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.ProxyInfo;
@@ -141,6 +142,7 @@ public class DownloadManager {
                 throw new IOException("User Interrupted");
             }
             downloadStatus = Constants.Enums.DownloadStatus.DOWNLOAD_DONE;
+            EventManagement.getInstance().putEvent(new DownloadDoneEvent(this));
         } catch (IOException | NoSuchAlgorithmException | KeyManagementException e) {
             e.printStackTrace();
             if (!"User Interrupted".equals(e.getMessage())) {
