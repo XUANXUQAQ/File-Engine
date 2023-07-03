@@ -170,7 +170,7 @@ public class SQLiteUtil {
         return !connectionPool.containsKey(key);
     }
 
-    public static void initConnection(String url, String key) throws SQLException {
+    private static void initConnection(String url, String key) throws SQLException {
         initSqliteConfig();
         ConnectionWrapper connectionWrapper = new ConnectionWrapper(url);
         connectionPool.put(key, connectionWrapper);
@@ -205,11 +205,11 @@ public class SQLiteUtil {
     /**
      * 删除有问题的数据库文件，有问题的数据库被记录在user/malformedDB文件中
      */
-    private static void deleteMalFormedFile() {
-        Path malformedDB = Path.of("user/malformedDB");
+    private static void deleteMalFormedFile(String malformedDbFileSavePath) {
+        Path malformedDB = Path.of(malformedDbFileSavePath);
         if (Files.exists(malformedDB)) {
             String line;
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream("user/malformedDB"), StandardCharsets.UTF_8))) {
+            try (var reader = new BufferedReader(new InputStreamReader(new FileInputStream(malformedDbFileSavePath), StandardCharsets.UTF_8))) {
                 while ((line = reader.readLine()) != null) {
                     if (line.isEmpty() || line.isBlank()) {
                         continue;
@@ -271,7 +271,7 @@ public class SQLiteUtil {
     private static boolean isDatabaseEmpty(ArrayList<String> tableNames) throws SQLException {
         int emptyNum = 0;
         for (String each : RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks())) {
-            try (Statement stmt = SQLiteUtil.getStatement(String.valueOf(each.charAt(0)))) {
+            try (var stmt = SQLiteUtil.getStatement(String.valueOf(each.charAt(0)))) {
                 for (String tableName : tableNames) {
                     String sql = String.format("SELECT ASCII FROM %s LIMIT 10;", tableName);
                     try (ResultSet resultSet = stmt.executeQuery(sql)) {
@@ -313,7 +313,8 @@ public class SQLiteUtil {
 
     public static void initAllConnections(String dir) {
         currentDatabaseDir = dir;
-        deleteMalFormedFile();
+        String malformedDbFileSavePath = "user/malformedDB";
+        deleteMalFormedFile(malformedDbFileSavePath);
         String[] split = RegexUtil.comma.split(initializeAndGetDiskPath());
         ArrayList<File> malformedFiles = new ArrayList<>();
         for (String eachDisk : split) {
@@ -346,7 +347,7 @@ public class SQLiteUtil {
         }
         if (!malformedFiles.isEmpty()) {
             try {
-                var fileOutputStream = new FileOutputStream("user/malformedDB");
+                var fileOutputStream = new FileOutputStream(malformedDbFileSavePath);
                 var outputStreamWriter = new OutputStreamWriter(fileOutputStream, StandardCharsets.UTF_8);
                 var writer = new BufferedWriter(outputStreamWriter);
                 try (writer) {
@@ -372,13 +373,14 @@ public class SQLiteUtil {
         try (Statement p = getStatement(key)) {
             p.execute(String.format("SELECT * FROM %s", tableName));
             return true;
-        } catch (SQLException exception) {
+        } catch (SQLException ex) {
+            ex.printStackTrace();
             return false;
         }
     }
 
     private static void createWeightTable() throws SQLException {
-        try (PreparedStatement pStmt = getPreparedStatement("CREATE TABLE IF NOT EXISTS weight(TABLE_NAME text unique, TABLE_WEIGHT INT)", "weight")) {
+        try (var pStmt = getPreparedStatement("CREATE TABLE IF NOT EXISTS weight(TABLE_NAME text unique, TABLE_WEIGHT INT);", "weight")) {
             pStmt.executeUpdate();
         }
         try (Statement stmt = getStatement("weight")) {
@@ -398,7 +400,7 @@ public class SQLiteUtil {
     private static void initTables(String disk) {
         try (Statement stmt = getStatement(disk)) {
             for (int i = 0; i < 41; i++) {
-                stmt.executeUpdate("CREATE TABLE IF NOT EXISTS list" + i + "(ASCII INT, PATH TEXT, PRIORITY INT, PRIMARY KEY(\"ASCII\",\"PATH\",\"PRIORITY\"))");
+                stmt.executeUpdate("CREATE TABLE IF NOT EXISTS list" + i + "(ASCII INT, PATH TEXT, PRIORITY INT, PRIMARY KEY(\"ASCII\",\"PATH\",\"PRIORITY\"));");
             }
         } catch (SQLException exception) {
             exception.printStackTrace();
@@ -410,7 +412,7 @@ public class SQLiteUtil {
             return;
         }
         try (Statement statement = getStatement("cache")) {
-            int row = statement.executeUpdate("CREATE TABLE IF NOT EXISTS priority(SUFFIX text unique, PRIORITY INT)");
+            int row = statement.executeUpdate("CREATE TABLE IF NOT EXISTS priority(SUFFIX text unique, PRIORITY INT);");
             if (row == 0) {
                 int count = 10;
                 HashMap<String, Integer> map = new HashMap<>();
@@ -459,7 +461,7 @@ public class SQLiteUtil {
     }
 
     private static String generateFormattedSql(String suffix, int priority) {
-        return String.format("INSERT OR IGNORE INTO priority VALUES(\"%s\", %d)", suffix, priority);
+        return String.format("INSERT OR IGNORE INTO priority VALUES(\"%s\", %d);", suffix, priority);
     }
 
     private static class ConnectionWrapper {
@@ -475,11 +477,12 @@ public class SQLiteUtil {
             this.url = url;
             this.connection = DriverManager.getConnection(url, sqLiteConfig.toProperties());
             this.usingTimeMills = System.currentTimeMillis();
-            this.randomTimeMills = random.nextInt(9000) + 1000; //随机添加超时时间，从1秒到10秒，防止所有连接同时关闭
+            this.randomTimeMills = random.nextInt(300000) + 30000; //随机添加超时时间，从30秒到5秒，防止所有连接同时关闭
         }
 
         private boolean isIdleTimeout() {
-            return System.currentTimeMillis() - this.usingTimeMills > Constants.CLOSE_DATABASE_TIMEOUT_MILLS + this.randomTimeMills && connectionUsingCounter.get() == 0;
+            return System.currentTimeMillis() - this.usingTimeMills > Constants.CLOSE_DATABASE_TIMEOUT_MILLS + this.randomTimeMills &&
+                    connectionUsingCounter.get() == 0;
         }
 
         private boolean isConnectionUsing() {
