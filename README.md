@@ -1,4 +1,4 @@
-<div align='center' ><font size='70'>File-Engine</font></div>
+<div style="font-size: 60px; text-align: center">File-Engine</div>
 
 A tool can make you work more efficiently.
 
