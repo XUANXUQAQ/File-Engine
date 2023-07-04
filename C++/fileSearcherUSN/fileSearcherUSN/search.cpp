@@ -176,10 +176,10 @@ void volume::save_all_results_to_db()
 {
     init_all_prepare_statement();
     unsigned count = 0;
-    for (auto& [fst, snd] : all_results_map)
+    for (auto& [record_list_name, record_list_container] : all_results_map)
     {
-        const int ascii_group = stoi(fst.substr(4));
-        for (auto& [priority, result_container] : *snd)
+        const int ascii_group = stoi(record_list_name.substr(4));
+        for (auto& [priority, result_container] : *record_list_container)
         {
             for (auto&& iter = result_container->begin(); iter != result_container->end(); ++iter)
             {
@@ -630,8 +630,7 @@ bool volume::get_usn_journal()
 
 bool volume::delete_usn() const
 {
-    DELETE_USN_JOURNAL_DATA dujd
-        {ujd.UsnJournalID, USN_DELETE_FLAG_DELETE | USN_DELETE_FLAG_NOTIFY};
+    DELETE_USN_JOURNAL_DATA dujd{ujd.UsnJournalID, USN_DELETE_FLAG_DELETE | USN_DELETE_FLAG_NOTIFY};
     DWORD br;
 
     if (DeviceIoControl(hVol,

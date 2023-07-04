@@ -25,6 +25,10 @@ class volume
 public:
     volume(char vol, sqlite3* database, std::vector<std::string>* ignore_paths, PriorityMap* priority_map);
 
+    volume(volume&) = delete;
+
+    volume(volume&&) = delete;
+
     ~volume();
 
     char getDiskPath() const

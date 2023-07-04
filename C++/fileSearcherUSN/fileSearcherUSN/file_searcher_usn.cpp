@@ -1,4 +1,5 @@
-﻿#include "file_search_usn.h"
+﻿#include "constants.h"
+#include "file_search_usn.h"
 #include "string_to_utf8.h"
 #ifdef TEST
 #include <iostream>
@@ -19,10 +20,10 @@ void init_tables(sqlite3* db)
     for (int i = 0; i < 41; i++)
     {
         string sql = "CREATE TABLE IF NOT EXISTS list" + to_string(i) +
-            R"((ASCII INT, PATH TEXT, PRIORITY INT, PRIMARY KEY("ASCII","PATH","PRIORITY")))";
+            R"((ASCII INT, PATH TEXT, PRIORITY INT, PRIMARY KEY("ASCII","PATH","PRIORITY"));)";
         sqlite3_exec(db, sql.c_str(), nullptr, nullptr, nullptr);
     }
-    sqlite3_exec(db, "COMMIT", nullptr, nullptr, nullptr);
+    sqlite3_exec(db, "COMMIT;", nullptr, nullptr, nullptr);
 }
 
 /**
@@ -43,7 +44,7 @@ void init_usn(parameter p)
 /**
  * 获取后缀优先级表，构造成Map
  */
-inline bool init_priority_map(PriorityMap& priority_map, const char* priorityDbPath)
+inline bool init_priority_map(PriorityMap& priority_map, const char* priority_db_path)
 {
     using namespace std;
     char* error;
@@ -51,7 +52,7 @@ inline bool init_priority_map(PriorityMap& priority_map, const char* priorityDbP
     int row, column;
     sqlite3* cache_db;
     const string sql = "select * from priority;";
-    sqlite3_open(priorityDbPath, &cache_db);
+    sqlite3_open(priority_db_path, &cache_db);
     if (const size_t ret = sqlite3_get_table(cache_db, sql.c_str(), &p_result, &row, &column, &error); ret != SQLITE_OK)
     {
         fprintf(stderr, "fileSearcherUSN: error init priority map\n");
@@ -127,9 +128,9 @@ bool get_search_info(char disk_path[500], char output[500], char ignore_path[500
 int main()
 {
     using namespace std;
-    char disk_path[500];
-    char output[500];
-    char ignore_path[500];
+    char disk_path[500]{0};
+    char output[500]{0};
+    char ignore_path[500]{0};
 
     if (!get_search_info(disk_path, output, ignore_path))
     {
@@ -191,7 +192,7 @@ int main()
             sqlite3_exec(p.db, "PRAGMA page_size=65535;", nullptr, nullptr, nullptr);
             sqlite3_exec(p.db, "PRAGMA auto_vacuum=0;", nullptr, nullptr, nullptr);
             sqlite3_exec(p.db, "PRAGMA mmap_size=4096;", nullptr, nullptr, nullptr);
-            threads.emplace_back(thread(init_usn, p));
+            threads.emplace_back(init_usn, p);
         }
     }
     //等待数据库写入
