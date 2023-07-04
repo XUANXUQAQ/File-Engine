@@ -74,10 +74,116 @@
 
 事件处理系统详见[Event_Management](https://github.com/XUANXUQAQ/File-Engine/blob/master/Event_Mangement.md)
 
+## 整体启动流程：
+
+```java
+public static void main(String[] args) {
+    try {
+        // 设置所有系统属性
+        setSystemProperties();
+
+        if (!System.getProperty("os.arch").contains("64")) {
+            JOptionPane.showMessageDialog(null, "Not 64 Bit", "ERROR", JOptionPane.ERROR_MESSAGE);
+            throw new RuntimeException("Not 64 Bit");
+        }
+        // 从tmp中更新插件（File-Engine上次启动更新的插件jar文件）
+        updatePlugins();
+
+        // 创建所有必要文件夹
+        initFoldersAndFiles();
+        // 从resources中释放所有的依赖
+        releaseAllDependence();
+        Class.forName("org.sqlite.JDBC");
+        // 初始化本地dll
+        initializeDllInterface();
+        // 扫描所有类，加载带有@EventRegister和@EventListener的事件处理器和事件监听器，并初始化事件处理系统
+        initEventManagement();
+        // 更新File-Engine启动器（File-Engine上次启动检查更新下载的File-Engine.exe文件）
+        updateLauncher();
+        // 清空tmp
+        FileUtil.deleteDir(new File("tmp"));
+        // 发出SetConfigsEvent事件并等待处理完成
+        setAllConfigs();
+        // 发出CheckConfigsEvent事件检查可能出错的配置并纠正
+        checkConfigs();
+        // 初始化数据库连接
+        initDatabase();
+        // 初始化全部完成，发出启动系统事件，AllConfigs配置中心处理完成BootSystemEvent事件之后，启动所有服务
+        if (sendBootSystemSignal()) {
+            JOptionPane.showMessageDialog(null, "Boot system failed", "ERROR", JOptionPane.ERROR_MESSAGE);
+            throw new RuntimeException("Boot System Failed");
+        }
+        // 检查版本更新
+        checkVersion();
+
+        // 进入主循环（检查进程已启动时间，当超过2天之后发出UpdateDatabaseEvent事件更新数据库）
+        mainLoop();
+    } catch (Exception e) {
+        e.printStackTrace();
+        System.exit(-1);
+    }
+}
+```
+
 ## 下面是各个包以及各个依赖的作用。
 
 ## Java包部分
 
+* ### configs
+  
+  * AllConfigs
+    
+    * 全局配置中心，在这里读取所有的配置，并响应SetConfigsEvent事件，各服务监听该事件响应配置变化。当BootSystemEvent事件发出后，配置中心第一个处理该事件，读取所有的配置，并发出其他启动事件。
+    
+    * 注册和监听的主要事件
+      
+      ```java
+      /**
+       * 系统启动事件，当此事件发出将会进行初始化
+       * @param event 启动事件
+       */
+      @EventRegister(registerClass = BootSystemEvent.class)
+      private static void bootSystemEvent(Event event) {
+          EventManagement eventManagement = EventManagement.getInstance();
+          eventManagement.putEvent(new StartMonitorDiskEvent());
+          eventManagement.putEvent(new ShowTrayIconEvent());
+          eventManagement.putEvent(new LoadAllPluginsEvent("plugins"));
+          eventManagement.putEvent(new SetSwingLaf());
+          if (isFirstRunApp) {
+              checkRunningDirAtDiskC();
+          }
+      }
+      
+      /**
+       * 读取所有配置
+       * @param event 读取配置事件
+       */
+      @EventRegister(registerClass = SetConfigsEvent.class)
+      private static void setAllConfigsEvent(Event event) {
+          SetConfigsEvent setConfigsEvent = (SetConfigsEvent) event;
+          AllConfigs allConfigs = getInstance();
+          if (setConfigsEvent.getConfigs() == null) {
+              // MainClass初始化
+              allConfigs.readAllSettings();
+              setConfigsEvent.setConfigs(allConfigs.configEntity);
+          } else {
+              // 添加高级设置参数
+              Map<String, Object> configsJson = allConfigs.getSettingsJSON();
+              allConfigs.readAdvancedConfigs(configsJson);
+              ConfigEntity tempConfigEntity = setConfigsEvent.getConfigs();
+              tempConfigEntity.setAdvancedConfigEntity(allConfigs.configEntity.getAdvancedConfigEntity());
+      
+              // 更新设置
+              if (allConfigs.noNullValue(tempConfigEntity)) {
+                  allConfigs.correctInvalidConfigs(tempConfigEntity);
+                  allConfigs.configEntity = tempConfigEntity;
+                  allConfigs.saveAllSettings();
+              } else {
+                  throw new NullPointerException("configEntity中有Null值");
+              }
+          }
+      }
+      ```
 - ### frames
   
   - UI层的实现。包含搜索框，设置窗口，任务栏，插件市场窗口的实现。以及一些通用控件。
