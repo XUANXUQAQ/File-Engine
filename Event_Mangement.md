@@ -4,6 +4,8 @@
 
 事件的基类为Event。下方为Event拥有的public方法以及作用
 
+## Event.java
+
 ### isFinished
 
 ```java
@@ -84,9 +86,15 @@
 
 设置事件最大重试次数，默认最大尝试次数为5，一般不需要修改。
 
-### 事件处理器通过EventManagement进行管理。
+
+
+
+
+## 事件处理器通过EventManagement进行管理。
 
 EventManagement中可调用的方法如下。
+
+## EventManagement.java
 
 ### waitForEvent
 
@@ -178,9 +186,17 @@ public @interface EventRegister {
 }
 ```
 
+
+
+
+
+## 注册事件处理器和监听器
+
+使用上方的两个注解就可以实现注册事件的处理器和监听器
+
 **需要注意的是**
 
-注册事件处理器和监听器的方法必须是static方法，且只能有一个参数Event
+**注册事件处理器和监听器的方法必须是static方法**，且只能有一个参数Event
 
 ```java
     @EventRegister(registerClass = SomeEvent.class)
