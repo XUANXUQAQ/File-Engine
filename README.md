@@ -1,18 +1,17 @@
-# <div align="center">File-Engine</div>
+<h1 align="center">File-Engine</h1>
 
-A tool can make you work more efficiently.
-
-> 不必再在杂乱的文件夹中寻找文件。
-> 提高工作效率。
-> 这是一个绿色软件，不必安装，随时使用。
-
-![License](https://img.shields.io/badge/license-MIT-yellow)
-![Language](https://img.shields.io/badge/language-c++-brightgreen)
-![Language](https://img.shields.io/badge/language-java-brightgreen)
-![Language](https://img.shields.io/badge/language-cuda-brightgreen)
-![Documentation](https://img.shields.io/badge/documentation-yes-brightgreen)
-
-## [下载](https://github.com/XUANXUQAQ/File-Engine/releases/)
+<div align="center">
+  <strong>A tool can make you work more efficiently.</strong><br>
+  <sub>不必再在杂乱的文件夹中寻找文件。提高工作效率。这是一个绿色软件，不必安装，随时使用。</sub>
+</div>
+<br>
+<div align="center">
+  <img src="https://img.shields.io/badge/license-MIT-yellow"/>
+  <img src="https://img.shields.io/badge/language-c++-brightgreen"/>
+  <img src="https://img.shields.io/badge/language-java-brightgreen" />
+  <img src="https://img.shields.io/badge/language-cuda-brightgreen"/>
+  <img src="https://img.shields.io/badge/documentation-yes-brightgreen"/>
+</div>
 
 ## 🏠如何编译构建本项目
 
