@@ -2609,17 +2609,18 @@ public class SettingsFrame {
     }
 
     private void setLabelGui() {
-        labelProject1.setText("<html><a href='https://github.com/google/gson'><font size=\"4\">gson</font></a></html>");
-        labelProject2.setText("<html><a href='https://github.com/JFormDesigner/FlatLaf'><font size=\"4\">FlatLaf</font></a></html>");
-        labelProject3.setText("<html><a href='https://github.com/xerial/sqlite-jdbc'><font size=\"4\">sqlite_jdbc</font></a></html>");
-        labelProject4.setText("<html><a href='https://projectlombok.org'><font size=\"4\">lombok</font></a></html>");
-        labelProject5.setText("<html><a href='https://github.com/promeG/TinyPinyin'><font size=\"4\">TinyPinyin</font></a></html>");
-        labelProject6.setText("<html><a href='https://github.com/kuba--/zip'><font size=\"4\">zip</font></a></html>");
-        labelProject7.setText("<html><a href='https://github.com/ProjectPhysX/OpenCL-Wrapper'><font size=\"4\">OpenCLWrapper</font></a></html>");
-        labelProject8.setText("<html><a href='https://github.com/oshi/oshi'><font size=\"4\">oshi</font></a></html>");
-        labelProject9.setText("<html><a href='https://github.com/java-native-access/jna'><font size=\"4\">jna</font></a></html>");
-        labelProject10.setText("<html><a href='https://github.com/MrMarnic/JIconExtractReloaded'><font size=\"4\">JIconExtractReloaded</font></a></html>");
-        labelAboutGithub.setText("<html><a href='https://github.com/XUANXUQAQ/File-Engine'><font size=\"4\">File-Engine</font></a></html>");
+        String template = "<html>&nbsp;&nbsp;&nbsp;&nbsp;<a href='%s'><font size=\"4\">%s</font></a></html>";
+        labelProject1.setText(String.format(template, "https://github.com/google/gson", "google/gson"));
+        labelProject2.setText(String.format(template, "https://github.com/JFormDesigner/FlatLaf", "JFormDesigner/FlatLaf"));
+        labelProject3.setText(String.format(template, "https://github.com/xerial/sqlite-jdbc", "xerial/sqlite-jdbc"));
+        labelProject4.setText(String.format(template, "https://projectlombok.org", "lombok"));
+        labelProject5.setText(String.format(template, "https://github.com/promeG/TinyPinyin", "promeG/TinyPinyin"));
+        labelProject6.setText(String.format(template, "https://github.com/kuba--/zip", "kuba--/zip"));
+        labelProject7.setText(String.format(template, "https://github.com/ProjectPhysX/OpenCL-Wrapper", "ProjectPhysX/OpenCLWrapper"));
+        labelProject8.setText(String.format(template, "https://github.com/oshi/oshi", "oshi/oshi"));
+        labelProject9.setText(String.format(template, "https://github.com/java-native-access/jna", "java-native-access/jna"));
+        labelProject10.setText(String.format(template, "https://github.com/MrMarnic/JIconExtractReloaded", "MrMarnic/JIconExtractReloaded"));
+        labelAboutGithub.setText(String.format(template, "https://github.com/XUANXUQAQ/File-Engine", "File-Engine"));
         labelPluginNum.setText(String.valueOf(PluginService.getInstance().getInstalledPluginNum()));
         ImageIcon imageIcon = new ImageIcon(Objects.requireNonNull(SettingsFrame.class.getResource("/icons/frame.png")));
         labelIcon.setIcon(imageIcon);
