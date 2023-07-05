@@ -4,15 +4,14 @@ import java.awt.*;
 
 public enum RobotUtil {
     INSTANCE;
-    private static Robot robot;
-
+    private static final Robot robot;
     private static final int delayMills = 5;
 
     static {
         try {
             robot = new Robot();
         } catch (AWTException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
@@ -26,20 +25,18 @@ public enum RobotUtil {
      * @see java.awt.event.InputEvent
      */
     public void mouseClicked(int x, int y, int count, int mouseButtonNum) {
-        if (robot != null) {
-            double originX, originY;
-            Point point = MouseInfo.getPointerInfo().getLocation();
-            originX = point.getX();
-            originY = point.getY();
-            robot.mouseMove(x, y);
-            for (int i = 0; i < count; ++i) {
-                robot.mousePress(mouseButtonNum);
-                robot.delay(delayMills);
-                robot.mouseRelease(mouseButtonNum);
-            }
-            //鼠标归位
-            robot.mouseMove((int) originX, (int) originY);
+        double originX, originY;
+        Point point = MouseInfo.getPointerInfo().getLocation();
+        originX = point.getX();
+        originY = point.getY();
+        robot.mouseMove(x, y);
+        for (int i = 0; i < count; ++i) {
+            robot.mousePress(mouseButtonNum);
+            robot.delay(delayMills);
+            robot.mouseRelease(mouseButtonNum);
         }
+        //鼠标归位
+        robot.mouseMove((int) originX, (int) originY);
     }
 
     /**
@@ -49,17 +46,15 @@ public enum RobotUtil {
      * @see java.awt.event.KeyEvent
      */
     public void keyTyped(int... keyCodes) {
-        if (robot != null) {
-            //全部点击
-            for (int each : keyCodes) {
-                robot.keyPress(each);
-                robot.delay(delayMills);
-            }
-            //全部释放
-            for (int each : keyCodes) {
-                robot.keyRelease(each);
-                robot.delay(delayMills);
-            }
+        //全部点击
+        for (int each : keyCodes) {
+            robot.keyPress(each);
+            robot.delay(delayMills);
+        }
+        //全部释放
+        for (int each : keyCodes) {
+            robot.keyRelease(each);
+            robot.delay(delayMills);
         }
     }
 }

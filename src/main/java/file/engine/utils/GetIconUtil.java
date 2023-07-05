@@ -1,6 +1,7 @@
 package file.engine.utils;
 
 import file.engine.configs.AllConfigs;
+import file.engine.dllInterface.icon.JIconExtract;
 import file.engine.event.handler.EventManagement;
 import file.engine.utils.system.properties.IsDebug;
 import lombok.NonNull;
@@ -193,7 +194,7 @@ public class GetIconUtil {
 
     @SneakyThrows
     private void consumeTaskFunc() {
-        EventManagement eventManagement = EventManagement.getInstance();
+        var eventManagement = EventManagement.getInstance();
         while (eventManagement.notMainExit()) {
             var task = workingQueue.poll();
             if (task == null) {
@@ -205,16 +206,18 @@ public class GetIconUtil {
                 if (task.isDone) {
                     icon = task.icon;
                 } else {
-                    icon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(task.path), task.width, task.height);
-                    if (null != icon) {
-                        cacheIconMap.put(task.path.getAbsolutePath(), new IconCache(System.currentTimeMillis(), icon));
-                    } else {
-                        icon = changeIcon(constantIconMap.get("blankIcon"), task.width, task.height);
-                    }
+                    icon = new ImageIcon(JIconExtract.getIconForFile(task.width, task.height, task.path));
+//                     icon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(task.path), task.width, task.height);
+//                    if (null != icon) {
+//                        cacheIconMap.put(task.path.getAbsolutePath(), new IconCache(System.currentTimeMillis(), icon));
+//                    } else {
+//                        icon = changeIcon(constantIconMap.get("blankIcon"), task.width, task.height);
+//                    }
                 }
                 task.timeoutCallBack.accept(icon);
             } else {
-                task.icon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(task.path), task.width, task.height);
+                task.icon = new ImageIcon(JIconExtract.getIconForFile(task.width, task.height, task.path));
+//                task.icon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(task.path), task.width, task.height);
                 task.isDone = true;
                 cacheIconMap.put(task.path.getAbsolutePath(), new IconCache(System.currentTimeMillis(), task.icon));
             }

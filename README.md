@@ -91,12 +91,13 @@
 
 ## 💖感谢以下项目：
 
-1. gson (https://github.com/google/gson)
-2. FlatLaf (https://github.com/JFormDesigner/FlatLaf)   
-3. sqlite_jdbc (https://github.com/xerial/sqlite-jdbc)   
-4. lombok (https://projectlombok.org/)   
-5. TinyPinyin (https://github.com/promeG/TinyPinyin)
-6. zip (https://github.com/kuba--/zip)
-7. OpenCLWrapper (https://github.com/ProjectPhysX/OpenCL-Wrapper)
-8. oshi (https://github.com/oshi/oshi)
-9. jna (https://github.com/java-native-access/jna)
+- [gson](https://github.com/google/gson)
+- [FlatLaf](https://github.com/JFormDesigner/FlatLaf)   
+- [sqlite_jdbc](https://github.com/xerial/sqlite-jdbc)   
+- [lombok](https://projectlombok.org/)   
+- [TinyPinyin](https://github.com/promeG/TinyPinyin)
+- [zip](https://github.com/kuba--/zip)
+- [OpenCLWrapper](https://github.com/ProjectPhysX/OpenCL-Wrapper)
+- [oshi](https://github.com/oshi/oshi)
+- [jna](https://github.com/java-native-access/jna)
+- [JIconExtractReloaded](https://github.com/MrMarnic/JIconExtractReloaded)

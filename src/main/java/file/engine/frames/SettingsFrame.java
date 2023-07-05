@@ -73,6 +73,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static file.engine.utils.ColorUtil.*;
 import static file.engine.utils.StartupUtil.hasStartup;
@@ -161,9 +163,6 @@ public class SettingsFrame {
     private JLabel searchBarColorChooser;
     private JLabel labelCmdTip2;
     private JLabel labelDescription;
-    private JLabel labelWebLookAndFeel;
-    private JLabel labelFastJson;
-    private JLabel labelJna;
     private JPanel tabLanguage;
     private JList<Object> listLanguage;
     private JLabel labelLanguageChooseTip;
@@ -182,7 +181,6 @@ public class SettingsFrame {
     private JButton buttonUpdatePlugin;
     private JPanel tabAbout;
     private JScrollPane scrollPane;
-    private JLabel labelSQLite;
     private JButton buttonPluginMarket;
     private JLabel labelAuthor;
     private JLabel labelOfficialSite;
@@ -242,8 +240,6 @@ public class SettingsFrame {
     private JLabel placeholderN;
     private JLabel placeholderl;
     private JLabel placeholdersearch0;
-    private JLabel labelTinyPinyin;
-    private JLabel labelLombok;
     private JPanel tabModifyPriority;
     private JScrollPane suffixScrollpane;
     private JButton buttonAddSuffix;
@@ -286,7 +282,6 @@ public class SettingsFrame {
     private JTextField textFieldBorderThickness;
     private JComboBox<Object> comboBoxBorderType;
     private JCheckBox checkBoxIsAttachExplorer;
-    private JLabel labelZip;
     private JLabel labelRoundRadius;
     private JTextField textFieldRoundRadius;
     private JSplitPane splitPane;
@@ -309,9 +304,17 @@ public class SettingsFrame {
     private JComboBox<Object> comboBoxCudaDevice;
     private JLabel labelSearchThread;
     private JComboBox<Object> comboBoxSearchThread;
-    private JLabel labelOpenclWrapper;
-    private JLabel labelOshi;
     private JLabel labelBuildVersion;
+    private JLabel labelProject1;
+    private JLabel labelProject2;
+    private JLabel labelProject3;
+    private JLabel labelProject4;
+    private JLabel labelProject5;
+    private JLabel labelProject6;
+    private JLabel labelProject7;
+    private JLabel labelProject8;
+    private JLabel labelProject9;
+    private JLabel labelProject10;
 
 
     private static volatile SettingsFrame instance = null;
@@ -632,21 +635,39 @@ public class SettingsFrame {
      * 点击打开github
      */
     private void addGitHubLabelListener() {
-        labelAboutGithub.addMouseListener(new MouseAdapter() {
+        MouseAdapter aHrefMouseAdapter = new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 Desktop desktop;
                 if (Desktop.isDesktopSupported()) {
                     desktop = Desktop.getDesktop();
-                    try {
-                        URI uri = new URI("https://github.com/XUANXUQAQ/File-Engine");
-                        desktop.browse(uri);
-                    } catch (Exception ignored) {
-
+                    JLabel labelSource = (JLabel) e.getSource();
+                    String text = labelSource.getText();
+                    Pattern aHref = RegexUtil.getPattern("<a\\s+href\\s*=\\s*(\"|')?(.*?)[\"|'|>]", Pattern.CASE_INSENSITIVE);
+                    Matcher matcher = aHref.matcher(text);
+                    while (matcher.find()) {
+                        String link = matcher.group(2).trim();
+                        try {
+                            URI uri = new URI(link);
+                            desktop.browse(uri);
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
                     }
                 }
             }
-        });
+        };
+        labelAboutGithub.addMouseListener(aHrefMouseAdapter);
+        labelProject1.addMouseListener(aHrefMouseAdapter);
+        labelProject2.addMouseListener(aHrefMouseAdapter);
+        labelProject3.addMouseListener(aHrefMouseAdapter);
+        labelProject4.addMouseListener(aHrefMouseAdapter);
+        labelProject5.addMouseListener(aHrefMouseAdapter);
+        labelProject6.addMouseListener(aHrefMouseAdapter);
+        labelProject7.addMouseListener(aHrefMouseAdapter);
+        labelProject8.addMouseListener(aHrefMouseAdapter);
+        labelProject9.addMouseListener(aHrefMouseAdapter);
+        labelProject10.addMouseListener(aHrefMouseAdapter);
     }
 
     /**
@@ -1891,7 +1912,7 @@ public class SettingsFrame {
         labelHolder4.setText("   ");
         tabCommands.add(labelHolder4, new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         tabAbout = new JPanel();
-        tabAbout.setLayout(new GridLayoutManager(19, 12, new Insets(0, 0, 0, 0), -1, -1));
+        tabAbout.setLayout(new GridLayoutManager(20, 12, new Insets(0, 0, 0, 0), -1, -1));
         tabAbout.setMaximumSize(new Dimension(1000, 600));
         tabAbout.setMinimumSize(new Dimension(850, 500));
         tabAbout.setOpaque(false);
@@ -1900,7 +1921,7 @@ public class SettingsFrame {
         final Spacer spacer14 = new Spacer();
         tabAbout.add(spacer14, new GridConstraints(0, 11, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
         final Spacer spacer15 = new Spacer();
-        tabAbout.add(spacer15, new GridConstraints(18, 0, 1, 5, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        tabAbout.add(spacer15, new GridConstraints(19, 0, 1, 5, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         labelIcon = new JLabel();
         labelIcon.setText("");
         tabAbout.add(labelIcon, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -1935,18 +1956,6 @@ public class SettingsFrame {
         labelDescription = new JLabel();
         labelDescription.setText("Thanks for the following project");
         tabAbout.add(labelDescription, new GridConstraints(8, 1, 1, 10, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        labelWebLookAndFeel = new JLabel();
-        labelWebLookAndFeel.setText("Label");
-        tabAbout.add(labelWebLookAndFeel, new GridConstraints(9, 1, 1, 10, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        labelFastJson = new JLabel();
-        labelFastJson.setText("Label");
-        tabAbout.add(labelFastJson, new GridConstraints(10, 1, 1, 10, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        labelJna = new JLabel();
-        labelJna.setText("Label");
-        tabAbout.add(labelJna, new GridConstraints(11, 1, 1, 10, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        labelSQLite = new JLabel();
-        labelSQLite.setText("Label");
-        tabAbout.add(labelSQLite, new GridConstraints(12, 1, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         buttonCheckUpdate = new JButton();
         buttonCheckUpdate.setText("Check for update");
         tabAbout.add(buttonCheckUpdate, new GridConstraints(7, 4, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -1956,26 +1965,41 @@ public class SettingsFrame {
         chooseUpdateAddressLabel = new JLabel();
         chooseUpdateAddressLabel.setText("Choose update address");
         tabAbout.add(chooseUpdateAddressLabel, new GridConstraints(6, 1, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        labelTinyPinyin = new JLabel();
-        labelTinyPinyin.setText("Label");
-        tabAbout.add(labelTinyPinyin, new GridConstraints(13, 1, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        labelLombok = new JLabel();
-        labelLombok.setText("Label");
-        tabAbout.add(labelLombok, new GridConstraints(14, 1, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        labelZip = new JLabel();
-        labelZip.setText("Label");
-        tabAbout.add(labelZip, new GridConstraints(15, 1, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        labelOpenclWrapper = new JLabel();
-        labelOpenclWrapper.setText("Label");
-        tabAbout.add(labelOpenclWrapper, new GridConstraints(16, 1, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        labelOshi = new JLabel();
-        labelOshi.setText("Label");
-        tabAbout.add(labelOshi, new GridConstraints(17, 1, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         labelBuildVersion = new JLabel();
         labelBuildVersion.setText("LabelBuildVersion");
         tabAbout.add(labelBuildVersion, new GridConstraints(2, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer21 = new Spacer();
         tabAbout.add(spacer21, new GridConstraints(2, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        labelProject1 = new JLabel();
+        labelProject1.setText("Label");
+        tabAbout.add(labelProject1, new GridConstraints(9, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        labelProject2 = new JLabel();
+        labelProject2.setText("Label");
+        tabAbout.add(labelProject2, new GridConstraints(10, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        labelProject3 = new JLabel();
+        labelProject3.setText("Label");
+        tabAbout.add(labelProject3, new GridConstraints(11, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        labelProject4 = new JLabel();
+        labelProject4.setText("Label");
+        tabAbout.add(labelProject4, new GridConstraints(12, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        labelProject5 = new JLabel();
+        labelProject5.setText("Label");
+        tabAbout.add(labelProject5, new GridConstraints(13, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        labelProject6 = new JLabel();
+        labelProject6.setText("Label");
+        tabAbout.add(labelProject6, new GridConstraints(14, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        labelProject7 = new JLabel();
+        labelProject7.setText("Label");
+        tabAbout.add(labelProject7, new GridConstraints(15, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        labelProject8 = new JLabel();
+        labelProject8.setText("Label");
+        tabAbout.add(labelProject8, new GridConstraints(16, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        labelProject9 = new JLabel();
+        labelProject9.setText("Label");
+        tabAbout.add(labelProject9, new GridConstraints(17, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        labelProject10 = new JLabel();
+        labelProject10.setText("Label");
+        tabAbout.add(labelProject10, new GridConstraints(18, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         tabIndex = new JPanel();
         tabIndex.setLayout(new GridLayoutManager(9, 3, new Insets(0, 0, 0, 0), -1, -1));
         tabbedPane.addTab("Index", tabIndex);
@@ -2585,16 +2609,17 @@ public class SettingsFrame {
     }
 
     private void setLabelGui() {
+        labelProject1.setText("<html><a href='https://github.com/google/gson'><font size=\"4\">gson</font></a></html>");
+        labelProject2.setText("<html><a href='https://github.com/JFormDesigner/FlatLaf'><font size=\"4\">FlatLaf</font></a></html>");
+        labelProject3.setText("<html><a href='https://github.com/xerial/sqlite-jdbc'><font size=\"4\">sqlite_jdbc</font></a></html>");
+        labelProject4.setText("<html><a href='https://projectlombok.org'><font size=\"4\">lombok</font></a></html>");
+        labelProject5.setText("<html><a href='https://github.com/promeG/TinyPinyin'><font size=\"4\">TinyPinyin</font></a></html>");
+        labelProject6.setText("<html><a href='https://github.com/kuba--/zip'><font size=\"4\">zip</font></a></html>");
+        labelProject7.setText("<html><a href='https://github.com/ProjectPhysX/OpenCL-Wrapper'><font size=\"4\">OpenCLWrapper</font></a></html>");
+        labelProject8.setText("<html><a href='https://github.com/oshi/oshi'><font size=\"4\">oshi</font></a></html>");
+        labelProject9.setText("<html><a href='https://github.com/java-native-access/jna'><font size=\"4\">jna</font></a></html>");
+        labelProject10.setText("<html><a href='https://github.com/MrMarnic/JIconExtractReloaded'><font size=\"4\">JIconExtractReloaded</font></a></html>");
         labelAboutGithub.setText("<html><a href='https://github.com/XUANXUQAQ/File-Engine'><font size=\"4\">File-Engine</font></a></html>");
-        labelWebLookAndFeel.setText("1.JFormDesigner/FlatLaf");
-        labelFastJson.setText("2.google/gson");
-        labelJna.setText("3.java-native-access/jna");
-        labelSQLite.setText("4.xerial/sqlite-jdbc");
-        labelTinyPinyin.setText("5.promeG/TinyPinyin");
-        labelLombok.setText("6.projectlombok/Lombok");
-        labelZip.setText("7.kuba--/zip");
-        labelOpenclWrapper.setText("8.com.intellij/forms_rt");
-        labelOshi.setText("9.oshi/oshi");
         labelPluginNum.setText(String.valueOf(PluginService.getInstance().getInstalledPluginNum()));
         ImageIcon imageIcon = new ImageIcon(Objects.requireNonNull(SettingsFrame.class.getResource("/icons/frame.png")));
         labelIcon.setIcon(imageIcon);
