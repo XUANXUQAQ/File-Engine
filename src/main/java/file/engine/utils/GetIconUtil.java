@@ -11,6 +11,7 @@ import lombok.SneakyThrows;
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Objects;
@@ -206,7 +207,13 @@ public class GetIconUtil {
                 if (task.isDone) {
                     icon = task.icon;
                 } else {
-                    icon = new ImageIcon(JIconExtract.getIconForFile(task.width, task.height, task.path));
+                    BufferedImage iconForFile = JIconExtract.getIconForFile(task.width, task.height, task.path);
+                    if (iconForFile == null) {
+                        icon = changeIcon(constantIconMap.get("blankIcon"), task.width, task.height);
+                    } else {
+                        icon = new ImageIcon(iconForFile);
+                        cacheIconMap.put(task.path.getAbsolutePath(), new IconCache(System.currentTimeMillis(), icon));
+                    }
 //                     icon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(task.path), task.width, task.height);
 //                    if (null != icon) {
 //                        cacheIconMap.put(task.path.getAbsolutePath(), new IconCache(System.currentTimeMillis(), icon));
@@ -216,10 +223,15 @@ public class GetIconUtil {
                 }
                 task.timeoutCallBack.accept(icon);
             } else {
-                task.icon = new ImageIcon(JIconExtract.getIconForFile(task.width, task.height, task.path));
+                BufferedImage iconForFile = JIconExtract.getIconForFile(task.width, task.height, task.path);
+                if (iconForFile == null) {
+                    task.icon = changeIcon(constantIconMap.get("blankIcon"), task.width, task.height);
+                } else {
+                    task.icon = new ImageIcon(iconForFile);
+                    cacheIconMap.put(task.path.getAbsolutePath(), new IconCache(System.currentTimeMillis(), task.icon));
+                }
 //                task.icon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(task.path), task.width, task.height);
                 task.isDone = true;
-                cacheIconMap.put(task.path.getAbsolutePath(), new IconCache(System.currentTimeMillis(), task.icon));
             }
             TimeUnit.MILLISECONDS.sleep(1);
         }
