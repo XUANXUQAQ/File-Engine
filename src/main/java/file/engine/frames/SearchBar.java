@@ -3218,11 +3218,11 @@ public class SearchBar {
     }
 
     private int getTextFieldFontSizeByTextFieldHeight(int textFieldHeight) {
-        return (int) ((textFieldHeight / 0.7 * 9 * 0.3) / 96 * 72) / 4;
+        return (int) (((textFieldHeight / 0.7 * 9 * 0.3) / 96 * 72) / 4 / DpiUtil.getDpi());
     }
 
     private int getLabelFontSizeBySearchBarHeight(int searchBarHeight) {
-        return (int) (((searchBarHeight * 0.2) / 96 * 72) / 4.5);
+        return (int) ((((searchBarHeight * 0.2) / 96 * 72) / 4.5) / DpiUtil.getDpi());
     }
 
     private void switchToNormalMode(boolean isCloseWindow, Dimension screenSize) {
