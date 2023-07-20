@@ -19,6 +19,7 @@ public interface IGPUAccelerator {
      * @param keywordsLowerCase 搜索关键字，全小写字母，内容与keywords相同，但字母为全小写
      * @param isKeywordPath 保存keywords中的关键字是路径判断还是文件名判断
      * @param maxResultNumber 最大匹配结果数量限制
+     * @param resultCollectThreadNum 收集GPU搜索结果并发线程数
      * @param resultCollector 有一个结果匹配后的回调方法
      */
     void match(String[] searchCase,
@@ -28,6 +29,7 @@ public interface IGPUAccelerator {
                String[] keywordsLowerCase,
                boolean[] isKeywordPath,
                int maxResultNumber,
+               int resultCollectThreadNum,
                BiConsumer<String, String> resultCollector);
 
     /**

@@ -1951,6 +1951,7 @@ public class DatabaseService {
                         searchInfo.keywordsLowerCase,
                         searchInfo.isKeywordPath,
                         MAX_RESULTS,
+                        Math.max(2, AllConfigs.getInstance().getConfigEntity().getSearchThreadNumber() / 4),
                         (key, path) -> {
                             if (FileUtil.isFileNotExist(path)) {
                                 databaseService.removeFileFromDatabase(path);

@@ -66,9 +66,18 @@ public enum GPUAccelerator {
                       String[] keywordsLowerCase,
                       boolean[] isKeywordPath,
                       int maxResultNumber,
+                      int resultCollectThreadNum,
                       BiConsumer<String, String> resultCollector) {
         if (gpuAccelerator != null) {
-            gpuAccelerator.match(searchCase, isIgnoreCase, searchText, keywords, keywordsLowerCase, isKeywordPath, maxResultNumber, resultCollector);
+            gpuAccelerator.match(searchCase,
+                    isIgnoreCase,
+                    searchText,
+                    keywords,
+                    keywordsLowerCase,
+                    isKeywordPath,
+                    maxResultNumber,
+                    resultCollectThreadNum,
+                    resultCollector);
         }
     }
 

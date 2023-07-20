@@ -28,6 +28,7 @@ enum OpenclAccelerator implements IGPUAccelerator {
                              String[] keywordsLowerCase,
                              boolean[] isKeywordPath,
                              int maxResultNumber,
+                             int resultCollectThreadNum,
                              BiConsumer<String, String> resultCollector);
 
     public boolean isGPUAvailableOnSystem() {

@@ -183,12 +183,12 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_stopC
 /*
  * Class:     file_engine_dllInterface_gpu_OpenclAccelerator
  * Method:    match
- * Signature: ([Ljava/lang/String;ZLjava/lang/String;[Ljava/lang/String;[Ljava/lang/String;[ZILjava/util/function/BiConsumer;)V
+ * Signature: ([Ljava/lang/String;ZLjava/lang/String;[Ljava/lang/String;[Ljava/lang/String;[ZIILjava/util/function/BiConsumer;)V
  */
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_match
 (JNIEnv* env, jobject, jobjectArray search_case, jboolean is_ignore_case, jstring search_text,
 	jobjectArray keywords, jobjectArray keywords_lower, jbooleanArray is_keyword_path, jint max_results,
-	jobject result_collector)
+	jint result_collect_thread_num, jobject result_collector)
 {
 	if (cache_map.empty())
 	{
@@ -239,8 +239,8 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_match
 	const auto search_text_chars = env->GetStringUTFChars(search_text, nullptr);
 	std::atomic_uint result_counter = 0;
 	std::vector<std::thread> collect_threads_vec;
-	collect_threads_vec.reserve(COLLECT_RESULTS_THREADS);
-	for (int i = 0; i < COLLECT_RESULTS_THREADS; ++i)
+	collect_threads_vec.reserve(result_collect_thread_num);
+	for (int i = 0; i < result_collect_thread_num; ++i)
 	{
 		auto&& collect_func = [&]
 		{

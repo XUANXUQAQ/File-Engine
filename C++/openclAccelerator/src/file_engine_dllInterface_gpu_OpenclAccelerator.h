@@ -18,10 +18,10 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_reset
 /*
  * Class:     file_engine_dllInterface_gpu_OpenclAccelerator
  * Method:    match
- * Signature: ([Ljava/lang/String;ZLjava/lang/String;[Ljava/lang/String;[Ljava/lang/String;[ZILjava/util/function/BiConsumer;)V
+ * Signature: ([Ljava/lang/String;ZLjava/lang/String;[Ljava/lang/String;[Ljava/lang/String;[ZIILjava/util/function/BiConsumer;)V
  */
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_gpu_OpenclAccelerator_match
-  (JNIEnv *, jobject, jobjectArray, jboolean, jstring, jobjectArray, jobjectArray, jbooleanArray, jint, jobject);
+  (JNIEnv *, jobject, jobjectArray, jboolean, jstring, jobjectArray, jobjectArray, jbooleanArray, jint, jint, jobject);
 
 /*
  * Class:     file_engine_dllInterface_gpu_OpenclAccelerator
