@@ -53,10 +53,7 @@ public enum ThreadPoolUtil {
     }
 
     public <T> Future<T> executeTask(Callable<T> task) {
-        if (isShutdown.get()) {
-            return null;
-        }
-        return executeTaskPlatform(task);
+        return executeTask(task, true);
     }
 
     /**
@@ -82,7 +79,7 @@ public enum ThreadPoolUtil {
         if (isShutdown.get()) {
             return;
         }
-        executeTaskPlatform(task);
+        executeTask(task, true);
     }
 
     /**
