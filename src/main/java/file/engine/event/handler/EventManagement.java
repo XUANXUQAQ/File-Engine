@@ -189,6 +189,7 @@ public class EventManagement {
                         pluginHandler.accept(event.getClass(), event);
                     } else {
                         pluginHandler.accept(pluginRegisterEvent.getEventClass(), pluginRegisterEvent.getEventObjFromPlugin());
+                        doAllMethod(eventClassName, event);
                     }
                 } else {
                     pluginHandler.accept(event.getClass(), event);
@@ -342,7 +343,13 @@ public class EventManagement {
         }
         var classObjectBiConsumer = PLUGIN_EVENT_LISTENER_MAP.get(eventType);
         if (classObjectBiConsumer != null) {
-            classObjectBiConsumer.forEach((pluginName, listeners) -> listeners.forEach(listener -> listener.listener.accept(event.getClass(), event)));
+            if (event instanceof PluginRegisterEvent pluginRegisterEvent) {
+                classObjectBiConsumer.forEach((pluginName, listeners) ->
+                        listeners.forEach(listener ->
+                                listener.listener.accept(pluginRegisterEvent.getEventClass(), pluginRegisterEvent.getEventObjFromPlugin())));
+            } else {
+                classObjectBiConsumer.forEach((pluginName, listeners) -> listeners.forEach(listener -> listener.listener.accept(event.getClass(), event)));
+            }
         }
     }
 
