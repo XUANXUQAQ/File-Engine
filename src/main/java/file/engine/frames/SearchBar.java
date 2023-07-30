@@ -224,7 +224,7 @@ public class SearchBar {
         //TextField
         textField = new JTextField(1000);
         textField.setSize(searchBarWidth, textFieldHeight);
-        Font textFieldFont = new Font(Font.SANS_SERIF, Font.PLAIN, getTextFieldFontSizeByTextFieldHeight(textFieldHeight));
+        Font textFieldFont = new Font(Font.SANS_SERIF, Font.PLAIN, getTextFieldFontSizeByTextFieldHeight());
         textField.setFont(textFieldFont);
         textField.setForeground(Color.BLACK);
         textField.setHorizontalAlignment(JTextField.LEFT);
@@ -233,7 +233,7 @@ public class SearchBar {
         textField.setOpaque(true);
 
         //labels
-        final Font labelFont = new Font(Font.SANS_SERIF, Font.BOLD, getLabelFontSizeBySearchBarHeight(searchBarHeight));
+        final Font labelFont = new Font(Font.SANS_SERIF, Font.BOLD, getLabelFontSizeBySearchBarHeight());
         searchInfoLabel = new JLabel();
         searchInfoLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
@@ -3200,9 +3200,9 @@ public class SearchBar {
             if (showingMode != Constants.Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
                 //设置字体
                 int textFieldHeight = (int) (labelHeight * TEXT_FIELD_HEIGHT_RATIO);
-                Font textFieldFont = new Font(null, Font.PLAIN, getTextFieldFontSizeByTextFieldHeight(textFieldHeight));
+                Font textFieldFont = new Font(null, Font.PLAIN, getTextFieldFontSizeByTextFieldHeight());
                 textField.setFont(textFieldFont);
-                Font labelFont = new Font(null, Font.BOLD, getLabelFontSizeBySearchBarHeight(searchBarHeight));
+                Font labelFont = new Font(null, Font.BOLD, getLabelFontSizeBySearchBarHeight());
                 label1.setFont(labelFont);
                 label2.setFont(labelFont);
                 label3.setFont(labelFont);
@@ -3217,12 +3217,12 @@ public class SearchBar {
         }
     }
 
-    private int getTextFieldFontSizeByTextFieldHeight(int textFieldHeight) {
-        return (int) (((textFieldHeight / 0.7 * 9 * 0.3) / 96 * 72) / 4 * 1.2);
+    private int getTextFieldFontSizeByTextFieldHeight() {
+        return (int) (30 / DpiUtil.getDpi());
     }
 
-    private int getLabelFontSizeBySearchBarHeight(int searchBarHeight) {
-        return (int) ((((searchBarHeight * 0.2) / 96 * 72) / 4.5) * 1.2);
+    private int getLabelFontSizeBySearchBarHeight() {
+        return (int) (18 / DpiUtil.getDpi());
     }
 
     private void switchToNormalMode(boolean isCloseWindow, Dimension screenSize) {
@@ -3236,8 +3236,8 @@ public class SearchBar {
         //设置字体
         int labelHeight = searchBarHeight / 9;
         int textFieldHeight = (int) (labelHeight * TEXT_FIELD_HEIGHT_RATIO);
-        Font labelFont = new Font(null, Font.BOLD, getLabelFontSizeBySearchBarHeight(searchBarHeight));
-        Font textFieldFont = new Font(null, Font.PLAIN, getTextFieldFontSizeByTextFieldHeight(textFieldHeight));
+        Font labelFont = new Font(null, Font.BOLD, getLabelFontSizeBySearchBarHeight());
+        Font textFieldFont = new Font(null, Font.PLAIN, getTextFieldFontSizeByTextFieldHeight());
         textField.setFont(textFieldFont);
         label1.setFont(labelFont);
         label2.setFont(labelFont);
