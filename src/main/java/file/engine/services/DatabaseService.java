@@ -862,6 +862,12 @@ public class DatabaseService {
             GPUAccelerator.INSTANCE.stopCollectResults();
         }
         searchTask.searchDoneFlag = true;
+        // 检查prepareTaskMap中是否有过期任务
+        for (var eachTask : prepareTasksMap.entrySet()) {
+            if (System.currentTimeMillis() - eachTask.getValue().taskCreateTimeMills > SearchTask.maxTaskValidThreshold) {
+                prepareTasksMap.remove(eachTask.getKey());
+            }
+        }
     }
 
     /**
@@ -1542,6 +1548,7 @@ public class DatabaseService {
     }
 
     private void stopAllSearch() {
+        prepareTasksMap.values().forEach(SearchTask::stopSearch);
     }
 
     /**
@@ -1851,17 +1858,15 @@ public class DatabaseService {
             Thread.onSpinWait();
         }
 
-        // 检查prepareTaskMap中是否有过期任务
-        for (var eachTask : prepareTasksMap.entrySet()) {
-            if (System.currentTimeMillis() - eachTask.getValue().taskCreateTimeMills > SearchTask.maxTaskValidThreshold) {
-                prepareTasksMap.remove(eachTask.getKey());
-            }
-        }
-
         var prepareSearchEvent = (PrepareSearchEvent) event;
         var searchInfo = prepareSearchKeywords(prepareSearchEvent.searchText, prepareSearchEvent.searchCase, prepareSearchEvent.keywords);
-        var searchTask = prepareSearch(searchInfo);
-        prepareTasksMap.put(searchInfo, searchTask);
+        var searchTask = prepareTasksMap.get(searchInfo);
+        if (searchTask == null) {
+            searchTask = prepareSearch(searchInfo);
+            prepareTasksMap.put(searchInfo, searchTask);
+        } else {
+            searchTask.updateTaskCreateTimeMills();
+        }
         event.setReturnValue(searchTask);
     }
 
@@ -1887,8 +1892,11 @@ public class DatabaseService {
         var searchTask = prepareTasksMap.get(searchInfo);
         if (searchTask == null) {
             searchTask = prepareSearch(searchInfo);
+            prepareTasksMap.put(searchInfo, searchTask);
         }
-        databaseService.startSearchInThreadPool(searchTask);
+        if (!searchTask.searchDoneFlag) {
+            databaseService.startSearchInThreadPool(searchTask);
+        }
         event.setReturnValue(searchTask);
     }
 
@@ -2344,18 +2352,27 @@ public class DatabaseService {
         private final Set<String> tempResultsSet = ConcurrentHashMap.newKeySet();
         private final AtomicInteger resultCounter = new AtomicInteger();
         private volatile boolean searchDoneFlag = false;
-        private final long taskCreateTimeMills = System.currentTimeMillis();
+        private volatile long taskCreateTimeMills = System.currentTimeMillis();
+        private volatile boolean shouldStopSearchFlag = false;
 
 
         private static final AtomicBoolean isGpuThreadRunning = new AtomicBoolean();
-        private static final long maxTaskValidThreshold = 5000;
+        private static final long maxTaskValidThreshold = 10_000;
 
         public boolean isSearchDone() {
             return searchDoneFlag;
         }
 
+        public void updateTaskCreateTimeMills() {
+            taskCreateTimeMills = System.currentTimeMillis();
+        }
+
+        public void stopSearch() {
+            shouldStopSearchFlag = true;
+        }
+
         private boolean shouldStopSearch() {
-            return resultCounter.get() > MAX_RESULTS;
+            return resultCounter.get() > MAX_RESULTS || shouldStopSearchFlag;
         }
     }
 
