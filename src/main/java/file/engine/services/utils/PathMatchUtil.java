@@ -20,12 +20,10 @@ public class PathMatchUtil {
      */
     private static boolean notMatched(String path, boolean isIgnoreCase, String[] keywords, String[] keywordsLowerCase, boolean[] isKeywordPath) {
         final int length = keywords.length;
-        String parentPath = FileUtil.getParentPath(path);
-        String fileName = FileUtil.getFileName(path);
         for (int i = 0; i < length; ++i) {
             String eachKeyword;
             final boolean isPath = isKeywordPath[i];
-            String matcherStrFromFilePath = isPath ? parentPath : fileName;
+            String matcherStrFromFilePath = isPath ? FileUtil.getParentPath(path) : FileUtil.getFileName(path);
             if (isIgnoreCase) {
                 eachKeyword = keywordsLowerCase[i];
                 matcherStrFromFilePath = matcherStrFromFilePath.toLowerCase();
@@ -81,19 +79,18 @@ public class PathMatchUtil {
         if (notMatched(path, isIgnoreCase, keywords, keywordsLowerCase, isKeywordPath)) {
             return false;
         }
-        if (searchCase == null || searchCase.length == 0) {
+        if (searchCase == null) {
             return true;
         }
-        Path pathVar = Path.of(path);
         for (String eachCase : searchCase) {
             switch (eachCase) {
                 case SearchCase.F -> {
-                    if (!Files.isRegularFile(pathVar)) {
+                    if (!Files.isRegularFile(Path.of(path))) {
                         return false;
                     }
                 }
                 case SearchCase.D -> {
-                    if (!Files.isDirectory(pathVar)) {
+                    if (!Files.isDirectory(Path.of(path))) {
                         return false;
                     }
                 }

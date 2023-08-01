@@ -743,9 +743,6 @@ public class DatabaseService {
                         isGPUMatchDone = true;
                         break out;
                     }
-                    if (searchTask.shouldStopSearch() || !eventManagement.notMainExit()) {
-                        break out;
-                    }
                     if (resultSet.next()) {
                         tmpQueryResultsCache[realResultCount] = resultSet.getString("PATH");
                         ++realResultCount;
@@ -862,12 +859,6 @@ public class DatabaseService {
             GPUAccelerator.INSTANCE.stopCollectResults();
         }
         searchTask.searchDoneFlag = true;
-        // 检查prepareTaskMap中是否有过期任务
-        for (var eachTask : prepareTasksMap.entrySet()) {
-            if (System.currentTimeMillis() - eachTask.getValue().taskCreateTimeMills > SearchTask.maxTaskValidThreshold) {
-                prepareTasksMap.remove(eachTask.getKey());
-            }
-        }
     }
 
     /**
@@ -1004,9 +995,6 @@ public class DatabaseService {
             for (String e : cache.data) {
                 if (checkIsMatchedAndAddToList(e, searchTask)) {
                     count++;
-                }
-                if (searchTask.shouldStopSearch()) {
-                    break;
                 }
             }
             matchedNum = count;
@@ -1791,8 +1779,7 @@ public class DatabaseService {
                 keywordsLowerCase[i] = "";
                 continue;
             }
-            final char _firstChar = eachKeyword.charAt(0);
-            final boolean isPath = _firstChar == '/' || _firstChar == File.separatorChar;
+            final boolean isPath = eachKeyword.startsWith("/") || eachKeyword.startsWith(File.separator);
             if (isPath) {
                 // 当关键字为"test;/C:/test"时，分割出来为["test", "/C:/test"]，所以需要去掉 /C:/test 前面的 "/"
                 eachKeyword = eachKeyword.substring(1);
@@ -1844,8 +1831,9 @@ public class DatabaseService {
 
     @EventRegister(registerClass = PrepareSearchEvent.class)
     private static void prepareSearchEvent(Event event) {
-        if (IsDebug.isDebug()) {
-            System.out.println("进行预搜索并添加搜索任务");
+        if (((PrepareSearchEvent) event).searchText.get().length() > Constants.MAX_SEARCH_TEXT_LENGTH) {
+            System.err.println("关键字太长，取消搜索");
+            return;
         }
         var startWaiting = System.currentTimeMillis();
         final long timeout = 3000;
@@ -1857,7 +1845,6 @@ public class DatabaseService {
             }
             Thread.onSpinWait();
         }
-
         var prepareSearchEvent = (PrepareSearchEvent) event;
         var searchInfo = prepareSearchKeywords(prepareSearchEvent.searchText, prepareSearchEvent.searchCase, prepareSearchEvent.keywords);
         var searchTask = prepareTasksMap.get(searchInfo);
@@ -1886,7 +1873,12 @@ public class DatabaseService {
             }
             Thread.onSpinWait();
         }
-
+        // 检查prepareTaskMap中是否有过期任务
+        for (var eachTask : prepareTasksMap.entrySet()) {
+            if (System.currentTimeMillis() - eachTask.getValue().taskCreateTimeMills > SearchTask.maxTaskValidThreshold) {
+                prepareTasksMap.remove(eachTask.getKey());
+            }
+        }
         var startSearchEvent = (StartSearchEvent) event;
         var searchInfo = prepareSearchKeywords(startSearchEvent.searchText, startSearchEvent.searchCase, startSearchEvent.keywords);
         var searchTask = prepareTasksMap.get(searchInfo);
