@@ -47,6 +47,7 @@ public class Plugin {
         methodList.add("restoreFileEngineEventHandler");
         methodList.add("pollFromEventListenerQueue");
         methodList.add("removeFileEngineEventListener");
+        methodList.add("openSettings");
     }
 
     public Plugin(String name, String identifier, PluginClassAndInstanceInfo pluginClassAndInstanceInfo) {
@@ -107,6 +108,11 @@ public class Plugin {
 
     public Object[] pollFromEventQueue() {
         return invokeByKeyNoExcept("pollFromEventQueue[]");
+    }
+
+    public void openSettings() {
+        String key = "openSettings[]";
+        invokeByKeyNoExcept(key);
     }
 
     public void eventProcessed(Class<?> c, Object eventInstance) {

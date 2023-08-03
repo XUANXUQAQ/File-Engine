@@ -315,6 +315,7 @@ public class SettingsFrame {
     private JLabel labelProject8;
     private JLabel labelProject9;
     private JLabel labelProject10;
+    private JButton buttonPluginSettings;
 
 
     private static volatile SettingsFrame instance = null;
@@ -1015,6 +1016,7 @@ public class SettingsFrame {
                         labelOfficialSite.setText("<html><a href='" + officialSite + "'><font size=\"4\">" + pluginName + "</font></a></html>");
                         labelProgress.setText("");
                         buttonUpdatePlugin.setVisible(true);
+                        buttonPluginSettings.setVisible(true);
                     });
                     if (PluginService.getInstance().hasPluginNotLatest(pluginName)) {
                         boolean isTaskDone = downloadedPlugins.contains(pluginName);
@@ -1685,7 +1687,7 @@ public class SettingsFrame {
         tabbedPane.addTab("Plugins", tabPlugin);
         tabPlugin.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(), null, TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
         PluginSettingsPanel = new JPanel();
-        PluginSettingsPanel.setLayout(new GridLayoutManager(8, 7, new Insets(0, 0, 0, 0), -1, -1));
+        PluginSettingsPanel.setLayout(new GridLayoutManager(8, 8, new Insets(0, 0, 0, 0), -1, -1));
         PluginSettingsPanel.setOpaque(false);
         GridBagConstraints gbc;
         gbc = new GridBagConstraints();
@@ -1706,7 +1708,7 @@ public class SettingsFrame {
         labelPluginVersion.setText("");
         PluginSettingsPanel.add(labelPluginVersion, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         scrollPane = new JScrollPane();
-        PluginSettingsPanel.add(scrollPane, new GridConstraints(5, 0, 1, 6, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        PluginSettingsPanel.add(scrollPane, new GridConstraints(5, 0, 1, 7, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         textAreaDescription = new JTextArea();
         textAreaDescription.setEditable(false);
         textAreaDescription.setEnabled(true);
@@ -1729,25 +1731,28 @@ public class SettingsFrame {
         PluginSettingsPanel.add(labelPlaceHolder12, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         labelUninstallPluginTip = new JLabel();
         labelUninstallPluginTip.setText("If you need to delete a plug-in, just delete it under the \"plugins\" folder in the software directory.");
-        PluginSettingsPanel.add(labelUninstallPluginTip, new GridConstraints(0, 0, 1, 5, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        PluginSettingsPanel.add(labelUninstallPluginTip, new GridConstraints(0, 0, 1, 6, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         placeholderPlugin2 = new JLabel();
         placeholderPlugin2.setText("   ");
         PluginSettingsPanel.add(placeholderPlugin2, new GridConstraints(7, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         placeholderPlugin1 = new JLabel();
         placeholderPlugin1.setText("         ");
-        PluginSettingsPanel.add(placeholderPlugin1, new GridConstraints(5, 6, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        PluginSettingsPanel.add(placeholderPlugin1, new GridConstraints(5, 7, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         placeholderPlugins3 = new JLabel();
         placeholderPlugins3.setText("    ");
-        PluginSettingsPanel.add(placeholderPlugins3, new GridConstraints(4, 5, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        PluginSettingsPanel.add(placeholderPlugins3, new GridConstraints(4, 6, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         buttonUpdatePlugin = new JButton();
         buttonUpdatePlugin.setText("Check for Update");
-        PluginSettingsPanel.add(buttonUpdatePlugin, new GridConstraints(2, 4, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        PluginSettingsPanel.add(buttonUpdatePlugin, new GridConstraints(2, 5, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         labelProgress = new JLabel();
         labelProgress.setText("    ");
-        PluginSettingsPanel.add(labelProgress, new GridConstraints(3, 4, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        PluginSettingsPanel.add(labelProgress, new GridConstraints(3, 5, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         labelHolder2 = new JLabel();
         labelHolder2.setText("   ");
         PluginSettingsPanel.add(labelHolder2, new GridConstraints(6, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        buttonPluginSettings = new JButton();
+        buttonPluginSettings.setText("Settings");
+        PluginSettingsPanel.add(buttonPluginSettings, new GridConstraints(2, 4, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         PluginListPanel = new JPanel();
         PluginListPanel.setLayout(new GridLayoutManager(4, 1, new Insets(0, 0, 0, 0), -1, -1));
         PluginListPanel.setOpaque(false);
@@ -2519,6 +2524,17 @@ public class SettingsFrame {
         return true;
     }
 
+    private void addButtonOpenPluginSettingsListener() {
+        buttonPluginSettings.addActionListener(e -> {
+            String pluginName = (String) listPlugins.getSelectedValue();
+            eventManagement.putEvent(new GetPluginByNameEvent(pluginName), event -> {
+                GetPluginByNameEvent getPluginByNameEvent = (GetPluginByNameEvent) event;
+                Optional<PluginService.PluginInfo> returnValue = getPluginByNameEvent.getReturnValue();
+                returnValue.ifPresent(pluginInfo -> pluginInfo.plugin.openSettings());
+            }, null);
+        });
+    }
+
     private void addButtonPluginUpdateCheckListener() {
         AtomicBoolean isVersionLatest = new AtomicBoolean(true);
         AtomicBoolean isSkipConfirm = new AtomicBoolean(false);
@@ -2874,6 +2890,7 @@ public class SettingsFrame {
         tabbedPane.setBackground(new Color(0, 0, 0, 0));
 
         buttonUpdatePlugin.setVisible(false);
+        buttonPluginSettings.setVisible(false);
         var configs = allConfigs.getConfigEntity();
         if (configs.getProxyType() == Constants.Enums.ProxyType.PROXY_DIRECT) {
             radioButtonNoProxy.setSelected(true);
@@ -3056,6 +3073,7 @@ public class SettingsFrame {
         addResetColorButtonListener();
         addColorChooserLabelListener();
         addListPluginMouseListener();
+        addButtonOpenPluginSettingsListener();
         addButtonPluginUpdateCheckListener();
         addButtonViewPluginMarketListener();
         addButtonAddDiskListener();
@@ -3201,6 +3219,7 @@ public class SettingsFrame {
         buttonRebuildIndex.setText(translateService.getTranslation("Rebuild"));
         buttonAddNewDisk.setText(translateService.getTranslation("Add"));
         buttonDeleteDisk.setText(translateService.getTranslation("Delete"));
+        buttonPluginSettings.setText(translateService.getTranslation("Settings"));
     }
 
     private void translateRadioButtons() {

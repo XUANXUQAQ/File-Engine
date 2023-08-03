@@ -1189,7 +1189,7 @@
                     </properties>
                     <border type="empty"/>
                     <children>
-                      <grid id="76311" binding="PluginSettingsPanel" layout-manager="GridLayoutManager" row-count="8" column-count="7" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+                      <grid id="76311" binding="PluginSettingsPanel" layout-manager="GridLayoutManager" row-count="8" column-count="8" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                         <margin top="0" left="0" bottom="0" right="0"/>
                         <constraints>
                           <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
@@ -1226,7 +1226,7 @@
                           </component>
                           <scrollpane id="2d49d" binding="scrollPane">
                             <constraints>
-                              <grid row="5" column="0" row-span="1" col-span="6" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                              <grid row="5" column="0" row-span="1" col-span="7" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
                             </constraints>
                             <properties/>
                             <border type="none"/>
@@ -1278,7 +1278,7 @@
                           </component>
                           <component id="df106" class="javax.swing.JLabel" binding="labelUninstallPluginTip">
                             <constraints>
-                              <grid row="0" column="0" row-span="1" col-span="5" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                              <grid row="0" column="0" row-span="1" col-span="6" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                             </constraints>
                             <properties>
                               <text value="If you need to delete a plug-in, just delete it under the &quot;plugins&quot; folder in the software directory."/>
@@ -1294,7 +1294,7 @@
                           </component>
                           <component id="11bc0" class="javax.swing.JLabel" binding="placeholderPlugin1">
                             <constraints>
-                              <grid row="5" column="6" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                              <grid row="5" column="7" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                             </constraints>
                             <properties>
                               <text value="         "/>
@@ -1302,7 +1302,7 @@
                           </component>
                           <component id="64fee" class="javax.swing.JLabel" binding="placeholderPlugins3">
                             <constraints>
-                              <grid row="4" column="5" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                              <grid row="4" column="6" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                             </constraints>
                             <properties>
                               <text value="    "/>
@@ -1310,7 +1310,7 @@
                           </component>
                           <component id="84bbe" class="javax.swing.JButton" binding="buttonUpdatePlugin">
                             <constraints>
-                              <grid row="2" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                              <grid row="2" column="5" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                             </constraints>
                             <properties>
                               <text value="Check for Update"/>
@@ -1318,7 +1318,7 @@
                           </component>
                           <component id="14dd7" class="javax.swing.JLabel" binding="labelProgress">
                             <constraints>
-                              <grid row="3" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                              <grid row="3" column="5" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                             </constraints>
                             <properties>
                               <text value="    "/>
@@ -1330,6 +1330,14 @@
                             </constraints>
                             <properties>
                               <text value="   "/>
+                            </properties>
+                          </component>
+                          <component id="66d85" class="javax.swing.JButton" binding="buttonPluginSettings">
+                            <constraints>
+                              <grid row="2" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                            </constraints>
+                            <properties>
+                              <text value="Settings"/>
                             </properties>
                           </component>
                         </children>

@@ -34,10 +34,10 @@ public class Constants {
     public static final String LAUNCH_WRAPPER_NAME = "File-Engine.exe";
 
     // 插件API版本
-    public static final int API_VERSION = 7;
+    public static final int API_VERSION = 8;
 
     // 兼容的插件API版本
-    public static final int[] COMPATIBLE_API_VERSIONS = {3, 4, 5, 6, 7};
+    public static final int[] COMPATIBLE_API_VERSIONS = {3, 4, 5, 6, 7, API_VERSION};
 
     // 默认swing主题
     public static final String DEFAULT_SWING_THEME = "MaterialLighter";
