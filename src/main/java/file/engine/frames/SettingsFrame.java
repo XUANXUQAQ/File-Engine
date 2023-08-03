@@ -3026,6 +3026,14 @@ public class SettingsFrame {
         addListeners();
     }
 
+    private void addChooseUpdateComboBoxListener() {
+        chooseUpdateAddress.addItemListener(item -> {
+            if (item.getStateChange() == ItemEvent.SELECTED) {
+                saveChanges();
+            }
+        });
+    }
+
     /**
      * 添加所有监听器
      */
@@ -3069,6 +3077,7 @@ public class SettingsFrame {
         addButtonClosePreviewListener();
         addTextFieldSearchCommandsListener();
         addTreeSettingsListener();
+        addChooseUpdateComboBoxListener();
     }
 
     /**
