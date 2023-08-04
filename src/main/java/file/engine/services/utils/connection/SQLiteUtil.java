@@ -297,7 +297,7 @@ public class SQLiteUtil {
     public static boolean isDatabaseDamaged() {
         try {
             ArrayList<String> list = new ArrayList<>();
-            for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
+            for (int i = 0; i <= Constants.MAX_TABLE_NUM; i++) {
                 list.add("list" + i);
             }
             return isDatabaseEmpty(list);

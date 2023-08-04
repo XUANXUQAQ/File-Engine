@@ -809,7 +809,7 @@ public class DatabaseService {
         boolean isNeedSubtract = false;
         HashMap<String, Integer> weights = queryAllWeights();
         if (!weights.isEmpty()) {
-            for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
+            for (int i = 0; i <= Constants.MAX_TABLE_NUM; i++) {
                 Integer weight = weights.get("list" + i);
                 if (weight == null) {
                     weight = 0;
@@ -820,7 +820,7 @@ public class DatabaseService {
                 tableSet.add(new TableNameWeightInfo("list" + i, weight));
             }
         } else {
-            for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
+            for (int i = 0; i <= Constants.MAX_TABLE_NUM; i++) {
                 tableSet.add(new TableNameWeightInfo("list" + i, 0));
             }
         }
@@ -1027,8 +1027,8 @@ public class DatabaseService {
             }
         }
         int asciiGroup = asciiSum / 100;
-        if (asciiGroup > Constants.ALL_TABLE_NUM) {
-            asciiGroup = Constants.ALL_TABLE_NUM;
+        if (asciiGroup > Constants.MAX_TABLE_NUM) {
+            asciiGroup = Constants.MAX_TABLE_NUM;
         }
         String firstTableName = "list" + asciiGroup;
         // 有d代表只需要搜索文件夹，文件夹的priority为-1
@@ -1119,7 +1119,7 @@ public class DatabaseService {
     private void addDeleteSqlCommandByAscii(int asciiSum, String path) {
         String command;
         int asciiGroup = asciiSum / 100;
-        asciiGroup = Math.min(asciiGroup, Constants.ALL_TABLE_NUM);
+        asciiGroup = Math.min(asciiGroup, Constants.MAX_TABLE_NUM);
         String sql = "DELETE FROM %s where PATH=\"%s\";";
         command = String.format(sql, "list" + asciiGroup, path);
         if (command != null && isCommandNotRepeat(command)) {
@@ -1140,7 +1140,7 @@ public class DatabaseService {
     private void addAddSqlCommandByAscii(int asciiSum, String path, int priority) {
         String commandTemplate = "INSERT OR IGNORE INTO %s VALUES(%d, \"%s\", %d)";
         int asciiGroup = asciiSum / 100;
-        asciiGroup = Math.min(asciiGroup, Constants.ALL_TABLE_NUM);
+        asciiGroup = Math.min(asciiGroup, Constants.MAX_TABLE_NUM);
         String columnName = "list" + asciiGroup;
         String command = String.format(commandTemplate, columnName, asciiSum, path, priority);
         if (command != null && isCommandNotRepeat(command)) {
@@ -1185,7 +1185,7 @@ public class DatabaseService {
             addDeleteSqlCommandByAscii(asciiSum, path);
             int priorityBySuffix = getPriorityBySuffix(getSuffixByPath(path));
             int asciiGroup = asciiSum / 100;
-            asciiGroup = Math.min(asciiGroup, Constants.ALL_TABLE_NUM);
+            asciiGroup = Math.min(asciiGroup, Constants.MAX_TABLE_NUM);
             String tableName = "list" + asciiGroup;
             String key = path.charAt(0) + "," + tableName + "," + priorityBySuffix;
             if (isEnableGPUAccelerate) {
@@ -1267,7 +1267,7 @@ public class DatabaseService {
         int priorityBySuffix = getPriorityBySuffix(getSuffixByPath(path));
         addAddSqlCommandByAscii(asciiSum, path, priorityBySuffix);
         int asciiGroup = asciiSum / 100;
-        asciiGroup = Math.min(asciiGroup, Constants.ALL_TABLE_NUM);
+        asciiGroup = Math.min(asciiGroup, Constants.MAX_TABLE_NUM);
         String tableName = "list" + asciiGroup;
         String key = path.charAt(0) + "," + tableName + "," + priorityBySuffix;
         if (isEnableGPUAccelerate) {
@@ -1421,7 +1421,7 @@ public class DatabaseService {
     private void createAllIndex() {
         sqlCommandQueue.add(new SQLWithTaskId("CREATE INDEX IF NOT EXISTS cache_index ON cache(PATH);", SqlTaskIds.CREATE_INDEX, "cache"));
         for (String each : RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks())) {
-            for (int i = 0; i <= Constants.ALL_TABLE_NUM; ++i) {
+            for (int i = 0; i <= Constants.MAX_TABLE_NUM; ++i) {
                 String createIndex = "CREATE INDEX IF NOT EXISTS list" + i + "_index ON list" + i + "(PRIORITY);";
                 sqlCommandQueue.add(new SQLWithTaskId(createIndex, SqlTaskIds.CREATE_INDEX, String.valueOf(each.charAt(0))));
             }
@@ -1990,7 +1990,7 @@ public class DatabaseService {
         databaseService.prepareDatabaseCache();
         var allConfigs = AllConfigs.getInstance();
         for (String diskPath : RegexUtil.comma.split(allConfigs.getAvailableDisks())) {
-            for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
+            for (int i = 0; i <= Constants.MAX_TABLE_NUM; i++) {
                 for (var suffixPriorityPair : databaseService.priorityMap) {
                     databaseService.tableCache.put(diskPath.charAt(0) + "," + "list" + i + "," + suffixPriorityPair.priority, new Cache());
                 }

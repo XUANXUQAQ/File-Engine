@@ -18,8 +18,8 @@ public class Constants {
 
     public static String buildVersion;
 
-    // 数据库中所有表的数量
-    public static final int ALL_TABLE_NUM = 40;
+    // 数据库中最大的分表ID  list[0-40]
+    public static final int MAX_TABLE_NUM = 40;
 
     // 搜索框最短应该显示的时间，单位毫秒
     public static final int MIN_FRAME_VISIBLE_TIME = 500;
