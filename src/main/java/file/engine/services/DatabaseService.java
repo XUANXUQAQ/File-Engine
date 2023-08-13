@@ -355,11 +355,10 @@ public class DatabaseService {
                         if (gpuMemUsage < createGPUCacheThreshold) {
                             createGpuCache(isStopCreateCache, createGPUCacheThreshold);
                         }
-                    } else {
-                        final double memoryUsage = SystemInfoUtil.getMemoryUsage();
-                        if (memoryUsage * 100 < createMemoryThreshold) {
-                            createMemoryCache(isStopCreateCache);
-                        }
+                    }
+                    final double memoryUsage = SystemInfoUtil.getMemoryUsage();
+                    if (memoryUsage * 100 < createMemoryThreshold) {
+                        createMemoryCache(isStopCreateCache);
                     }
                 } else {
                     if (isEnableGPUAccelerate) {
@@ -395,7 +394,7 @@ public class DatabaseService {
                 tableQueueByPriority,
                 isStopCreateCache,
                 100,
-                2000);
+                5000);
         saveTableCache(isStopCreateCache, tableNeedCache);
         System.out.println("添加完成");
     }
@@ -409,7 +408,7 @@ public class DatabaseService {
         LinkedHashMap<String, Integer> tableNeedCache = scanDatabaseAndSelectCacheTable(disks,
                 tableQueueByPriority,
                 isStopCreateCache,
-                2000,
+                5000,
                 Integer.MAX_VALUE);
         saveTableCacheForGPU(isStopCreateCache, tableNeedCache, createGpuCacheThreshold);
         System.out.println("添加完成");
@@ -991,13 +990,7 @@ public class DatabaseService {
             if (IsDebug.isDebug()) {
                 System.out.println("从缓存中读取 " + key);
             }
-            long count = 0L;
-            for (String e : cache.data) {
-                if (checkIsMatchedAndAddToList(e, searchTask)) {
-                    count++;
-                }
-            }
-            matchedNum = count;
+            matchedNum = cache.data.parallelStream().filter(s -> checkIsMatchedAndAddToList(s, searchTask)).count();
         } else {
             //格式化是为了以后的拓展性
             String formattedSql = String.format(sql, "PATH");
