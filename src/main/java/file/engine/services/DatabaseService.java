@@ -74,7 +74,7 @@ public class DatabaseService {
     // 对数据库cache表的缓存，保存常用的应用
     private final ConcurrentSkipListSet<String> databaseCacheSet = new ConcurrentSkipListSet<>();
     private final AtomicInteger searchThreadCount = new AtomicInteger(0);
-    private static final int MAX_TEMP_QUERY_RESULT_CACHE = 512;
+    private static final int MAX_TEMP_QUERY_RESULT_CACHE = 1024;
     private static final int MAX_CACHED_RECORD_NUM = 10240 * 5;
     private static final int MAX_SQL_NUM = 5000;
     private static final int MAX_RESULTS = 200;
@@ -1061,7 +1061,7 @@ public class DatabaseService {
      */
     private void startSearch(SearchTask searchTask) {
         var eventManagement = EventManagement.getInstance();
-        ThreadPoolUtil threadPoolUtil = ThreadPoolUtil.getInstance();
+        var threadPoolUtil = ThreadPoolUtil.getInstance();
         Consumer<ConcurrentLinkedQueue<Runnable>> taskHandler = (taskQueue) -> {
             while (!taskQueue.isEmpty() && eventManagement.notMainExit()) {
                 var runnable = taskQueue.poll();
@@ -1069,24 +1069,25 @@ public class DatabaseService {
                     continue;
                 }
                 try {
-                    searchThreadCount.incrementAndGet();
+                    searchThreadCount.getAndIncrement();
                     runnable.run();
                 } catch (Exception e) {
                     e.printStackTrace();
                 } finally {
-                    searchThreadCount.decrementAndGet();
+                    searchThreadCount.getAndDecrement();
                 }
             }
         };
         int diskNumber = searchTask.taskMap.size();
         int searchThreadNumber = AllConfigs.getInstance().getConfigEntity().getSearchThreadNumber();
         int threadNumberPerDisk = Math.max(1, searchThreadNumber / diskNumber);
-        for (var taskQueue : searchTask.taskMap.values()) {
+        var taskQueues = searchTask.taskMap.values();
+        for (var taskQueue : taskQueues) {
             for (int i = 0; i < threadNumberPerDisk; i++) {
                 threadPoolUtil.executeTask(() -> {
                     taskHandler.accept(taskQueue);
                     //自身任务已经完成，开始扫描其他线程的任务
-                    for (var otherTaskQueue : searchTask.taskMap.values()) {
+                    for (var otherTaskQueue : taskQueues) {
                         taskHandler.accept(otherTaskQueue);
                     }
                 });
@@ -1095,7 +1096,7 @@ public class DatabaseService {
         int remainThreads = searchThreadNumber - threadNumberPerDisk * diskNumber;
         for (int i = 0; i < remainThreads; i++) {
             threadPoolUtil.executeTask((() -> {
-                for (var taskQueue : searchTask.taskMap.values()) {
+                for (var taskQueue : taskQueues) {
                     taskHandler.accept(taskQueue);
                 }
             }));
