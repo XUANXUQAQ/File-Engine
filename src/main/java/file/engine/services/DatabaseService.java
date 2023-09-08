@@ -1078,12 +1078,10 @@ public class DatabaseService {
                 }
             }
         };
-        int diskNumber = searchTask.taskMap.size();
-        int searchThreadNumber = AllConfigs.getInstance().getConfigEntity().getSearchThreadNumber();
-        int threadNumberPerDisk = Math.max(1, searchThreadNumber / diskNumber);
         var taskQueues = searchTask.taskMap.values();
         for (var taskQueue : taskQueues) {
-            for (int i = 0; i < threadNumberPerDisk; i++) {
+            int searchThreadNumber = AllConfigs.getInstance().getConfigEntity().getSearchThreadNumber();
+            for (int i = 0; i < searchThreadNumber; i++) {
                 threadPoolUtil.executeTask(() -> {
                     taskHandler.accept(taskQueue);
                     //自身任务已经完成，开始扫描其他线程的任务
@@ -1093,14 +1091,30 @@ public class DatabaseService {
                 });
             }
         }
-        int remainThreads = searchThreadNumber - threadNumberPerDisk * diskNumber;
-        for (int i = 0; i < remainThreads; i++) {
-            threadPoolUtil.executeTask((() -> {
-                for (var taskQueue : taskQueues) {
-                    taskHandler.accept(taskQueue);
-                }
-            }));
-        }
+
+//        int diskNumber = searchTask.taskMap.size();
+//        int searchThreadNumber = AllConfigs.getInstance().getConfigEntity().getSearchThreadNumber();
+//        int threadNumberPerDisk = Math.max(1, searchThreadNumber / diskNumber);
+//        var taskQueues = searchTask.taskMap.values();
+//        for (var taskQueue : taskQueues) {
+//            for (int i = 0; i < threadNumberPerDisk; i++) {
+//                threadPoolUtil.executeTask(() -> {
+//                    taskHandler.accept(taskQueue);
+//                    //自身任务已经完成，开始扫描其他线程的任务
+//                    for (var otherTaskQueue : taskQueues) {
+//                        taskHandler.accept(otherTaskQueue);
+//                    }
+//                });
+//            }
+//        }
+//        int remainThreads = searchThreadNumber - threadNumberPerDisk * diskNumber;
+//        for (int i = 0; i < remainThreads; i++) {
+//            threadPoolUtil.executeTask((() -> {
+//                for (var taskQueue : taskQueues) {
+//                    taskHandler.accept(taskQueue);
+//                }
+//            }));
+//        }
         waitForTasks(searchTask);
     }
 
