@@ -414,22 +414,27 @@ public class SQLiteUtil {
         try (Statement statement = getStatement("cache")) {
             int row = statement.executeUpdate("CREATE TABLE IF NOT EXISTS priority(SUFFIX text unique, PRIORITY INT);");
             if (row == 0) {
-                int count = 10;
-                HashMap<String, Integer> map = new HashMap<>();
-                map.put("lnk", count--);
-                map.put("exe", count--);
-                map.put("bat", count--);
-                map.put("cmd", count--);
-                map.put("txt", count--);
-                map.put("docx", count--);
-                map.put("zip", count--);
-                map.put("rar", count--);
-                map.put("7z", count--);
-                map.put("html", count);
-                map.put("defaultPriority", 0);
+                HashMap<String, Integer> map = generateSuffixPriorityMap();
                 insertAllSuffixPriority(map, statement);
             }
         }
+    }
+
+    private static HashMap<String, Integer> generateSuffixPriorityMap() {
+        int count = 10;
+        HashMap<String, Integer> map = new HashMap<>();
+        map.put("lnk", count--);
+        map.put("exe", count--);
+        map.put("bat", count--);
+        map.put("cmd", count--);
+        map.put("txt", count--);
+        map.put("docx", count--);
+        map.put("zip", count--);
+        map.put("rar", count--);
+        map.put("7z", count--);
+        map.put("html", count);
+        map.put("defaultPriority", 0);
+        return map;
     }
 
     private static void createCacheTable() throws SQLException {
