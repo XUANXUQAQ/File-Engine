@@ -22,9 +22,9 @@ import java.util.function.Consumer;
 public class GetIconUtil {
     private static final int MAX_CONSUMER_THREAD_NUM = 4;
     private static final FileSystemView FILE_SYSTEM_VIEW = FileSystemView.getFileSystemView();
+    private static final Task EMPTY_TASK = new Task(null, 0, 0);
     private final ConcurrentHashMap<String, ImageIcon> constantIconMap = new ConcurrentHashMap<>();
-    private final ConcurrentLinkedQueue<Task> workingQueue = new ConcurrentLinkedQueue<>();
-    private final ExecutorService iconTaskConsumer = Executors.newFixedThreadPool(MAX_CONSUMER_THREAD_NUM);
+    private final SynchronousQueue<Task> workingQueue = new SynchronousQueue<>();
     private final ConcurrentHashMap<String, IconCache> cacheIconMap = new ConcurrentHashMap<>();
 
     private static volatile GetIconUtil INSTANCE = null;
@@ -95,7 +95,7 @@ public class GetIconUtil {
     }
 
     public void clearIconCacheThread() {
-        new Thread(() -> {
+        Runnable clearCacheFunc = () -> {
             var eventManagement = EventManagement.getInstance();
             var allConfigs = AllConfigs.getInstance();
             long startCheck = System.currentTimeMillis();
@@ -120,7 +120,8 @@ public class GetIconUtil {
                     throw new RuntimeException(e);
                 }
             }
-        }).start();
+        };
+        Thread.startVirtualThread(clearCacheFunc);
     }
 
     public void getBigIcon(String pathOrKey,
@@ -162,7 +163,7 @@ public class GetIconUtil {
             return;
         }
         Task task = new Task(f, width, height);
-        if (!workingQueue.add(task)) {
+        if (!workingQueue.offer(task)) {
             throw new RuntimeException("add to working queue failed");
         }
         final long startMills = System.currentTimeMillis();
@@ -173,7 +174,7 @@ public class GetIconUtil {
                 normalCallback.accept(changeIcon(constantIconMap.get("blankIcon"), width, height), true);
                 if (timeoutCallback != null) {
                     task.timeoutCallBack = timeoutCallback;
-                    workingQueue.add(task);
+                    workingQueue.offer(task);
                 }
                 return;
             }
@@ -189,7 +190,7 @@ public class GetIconUtil {
 
     private void startWorkingThread() {
         for (int i = 0; i < MAX_CONSUMER_THREAD_NUM; i++) {
-            iconTaskConsumer.execute(this::consumeTaskFunc);
+            Thread.startVirtualThread(this::consumeTaskFunc);
         }
     }
 
@@ -197,10 +198,9 @@ public class GetIconUtil {
     private void consumeTaskFunc() {
         var eventManagement = EventManagement.getInstance();
         while (eventManagement.notMainExit()) {
-            var task = workingQueue.poll();
-            if (task == null) {
-                TimeUnit.MILLISECONDS.sleep(1);
-                continue;
+            var task = workingQueue.take();
+            if (task == EMPTY_TASK) {
+                return;
             }
             if (task.timeoutCallBack != null) {
                 ImageIcon icon;
@@ -233,12 +233,13 @@ public class GetIconUtil {
 //                task.icon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(task.path), task.width, task.height);
                 task.isDone = true;
             }
-            TimeUnit.MILLISECONDS.sleep(1);
         }
     }
 
     public void stopWorkingThread() {
-        iconTaskConsumer.shutdownNow();
+        for (int i = 0; i < MAX_CONSUMER_THREAD_NUM; i++) {
+            workingQueue.offer(EMPTY_TASK);
+        }
     }
 
     @RequiredArgsConstructor
