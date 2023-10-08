@@ -163,8 +163,10 @@ public class GetIconUtil {
             return;
         }
         Task task = new Task(f, width, height);
-        if (!workingQueue.offer(task)) {
-            throw new RuntimeException("add to working queue failed");
+        try {
+            workingQueue.put(task);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
         final long startMills = System.currentTimeMillis();
         final long timeoutThreshold = timeoutCallback == null ? 10_000 : 200; // 最长等待时间
@@ -174,7 +176,11 @@ public class GetIconUtil {
                 normalCallback.accept(changeIcon(constantIconMap.get("blankIcon"), width, height), true);
                 if (timeoutCallback != null) {
                     task.timeoutCallBack = timeoutCallback;
-                    workingQueue.offer(task);
+                    try {
+                        workingQueue.put(task);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
                 return;
             }

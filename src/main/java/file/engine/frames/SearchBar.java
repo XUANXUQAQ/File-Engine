@@ -2936,53 +2936,42 @@ public class SearchBar {
     private void sendGetIconTaskThread() {
         ThreadPoolUtil.getInstance().executeTask(() -> {
             final int labelNumber = 8;
-            EventManagement eventManagement = EventManagement.getInstance();
-            SearchBar searchBarInstance = getInstance();
-            GetIconUtil getIconUtil = GetIconUtil.getInstance();
-            HashMap<String, Field> objectHashMap = new HashMap<>();
-            for (int i = 1; i <= labelNumber; i++) {
-                String fieldName = "label" + i;
-                Field declaredField;
-                try {
-                    declaredField = SearchBar.class.getDeclaredField(fieldName);
-                } catch (NoSuchFieldException e) {
-                    throw new RuntimeException(e);
-                }
-                declaredField.setAccessible(true);
-                objectHashMap.put(fieldName, declaredField);
-            }
+            var eventManagement = EventManagement.getInstance();
+            var searchBarInstance = getInstance();
+            var getIconUtil = GetIconUtil.getInstance();
+            var labelFieldHashMap = getJLabelFieldMap();
             while (eventManagement.notMainExit()) {
                 switch (runningMode) {
                     case NORMAL_MODE, COMMAND_MODE -> {
-                        if (!isVisible()) {
-                            break;
-                        }
-                        for (int i = 1; i <= labelNumber; ++i) {
-                            String labelName = "label" + i;
-                            Field labelField = objectHashMap.get(labelName);
-                            JLabel labelInstance;
-                            try {
-                                labelInstance = (JLabel) labelField.get(searchBarInstance);
-                            } catch (IllegalAccessException e) {
-                                throw new RuntimeException(e);
-                            }
-                            var showPath = labelShowingPathInfo.getOrDefault(labelInstance, "");
-                            String lastShowPath = labelLastShowingPathInfo.getOrDefault(labelInstance, "");
-                            if (!showPath.equals(lastShowPath) && !showPath.isEmpty()) {
-                                getIconUtil.getBigIcon(showPath, iconSideLength, iconSideLength, icon -> {
-                                    SwingUtilities.invokeLater(() -> labelInstance.setIcon(icon));
-                                    labelLastShowingPathInfo.put(labelInstance, showPath);
-                                }, (icon, isTimeout) -> {
-                                    if (isTimeout) {
-                                        return;
+                        if (isVisible()) {
+                            for (int i = 1; i <= labelNumber; ++i) {
+                                String labelName = "label" + i;
+                                Field labelField = labelFieldHashMap.get(labelName);
+                                JLabel labelInstance;
+                                try {
+                                    labelInstance = (JLabel) labelField.get(searchBarInstance);
+                                } catch (IllegalAccessException e) {
+                                    throw new RuntimeException(e);
+                                }
+                                var showPath = labelShowingPathInfo.getOrDefault(labelInstance, "");
+                                var lastShowPath = labelLastShowingPathInfo.getOrDefault(labelInstance, "");
+                                if (!showPath.equals(lastShowPath) && !showPath.isEmpty()) {
+                                    try {
+                                        getIconUtil.getBigIcon(showPath, iconSideLength, iconSideLength, icon -> {
+                                            SwingUtilities.invokeLater(() -> labelInstance.setIcon(icon));
+                                            labelLastShowingPathInfo.put(labelInstance, showPath);
+                                        }, (icon, isTimeout) -> {
+                                            if (!isTimeout) {
+                                                SwingUtilities.invokeLater(() -> labelInstance.setIcon(icon));
+                                                labelLastShowingPathInfo.put(labelInstance, showPath);
+                                            }
+                                        });
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
                                     }
-                                    SwingUtilities.invokeLater(() -> labelInstance.setIcon(icon));
-                                    labelLastShowingPathInfo.put(labelInstance, showPath);
-                                });
+                                }
                             }
                         }
-                    }
-                    default -> {
                     }
                 }
                 try {
@@ -2992,6 +2981,23 @@ public class SearchBar {
                 }
             }
         });
+    }
+
+    private static HashMap<String, Field> getJLabelFieldMap() {
+        HashMap<String, Field> objectHashMap = new HashMap<>();
+        final int labelNumber = 8;
+        for (int i = 1; i <= labelNumber; i++) {
+            String fieldName = "label" + i;
+            Field declaredField;
+            try {
+                declaredField = SearchBar.class.getDeclaredField(fieldName);
+            } catch (NoSuchFieldException e) {
+                throw new RuntimeException(e);
+            }
+            declaredField.setAccessible(true);
+            objectHashMap.put(fieldName, declaredField);
+        }
+        return objectHashMap;
     }
 
     /**
