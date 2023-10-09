@@ -746,6 +746,7 @@ public class SettingsFrame {
                                         throw new RuntimeException(ex);
                                     }
                                 }
+                                eventManagement.putEvent(new RestartEvent());
                             });
                     if (!isDownloadSuccess) {
                         showManualDownloadDialog();
