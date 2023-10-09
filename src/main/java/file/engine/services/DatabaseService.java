@@ -914,7 +914,7 @@ public class DatabaseService {
                                      Bit currentTaskNum,
                                      SearchTask searchTask) {
         tasks.add(() -> {
-            Statement stmt = null;
+            Statement[] stmt = new Statement[]{null};
             for (var sqlAndTableName : sqlToExecute.entrySet()) {
                 String diskStr = String.valueOf(diskChar.charAt(0));
                 String eachSql = sqlAndTableName.getKey();
@@ -936,15 +936,7 @@ public class DatabaseService {
                         recordsNum = databaseResultsCount.get(key).get();
                     }
                     if (recordsNum != 0) {
-                        if (stmt == null) {
-                            try {
-                                stmt = SQLiteUtil.getStatement(diskStr);
-                            } catch (SQLException e) {
-                                e.printStackTrace();
-                                throw new RuntimeException(e);
-                            }
-                        }
-                        matchedNum = fallbackToSearchDatabase(searchTask, stmt, eachSql, key);
+                        matchedNum = fallbackToSearchDatabase(searchTask, stmt, diskStr, eachSql, key);
                     }
                 }
                 final long weight = Math.min(matchedNum, 5);
@@ -958,9 +950,9 @@ public class DatabaseService {
             do {
                 originalBytes = searchTask.taskStatus.getBytes();
             } while (!searchTask.taskStatus.compareAndSet(originalBytes, Bit.or(originalBytes, currentTaskNum.getBytes())));
-            if (stmt != null) {
+            if (stmt[0] != null) {
                 try {
-                    stmt.close();
+                    stmt[0].close();
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
@@ -968,19 +960,7 @@ public class DatabaseService {
         });
     }
 
-    private long fallbackToSearchDatabase(SearchTask searchTask, Statement stmt, String eachSql, String key) {
-        return searchFromDatabaseOrCache(stmt, eachSql, key, searchTask);
-    }
-
-    /**
-     * 从数据库中查找
-     *
-     * @param stmt statement
-     * @param sql  sql
-     * @param key  查询key，例如 [C,list10,-1]
-     * @return 查询的结果数量
-     */
-    private long searchFromDatabaseOrCache(Statement stmt, String sql, String key, SearchTask searchTask) {
+    private long fallbackToSearchDatabase(SearchTask searchTask, Statement[] stmt, String diskStr, String eachSql, String key) {
         if (searchTask.shouldStopSearch()) {
             return 0;
         }
@@ -993,9 +973,17 @@ public class DatabaseService {
             matchedNum = cache.data.parallelStream().filter(s -> checkIsMatchedAndAddToList(s, searchTask)).count();
         } else {
             //格式化是为了以后的拓展性
-            String formattedSql = String.format(sql, "PATH");
+            String formattedSql = String.format(eachSql, "PATH");
+            if (stmt[0] == null) {
+                try {
+                    stmt[0] = SQLiteUtil.getStatement(diskStr);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                    throw new RuntimeException(e);
+                }
+            }
             //当前数据库表中有多少个结果匹配成功
-            matchedNum = searchAndAddToTempResults(formattedSql, stmt, searchTask, key);
+            matchedNum = searchAndAddToTempResults(formattedSql, stmt[0], searchTask, key);
         }
         return matchedNum;
     }
@@ -2190,7 +2178,7 @@ public class DatabaseService {
                         throw new RuntimeException(e);
                     }
                 }
-            });
+            }, false);
         }
 
         private static void execWorkQueueThread() {
@@ -2235,7 +2223,7 @@ public class DatabaseService {
                         throw new RuntimeException(e);
                     }
                 }
-            });
+            }, false);
         }
 
         private static void addRecord(String key, String fileRecord) {
@@ -2292,7 +2280,8 @@ public class DatabaseService {
             if (!isEnableGPUAccelerate) {
                 return;
             }
-            GPUAccelerator.INSTANCE.clearAllCache();
+            ThreadPoolUtil.getInstance().executeTask(GPUAccelerator.INSTANCE::clearAllCache, false);
+
         }
     }
 
