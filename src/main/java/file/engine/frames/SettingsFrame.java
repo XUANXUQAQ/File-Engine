@@ -99,6 +99,7 @@ public class SettingsFrame {
     private final Set<Component> excludeComponent = ConcurrentHashMap.newKeySet();
     private final LinkedHashSet<String> diskSet = new LinkedHashSet<>();
     private final Set<String> downloadedPlugins = ConcurrentHashMap.newKeySet();
+    private final DownloadManager[] downloadManager = new DownloadManager[2]; // 两个元素，第一个为File-Engine.jar的下载管理对象，第二个为File-Engine.exe的下载管理对象
     private JTextField textFieldUpdateInterval;
     private JTextField textFieldCacheNum;
     private JTextArea textAreaIgnorePath;
@@ -675,80 +676,86 @@ public class SettingsFrame {
      * 点击检查更新
      */
     private void addCheckForUpdateButtonListener() {
-        var downloadManager = new Object() {
-            DownloadManager newJar;
-            DownloadManager newLauncher;
-        };
 
         buttonCheckUpdate.addActionListener(e -> {
-            if (downloadManager.newJar != null && downloadManager.newJar.getDownloadStatus() == Constants.Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
-                eventManagement.putEvent(new StopDownloadEvent(downloadManager.newJar));
-                eventManagement.putEvent(new StopDownloadEvent(downloadManager.newLauncher));
+            if (downloadManager[1] != null && downloadManager[1].getDownloadStatus() == Constants.Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
+                eventManagement.putEvent(new StopDownloadEvent(downloadManager[0]));
+                eventManagement.putEvent(new StopDownloadEvent(downloadManager[1]));
             } else {
-                //开始下载
-                Map<String, Object> updateInfo;
-                String latestVersion;
-                try {
-                    updateInfo = allConfigs.getUpdateInfo();
-                    if (updateInfo != null && !updateInfo.isEmpty()) {
-                        latestVersion = (String) updateInfo.get("version");
-                    } else {
-                        throw new IOException("failed");
-                    }
-                } catch (IOException e1) {
-                    JOptionPane.showMessageDialog(frame, translateService.getTranslation("Check update failed"));
-                    showManualDownloadDialog();
-                    return;
-                }
-                if (Double.parseDouble(latestVersion) > Double.parseDouble(Constants.version) || IsPreview.isPreview() || IsDebug.isDebug()) {
-                    String description = (String) updateInfo.get("description");
-                    int result = JOptionPane.showConfirmDialog(frame, translateService.getTranslation("New Version available") + latestVersion + "," + translateService.getTranslation("Whether to update") + "\n" + translateService.getTranslation("update content") + "\n" + description);
-                    if (result == JOptionPane.YES_OPTION) {
-                        //开始更新,下载更新文件到tmp
-                        downloadManager.newJar = new DownloadManager((String) updateInfo.get("url64"), Constants.FILE_NAME, new File("tmp").getAbsolutePath());
-                        downloadManager.newLauncher = new DownloadManager((String) updateInfo.get("urlLauncher"), Constants.LAUNCH_WRAPPER_NAME, new File("tmp").getAbsolutePath());
-                        eventManagement.putEvent(new StartDownloadEvent(downloadManager.newLauncher));
-                        threadPoolUtil.executeTask(() -> {
-                            try {
-                                if (!downloadManager.newLauncher.waitFor(10 * 60 * 1000)) {
-                                    return;
-                                }
-                                if (downloadManager.newLauncher.getDownloadStatus() == Constants.Enums.DownloadStatus.DOWNLOAD_DONE) {
-                                    Files.createFile(Path.of("user/updateLauncher"));
-                                }
-                            } catch (IOException e1) {
-                                e1.printStackTrace();
-                            }
-                        });
-                        eventManagement.putEvent(new StartDownloadEvent(downloadManager.newJar));
-                        threadPoolUtil.executeTask(() -> {
-                            boolean isDownloadSuccess = SetDownloadProgress.setProgress(labelDownloadProgress,
-                                    buttonCheckUpdate,
-                                    downloadManager.newLauncher,
-                                    () -> Constants.FILE_NAME.equals(downloadManager.newJar.fileName),
-                                    () -> {
-                                        File updateSign = new File("user/update");
-                                        if (!updateSign.exists()) {
-                                            try {
-                                                if (updateSign.createNewFile()) {
-                                                    throw new RuntimeException("create user/update file failed.");
-                                                }
-                                            } catch (IOException ex) {
-                                                throw new RuntimeException(ex);
-                                            }
-                                        }
-                                    });
-                            if (!isDownloadSuccess) {
-                                showManualDownloadDialog();
-                            }
-                        });
-                    }
-                } else {
-                    JOptionPane.showMessageDialog(frame, translateService.getTranslation("Latest version:") + latestVersion + "\n" +
-                            translateService.getTranslation("The current version is the latest"));
-                }
+                checkForUpdate(downloadManager, true);
             }
         });
+    }
+
+    private void checkForUpdate(DownloadManager[] downloadManager, boolean isShowCheckUpdateFailedDialog) {
+        //开始下载
+        Map<String, Object> updateInfo;
+        String latestVersion;
+        try {
+            updateInfo = allConfigs.getUpdateInfo();
+            if (updateInfo != null && !updateInfo.isEmpty()) {
+                latestVersion = (String) updateInfo.get("version");
+            } else {
+                throw new IOException("failed");
+            }
+        } catch (IOException e1) {
+            if (isShowCheckUpdateFailedDialog) {
+                JOptionPane.showMessageDialog(frame, translateService.getTranslation("Check update failed"));
+                showManualDownloadDialog();
+            }
+            return;
+        }
+        if (Double.parseDouble(latestVersion) > Double.parseDouble(Constants.version) || IsPreview.isPreview() || IsDebug.isDebug()) {
+            String description = (String) updateInfo.get("description");
+            int result = JOptionPane.showConfirmDialog(frame, translateService.getTranslation("New Version available") + "  " +
+                    latestVersion + ", " + translateService.getTranslation("Whether to update") + "\n" +
+                    translateService.getTranslation("update content") + "\n" + description);
+            if (result == JOptionPane.YES_OPTION) {
+                //开始更新,下载更新文件到tmp
+                downloadManager[0] = new DownloadManager((String) updateInfo.get("url64"), Constants.FILE_NAME, new File("tmp").getAbsolutePath());
+                downloadManager[1] = new DownloadManager((String) updateInfo.get("urlLauncher"), Constants.LAUNCH_WRAPPER_NAME, new File("tmp").getAbsolutePath());
+                //下载File-Engine.exe
+                eventManagement.putEvent(new StartDownloadEvent(downloadManager[1]));
+                threadPoolUtil.executeTask(() -> {
+                    try {
+                        if (!downloadManager[1].waitFor(10 * 60 * 1000)) {
+                            return;
+                        }
+                        if (downloadManager[1].getDownloadStatus() == Constants.Enums.DownloadStatus.DOWNLOAD_DONE) {
+                            Files.createFile(Path.of("user/updateLauncher"));
+                        }
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
+                });
+                //下载File-Engine.jar
+                eventManagement.putEvent(new StartDownloadEvent(downloadManager[0]));
+                threadPoolUtil.executeTask(() -> {
+                    boolean isDownloadSuccess = SetDownloadProgress.setProgress(labelDownloadProgress,
+                            buttonCheckUpdate,
+                            downloadManager[1],
+                            () -> Constants.FILE_NAME.equals(downloadManager[0].fileName),
+                            () -> {
+                                File updateSign = new File("user/update");
+                                if (!updateSign.exists()) {
+                                    try {
+                                        if (updateSign.createNewFile()) {
+                                            throw new RuntimeException("create user/update file failed.");
+                                        }
+                                    } catch (IOException ex) {
+                                        throw new RuntimeException(ex);
+                                    }
+                                }
+                            });
+                    if (!isDownloadSuccess) {
+                        showManualDownloadDialog();
+                    }
+                });
+            }
+        } else {
+            JOptionPane.showMessageDialog(frame, translateService.getTranslation("Latest version:") + latestVersion + "\n" +
+                    translateService.getTranslation("The current version is the latest"));
+        }
     }
 
     /**
@@ -3266,6 +3273,7 @@ public class SettingsFrame {
         } else {
             settingsFrame.showWindow(showSettingsFrameEvent.showTabName);
         }
+        settingsFrame.checkForUpdate(settingsFrame.downloadManager, false);
     }
 
     @EventListener(listenClass = AddToCacheEvent.class)
