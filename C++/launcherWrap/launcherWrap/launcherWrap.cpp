@@ -22,7 +22,7 @@
 #pragma comment(lib, "User32.lib")
 
 // TODO 该变量为File-Engine.zip中的File-Engine.jar的md5值
-#define FILE_ENGINE_JAR_MD5 "315103a829c6624b832a13bdd4ee0248"
+#define FILE_ENGINE_JAR_MD5 "2819b4b5a65b4df483f84eb4c871c855"
 
 constexpr auto MAX_LOG_PRESERVE_DAYS = 5;
 constexpr auto CHECK_TIME_THRESHOLD = 1;
@@ -31,11 +31,9 @@ const std::string redirect_error_file_option = "-XX:ErrorFile=../logs/hs_err_pid
 const std::string default_jvm_params =
     "-Xms8M "
     "-Xmx256M "
-    "-XX:+UseParallelGC "
     "-XX:MaxHeapFreeRatio=20 "
     "-XX:MinHeapFreeRatio=10 "
     "-Dsun.java2d.noddraw=true "
-    "-XX:NewRatio=1 "
     "-XX:+CompactStrings " +
     redirect_error_file_option;
 
