@@ -676,7 +676,6 @@ public class SettingsFrame {
      * 点击检查更新
      */
     private void addCheckForUpdateButtonListener() {
-
         buttonCheckUpdate.addActionListener(e -> {
             if (downloadManager[1] != null && downloadManager[1].getDownloadStatus() == Constants.Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                 eventManagement.putEvent(new StopDownloadEvent(downloadManager[0]));
@@ -687,7 +686,7 @@ public class SettingsFrame {
         });
     }
 
-    private void checkForUpdate(DownloadManager[] downloadManager, boolean isShowCheckUpdateFailedDialog) {
+    private void checkForUpdate(DownloadManager[] downloadManager, boolean isShowCheckUpdateDialogs) {
         //开始下载
         Map<String, Object> updateInfo;
         String latestVersion;
@@ -699,7 +698,7 @@ public class SettingsFrame {
                 throw new IOException("failed");
             }
         } catch (IOException e1) {
-            if (isShowCheckUpdateFailedDialog) {
+            if (isShowCheckUpdateDialogs) {
                 JOptionPane.showMessageDialog(frame, translateService.getTranslation("Check update failed"));
                 showManualDownloadDialog();
             }
@@ -754,8 +753,10 @@ public class SettingsFrame {
                 });
             }
         } else {
-            JOptionPane.showMessageDialog(frame, translateService.getTranslation("Latest version:") + latestVersion + "\n" +
-                    translateService.getTranslation("The current version is the latest"));
+            if (isShowCheckUpdateDialogs) {
+                JOptionPane.showMessageDialog(frame, translateService.getTranslation("Latest version:") + latestVersion + "\n" +
+                        translateService.getTranslation("The current version is the latest"));
+            }
         }
     }
 
