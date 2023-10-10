@@ -4,7 +4,7 @@
 #include <ranges>
 #include "string_wstring_converter.h"
 
-constexpr unsigned MAX_USN_CACHE_SIZE = 100000;
+constexpr unsigned MAX_USN_CACHE_SIZE = 1000000;
 
 const int NTFSChangesWatcher::kBufferSize = 1024 * 1024 / 2;
 const int NTFSChangesWatcher::FILE_CHANGE_BITMASK = USN_REASON_RENAME_NEW_NAME | USN_REASON_RENAME_OLD_NAME;
@@ -361,15 +361,6 @@ void NTFSChangesWatcher::showRecord(std::u16string& full_path, USN_RECORD* recor
 
     auto file_name = GetFilename(record);
     full_path += file_name;
-    if (record->FileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-    {
-        auto&& path_using_count_pair = std::make_pair(file_name, GetTickCount64());
-        auto&& path_usn_record_pair = std::make_pair(path_using_count_pair,
-                                                     record->ParentFileReferenceNumber);
-
-        frn_record_pfrn_map_.insert(std::make_pair(record->FileReferenceNumber,
-                                                   path_usn_record_pair));
-    }
 
     DWORDLONG file_parent_id = record->ParentFileReferenceNumber;
     const auto usn_buffer = std::make_unique<char[]>(kBufferSize);
