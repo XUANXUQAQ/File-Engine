@@ -17,7 +17,7 @@
 
 ---
 
-- JDK >= 17
+- JDK >= 21  (项目使用了jdk21虚拟线程)
 - Python >= 3.7
 - Visual Studio 2022（C++ 生成工具 >= v143）
 - maven >= 3.6.1
