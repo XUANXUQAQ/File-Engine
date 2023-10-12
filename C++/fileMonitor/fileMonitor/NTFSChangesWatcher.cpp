@@ -5,10 +5,13 @@
 #include "string_wstring_converter.h"
 
 constexpr unsigned MAX_USN_CACHE_SIZE = 1000000;
+unsigned remain_cache_number = MAX_USN_CACHE_SIZE;
 
 const int NTFSChangesWatcher::kBufferSize = 1024 * 1024 / 2;
 const int NTFSChangesWatcher::FILE_CHANGE_BITMASK = USN_REASON_RENAME_NEW_NAME | USN_REASON_RENAME_OLD_NAME;
 const std::string file_monitor_exit_flag = "$$__File-Engine-Exit-Monitor__$$";
+const static std::wstring sep_wstr(L"\\");
+const static std::u16string sep(sep_wstr.begin(), sep_wstr.end());
 
 inline bool is_file_exist(const std::string& path)
 {
@@ -354,51 +357,52 @@ std::u16string NTFSChangesWatcher::GetFilename(USN_RECORD* record)
     return file_name;
 }
 
+/**
+ * \brief
+ * \param full_path 输出完整路径
+ * \param record 需要转换的usn record
+ */
 void NTFSChangesWatcher::showRecord(std::u16string& full_path, USN_RECORD* record)
 {
-    static std::wstring sep_wstr(L"\\");
-    static std::u16string sep(sep_wstr.begin(), sep_wstr.end());
+    cache_map_t temp_usn_cache;
 
-    auto file_name = GetFilename(record);
-    full_path += file_name;
+    full_path += GetFilename(record);
 
-    DWORDLONG file_parent_id = record->ParentFileReferenceNumber;
-    const auto usn_buffer = std::make_unique<char[]>(kBufferSize);
     const auto start_loop = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::system_clock::now().time_since_epoch()
     );
-    int remain_cache_size = static_cast<int>(MAX_USN_CACHE_SIZE) - static_cast<int>(frn_record_pfrn_map_.size());
-    do
+    // 清除最不常使用缓存
+    if (remain_cache_number <= 0)
     {
-        if (remain_cache_size <= 0)
-        {
-            for (unsigned i = 0; i < MAX_USN_CACHE_SIZE / 1000; ++i)
-            {
-                auto&& min_used_cache = std::ranges::min_element(frn_record_pfrn_map_,
-                                                                 [&](const std::pair<DWORDLONG,
-                                                                         std::pair<std::pair<std::u16string, DWORDLONG>,
-                                                                             DWORDLONG>>& left,
-                                                                     const std::pair<DWORDLONG,
-                                                                         std::pair<std::pair<std::u16string, DWORDLONG>,
-                                                                             DWORDLONG>>& right)
-                                                                 {
-                                                                     return left.second.first.second <
-                                                                         right.second.first.second;
-                                                                 });
-                frn_record_pfrn_map_.erase(min_used_cache->first);
-                ++remain_cache_size;
-            }
-        }
-
-        if (auto&& val = frn_record_pfrn_map_.find(file_parent_id);
-            val != frn_record_pfrn_map_.end())
-        {
-            full_path = val->second.first.first + sep + full_path;
-            auto& cache_count = val->second.first.second;
-            cache_count = GetTickCount64();
-            file_parent_id = val->second.second;
-        }
-        else
+        auto&& least_used_cache = std::ranges::min_element(frn_record_pfrn_map_,
+                                                           [&](const std::pair<DWORDLONG,
+                                                                               std::pair<
+                                                                                   std::pair<std::u16string, DWORDLONG>,
+                                                                                   DWORDLONG>>& left,
+                                                               const std::pair<DWORDLONG,
+                                                                               std::pair<
+                                                                                   std::pair<std::u16string, DWORDLONG>,
+                                                                                   DWORDLONG>>& right)
+                                                           {
+                                                               return left.second.first.second <
+                                                                   right.second.first.second;
+                                                           });
+        frn_record_pfrn_map_.erase(least_used_cache->first);
+        ++remain_cache_number;
+    }
+    //检查缓存是否已存在
+    if (auto&& val = frn_record_pfrn_map_.find(record->ParentFileReferenceNumber);
+        val != frn_record_pfrn_map_.end())
+    {
+        full_path = val->second.first.first + sep + full_path;
+        auto& cache_used_timestamp = val->second.first.second;
+        cache_used_timestamp = GetTickCount64();
+    }
+    else
+    {
+        DWORDLONG file_parent_id = record->ParentFileReferenceNumber;
+        const auto usn_buffer = std::make_unique<char[]>(kBufferSize);
+        do
         {
             MFT_ENUM_DATA_V0 med;
             med.StartFileReferenceNumber = file_parent_id;
@@ -416,35 +420,33 @@ void NTFSChangesWatcher::showRecord(std::u16string& full_path, USN_RECORD* recor
             {
                 return;
             }
+            // 防止超时卡死
+            if (const auto loop_time = std::chrono::duration_cast<std::chrono::milliseconds>
+                (std::chrono::system_clock::now().time_since_epoch()) -
+                start_loop; loop_time.count() > 10000)
+            {
+                return;
+            }
+            // 读取父级usn record
             const auto parent_record = reinterpret_cast<USN_RECORD*>(reinterpret_cast<USN*>(usn_buffer.get()) + 1);
             if (parent_record->FileReferenceNumber != file_parent_id)
             {
                 break;
             }
-            file_name = GetFilename(parent_record);
+            const auto file_name = GetFilename(parent_record);
             full_path = file_name + sep + full_path;
-            if (parent_record->FileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-            {
-                auto&& path_using_count_pair = std::make_pair(file_name, GetTickCount64());
-                auto&& path_usn_record_pair = std::make_pair(path_using_count_pair,
-                                                             parent_record->ParentFileReferenceNumber);
-
-                frn_record_pfrn_map_.insert(
-                    std::make_pair(parent_record->FileReferenceNumber, path_usn_record_pair)
-                );
-                --remain_cache_size;
-            }
-
             file_parent_id = parent_record->ParentFileReferenceNumber;
+
+            // 添加到temp_usn_cache，递归出完整路径后再转移到frn_record_pfrn_map_
+            auto&& path_using_count_pair = std::make_pair(file_name, GetTickCount64());
+            auto&& path_usn_record_pair = std::make_pair(path_using_count_pair,
+                                                         parent_record->ParentFileReferenceNumber);
+            temp_usn_cache.insert(
+                std::make_pair(parent_record->FileReferenceNumber, path_usn_record_pair)
+            );
         }
-        if (const auto loop_time = std::chrono::duration_cast<std::chrono::milliseconds>
-            (std::chrono::system_clock::now().time_since_epoch()) -
-            start_loop; loop_time.count() > 10000)
-        {
-            return;
-        }
+        while (true);
     }
-    while (true);
 
     static std::wstring colon_wstr(L":");
     static std::u16string colon(colon_wstr.begin(), colon_wstr.end());
@@ -453,4 +455,49 @@ void NTFSChangesWatcher::showRecord(std::u16string& full_path, USN_RECORD* recor
     auto&& w_drive = string2wstring(drive);
     const std::u16string drive_u16(w_drive.begin(), w_drive.end());
     full_path = drive_u16 + colon + sep + full_path;
+
+    if (remain_cache_number > temp_usn_cache.size())
+    {
+        save_usn_cache_to_map(temp_usn_cache);
+    }
+    if ((record->FileAttributes & FILE_ATTRIBUTE_DIRECTORY) && remain_cache_number > 0)
+    {
+        auto&& path_using_count_pair = std::make_pair(full_path, GetTickCount64());
+        auto&& path_usn_record_pair = std::make_pair(path_using_count_pair,
+                                                     record->ParentFileReferenceNumber);
+        frn_record_pfrn_map_.insert(
+            std::make_pair(record->FileReferenceNumber, path_usn_record_pair)
+        );
+        --remain_cache_number;
+    }
+}
+
+/**
+ * \brief 将usn_cache_map的usn记录缓存
+ * \param usn_cache_map 需要缓存的usn record
+ */
+void NTFSChangesWatcher::save_usn_cache_to_map(const cache_map_t& usn_cache_map)
+{
+    for (const auto& [file_ref_number, path_usn_record] : usn_cache_map)
+    {
+        DWORDLONG file_parent_id = path_usn_record.second;
+        std::u16string full_path(path_usn_record.first.first);
+        do
+        {
+            auto&& parent_file = usn_cache_map.find(file_parent_id);
+            if (parent_file == usn_cache_map.end())
+            {
+                break;
+            }
+            std::u16string file_name = parent_file->second.first.first;
+            full_path = file_name.append(sep).append(full_path);
+            file_parent_id = parent_file->second.second;
+        }
+        while (true);
+        auto&& path_using_count_pair = std::make_pair(full_path, GetTickCount64());
+        auto&& path_usn_record_pair = std::make_pair(path_using_count_pair,
+                                                     path_usn_record.second);
+        frn_record_pfrn_map_.insert(std::make_pair(file_ref_number, path_usn_record_pair));
+        --remain_cache_number;
+    }
 }

@@ -4,6 +4,8 @@
 #include <Windows.h>
 #include <unordered_map>
 
+using cache_map_t = std::unordered_map<DWORDLONG, std::pair<std::pair<std::u16string, DWORDLONG>, DWORDLONG>>;
+
 class NTFSChangesWatcher
 {
 public:
@@ -43,6 +45,8 @@ private:
 
     static std::u16string GetFilename(USN_RECORD* record);
 
+    void save_usn_cache_to_map(const cache_map_t& usn_cache_map);
+
     char drive_letter_;
 
     volatile bool is_delete_usn_on_exit_;
@@ -51,7 +55,7 @@ private:
 
     volatile bool stop_flag;
 
-    std::unordered_map<DWORDLONG, std::pair<std::pair<std::u16string, DWORDLONG>, DWORDLONG>> frn_record_pfrn_map_;
+    cache_map_t frn_record_pfrn_map_;
 
     std::unique_ptr<USN_JOURNAL_DATA> journal_;
 

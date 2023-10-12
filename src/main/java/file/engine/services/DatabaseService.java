@@ -589,9 +589,9 @@ public class DatabaseService {
             String deleteFilePath = FileMonitor.INSTANCE.pop_del_file();
             if (addFilePath != null && !addFilePath.contains(tempPath)) {
                 File addFile = new File(addFilePath);
-                var dirs = new ArrayDeque<File>();
+                var dirQueue = new ArrayDeque<File>();
                 if (addFile.isDirectory()) {
-                    dirs.add(addFile);
+                    dirQueue.add(addFile);
                 }
                 do {
                     if (addFile.getParentFile() != null) {
@@ -599,7 +599,7 @@ public class DatabaseService {
                     }
                 } while ((addFile = addFile.getParentFile()) != null);
                 File remain;
-                while ((remain = dirs.poll()) != null) {
+                while ((remain = dirQueue.poll()) != null) {
                     addFileToDatabase(remain.getAbsolutePath());
                     File[] subFiles = remain.listFiles();
                     if (subFiles == null) {
@@ -608,7 +608,7 @@ public class DatabaseService {
                     Arrays.stream(subFiles).forEach(eachFile -> {
                         addFileToDatabase(eachFile.getAbsolutePath());
                         if (eachFile.isDirectory()) {
-                            dirs.add(eachFile);
+                            dirQueue.add(eachFile);
                         }
                     });
                 }
@@ -1133,7 +1133,7 @@ public class DatabaseService {
      * @param path     文件路径
      * @param priority 优先级
      */
-    private void addAddSqlCommandByAscii(int asciiSum, String path, int priority) {
+    private void addInsertSqlCommandByAscii(int asciiSum, String path, int priority) {
         String commandTemplate = "INSERT OR IGNORE INTO %s VALUES(%d, \"%s\", %d)";
         int asciiGroup = asciiSum / 100;
         asciiGroup = Math.min(asciiGroup, Constants.MAX_TABLE_NUM);
@@ -1261,7 +1261,7 @@ public class DatabaseService {
         }
         int asciiSum = StringUtf8SumUtil.getStringSum(FileUtil.getFileName(path));
         int priorityBySuffix = getPriorityBySuffix(getSuffixByPath(path));
-        addAddSqlCommandByAscii(asciiSum, path, priorityBySuffix);
+        addInsertSqlCommandByAscii(asciiSum, path, priorityBySuffix);
         int asciiGroup = asciiSum / 100;
         asciiGroup = Math.min(asciiGroup, Constants.MAX_TABLE_NUM);
         String tableName = "list" + asciiGroup;
@@ -2186,10 +2186,14 @@ public class DatabaseService {
                 EventManagement eventManagement = EventManagement.getInstance();
                 DatabaseService databaseService = DatabaseService.getInstance();
                 final int removeRecordsThreshold = 100;
+                AllConfigs allConfigs = AllConfigs.getInstance();
+                long lastCheckTime = System.currentTimeMillis();
                 while (eventManagement.notMainExit()) {
                     if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL &&
                             !GetHandle.INSTANCE.isForegroundFullscreen() &&
-                            (!recordsToAdd.isEmpty() || !recordsToRemove.isEmpty())) {
+                            (!recordsToAdd.isEmpty() || !recordsToRemove.isEmpty()) &&
+                            System.currentTimeMillis() - lastCheckTime > allConfigs.getConfigEntity().getUpdateTimeLimit() * 1000L) {
+                        lastCheckTime = System.currentTimeMillis();
                         for (var entry : recordsToAdd.entrySet()) {
                             String k = entry.getKey();
                             Set<String> container = entry.getValue();
