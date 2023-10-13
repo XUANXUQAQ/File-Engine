@@ -710,6 +710,7 @@ public class SearchBar {
         }
         saveCache(result);
         GetHandle.INSTANCE.setEditPath(new String(result.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8));
+        closeWithoutHideSearchBar();
     }
 
     /**
