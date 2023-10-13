@@ -42,24 +42,21 @@ BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam);
 inline bool isMouseClicked();
 bool isDialogNotExist();
 BOOL CALLBACK findToolbarWin32Internal(HWND hwndChild, LPARAM lParam);
+void start();
+void stop();
+BOOL changeToAttach();
+BOOL changeToNormal();
+long getExplorerX();
+long getExplorerY();
+long getExplorerWidth();
+long getExplorerHeight();
+const char* getExplorerPath();
+BOOL isDialogWindow();
+int getToolBarX();
+int getToolBarY();
+BOOL isKeyPressed(int vk_key);
+BOOL isForegroundFullscreen();
 
-extern "C" {
-__declspec(dllexport) void start();
-__declspec(dllexport) void stop();
-__declspec(dllexport) BOOL changeToAttach();
-__declspec(dllexport) BOOL changeToNormal();
-__declspec(dllexport) long getExplorerX();
-__declspec(dllexport) long getExplorerY();
-__declspec(dllexport) long getExplorerWidth();
-__declspec(dllexport) long getExplorerHeight();
-__declspec(dllexport) const char* getExplorerPath();
-__declspec(dllexport) BOOL isDialogWindow();
-__declspec(dllexport) int getToolBarX();
-__declspec(dllexport) int getToolBarY();
-__declspec(dllexport) BOOL isKeyPressed(int vk_key);
-__declspec(dllexport) BOOL isForegroundFullscreen();
-// __declspec(dllexport) void setEditPath(const jchar* path);
-}
 
 /*
  * Class:     file_engine_dllInterface_GetHandle

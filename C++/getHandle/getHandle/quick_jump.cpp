@@ -73,7 +73,9 @@ void jump_to_dest(HWND hwnd, const wchar_t* path)
 
     if (pShellBrowser != nullptr)
     {
-        pShellBrowser->BrowseObject(ILCreateFromPath(path), SBSP_SAMEBROWSER);
+        LPITEMIDLIST pidl = ILCreateFromPath(path);
+        pShellBrowser->BrowseObject(pidl, SBSP_SAMEBROWSER);
+        ILFree(pidl);
         pShellBrowser->Release();
     }
     CoUninitialize();
