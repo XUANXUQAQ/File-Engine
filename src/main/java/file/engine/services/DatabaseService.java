@@ -658,6 +658,12 @@ public class DatabaseService {
                 if (countObj != null) {
                     count = Integer.parseInt(String.valueOf(countObj));
                 }
+                if (count > Integer.MAX_VALUE - 100_000) {
+                    addToCommandQueue(new SQLWithTaskId("update statistics set COUNT = COUNT/2;", SqlTaskIds.UPDATE_STATISTICS, "cache"));
+                } else if (count <= 0) {
+                    count = 1;
+                    addToCommandQueue(new SQLWithTaskId("update statistics set COUNT = 1 where PATH='" + eachLine + "';", SqlTaskIds.UPDATE_STATISTICS, "cache"));
+                }
                 databaseCacheMap.put(eachLine, count);
             }
         } catch (Exception e) {
@@ -2173,7 +2179,7 @@ public class DatabaseService {
     }
 
     private enum SqlTaskIds {
-        DELETE_FROM_LIST, DELETE_FROM_CACHE, DELETE_FROM_STATISTICS, INSERT_TO_LIST, INSERT_TO_CACHE, INSERT_TO_STATISTICS,
+        DELETE_FROM_LIST, DELETE_FROM_CACHE, DELETE_FROM_STATISTICS, INSERT_TO_LIST, INSERT_TO_CACHE, INSERT_TO_STATISTICS, UPDATE_STATISTICS,
         CREATE_INDEX, CREATE_TABLE, DROP_TABLE, DROP_INDEX, UPDATE_SUFFIX, UPDATE_WEIGHT
     }
 
