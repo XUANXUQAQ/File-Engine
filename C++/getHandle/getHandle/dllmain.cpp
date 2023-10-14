@@ -242,18 +242,6 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_GetHandle_setEditPath
     CoUninitialize();
 }
 
-#ifdef TEST
-void outputHwndInfo(HWND hwnd)
-{
-	char hwndTitle[200];
-	char hwndClassName[200];
-	GetWindowTextA(hwnd, hwndTitle, 200);
-	GetClassNameA(hwnd, hwndClassName, 200);
-	cout << "hwnd class name: " << hwndClassName << endl;
-	cout << "hwnd title: " << hwndTitle << endl;
-}
-#endif
-
 int getToolBarX()
 {
     return toolbar_click_x;

@@ -109,47 +109,60 @@ IShellBrowser* GetShellBrowserFromHWND(HWND hwnd)
 
 void jump_to_dest(HWND hwnd, const wchar_t* path)
 {
-    if (!is_explorer_window_by_class_name(hwnd))
+    if (is_explorer_window_by_class_name(hwnd))
     {
-        return;
+        IShellBrowser* pShellBrowser = GetShellBrowserFromHWND(hwnd);
+
+        if (pShellBrowser != nullptr)
+        {
+            LPITEMIDLIST pidl = ILCreateFromPath(path);
+            pShellBrowser->BrowseObject(pidl, SBSP_SAMEBROWSER);
+            SHChangeNotify(SHCNE_ALLEVENTS, SHCNF_FLUSH, nullptr, nullptr);
+            ILFree(pidl);
+            pShellBrowser->Release();
+        }
     }
-
-    IShellBrowser* pShellBrowser = GetShellBrowserFromHWND(hwnd);
-
-    if (pShellBrowser != nullptr)
+    else if (is_file_chooser_window(hwnd))
     {
-        LPITEMIDLIST pidl = ILCreateFromPath(path);
-        pShellBrowser->BrowseObject(pidl, SBSP_SAMEBROWSER);
-        SHChangeNotify(SHCNE_ALLEVENTS, SHCNF_FLUSH, nullptr, nullptr);
-        ILFree(pidl);
-        pShellBrowser->Release();
+        HWND hCtl = GetDlgItem(hwnd, 0x47C); // Combo
+        if (!hCtl) hCtl = GetDlgItem(hwnd, 0x480); // Old Edit
+        if (hCtl && *path && static_cast<int>(SendMessage(hCtl, WM_SETTEXT, 0, reinterpret_cast<SIZE_T>(path))) > 0)
+        {
+            INPUT input{};
+            input.type = INPUT_KEYBOARD;
+            input.ki.wVk = VK_RETURN;
+            SendInput(1, &input, sizeof(INPUT));
+        }
     }
 }
 
 void set_file_selected(HWND hwnd, const wchar_t* file_name)
 {
-    IFolderView2* pFolderView = GetFolderViewFromHWND(hwnd);
-    if (pFolderView != nullptr)
+    if (is_explorer_window_by_class_name(hwnd))
     {
-        int count = 0;
-        throw_if_failed(pFolderView->ItemCount(SVGIO_ALLVIEW, &count), "Get directory item count failed");
-        for (int i = 0; i < count; ++i)
+        IFolderView2* pFolderView = GetFolderViewFromHWND(hwnd);
+        if (pFolderView != nullptr)
         {
-            IShellItem2* pShellItem;
-            throw_if_failed(pFolderView->GetItem(i, IID_IShellItem2, reinterpret_cast<void**>(&pShellItem)),
-                            "Get shell item failed");
-            LPWSTR file_name_view = nullptr;
-            throw_if_failed(pShellItem->GetString(PKEY_FileName, &file_name_view),
-                            "Get item display name failed");
-            const auto cmp_res = wcscmp(file_name, file_name_view);
-            CoTaskMemFree(file_name_view);
-            pShellItem->Release();
-            if (cmp_res == 0)
+            int count = 0;
+            throw_if_failed(pFolderView->ItemCount(SVGIO_ALLVIEW, &count), "Get directory item count failed");
+            for (int i = 0; i < count; ++i)
             {
-                pFolderView->SelectItem(i, SVSI_SELECT | SVSI_DESELECTOTHERS);
-                break;
+                IShellItem2* pShellItem;
+                throw_if_failed(pFolderView->GetItem(i, IID_IShellItem2, reinterpret_cast<void**>(&pShellItem)),
+                                "Get shell item failed");
+                LPWSTR file_name_view = nullptr;
+                throw_if_failed(pShellItem->GetString(PKEY_FileName, &file_name_view),
+                                "Get item display name failed");
+                const auto cmp_res = wcscmp(file_name, file_name_view);
+                CoTaskMemFree(file_name_view);
+                pShellItem->Release();
+                if (cmp_res == 0)
+                {
+                    pFolderView->SelectItem(i, SVSI_SELECT | SVSI_DESELECTOTHERS);
+                    break;
+                }
             }
+            pFolderView->Release();
         }
-        pFolderView->Release();
     }
 }
