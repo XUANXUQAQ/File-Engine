@@ -122,10 +122,10 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_GetHandle_isForegroundF
 /*
  * Class:     file_engine_dllInterface_GetHandle
  * Method:    setEditPath
- * Signature: (Ljava/lang/String;)V
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_GetHandle_setEditPath
-  (JNIEnv *, jobject, jstring);
+  (JNIEnv *, jobject, jstring, jstring);
 
 #ifdef __cplusplus
 }

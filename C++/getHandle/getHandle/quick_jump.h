@@ -10,3 +10,4 @@ struct CoTaskMemDeleter
 };
 
 void jump_to_dest(HWND hwnd, const wchar_t* path);
+void set_file_selected(HWND hwnd, const wchar_t* file_name);

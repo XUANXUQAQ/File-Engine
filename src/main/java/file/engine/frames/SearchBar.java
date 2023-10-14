@@ -705,11 +705,19 @@ public class SearchBar {
 
     //在explorer attach模式时操作鼠标和键盘以快速跳转到文件位置
     private void quickJump(String result) {
+        String jumpLocation;
+        String fileName;
         if (FileUtil.isFile(result)) {
-            result = FileUtil.getParentPath(result);
+            jumpLocation = FileUtil.getParentPath(result);
+            fileName = FileUtil.getFileName(result);
+        } else {
+            jumpLocation = result;
+            fileName = "";
         }
         saveCache(result);
-        GetHandle.INSTANCE.setEditPath(new String(result.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8));
+        jumpLocation = new String(jumpLocation.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
+        fileName = new String(fileName.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
+        GetHandle.INSTANCE.setEditPath(jumpLocation, fileName);
         closeWithoutHideSearchBar();
     }
 

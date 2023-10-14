@@ -102,5 +102,5 @@ public enum GetHandle {
      *
      * @param path 文件夹路径
      */
-    public native void setEditPath(String path);
+    public native void setEditPath(String path, String fileName);
 }

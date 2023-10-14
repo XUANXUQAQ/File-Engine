@@ -216,18 +216,30 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_GetHandle_isForegroundF
 /*
  * Class:     file_engine_dllInterface_GetHandle
  * Method:    setEditPath
- * Signature: (Ljava/lang/String;)V
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_GetHandle_setEditPath
-(JNIEnv* env, jobject, jstring path)
+(JNIEnv* env, jobject, jstring path, jstring file_name)
 {
-    std::wstring value;
+    std::wstring path_wstring;
+    std::wstring file_name_wstring;
 
     const jchar* raw = env->GetStringChars(path, nullptr);
+    const jchar* raw_name = env->GetStringChars(file_name, nullptr);
+
     jsize len = env->GetStringLength(path);
-    value.assign(raw, raw + len);
+    jsize len_name = env->GetStringLength(file_name);
+
+    path_wstring.assign(raw, raw + len);
+    file_name_wstring.assign(raw_name, raw_name + len_name);
+
     env->ReleaseStringChars(path, raw);
-    jump_to_dest(current_attach_explorer, value.c_str());
+    env->ReleaseStringChars(file_name, raw_name);
+
+    CoInitialize(nullptr);
+    jump_to_dest(current_attach_explorer, path_wstring.c_str());
+    set_file_selected(current_attach_explorer, file_name_wstring.c_str());
+    CoUninitialize();
 }
 
 #ifdef TEST
