@@ -2821,6 +2821,15 @@ public class SearchBar {
         var showSearchBarTask = (ShowSearchBarEvent) event;
         SearchBar searchBarInstance = getInstance();
         searchBarInstance.showSearchbar(showSearchBarTask.isGrabFocus, showSearchBarTask.isSwitchToNormal);
+        final long start = System.currentTimeMillis();
+        while (searchBarInstance.showingMode != Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING &&
+                System.currentTimeMillis() - start < 3000) {
+            try {
+                TimeUnit.MILLISECONDS.sleep(1);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
         DatabaseService databaseService = DatabaseService.getInstance();
         List<String> top8Caches = databaseService.getTop8Caches();
         top8Caches.forEach(e -> searchBarInstance.listResults.add(new ResultWrap(null, e)));
