@@ -4107,7 +4107,9 @@ public class SearchBar {
      * @param isGrabFocus 是否强制抓取焦点
      */
     private void showSearchbar(boolean isGrabFocus, boolean isSwitchToNormal) {
-        EventManagement eventManagement = EventManagement.getInstance();
+        var eventManagement = EventManagement.getInstance();
+        var threadPoolUtil = ThreadPoolUtil.INSTANCE;
+        runningMode = RunningMode.NORMAL_MODE;
         try {
             SwingUtilities.invokeAndWait(() -> {
                 if (!isVisible()) {
@@ -4129,7 +4131,7 @@ public class SearchBar {
         }
         listResults = new ArrayList<>();
         labelRefreshFlag = new AtomicInteger();
-        ThreadPoolUtil.getInstance().executeTask(() -> {
+        threadPoolUtil.executeTask(() -> {
             if (isGrabFocus && !isSwitchToNormal) {
                 try {
                     TimeUnit.MILLISECONDS.sleep(250);
@@ -4140,7 +4142,7 @@ public class SearchBar {
             }
         });
         if (isBorderThreadNotExist.compareAndSet(true, false)) {
-            ThreadPoolUtil.getInstance().executeTask(this::setBorderOnVisible);
+            threadPoolUtil.executeTask(this::setBorderOnVisible);
         }
         if (isTryToShowResultThreadNotExist.compareAndSet(true, false)) {
             tryToShowResultsThread();
