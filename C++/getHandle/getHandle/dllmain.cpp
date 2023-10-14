@@ -27,21 +27,14 @@ int explorer_x;
 int explorer_y;
 long explorer_width;
 long explorer_height;
-int toolbar_click_x;
-int toolbar_click_y;
-int toolbar_width;
-int toolbar_height;
 int top_window_type;
 HWND current_attach_explorer;
 char drag_explorer_path[500];
 
 void checkTopWindowThread();
 void checkMouseThread();
-inline void setClickPos(const HWND& fileChooserHwnd);
-BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam);
 inline bool isMouseClicked();
 bool isDialogNotExist();
-BOOL CALLBACK findToolbarWin32Internal(HWND hwndChild, LPARAM lParam);
 void start();
 void stop();
 BOOL changeToAttach();
@@ -52,8 +45,6 @@ long getExplorerWidth();
 long getExplorerHeight();
 const char* getExplorerPath();
 BOOL isDialogWindow();
-int getToolBarX();
-int getToolBarY();
 BOOL isKeyPressed(int vk_key);
 BOOL isForegroundFullscreen();
 
@@ -177,7 +168,7 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_GetHandle_isDialogWindo
 JNIEXPORT jint JNICALL Java_file_engine_dllInterface_GetHandle_getToolBarX
 (JNIEnv*, jobject)
 {
-    return getToolBarX();
+    return 0;
 }
 
 /*
@@ -188,7 +179,7 @@ JNIEXPORT jint JNICALL Java_file_engine_dllInterface_GetHandle_getToolBarX
 JNIEXPORT jint JNICALL Java_file_engine_dllInterface_GetHandle_getToolBarY
 (JNIEnv*, jobject)
 {
-    return getToolBarY();
+    return 0;
 }
 
 /*
@@ -242,11 +233,6 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_GetHandle_setEditPath
     CoUninitialize();
 }
 
-int getToolBarX()
-{
-    return toolbar_click_x;
-}
-
 /**
  * 检查顶层窗口是不是全屏显示，防止游戏时开始搜索导致卡顿
  */
@@ -282,11 +268,6 @@ BOOL isForegroundFullscreen()
         }
     } //如果当前激活窗口是桌面窗口，或者是控制台窗口，就直接返回不是全屏
     return b_fullscreen;
-}
-
-int getToolBarY()
-{
-    return toolbar_click_y;
 }
 
 BOOL changeToNormal()
@@ -354,104 +335,6 @@ bool isDialogNotExist()
             }
         }
         hd = GetWindow(hd, GW_HWNDNEXT);
-    }
-#ifdef TEST
-	cout << "all dialog not exist" << endl;
-#endif
-    return true;
-}
-
-/**
- * 定位explorer窗口输入文件夹路径的控件坐标
- */
-inline void setClickPos(const HWND& fileChooserHwnd)
-{
-    EnumChildWindows(fileChooserHwnd, findToolbar, NULL);
-}
-
-//
-// void setEditPath(const jchar* path)
-// {
-// 	using namespace std::chrono;
-// 	const POINT toolbar_pos{ toolbar_click_x, toolbar_click_y };
-// 	POINT origin_mouse_pos;
-// 	GetCursorPos(&origin_mouse_pos);
-// 	char class_name[50] = { "\0" };
-// 	const auto start_time = system_clock::now();
-// 	const auto end_time = start_time + seconds(3);
-// 	HWND hwnd_from_toolbar;
-// 	bool is_timeout = false;
-// 	const POINT toolbar_center{ toolbar_click_x - toolbar_width / 2, toolbar_click_y };
-// 	while (true)
-// 	{
-// 		//尝试点击
-// 		SetCursorPos(toolbar_pos.x, toolbar_pos.y);
-// 		INPUT input;
-// 		input.type = INPUT_MOUSE;
-// 		input.mi.dwFlags = MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP;
-// 		SendInput(1, &input, sizeof(INPUT));
-// 		Sleep(15);
-//
-// 		//检查toolbar位置是否已经变成Edit框
-// 		hwnd_from_toolbar = WindowFromPoint(toolbar_center);
-// 		GetClassNameA(hwnd_from_toolbar, class_name, sizeof class_name);
-// 		if (strcmp(class_name, "Edit") == 0)
-// 		{
-// 			break;
-// 		}
-// 		if (system_clock::now() > end_time)
-// 		{
-// 			// fprintf(stderr, "Get explorer edit path timeout.");
-// 			is_timeout = true;
-// 			break;
-// 		}
-// 	}
-// 	SetCursorPos(origin_mouse_pos.x, origin_mouse_pos.y);
-// 	if (is_timeout)
-// 	{
-// 		return;
-// 	}
-// 	SendMessageW(hwnd_from_toolbar, EM_SETSEL, static_cast<WPARAM>(0), -1);
-// 	SendMessageW(hwnd_from_toolbar, EM_REPLACESEL, static_cast<WPARAM>(TRUE), reinterpret_cast<LPARAM>(path));
-// 	INPUT input{};
-// 	input.type = INPUT_KEYBOARD;
-// 	input.ki.wVk = VK_RETURN;
-// 	SendInput(1, &input, sizeof(INPUT));
-// }
-
-BOOL CALLBACK findToolbarWin32Internal(HWND hwndChild, LPARAM lParam)
-{
-    auto* hwd_tool_bar = FindWindowExA(hwndChild, nullptr, "ToolbarWindow32", nullptr);
-    if (IsWindow(hwd_tool_bar))
-    {
-        RECT combo_box_rect;
-        GetWindowRect(hwd_tool_bar, &combo_box_rect);
-        *reinterpret_cast<int*>(lParam) = combo_box_rect.right - combo_box_rect.left;
-        return false;
-    }
-    return true;
-}
-
-/**
- * 定位explorer窗口输入文件夹路径的控件坐标
- */
-BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam)
-{
-    auto* hwd2 = FindWindowExA(hwndChild, nullptr, "Address Band Root", nullptr);
-    if (IsWindow(hwd2))
-    {
-        RECT rect;
-        int toolbar_win32_width = 0;
-        GetWindowRect(hwd2, &rect);
-        const int toolbar_x = rect.left;
-        const int toolbar_y = rect.top;
-        toolbar_width = rect.right - rect.left;
-        toolbar_height = rect.bottom - rect.top;
-        EnumChildWindows(hwd2, findToolbarWin32Internal, reinterpret_cast<LPARAM>(&toolbar_win32_width));
-        const int combo_box_width = toolbar_win32_width;
-        toolbar_click_x = toolbar_x + toolbar_width - combo_box_width - 15;
-        toolbar_click_y = toolbar_y + toolbar_height / 2;
-        return false;
     }
     return true;
 }
@@ -631,7 +514,6 @@ void checkTopWindowThread()
                     top_window_type = G_DIALOG;
                 }
                 current_attach_explorer = hwnd;
-                setClickPos(hwnd);
                 is_explorer_window_at_top = true;
                 is_mouse_click_out_of_explorer = false;
             }

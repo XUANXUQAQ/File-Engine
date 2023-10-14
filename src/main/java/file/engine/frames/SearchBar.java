@@ -708,7 +708,7 @@ public class SearchBar {
         if (GetHandle.INSTANCE.isDialogWindow()) {
             closeSearchBar();
             try {
-                TimeUnit.MILLISECONDS.sleep(200);
+                TimeUnit.MILLISECONDS.sleep(50);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
