@@ -444,7 +444,7 @@ public class SQLiteUtil {
         try (PreparedStatement pStmt = getPreparedStatement("""
                 CREATE TABLE IF NOT EXISTS statistics
                 (
-                    ID    int primary key autoincrement,
+                    ID    INTEGER primary key autoincrement,
                     PATH  text unique,
                     COUNT int default 1
                 );
