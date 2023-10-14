@@ -441,6 +441,16 @@ public class SQLiteUtil {
         try (PreparedStatement pStmt = getPreparedStatement("CREATE TABLE IF NOT EXISTS cache(PATH text unique);", "cache")) {
             pStmt.executeUpdate();
         }
+        try (PreparedStatement pStmt = getPreparedStatement("""
+                CREATE TABLE IF NOT EXISTS statistics
+                (
+                    ID    int primary key autoincrement,
+                    PATH  text unique,
+                    COUNT int default 1
+                );
+                """, "cache")) {
+            pStmt.executeUpdate();
+        }
     }
 
     private static void insertAllSuffixPriority(HashMap<String, Integer> suffixMap, Statement statement) {

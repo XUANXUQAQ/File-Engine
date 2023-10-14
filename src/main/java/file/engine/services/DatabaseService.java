@@ -48,7 +48,10 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
@@ -72,7 +75,7 @@ public class DatabaseService {
     private final ConcurrentHashMap<String, Cache> tableCache = new ConcurrentHashMap<>();
     private final AtomicInteger tableCacheCount = new AtomicInteger();
     // 对数据库cache表的缓存，保存常用的应用
-    private final ConcurrentSkipListSet<String> databaseCacheSet = new ConcurrentSkipListSet<>();
+    private final ConcurrentSkipListMap<String, Integer> databaseCacheMap = new ConcurrentSkipListMap<>();
     private final AtomicInteger searchThreadCount = new AtomicInteger(0);
     private static final int MAX_TEMP_QUERY_RESULT_CACHE = 1024;
     private static final int MAX_CACHED_RECORD_NUM = 10240 * 5;
@@ -624,20 +627,38 @@ public class DatabaseService {
         }
     }
 
+    public List<String> getTop8Caches() {
+        return databaseCacheMap.entrySet()
+                .stream()
+                .sorted((o1, o2) -> o2.getValue() - o1.getValue())
+                .filter(e -> {
+                    var s = e.getKey();
+                    var sLower = s.toLowerCase();
+                    return sLower.endsWith(".exe") || sLower.endsWith(".lnk");
+                })
+                .map(Map.Entry::getKey)
+                .limit(8)
+                .toList();
+    }
+
     public Set<String> getCache() {
-        return new LinkedHashSet<>(databaseCacheSet);
+        return new LinkedHashSet<>(databaseCacheMap.keySet());
     }
 
     /**
      * 将缓存中的文件保存到cacheSet中
      */
     private void prepareDatabaseCache() {
-        String eachLine;
         try (Statement statement = SQLiteUtil.getStatement("cache");
-             ResultSet resultSet = statement.executeQuery("SELECT PATH FROM cache;")) {
+             ResultSet resultSet = statement.executeQuery("select cache.PATH, COUNT from cache left join statistics s on cache.PATH = s.PATH;")) {
             while (resultSet.next()) {
-                eachLine = resultSet.getString("PATH");
-                databaseCacheSet.add(eachLine);
+                String eachLine = resultSet.getString("PATH");
+                Object countObj = resultSet.getObject("COUNT");
+                int count = 1;
+                if (countObj != null) {
+                    count = Integer.parseInt(String.valueOf(countObj));
+                }
+                databaseCacheMap.put(eachLine, count);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -650,7 +671,7 @@ public class DatabaseService {
     private void searchCache(SearchTask searchTask) {
         var eventManagement = EventManagement.getInstance();
         HashSet<String> dirs = new HashSet<>();
-        for (String each : databaseCacheSet) {
+        for (var each : databaseCacheMap.keySet()) {
             if (FileUtil.isFileNotExist(each)) {
                 eventManagement.putEvent(new DeleteFromCacheEvent(each));
             } else {
@@ -1281,9 +1302,11 @@ public class DatabaseService {
     }
 
     private void addFileToCache(String path) {
-        String command = "INSERT OR IGNORE INTO cache(PATH) VALUES(\"" + path + "\");";
+        String command = "INSERT OR IGNORE INTO cache(PATH) VALUES('" + path + "');";
+        String statisticsCommand = "INSERT INTO statistics(PATH) VALUES('" + path + "') ON CONFLICT DO UPDATE SET COUNT = COUNT + 1;";
         if (isCommandNotRepeat(command)) {
             addToCommandQueue(new SQLWithTaskId(command, SqlTaskIds.INSERT_TO_CACHE, "cache"));
+            addToCommandQueue(new SQLWithTaskId(statisticsCommand, SqlTaskIds.INSERT_TO_STATISTICS, "cache"));
             if (IsDebug.isDebug()) {
                 System.out.println("添加" + path + "到缓存");
             }
@@ -1291,9 +1314,11 @@ public class DatabaseService {
     }
 
     private void removeFileFromCache(String path) {
-        String command = "DELETE from cache where PATH=" + "\"" + path + "\";";
+        String command = "DELETE from cache where PATH=" + "'" + path + "';";
+        String statisticsCommand = "DELETE from statistics where PATH=" + "'" + path + "';";
         if (isCommandNotRepeat(command)) {
             addToCommandQueue(new SQLWithTaskId(command, SqlTaskIds.DELETE_FROM_CACHE, "cache"));
+            addToCommandQueue(new SQLWithTaskId(statisticsCommand, SqlTaskIds.DELETE_FROM_STATISTICS, "cache"));
             if (IsDebug.isDebug()) {
                 System.out.println("删除" + path + "到缓存");
             }
@@ -1691,7 +1716,7 @@ public class DatabaseService {
      * @return cache num
      */
     public int getDatabaseCacheNum() {
-        return databaseCacheSet.size();
+        return databaseCacheMap.size();
     }
 
     private boolean isTaskExistInCommandSet(SqlTaskIds taskId) {
@@ -2004,7 +2029,12 @@ public class DatabaseService {
     private static void addToCacheEvent(Event event) {
         DatabaseService databaseService = getInstance();
         String path = ((AddToCacheEvent) event).path;
-        databaseService.databaseCacheSet.add(path);
+        Integer count;
+        if ((count = databaseService.databaseCacheMap.get(path)) == null) {
+            databaseService.databaseCacheMap.put(path, 1);
+        } else {
+            databaseService.databaseCacheMap.put(path, count + 1);
+        }
         if (databaseService.status.get() == Constants.Enums.DatabaseStatus._TEMP) {
             return;
         }
@@ -2015,7 +2045,7 @@ public class DatabaseService {
     private static void deleteFromCacheEvent(Event event) {
         DatabaseService databaseService = getInstance();
         String path = ((DeleteFromCacheEvent) event).path;
-        databaseService.databaseCacheSet.remove(path);
+        databaseService.databaseCacheMap.remove(path);
         if (databaseService.status.get() == Constants.Enums.DatabaseStatus._TEMP) {
             return;
         }
@@ -2143,7 +2173,7 @@ public class DatabaseService {
     }
 
     private enum SqlTaskIds {
-        DELETE_FROM_LIST, DELETE_FROM_CACHE, INSERT_TO_LIST, INSERT_TO_CACHE,
+        DELETE_FROM_LIST, DELETE_FROM_CACHE, DELETE_FROM_STATISTICS, INSERT_TO_LIST, INSERT_TO_CACHE, INSERT_TO_STATISTICS,
         CREATE_INDEX, CREATE_TABLE, DROP_TABLE, DROP_INDEX, UPDATE_SUFFIX, UPDATE_WEIGHT
     }
 

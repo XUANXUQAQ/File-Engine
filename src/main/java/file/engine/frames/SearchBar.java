@@ -613,7 +613,7 @@ public class SearchBar {
                         }
                         if (runningMode == RunningMode.NORMAL_MODE) {
                             String searchBarText = getSearchBarText();
-                            if (searchBarText.charAt(0) == '>') {
+                            if (!searchBarText.isEmpty() && searchBarText.charAt(0) == '>') {
                                 SwingUtilities.invokeLater(() -> textField.setText(">" + res + " "));
                                 return;
                             } else {
@@ -829,7 +829,7 @@ public class SearchBar {
                 String res = listResults.get(currentResultCount.get()).result();
                 if (runningMode == RunningMode.NORMAL_MODE) {
                     String searchBarText = getSearchBarText();
-                    if (searchBarText.charAt(0) == '>') {
+                    if (!searchBarText.isEmpty() && searchBarText.charAt(0) == '>') {
                         SwingUtilities.invokeLater(() -> textField.setText(">" + res + " "));
                         return true;
                     } else {
@@ -889,17 +889,15 @@ public class SearchBar {
                     boolean isNextLabelValid = isNextLabelValid();
                     //当下一个label有数据时才移动到下一个
                     if (isNextLabelValid) {
-                        if (!getSearchBarText().isEmpty()) {
-                            currentResultCount.incrementAndGet();
-                            int size = listResults.size();
-                            if (currentResultCount.get() >= size) {
-                                currentResultCount.set(size - 1);
-                            }
-                            if (currentResultCount.get() <= 0) {
-                                currentResultCount.set(0);
-                            }
-                            moveDownward(getCurrentLabelPos());
+                        currentResultCount.incrementAndGet();
+                        int size = listResults.size();
+                        if (currentResultCount.get() >= size) {
+                            currentResultCount.set(size - 1);
                         }
+                        if (currentResultCount.get() <= 0) {
+                            currentResultCount.set(0);
+                        }
+                        moveDownward(getCurrentLabelPos());
                     }
                 }
             }
@@ -914,17 +912,15 @@ public class SearchBar {
                         isUserPressed.set(true);
                     }
 
-                    if (!getSearchBarText().isEmpty()) {
-                        currentResultCount.decrementAndGet();
-                        int size = listResults.size();
-                        if (currentResultCount.get() >= size) {
-                            currentResultCount.set(size - 1);
-                        }
-                        if (currentResultCount.get() <= 0) {
-                            currentResultCount.set(0);
-                        }
-                        moveUpward(getCurrentLabelPos());
+                    currentResultCount.decrementAndGet();
+                    int size = listResults.size();
+                    if (currentResultCount.get() >= size) {
+                        currentResultCount.set(size - 1);
                     }
+                    if (currentResultCount.get() <= 0) {
+                        currentResultCount.set(0);
+                    }
+                    moveUpward(getCurrentLabelPos());
                 }
             }
 
@@ -1735,26 +1731,7 @@ public class SearchBar {
                     isUserPressed.set(false);
                 }
                 if (isNextLabelValid()) {
-                    if (!getSearchBarText().isEmpty()) {
-                        currentResultCount.incrementAndGet();
-                        int size = listResults.size();
-                        if (currentResultCount.get() >= size) {
-                            currentResultCount.set(size - 1);
-                        }
-                        if (currentResultCount.get() <= 0) {
-                            currentResultCount.set(0);
-                        }
-                        moveDownward(getCurrentLabelPos());
-                    }
-                }
-            } else if (e.getPreciseWheelRotation() < 0) {
-                //向上滚动
-                if (isLabelNotEmpty(label1) && isLabelNotEmpty(label2) && isLabelNotEmpty(label3) && isLabelNotEmpty(label4)
-                        && isLabelNotEmpty(label5) && isLabelNotEmpty(label6) && isLabelNotEmpty(label7) && isLabelNotEmpty(label8)) {
-                    isUserPressed.set(true);
-                }
-                if (!getSearchBarText().isEmpty()) {
-                    currentResultCount.getAndDecrement();
+                    currentResultCount.incrementAndGet();
                     int size = listResults.size();
                     if (currentResultCount.get() >= size) {
                         currentResultCount.set(size - 1);
@@ -1762,8 +1739,23 @@ public class SearchBar {
                     if (currentResultCount.get() <= 0) {
                         currentResultCount.set(0);
                     }
-                    moveUpward(getCurrentLabelPos());
+                    moveDownward(getCurrentLabelPos());
                 }
+            } else if (e.getPreciseWheelRotation() < 0) {
+                //向上滚动
+                if (isLabelNotEmpty(label1) && isLabelNotEmpty(label2) && isLabelNotEmpty(label3) && isLabelNotEmpty(label4)
+                        && isLabelNotEmpty(label5) && isLabelNotEmpty(label6) && isLabelNotEmpty(label7) && isLabelNotEmpty(label8)) {
+                    isUserPressed.set(true);
+                }
+                currentResultCount.getAndDecrement();
+                int size = listResults.size();
+                if (currentResultCount.get() >= size) {
+                    currentResultCount.set(size - 1);
+                }
+                if (currentResultCount.get() <= 0) {
+                    currentResultCount.set(0);
+                }
+                moveUpward(getCurrentLabelPos());
             }
         });
     }
@@ -2829,6 +2821,9 @@ public class SearchBar {
         var showSearchBarTask = (ShowSearchBarEvent) event;
         SearchBar searchBarInstance = getInstance();
         searchBarInstance.showSearchbar(showSearchBarTask.isGrabFocus, showSearchBarTask.isSwitchToNormal);
+        DatabaseService databaseService = DatabaseService.getInstance();
+        List<String> top8Caches = databaseService.getTop8Caches();
+        top8Caches.forEach(e -> searchBarInstance.listResults.add(new ResultWrap(null, e)));
     }
 
     @EventRegister(registerClass = HideSearchBarEvent.class)
@@ -2846,7 +2841,11 @@ public class SearchBar {
             searchBarInstance.detectShowingModeAndClose();
         } else {
             searchBarInstance.showSearchbar(switchVisibleStatusEvent.isGrabFocus, switchVisibleStatusEvent.isSwitchToNormal);
+            DatabaseService databaseService = DatabaseService.getInstance();
+            List<String> top8Caches = databaseService.getTop8Caches();
+            top8Caches.forEach(e -> searchBarInstance.listResults.add(new ResultWrap(null, e)));
         }
+
     }
 
     @EventListener(listenClass = RestartEvent.class)
@@ -3065,11 +3064,11 @@ public class SearchBar {
                 } else {
                     if (GetHandle.INSTANCE.changeToNormal() &&
                             showingMode != Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                        switchToNormalMode(true, screenInfo.screenSize);
+                        switchToNormalMode(true);
                     } else if (isSwitchToNormalManual.get() &&
                             showingMode != Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
                         grabFocus();
-                        switchToNormalMode(false, screenInfo.screenSize);
+                        switchToNormalMode(false);
                     }
                 }
                 try {
@@ -3214,7 +3213,6 @@ public class SearchBar {
         if (labelHeight > 35) {
             if (showingMode != Constants.Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
                 //设置字体
-                int textFieldHeight = (int) (labelHeight * TEXT_FIELD_HEIGHT_RATIO);
                 Font textFieldFont = new Font(null, Font.PLAIN, getTextFieldFontSizeByTextFieldHeight());
                 textField.setFont(textFieldFont);
                 Font labelFont = new Font(null, Font.BOLD, getLabelFontSizeBySearchBarHeight());
@@ -3240,17 +3238,13 @@ public class SearchBar {
         return (int) (18 / DpiUtil.getDpi());
     }
 
-    private void switchToNormalMode(boolean isCloseWindow, Dimension screenSize) {
+    private void switchToNormalMode(boolean isCloseWindow) {
         if (isCloseWindow) {
             closeSearchBar();
         } else {
             closeWithoutHideSearchBar();
         }
-        int height = screenSize.height;
-        int searchBarHeight = (int) (height * 0.5);
         //设置字体
-        int labelHeight = searchBarHeight / 9;
-        int textFieldHeight = (int) (labelHeight * TEXT_FIELD_HEIGHT_RATIO);
         Font labelFont = new Font(null, Font.BOLD, getLabelFontSizeBySearchBarHeight());
         Font textFieldFont = new Font(null, Font.PLAIN, getTextFieldFontSizeByTextFieldHeight());
         textField.setFont(textFieldFont);
@@ -3301,10 +3295,7 @@ public class SearchBar {
             try {
                 clearAllLabels();
                 while (isVisible()) {
-                    String text = getSearchBarText();
-                    if (text.isEmpty()) {
-                        clearAllLabels();
-                    } else if (!listResults.isEmpty()) {
+                    if (!listResults.isEmpty()) {
                         //在结果不足8个的时候不断尝试显示
                         //设置窗口上的文字和图片显示
                         tryToShowResults(label -> {
@@ -4169,6 +4160,9 @@ public class SearchBar {
      * @return 处理后带html
      */
     private String highLight(String html, String[] keywords) {
+        if (keywords == null) {
+            keywords = new String[]{""};
+        }
         StringBuilder regexPatternBuilder = new StringBuilder();
         List<String> collect = Arrays.stream(keywords).sorted((o1, o2) -> o2.length() - o1.length()).toList();
         for (String keyword : collect) {
@@ -4185,10 +4179,11 @@ public class SearchBar {
             // 挑出所有的中文字符
             Map<String, String> chinesePinyinMap = PinyinUtil.getChinesePinyinMap(html);
             // 转换成拼音后和keywords匹配，如果发现匹配出成功，则添加到正则表达式中
+            String[] finalKeywords = keywords;
             chinesePinyinMap.entrySet()
                     .stream()
                     .filter(pair -> {
-                        for (String each : keywords) {
+                        for (String each : finalKeywords) {
                             if (each.toLowerCase().indexOf(pair.getValue().toLowerCase()) != -1) {
                                 return true;
                             }
@@ -4198,7 +4193,7 @@ public class SearchBar {
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
                     .forEach((k, v) -> regexPatternBuilder.append(k).append("|"));
         }
-        if (regexPatternBuilder.length() > 0) {
+        if (!regexPatternBuilder.isEmpty()) {
             String pattern = regexPatternBuilder.substring(0, regexPatternBuilder.length() - 1);
             Pattern compile = RegexUtil.getPattern(pattern, Pattern.CASE_INSENSITIVE);
             Matcher matcher = compile.matcher(html);
