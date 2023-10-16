@@ -705,16 +705,7 @@ public class SearchBar {
 
     //在explorer attach模式时操作鼠标和键盘以快速跳转到文件位置
     private void quickJump(String result) {
-        if (GetHandle.INSTANCE.isDialogWindow()) {
-            closeSearchBar();
-            try {
-                TimeUnit.MILLISECONDS.sleep(50);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        } else {
-            closeWithoutHideSearchBar();
-        }
+        closeWithoutHideSearchBar();
         String jumpLocation;
         String fileName;
         if (FileUtil.isFile(result)) {
