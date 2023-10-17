@@ -351,6 +351,12 @@ void start()
         checkTopWindow.detach();
         std::thread checkMouse(checkMouseThread);
         checkMouse.detach();
+        DWORD dwTimeout = -1;
+        SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, &dwTimeout, 0);
+        if (dwTimeout >= 100)
+        {
+            SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, nullptr, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+        }
     }
 }
 

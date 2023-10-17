@@ -128,7 +128,11 @@ void jump_to_dest(HWND hwnd, const wchar_t* path)
         if (!hCtl) hCtl = GetDlgItem(hwnd, 0x480); // Old Edit
         if (hCtl && *path && static_cast<int>(SendMessage(hCtl, WM_SETTEXT, 0, reinterpret_cast<SIZE_T>(path))) > 0)
         {
+            const DWORD dwCurID = GetCurrentThreadId();
+            const DWORD dwForeID = GetWindowThreadProcessId(GetForegroundWindow(), nullptr);
+            AttachThreadInput(dwCurID, dwForeID, TRUE);
             SetForegroundWindow(hwnd);
+            AttachThreadInput(dwCurID, dwForeID, FALSE);
             INPUT input{};
             input.type = INPUT_KEYBOARD;
             input.ki.wVk = VK_RETURN;
