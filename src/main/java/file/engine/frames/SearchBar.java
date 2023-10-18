@@ -4069,27 +4069,28 @@ public class SearchBar {
     }
 
     private void grabFocus() {
-        int x = 0, y = 0;
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        int height = screenSize.height;
-        int searchBarHeight = (int) (height * SEARCH_BAR_HEIGHT_RATIO);
-        int labelHeight = searchBarHeight / 9;
+//        int x = 0, y = 0;
+//        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+//        int height = screenSize.height;
+//        int searchBarHeight = (int) (height * SEARCH_BAR_HEIGHT_RATIO);
+//        int labelHeight = searchBarHeight / 9;
         long start = System.currentTimeMillis();
         try {
             while (!isVisible() && System.currentTimeMillis() - start < 3000) {
                 TimeUnit.MILLISECONDS.sleep(5);
             }
-        } catch (InterruptedException ignored) {
-            // ignored
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
-        if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-            x = searchBar.getX() + textField.getWidth() / 2;
-            y = searchBar.getY() + textField.getHeight() / 2;
-        } else if (showingMode == Constants.Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
-            x = searchBar.getX() + textField.getWidth() / 2;
-            y = searchBar.getY() + labelHeight * 8 + searchInfoLabel.getHeight() + textField.getHeight() / 2;
-        }
-        RobotUtil.INSTANCE.mouseClicked(x, y, 1, InputEvent.BUTTON1_DOWN_MASK);
+//        if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+//            x = searchBar.getX() + textField.getWidth() / 2;
+//            y = searchBar.getY() + textField.getHeight() / 2;
+//        } else if (showingMode == Constants.Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
+//            x = searchBar.getX() + textField.getWidth() / 2;
+//            y = searchBar.getY() + labelHeight * 8 + searchInfoLabel.getHeight() + textField.getHeight() / 2;
+//        }
+        GetHandle.INSTANCE.bringWindowToTop();
+//        RobotUtil.INSTANCE.mouseClicked(x, y, 1, InputEvent.BUTTON1_DOWN_MASK);
     }
 
     /**

@@ -103,4 +103,9 @@ public enum GetHandle {
      * @param path 文件夹路径
      */
     public native void setEditPath(String path, String fileName);
+
+    /**
+     * 将搜索框设置为前台窗口
+     */
+    public native void bringWindowToTop();
 }

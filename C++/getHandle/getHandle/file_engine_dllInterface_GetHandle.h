@@ -127,6 +127,14 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_GetHandle_isForegroundF
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_GetHandle_setEditPath
   (JNIEnv *, jobject, jstring, jstring);
 
+/*
+ * Class:     file_engine_dllInterface_GetHandle
+ * Method:    bringWindowToTop
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_file_engine_dllInterface_GetHandle_bringWindowToTop
+  (JNIEnv *, jobject);
+
 #ifdef __cplusplus
 }
 #endif

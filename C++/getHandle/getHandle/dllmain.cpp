@@ -233,6 +233,21 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_GetHandle_setEditPath
     CoUninitialize();
 }
 
+/*
+ * Class:     file_engine_dllInterface_GetHandle
+ * Method:    bringWindowToTop
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_file_engine_dllInterface_GetHandle_bringWindowToTop
+  (JNIEnv *, jobject)
+{
+    const DWORD dwCurID = GetCurrentThreadId();
+    const DWORD dwForeID = GetWindowThreadProcessId(GetForegroundWindow(), nullptr);
+    AttachThreadInput(dwCurID, dwForeID, TRUE);
+    SetForegroundWindow(get_search_bar_hwnd());
+    AttachThreadInput(dwCurID, dwForeID, FALSE);
+}
+
 /**
  * 检查顶层窗口是不是全屏显示，防止游戏时开始搜索导致卡顿
  */
