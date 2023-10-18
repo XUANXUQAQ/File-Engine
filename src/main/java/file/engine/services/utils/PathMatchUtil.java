@@ -99,8 +99,6 @@ public class PathMatchUtil {
                         return false;
                     }
                 }
-                default -> {
-                }
             }
         }
         //所有规则均已匹配

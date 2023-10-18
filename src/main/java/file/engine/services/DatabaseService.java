@@ -631,12 +631,8 @@ public class DatabaseService {
         return databaseCacheMap.entrySet()
                 .stream()
                 .sorted((o1, o2) -> o2.getValue() - o1.getValue())
-                .filter(e -> {
-                    var s = e.getKey();
-                    var sLower = s.toLowerCase();
-                    return sLower.endsWith(".exe") || sLower.endsWith(".lnk");
-                })
                 .map(Map.Entry::getKey)
+                .filter(FileUtil::isFile)
                 .limit(8)
                 .toList();
     }
