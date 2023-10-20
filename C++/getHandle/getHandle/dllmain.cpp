@@ -238,14 +238,17 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_GetHandle_setEditPath
  * Method:    bringWindowToTop
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_file_engine_dllInterface_GetHandle_bringWindowToTop
+JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_GetHandle_bringWindowToTop
   (JNIEnv *, jobject)
 {
+    const auto search_bar_hwnd = get_search_bar_hwnd();
     const DWORD dwCurID = GetCurrentThreadId();
     const DWORD dwForeID = GetWindowThreadProcessId(GetForegroundWindow(), nullptr);
     AttachThreadInput(dwCurID, dwForeID, TRUE);
-    SetForegroundWindow(get_search_bar_hwnd());
+    SetForegroundWindow(search_bar_hwnd);
     AttachThreadInput(dwCurID, dwForeID, FALSE);
+    const auto foreground = GetForegroundWindow();
+    return foreground == search_bar_hwnd;
 }
 
 /**

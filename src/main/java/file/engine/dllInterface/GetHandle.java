@@ -107,5 +107,5 @@ public enum GetHandle {
     /**
      * 将搜索框设置为前台窗口
      */
-    public native void bringWindowToTop();
+    public native boolean bringWindowToTop();
 }

@@ -130,9 +130,9 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_GetHandle_setEditPath
 /*
  * Class:     file_engine_dllInterface_GetHandle
  * Method:    bringWindowToTop
- * Signature: ()V
+ * Signature: ()Z
  */
-JNIEXPORT void JNICALL Java_file_engine_dllInterface_GetHandle_bringWindowToTop
+JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_GetHandle_bringWindowToTop
   (JNIEnv *, jobject);
 
 #ifdef __cplusplus
