@@ -338,7 +338,6 @@ public class MainClass {
         checkMd5AndReplace("user/sqlite3.dll", "/win32-native/sqlite3.dll");
         checkMd5AndReplace("user/getHandle.dll", "/win32-native/getHandle.dll");
         checkMd5AndReplace("user/shortcutGenerator.vbs", "/shortcutGenerator.vbs");
-        checkMd5AndReplace("user/getDpi.exe", "/win32-native/getDpi.exe");
         checkMd5AndReplace("user/getWindowsKnownFolder.dll", "/win32-native/getWindowsKnownFolder.dll");
         checkMd5AndReplace("user/sqliteJDBC.dll", "/win32-native/sqliteJDBC.dll");
         checkMd5AndReplace("user/emptyRecycleBin.dll", "/win32-native/emptyRecycleBin.dll");
