@@ -1,13 +1,15 @@
 package file.engine.services.utils.connection;
 
+import com.google.gson.Gson;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.Constants;
 import file.engine.dllInterface.IsLocalDisk;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.stop.RestartEvent;
-import file.engine.utils.ThreadPoolUtil;
 import file.engine.utils.RegexUtil;
+import file.engine.utils.ThreadPoolUtil;
 import file.engine.utils.file.FileUtil;
+import file.engine.utils.gson.GsonUtil;
 import file.engine.utils.system.properties.IsDebug;
 import org.sqlite.SQLiteConfig;
 import org.sqlite.SQLiteConnection;
@@ -20,6 +22,7 @@ import java.nio.file.Path;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -173,6 +176,18 @@ public class SQLiteUtil {
     private static void initConnection(String url, String key) throws SQLException {
         initSqliteConfig();
         ConnectionWrapper connectionWrapper = new ConnectionWrapper(url);
+        if (FileUtil.isFileExist(Constants.DATABASE_INTEGRITY_CHECK_FILE)) {
+            try (var reader = new BufferedReader(new InputStreamReader(new FileInputStream(Constants.DATABASE_INTEGRITY_CHECK_FILE), StandardCharsets.UTF_8))) {
+                Gson gson = GsonUtil.INSTANCE.getGson();
+                Map<String, Boolean> map = gson.fromJson(reader, Map.class);
+                boolean isDbNormal = map.getOrDefault(key, true);
+                if (!isDbNormal) {
+                    connectionWrapper.integrityCheck();
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
         connectionPool.put(key, connectionWrapper);
     }
 
@@ -361,6 +376,13 @@ public class SQLiteUtil {
             }
             EventManagement.getInstance().putEvent(new RestartEvent());
         }
+        if (FileUtil.isFileExist(Constants.DATABASE_INTEGRITY_CHECK_FILE)) {
+            try {
+                Files.delete(Path.of(Constants.DATABASE_INTEGRITY_CHECK_FILE));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     /**
@@ -498,6 +520,22 @@ public class SQLiteUtil {
         private boolean isIdleTimeout() {
             return System.currentTimeMillis() - this.usingTimeMills > Constants.CLOSE_DATABASE_TIMEOUT_MILLS + this.randomTimeMills &&
                     connectionUsingCounter.get() == 0;
+        }
+
+        private void integrityCheck() throws SQLException {
+            try (Statement statement = this.connection.createStatement()) {
+                if (statement.execute("PRAGMA integrity_check")) {
+                    try (ResultSet resultSet = statement.getResultSet()) {
+                        if (resultSet.next()) {
+                            String integrity = resultSet.getString(1);
+                            if ("ok".equals(integrity)) {
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+            throw new SQLException();
         }
 
         private boolean isConnectionUsing() {

@@ -8,14 +8,18 @@ import java.nio.file.Path;
 public class FileUtil {
 
     public static boolean isFileNotExist(String path) {
+        return !isFileExist(path);
+    }
+
+    public static boolean isFileExist(String path) {
         try {
-            return !Files.exists(Path.of(path));
+            return Files.exists(Path.of(path));
         } catch (InvalidPathException ignored) {
             // ignored
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return true;
+        return false;
     }
 
     /**

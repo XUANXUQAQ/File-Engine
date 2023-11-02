@@ -1335,7 +1335,7 @@ public class DatabaseService {
         if (!sqlCommandQueue.isEmpty()) {
             LinkedHashSet<SQLWithTaskId> tempCommandSet = new LinkedHashSet<>(sqlCommandQueue);
             HashMap<String, Statement> statementHashMap = new HashMap<>();
-
+            HashMap<String, Boolean> dbIntegrityMap = new HashMap<>();
             for (var sqlWithTaskId : tempCommandSet) {
                 Statement stmt;
                 try {
@@ -1364,6 +1364,8 @@ public class DatabaseService {
                     }
                 } catch (SQLException e) {
                     e.printStackTrace();
+                    // 标记下次启动时检查损坏数据库
+                    dbIntegrityMap.put(sqlWithTaskId.diskStr, false);
                 }
             }
             for (var entry : statementHashMap.entrySet()) {
@@ -1376,6 +1378,23 @@ public class DatabaseService {
                 }
             }
             sqlCommandQueue.removeAll(tempCommandSet);
+            if (!dbIntegrityMap.isEmpty()) {
+                Gson gson = GsonUtil.INSTANCE.getGson();
+                if (FileUtil.isFileExist(Constants.DATABASE_INTEGRITY_CHECK_FILE)) {
+                    try (var reader = new BufferedReader(new InputStreamReader(new FileInputStream(Constants.DATABASE_INTEGRITY_CHECK_FILE), StandardCharsets.UTF_8))) {
+                        Map<String, Boolean> map = gson.fromJson(reader, Map.class);
+                        map.forEach(dbIntegrityMap::putIfAbsent);
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+                try (var writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(Constants.DATABASE_INTEGRITY_CHECK_FILE), StandardCharsets.UTF_8))) {
+                    writer.write(gson.toJson(dbIntegrityMap));
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+                EventManagement.getInstance().putEvent(new RestartEvent());
+            }
         }
     }
 
@@ -1488,26 +1507,16 @@ public class DatabaseService {
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void checkDbFileSize(boolean isDropPrevious) {
-        String databaseCreateTimeFileName = "user/databaseCreateTime.dat";
         HashMap<String, String> databaseCreateTimeMap = new HashMap<>();
         String[] disks = RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks());
         LocalDate now = LocalDate.now();
         //从文件中读取每个数据库的创建时间
-        StringBuilder stringBuilder = new StringBuilder();
         Gson gson = GsonUtil.INSTANCE.getGson();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(databaseCreateTimeFileName), StandardCharsets.UTF_8))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                stringBuilder.append(line);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        try {
+        try (var reader = new BufferedReader(new InputStreamReader(new FileInputStream(Constants.DATABASE_CREATE_TIME_FILE), StandardCharsets.UTF_8))) {
             for (String disk : disks) {
                 databaseCreateTimeMap.put(disk, now.toString());
             }
-            Map map = gson.fromJson(stringBuilder.toString(), Map.class);
+            Map map = gson.fromJson(reader, Map.class);
             if (map != null) {
                 //从文件中读取每个数据库的创建时间
                 map.forEach((disk, createTime) -> databaseCreateTimeMap.put((String) disk, (String) createTime));
@@ -1536,7 +1545,7 @@ public class DatabaseService {
             }
         }
         String toJson = gson.toJson(databaseCreateTimeMap);
-        try (var writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(databaseCreateTimeFileName), StandardCharsets.UTF_8))) {
+        try (var writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(Constants.DATABASE_CREATE_TIME_FILE), StandardCharsets.UTF_8))) {
             writer.write(toJson);
         } catch (IOException e) {
             e.printStackTrace();

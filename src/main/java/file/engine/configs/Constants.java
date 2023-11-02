@@ -44,6 +44,10 @@ public class Constants {
 
     public static final int MAX_SEARCH_TEXT_LENGTH = 300;
 
+    public static final String DATABASE_CREATE_TIME_FILE = "user/databaseCreateTime.dat";
+
+    public static final String DATABASE_INTEGRITY_CHECK_FILE = "user/databaseIntegrityCheck.dat";
+
     static {
         version = "0";
         buildVersion = "Debug";

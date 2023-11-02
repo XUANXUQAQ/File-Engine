@@ -173,7 +173,7 @@ public class MainClass {
         EventManagement eventManagement = EventManagement.getInstance();
         InitializeDatabaseEvent initializeDatabaseEvent = new InitializeDatabaseEvent();
         eventManagement.putEvent(initializeDatabaseEvent);
-        if (eventManagement.waitForEvent(initializeDatabaseEvent)) {
+        if (eventManagement.waitForEvent(initializeDatabaseEvent, 5 * 60 * 1000)) {
             JOptionPane.showMessageDialog(null, "Initialize database failed", "ERROR", JOptionPane.ERROR_MESSAGE);
             throw new RuntimeException("Initialize database failed");
         }
