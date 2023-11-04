@@ -345,6 +345,7 @@ public class MainClass {
         checkMd5AndReplace("user/openclAccelerator.dll", "/win32-native/openclAccelerator.dll");
         checkMd5AndReplace("cudart64_110.dll", "/win32-native/cudart64_110.dll");
         checkMd5AndReplace("user/systemThemeInfo.dll", "/win32-native/systemThemeInfo.dll");
+        checkMd5AndReplace("user/getDpi.exe", "/win32-native/getDpi.exe");
     }
 
     private static void checkMd5AndReplace(String path, String rootPath) throws IOException {

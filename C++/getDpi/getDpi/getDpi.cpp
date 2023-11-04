@@ -1,36 +1,25 @@
-﻿// getDpi.cpp : 此文件包含 "main" 函数。程序执行将在此处开始并结束。
-//
-
-#include <cstdio>
+﻿#include <cstdio>
 #include <Windows.h>
+#include <shellscalingapi.h>
 #pragma comment(lib, "User32.lib")
-#pragma comment(lib, "Gdi32.lib")
+#pragma comment(lib, "Shcore.lib")
 
-using namespace std;
-
-double getDpi();
+float get_dpi();
 
 int main()
 {
-    const double dpi = getDpi();
+    const float dpi = get_dpi();
     printf("%f", dpi);
 }
 
 /**
  * 获取Windows缩放等级，适配高DPI
  */
-double getDpi()
+float get_dpi()
 {
-    SetProcessDPIAware();
-    // Get desktop dc
-    auto&& desktopDc = GetDC(nullptr);
-    // Get native resolution
-    const int dpi = GetDeviceCaps(desktopDc, LOGPIXELSX);
-    auto ret = 1 + (dpi - 96.0) / 24.0 * 0.25;
-    if (ret < 1)
-    {
-        ret = 1;
-    }
-    ReleaseDC(nullptr, desktopDc);
-    return ret;
+    const auto hwnd = FindWindowA(nullptr, "File-Engine-SearchBar");
+    const auto h_monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+    UINT x, y; // x == y
+    GetDpiForMonitor(h_monitor, MDT_EFFECTIVE_DPI, &x, &y);
+    return static_cast<float>(x) / 96;
 }
