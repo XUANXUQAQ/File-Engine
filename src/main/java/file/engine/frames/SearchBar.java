@@ -3024,17 +3024,7 @@ public class SearchBar {
             EventManagement eventManagement = EventManagement.getInstance();
             GetHandle.INSTANCE.start();
             AllConfigs allConfigs = AllConfigs.getInstance();
-            var screenInfo = new Object() {
-                Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
-                long screenSizeUpdateTime = System.currentTimeMillis();
-            };
-            final long updateScreenTimeLimit = 5000;
             while (eventManagement.notMainExit()) {
-                // 每隔5s更新一次屏幕大小
-                if (System.currentTimeMillis() - screenInfo.screenSizeUpdateTime > updateScreenTimeLimit) {
-                    screenInfo.screenSizeUpdateTime = System.currentTimeMillis();
-                    screenInfo.screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-                }
                 if (showingMode == Constants.Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
                     String searchInfoLabelText = searchInfoLabel.getText();
                     if (searchInfoLabelText != null && searchInfoLabelText.isEmpty()) {
@@ -3043,10 +3033,11 @@ public class SearchBar {
                                         .getInstance()
                                         .getTranslation("Double-click shift to switch here")));
                     }
-                    getExplorerSizeAndChangeSearchBarSizeExplorerMode(screenInfo.screenSize);
+                    getExplorerSizeAndChangeSearchBarSizeExplorerMode();
                 } else {
-                    int width = screenInfo.screenSize.width;
-                    int height = screenInfo.screenSize.height;
+                    Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+                    int width = screenSize.width;
+                    int height = screenSize.height;
                     int searchBarWidth = (int) (width * SEARCH_BAR_WIDTH_RATIO);
                     int searchBarHeight = (int) (height * SEARCH_BAR_HEIGHT_RATIO);
                     int positionX, positionY;
@@ -3092,14 +3083,15 @@ public class SearchBar {
     /**
      * 获取explorer窗口大小，并修改显示模式和大小
      */
-    private void getExplorerSizeAndChangeSearchBarSizeExplorerMode(Dimension screenSize) {
-        double dpi = DpiUtil.getDpi();
-        long explorerWidth = (long) (GetHandle.INSTANCE.getExplorerWidth() / dpi);
-        long explorerHeight = (long) (GetHandle.INSTANCE.getExplorerHeight() / dpi);
-        long explorerX = (long) (GetHandle.INSTANCE.getExplorerX() / dpi);
-        long explorerY = (long) (GetHandle.INSTANCE.getExplorerY() / dpi);
+    private void getExplorerSizeAndChangeSearchBarSizeExplorerMode() {
+        Dimension dimension = new Dimension();
+        float dpi = DpiUtil.getDpi(dimension);
+        long explorerWidth = GetHandle.INSTANCE.getExplorerWidth();
+        long explorerHeight = GetHandle.INSTANCE.getExplorerHeight();
+        long explorerX = GetHandle.INSTANCE.getExplorerX();
+        long explorerY = GetHandle.INSTANCE.getExplorerY();
         int searchBarWidth = (int) (explorerWidth * SEARCH_BAR_WIDTH_RATIO);
-        int searchBarHeight = (int) (screenSize.height * SEARCH_BAR_HEIGHT_RATIO);
+        int searchBarHeight = (int) (dimension.height / dpi * SEARCH_BAR_HEIGHT_RATIO);
 
         int labelHeight = searchBarHeight / 9;
         //explorer窗口大于20像素才开始显示，防止误判其他系统窗口

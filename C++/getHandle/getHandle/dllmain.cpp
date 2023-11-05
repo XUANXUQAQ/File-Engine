@@ -504,6 +504,7 @@ void checkMouseThread()
 void checkTopWindowThread()
 {
     RECT window_rect;
+    SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_UNAWARE);
     while (is_running)
     {
         HWND hwnd = GetForegroundWindow();
