@@ -1510,12 +1510,12 @@ public class DatabaseService {
         HashMap<String, String> databaseCreateTimeMap = new HashMap<>();
         String[] disks = RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks());
         LocalDate now = LocalDate.now();
+        for (String disk : disks) {
+            databaseCreateTimeMap.put(disk, now.toString());
+        }
         //从文件中读取每个数据库的创建时间
         Gson gson = GsonUtil.INSTANCE.getGson();
         try (var reader = new BufferedReader(new InputStreamReader(new FileInputStream(Constants.DATABASE_CREATE_TIME_FILE), StandardCharsets.UTF_8))) {
-            for (String disk : disks) {
-                databaseCreateTimeMap.put(disk, now.toString());
-            }
             Map map = gson.fromJson(reader, Map.class);
             if (map != null) {
                 //从文件中读取每个数据库的创建时间
