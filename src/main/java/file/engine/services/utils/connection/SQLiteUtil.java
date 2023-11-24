@@ -198,7 +198,7 @@ public class SQLiteUtil {
      */
     public static void closeAll() {
         if (IsDebug.isDebug()) {
-            log.error("正在关闭数据库连接");
+            log.info("正在关闭数据库连接");
         }
         final int timeout = 30_000; // 30s
         for (var entry : connectionPool.entrySet()) {
