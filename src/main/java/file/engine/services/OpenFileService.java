@@ -5,9 +5,11 @@ import file.engine.event.handler.Event;
 import file.engine.event.handler.impl.open.file.OpenFileEvent;
 import file.engine.services.utils.OpenFileUtil;
 import file.engine.utils.file.FileUtil;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 
+@Slf4j
 public class OpenFileService {
 
     @EventRegister(registerClass = OpenFileEvent.class)
@@ -34,7 +36,7 @@ public class OpenFileService {
         try {
             OpenFileUtil.openFolderByExplorer(path);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
             String parentPath = FileUtil.getParentPath(path);
             openFile(parentPath);
         }

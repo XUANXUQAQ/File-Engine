@@ -14,7 +14,6 @@ enum CudaAccelerator implements IGPUAccelerator {
             System.load(Path.of("user/cudaAccelerator.dll").toAbsolutePath().toString());
             isCudaLoaded = true;
         } catch (UnsatisfiedLinkError | Exception e) {
-            e.printStackTrace();
             isCudaLoaded = false;
         }
     }

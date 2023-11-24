@@ -36,6 +36,7 @@ import file.engine.utils.file.FileUtil;
 import file.engine.utils.gson.GsonUtil;
 import file.engine.utils.system.properties.IsDebug;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -56,6 +57,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 
+@Slf4j
 public class DatabaseService {
     private static boolean isEnableGPUAccelerate = false;
     // 搜索任务队列
@@ -148,7 +150,7 @@ public class DatabaseService {
         String format = String.format("UPDATE weight SET TABLE_WEIGHT=%d WHERE TABLE_NAME=\"%s\"", origin.weight.get(), tableName);
         addToCommandQueue(new SQLWithTaskId(format, SqlTaskIds.UPDATE_WEIGHT, "weight"));
         if (IsDebug.isDebug()) {
-            System.err.println("已更新" + tableName + "权重, 之前为" + origin + "***增加了" + weight);
+            log.info("已更新" + tableName + "权重, 之前为" + origin + "***增加了" + weight);
         }
     }
 
@@ -176,7 +178,7 @@ public class DatabaseService {
                 }
                 threadPoolUtil.executeTask(() -> {
                     FileMonitor.INSTANCE.monitor(root);
-                    System.out.println("停止监听 " + root + " 的文件变化");
+                    log.info("停止监听 " + root + " 的文件变化");
                 }, false);
             }
             var isCheckUnavailableDiskThreadNotExist = databaseService.isCheckUnavailableDiskThreadNotExist;
@@ -199,7 +201,7 @@ public class DatabaseService {
                                     }
                                     threadPoolUtil.executeTask(() -> {
                                         FileMonitor.INSTANCE.monitor(unAvailableDisk);
-                                        System.out.println("停止监听 " + unAvailableDisk + " 的文件变化");
+                                        log.info("停止监听 " + unAvailableDisk + " 的文件变化");
                                     }, false);
                                     unAvailableDiskSet.remove(unAvailableDisk);
                                 }
@@ -318,7 +320,7 @@ public class DatabaseService {
                     }
                 }
             } catch (SQLException e) {
-                e.printStackTrace();
+                log.error("error: {}", e.getMessage(), e);
             }
         }
         return tableNeedCache;
@@ -370,7 +372,7 @@ public class DatabaseService {
                             // 防止显存占用超过70%后仍然扫描数据库
                             startCheckInfo.startCheckTimeMills = System.currentTimeMillis();
                             if (GPUAccelerator.INSTANCE.hasCache()) {
-                                System.out.println("由于显存占用过多，清除GPU缓存");
+                                log.info("由于显存占用过多，清除GPU缓存");
                                 GPUClearCacheEvent gpuClearCacheEvent = new GPUClearCacheEvent();
                                 eventManagement.putEvent(gpuClearCacheEvent);
                                 eventManagement.waitForEvent(gpuClearCacheEvent);
@@ -388,7 +390,7 @@ public class DatabaseService {
     }
 
     private void createMemoryCache(Supplier<Boolean> isStopCreateCache) {
-        System.out.println("添加缓存");
+        log.info("添加缓存");
         String availableDisks = AllConfigs.getInstance().getAvailableDisks();
         ConcurrentLinkedQueue<String> tableQueueByPriority = initTableQueueByPriority();
         // 系统内存使用少于70%
@@ -399,12 +401,12 @@ public class DatabaseService {
                 100,
                 5000);
         saveTableCache(isStopCreateCache, tableNeedCache);
-        System.out.println("添加完成");
+        log.info("添加完成");
     }
 
     @SuppressWarnings("SameParameterValue")
     private void createGpuCache(Supplier<Boolean> isStopCreateCache, int createGpuCacheThreshold) {
-        System.out.println("添加gpu缓存");
+        log.info("添加gpu缓存");
         String availableDisks = AllConfigs.getInstance().getAvailableDisks();
         ConcurrentLinkedQueue<String> tableQueueByPriority = initTableQueueByPriority();
         String[] disks = RegexUtil.comma.split(availableDisks);
@@ -414,7 +416,7 @@ public class DatabaseService {
                 5000,
                 Integer.MAX_VALUE);
         saveTableCacheForGPU(isStopCreateCache, tableNeedCache, createGpuCacheThreshold);
-        System.out.println("添加完成");
+        log.info("添加完成");
     }
 
     /**
@@ -443,7 +445,7 @@ public class DatabaseService {
                                 return resultSet.getString("PATH");
                             }
                         } catch (Exception e) {
-                            e.printStackTrace();
+                            log.error("error: {}", e.getMessage(), e);
                         }
                         return null;
                     });
@@ -455,7 +457,7 @@ public class DatabaseService {
                         break;
                     }
                 } catch (SQLException e) {
-                    e.printStackTrace();
+                    log.error("error: {}", e.getMessage(), e);
                 }
             }
         }
@@ -489,7 +491,7 @@ public class DatabaseService {
                             tableCacheCount.incrementAndGet();
                         }
                     } catch (SQLException e) {
-                        e.printStackTrace();
+                        log.error("error: {}", e.getMessage(), e);
                     }
                     cache.isCached.set(true);
                     cache.isFileLost.set(false);
@@ -535,7 +537,7 @@ public class DatabaseService {
             try {
                 addFileChangesRecords();
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("error: {}", e.getMessage(), e);
             }
         });
     }
@@ -663,7 +665,7 @@ public class DatabaseService {
                 databaseCacheMap.put(eachLine, count);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
         }
     }
 
@@ -789,14 +791,14 @@ public class DatabaseService {
                 futures.add(taskFuture);
             }
         } catch (SQLException e) {
-            System.err.println("error sql : " + sql);
-            e.printStackTrace();
+            log.error("error sql : " + sql);
+            log.error("error: {}", e.getMessage(), e);
         }
         for (Future<Void> future : futures) {
             try {
                 future.get();
             } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
+                log.error("error: {}", e.getMessage(), e);
             }
         }
         if (isGPUMatchDone) {
@@ -816,7 +818,7 @@ public class DatabaseService {
         tmpCommandList.sort((o1, o2) -> Long.compare(o2.weight.get(), o1.weight.get()));
         for (TableNameWeightInfo each : tmpCommandList) {
             if (IsDebug.isDebug()) {
-                System.out.println("已添加表" + each.tableName + "----权重" + each.weight.get());
+                log.info("已添加表" + each.tableName + "----权重" + each.weight.get());
             }
             tableQueue.add(each.tableName);
         }
@@ -868,7 +870,7 @@ public class DatabaseService {
                 TimeUnit.MILLISECONDS.sleep(1);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
         } finally {
             searchDone(searchTask);
         }
@@ -977,7 +979,7 @@ public class DatabaseService {
                 try {
                     stmt[0].close();
                 } catch (SQLException e) {
-                    e.printStackTrace();
+                    log.error("error: {}", e.getMessage(), e);
                 }
             }
         });
@@ -991,7 +993,7 @@ public class DatabaseService {
         Cache cache = tableCache.get(key);
         if (cache != null && cache.isCacheValid()) {
             if (IsDebug.isDebug()) {
-                System.out.println("从缓存中读取 " + key);
+                log.info("从缓存中读取 " + key);
             }
             matchedNum = cache.data.parallelStream().filter(s -> checkIsMatchedAndAddToList(s, searchTask)).count();
         } else {
@@ -1001,7 +1003,7 @@ public class DatabaseService {
                 try {
                     stmt[0] = SQLiteUtil.getStatement(diskStr);
                 } catch (SQLException e) {
-                    e.printStackTrace();
+                    log.error("error: {}", e.getMessage(), e);
                     throw new RuntimeException(e);
                 }
             }
@@ -1083,7 +1085,7 @@ public class DatabaseService {
                     searchThreadCount.getAndIncrement();
                     runnable.run();
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    log.error("error: {}", e.getMessage(), e);
                 } finally {
                     searchThreadCount.getAndDecrement();
                 }
@@ -1238,13 +1240,13 @@ public class DatabaseService {
                 try {
                     priorityMap.add(new SuffixPriorityPair(suffix, Integer.parseInt(priority)));
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    log.error("error: {}", e.getMessage(), e);
                     priorityMap.add(new SuffixPriorityPair(suffix, 0));
                 }
             }
             priorityMap.add(new SuffixPriorityPair("dirPriority", -1));
-        } catch (SQLException exception) {
-            exception.printStackTrace();
+        } catch (SQLException e) {
+            log.error("error: {}", e.getMessage(), e);
         }
     }
 
@@ -1310,7 +1312,7 @@ public class DatabaseService {
             addToCommandQueue(new SQLWithTaskId(command, SqlTaskIds.INSERT_TO_CACHE, "cache"));
             addToCommandQueue(new SQLWithTaskId(statisticsCommand, SqlTaskIds.INSERT_TO_STATISTICS, "cache"));
             if (IsDebug.isDebug()) {
-                System.out.println("添加" + path + "到缓存");
+                log.info("添加" + path + "到缓存");
             }
         }
     }
@@ -1322,7 +1324,7 @@ public class DatabaseService {
             addToCommandQueue(new SQLWithTaskId(command, SqlTaskIds.DELETE_FROM_CACHE, "cache"));
             addToCommandQueue(new SQLWithTaskId(statisticsCommand, SqlTaskIds.DELETE_FROM_STATISTICS, "cache"));
             if (IsDebug.isDebug()) {
-                System.out.println("删除" + path + "到缓存");
+                log.info("删除" + path + "到缓存");
             }
         }
     }
@@ -1347,9 +1349,9 @@ public class DatabaseService {
                         stmt.execute("BEGIN;");
                     }
                     if (IsDebug.isDebug()) {
-                        System.out.println("----------------------------------------------");
-                        System.out.println("执行SQL命令--" + sqlWithTaskId.sql);
-                        System.out.println("----------------------------------------------");
+                        log.info("----------------------------------------------");
+                        log.info("执行SQL命令--" + sqlWithTaskId.sql);
+                        log.info("----------------------------------------------");
                     }
                     if (!stmt.execute(sqlWithTaskId.sql)) {
                         int updateCount = stmt.getUpdateCount();
@@ -1363,7 +1365,7 @@ public class DatabaseService {
                         }
                     }
                 } catch (SQLException e) {
-                    e.printStackTrace();
+                    log.error("error: {}", e.getMessage(), e);
                     // 标记下次启动时检查损坏数据库
                     dbIntegrityMap.put(sqlWithTaskId.diskStr, false);
                 }
@@ -1374,7 +1376,7 @@ public class DatabaseService {
                     v.execute("COMMIT;");
                     v.close();
                 } catch (SQLException e) {
-                    e.printStackTrace();
+                    log.error("error: {}", e.getMessage(), e);
                 }
             }
             sqlCommandQueue.removeAll(tempCommandSet);
@@ -1411,7 +1413,7 @@ public class DatabaseService {
             sqlCommandQueue.add(sql);
         } else {
             if (IsDebug.isDebug()) {
-                System.err.println("添加sql语句" + sql + "失败，已达到最大上限");
+                log.warn("添加sql语句" + sql + "失败，已达到最大上限");
             }
         }
     }
@@ -1498,7 +1500,7 @@ public class DatabaseService {
         try (var writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(startTimeCount), StandardCharsets.UTF_8))) {
             writer.write(String.valueOf(1));
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
         }
     }
 
@@ -1522,7 +1524,7 @@ public class DatabaseService {
                 map.forEach((disk, createTime) -> databaseCreateTimeMap.put((String) disk, (String) createTime));
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
         }
         final long maxDatabaseSize = 8L * 1024 * 1024 * 100;
         for (String eachDisk : disks) {
@@ -1534,21 +1536,21 @@ public class DatabaseService {
                         Period.between(LocalDate.parse(databaseCreateTimeMap.get(eachDisk)), now).getDays() > 5 ||
                         isDropPrevious) {
                     if (IsDebug.isDebug()) {
-                        System.out.println("当前文件" + name + "已删除");
+                        log.info("当前文件" + name + "已删除");
                     }
                     //更新创建时间
                     databaseCreateTimeMap.put(eachDisk, now.toString());
                     Files.delete(diskDatabaseFile);
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error("error: {}", e.getMessage(), e);
             }
         }
         String toJson = gson.toJson(databaseCreateTimeMap);
         try (var writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(Constants.DATABASE_CREATE_TIME_FILE), StandardCharsets.UTF_8))) {
             writer.write(toJson);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
         }
     }
 
@@ -1556,12 +1558,12 @@ public class DatabaseService {
     private void executeAllSQLAndWait(@SuppressWarnings("SameParameterValue") int timeoutMills) {// 等待剩余的sql全部执行完成
         final long time = System.currentTimeMillis();
         // 将在队列中的sql全部执行并等待搜索线程全部完成
-        System.out.println("等待所有sql执行完成，并且退出搜索");
+        log.info("等待所有sql执行完成，并且退出搜索");
         while (searchThreadCount.get() != 0 || !sqlCommandQueue.isEmpty()) {
             executeAllCommands();
             TimeUnit.MILLISECONDS.sleep(10);
             if (System.currentTimeMillis() - time > timeoutMills) {
-                System.out.println("等待超时");
+                log.info("等待超时");
                 break;
             }
         }
@@ -1582,7 +1584,7 @@ public class DatabaseService {
             ProcessUtil.waitForProcess("fileSearcherUSN.exe", 1000);
             readSearchUsnOutput(searchByUsn);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
         }
         stopAllSearch();
         casSetStatus(this.status.get(), Constants.Enums.DatabaseStatus.MANUAL_UPDATE);
@@ -1613,18 +1615,18 @@ public class DatabaseService {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(searchByUsn.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                System.out.println("fileSearcherUSN: " + line);
+                log.info("fileSearcherUSN: " + line);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
         }
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(searchByUsn.getErrorStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                System.err.println("fileSearcherUSN: " + line);
+                log.info("fileSearcherUSN: " + line);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
         }
     }
 
@@ -1665,7 +1667,7 @@ public class DatabaseService {
                 try (Statement stmt = SQLiteUtil.getStatement(String.valueOf(eachDisk.charAt(0)))) {
                     stmt.execute("VACUUM;");
                 } catch (Exception ex) {
-                    ex.printStackTrace();
+                    log.error("error: {}", ex.getMessage(), ex);
                 }
             }
         }
@@ -1673,7 +1675,7 @@ public class DatabaseService {
         SQLiteUtil.closeAll();
         SQLiteUtil.initAllConnections("tmp");
         if (IsDebug.isDebug()) {
-            System.out.println("成功切换到临时数据库");
+            log.info("成功切换到临时数据库");
         }
         if (!casSetStatus(status.get(), Constants.Enums.DatabaseStatus._TEMP)) {
             //恢复data目录的数据库
@@ -1690,7 +1692,7 @@ public class DatabaseService {
             // 创建搜索进程并等待
             searchByUSN = searchByUSN(AllConfigs.getInstance().getAvailableDisks(), ignorePath.toLowerCase());
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
             return false;
         } finally {
             waitForSearchAndSwitchDatabase(searchByUSN);
@@ -1710,7 +1712,7 @@ public class DatabaseService {
         while (eventManagement.notMainExit()) {
             //等待
             if (System.currentTimeMillis() - tmpStartTime > 60 * 1000) {
-                System.err.println("等待SQL语句任务" + taskId + "处理超时");
+                log.warn("等待SQL语句任务" + taskId + "处理超时");
                 break;
             }
             //判断commandSet中是否还有taskId存在
@@ -1753,8 +1755,8 @@ public class DatabaseService {
                 int weight = resultSet.getInt("TABLE_WEIGHT");
                 stringIntegerHashMap.put(tableName, weight);
             }
-        } catch (SQLException exception) {
-            exception.printStackTrace();
+        } catch (SQLException e) {
+            log.error("error: {}", e.getMessage(), e);
         }
         return stringIntegerHashMap;
     }
@@ -1855,7 +1857,7 @@ public class DatabaseService {
             synchronized (DatabaseService.class) {
                 var device = AllConfigs.getInstance().getConfigEntity().getGpuDevice();
                 if (!GPUAccelerator.INSTANCE.setDevice(device)) {
-                    System.err.println("gpu设备" + device + "无效");
+                    log.warn("gpu设备" + device + "无效");
                 }
             }
         }
@@ -1864,7 +1866,7 @@ public class DatabaseService {
     @EventRegister(registerClass = PrepareSearchEvent.class)
     private static void prepareSearchEvent(Event event) {
         if (((PrepareSearchEvent) event).searchText.get().length() > Constants.MAX_SEARCH_TEXT_LENGTH) {
-            System.err.println("关键字太长，取消搜索");
+            log.warn("关键字太长，取消搜索");
             return;
         }
         var startWaiting = System.currentTimeMillis();
@@ -1872,7 +1874,7 @@ public class DatabaseService {
         var databaseService = getInstance();
         while (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL) {
             if (System.currentTimeMillis() - startWaiting > timeout) {
-                System.err.println("prepareSearch，等待数据库状态超时");
+                log.warn("prepareSearch，等待数据库状态超时");
                 break;
             }
             Thread.onSpinWait();
@@ -1892,7 +1894,7 @@ public class DatabaseService {
     @EventRegister(registerClass = StartSearchEvent.class)
     private static void startSearchEvent(Event event) {
         if (((StartSearchEvent) event).searchText.get().length() > Constants.MAX_SEARCH_TEXT_LENGTH) {
-            System.err.println("关键字太长，取消搜索");
+            log.warn("关键字太长，取消搜索");
             return;
         }
         DatabaseService databaseService = getInstance();
@@ -1900,7 +1902,7 @@ public class DatabaseService {
         final long timeout = 3000;
         while (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL) {
             if (System.currentTimeMillis() - startWaiting > timeout) {
-                System.out.println("等待数据库状态为NORMAL超时");
+                log.info("等待数据库状态为NORMAL超时");
                 return;
             }
             Thread.onSpinWait();
@@ -1965,7 +1967,7 @@ public class DatabaseService {
                 final long start = System.currentTimeMillis();
                 while (!SearchTask.isGpuThreadRunning.compareAndSet(false, true)) {
                     if (System.currentTimeMillis() - start > timeout) {
-                        System.err.println("等待上一次gpu加速完成超时");
+                        log.warn("等待上一次gpu加速完成超时");
                         return;
                     }
                     if (searchTask.shouldStopSearch()) {
@@ -1999,7 +2001,7 @@ public class DatabaseService {
         }
         try {
             if (!countDownLatch.await(5, TimeUnit.SECONDS)) {
-                System.out.println("等待优先搜索文件夹超时");
+                log.info("等待优先搜索文件夹超时");
             }
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
@@ -2092,10 +2094,10 @@ public class DatabaseService {
             try (Statement stmt = SQLiteUtil.getStatement(String.valueOf(eachDisk.charAt(0)))) {
                 stmt.execute("VACUUM;");
             } catch (Exception ex) {
-                ex.printStackTrace();
+                log.error("error: {}", ex.getMessage(), ex);
             } finally {
                 if (IsDebug.isDebug()) {
-                    System.out.println("结束优化");
+                    log.info("结束优化");
                 }
             }
         }
@@ -2207,7 +2209,7 @@ public class DatabaseService {
                         HashSet<String> keysToRemove = new HashSet<>(invalidCacheKeys);
                         for (var eachKey : keysToRemove) {
                             if (IsDebug.isDebug()) {
-                                System.out.println("清除GPU缓存，key：" + eachKey);
+                                log.info("清除GPU缓存，key：" + eachKey);
                             }
                             GPUAccelerator.INSTANCE.clearCache(eachKey);
                         }

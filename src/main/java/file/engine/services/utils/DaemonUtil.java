@@ -1,8 +1,11 @@
 package file.engine.services.utils;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.File;
 import java.io.IOException;
 
+@Slf4j
 public class DaemonUtil {
     /**
      * 关闭守护进程
@@ -14,10 +17,10 @@ public class DaemonUtil {
             try {
                 isCreated = closeSignal.createNewFile();
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error("error: {}", e.getMessage(), e);
             }
             if (!isCreated) {
-                System.err.println("创建守护进程关闭标志文件失败");
+                log.error("创建守护进程关闭标志文件失败");
             }
         }
     }

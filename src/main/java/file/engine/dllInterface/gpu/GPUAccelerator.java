@@ -4,6 +4,7 @@ import file.engine.configs.AllConfigs;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.utils.RegexUtil;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -11,6 +12,7 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
+@Slf4j
 public enum GPUAccelerator {
     INSTANCE;
     private static IGPUAccelerator gpuAccelerator;
@@ -270,7 +272,7 @@ public enum GPUAccelerator {
                         deviceMap.put(deviceName, category + ";" + i);
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    log.error("error: {}", e.getMessage(), e);
                 }
             }
         }

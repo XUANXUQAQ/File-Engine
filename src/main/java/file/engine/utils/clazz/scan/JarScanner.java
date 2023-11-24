@@ -1,5 +1,7 @@
 package file.engine.utils.clazz.scan;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.IOException;
 import java.net.JarURLConnection;
 import java.net.URL;
@@ -9,6 +11,7 @@ import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+@Slf4j
 public class JarScanner implements Scan {
 
     @Override
@@ -48,7 +51,7 @@ public class JarScanner implements Scan {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
         }
         return classes;
     }

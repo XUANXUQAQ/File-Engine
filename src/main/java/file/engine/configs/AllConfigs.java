@@ -30,6 +30,7 @@ import file.engine.utils.RegexUtil;
 import file.engine.utils.gson.GsonUtil;
 import file.engine.utils.system.properties.IsDebug;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.swing.*;
 import java.awt.*;
@@ -48,6 +49,7 @@ import static file.engine.utils.StartupUtil.hasStartup;
 /**
  * 保存软件运行时的所有配置信息
  */
+@Slf4j
 public class AllConfigs {
     @Getter
     private volatile ConfigEntity configEntity;
@@ -139,6 +141,7 @@ public class AllConfigs {
 
     /**
      * 获取在配置文件中但是实际不存在的磁盘（如移动硬盘）
+     *
      * @return set
      */
     public Set<String> getUnAvailableDiskSet() {
@@ -155,6 +158,7 @@ public class AllConfigs {
 
     /**
      * 获取可搜索磁盘
+     *
      * @return 每个磁盘使用逗号隔开，如[C:\,D:\]
      */
     public String getAvailableDisks() {
@@ -171,6 +175,7 @@ public class AllConfigs {
 
     /**
      * 判断磁盘是否存在且为NTFS文件系统
+     *
      * @param root 磁盘路径，C:\  D:\
      * @return true如果存在且是NTFS磁盘
      */
@@ -189,7 +194,7 @@ public class AllConfigs {
                 cmdSet.add(each);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
         }
     }
 
@@ -514,7 +519,7 @@ public class AllConfigs {
                 }
                 return result.toString();
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error(e.getMessage());
             }
         } else {
             isFirstRunApp = true;
@@ -560,7 +565,7 @@ public class AllConfigs {
         Object tmp = json.get(key);
         if (tmp == null) {
             if (IsDebug.isDebug()) {
-                System.err.println("配置文件读取到null值   key : " + key);
+                log.error("配置文件读取到null值   key : " + key);
             }
             return (T) defaultObj;
         }
@@ -662,7 +667,7 @@ public class AllConfigs {
                         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
                     } catch (ClassNotFoundException | InstantiationException | IllegalAccessException |
                              UnsupportedLookAndFeelException e) {
-                        e.printStackTrace();
+                        log.error("error: {}", e.getMessage(), e);
                     }
                 }
                 default -> FlatDarculaLaf.setup();
@@ -690,7 +695,7 @@ public class AllConfigs {
             String format = GsonUtil.getInstance().getGson().toJson(configEntity);
             buffW.write(format);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
         }
     }
 
@@ -710,7 +715,7 @@ public class AllConfigs {
                 }
             }
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
             return false;
         }
         return true;
@@ -718,6 +723,7 @@ public class AllConfigs {
 
     /**
      * 修改无效的配置，如线程数为负数等
+     *
      * @param config 配置实体
      */
     private void correctInvalidConfigs(ConfigEntity config) {
@@ -794,6 +800,7 @@ public class AllConfigs {
 
     /**
      * 添加自定义命令，在设置-自定义命令添加后将会触发该事件
+     *
      * @param event 添加自定义命令事件
      */
     @EventRegister(registerClass = AddCmdEvent.class)
@@ -810,12 +817,13 @@ public class AllConfigs {
         try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("user/cmds.txt"), StandardCharsets.UTF_8))) {
             bw.write(strb.toString());
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
         }
     }
 
     /**
      * 删除自定义命令，在设置-自定义命令删除后将会触发该事件
+     *
      * @param event 删除自定义命令事件
      */
     @EventRegister(registerClass = DeleteCmdEvent.class)
@@ -832,12 +840,13 @@ public class AllConfigs {
         try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("user/cmds.txt"), StandardCharsets.UTF_8))) {
             bw.write(strb.toString());
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
         }
     }
 
     /**
      * 检查配置错误
+     *
      * @param event 检查配置事件
      */
     @EventRegister(registerClass = CheckConfigsEvent.class)
@@ -856,6 +865,7 @@ public class AllConfigs {
 
     /**
      * 系统启动事件，当此事件发出将会进行初始化
+     *
      * @param event 启动事件
      */
     @EventRegister(registerClass = BootSystemEvent.class)
@@ -872,6 +882,7 @@ public class AllConfigs {
 
     /**
      * 读取所有配置
+     *
      * @param event 读取配置事件
      */
     @EventRegister(registerClass = SetConfigsEvent.class)
@@ -902,6 +913,7 @@ public class AllConfigs {
 
     /**
      * 设置swing主题
+     *
      * @param event 事件
      */
     @EventRegister(registerClass = SetSwingLaf.class)
@@ -913,6 +925,7 @@ public class AllConfigs {
 
     /**
      * 在系统启动后添加一个钩子，在Windows关闭时自动退出
+     *
      * @param event 事件
      */
     @EventListener(listenClass = BootSystemEvent.class)

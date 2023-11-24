@@ -12,7 +12,8 @@ public enum GsonUtil {
     private final GsonBuilder gsonBuilder = new GsonBuilder();
     private final DataDataTypeAdapter dataDataTypeAdapter = new DataDataTypeAdapter();
     @SuppressWarnings("rawtypes")
-    private final Type mapType = new TypeToken<Map>(){}.getType();
+    private final Type mapType = new TypeToken<Map>() {
+    }.getType();
 
     public static GsonUtil getInstance() {
         return INSTANCE;

@@ -21,6 +21,7 @@ import file.engine.services.plugin.system.PluginService;
 import file.engine.utils.ThreadPoolUtil;
 import file.engine.utils.DpiUtil;
 import file.engine.utils.gson.GsonUtil;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -38,6 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+@Slf4j
 public class PluginMarket {
 
     private static volatile PluginMarket INSTANCE = null;
@@ -347,7 +349,7 @@ public class PluginMarket {
                             labelIcon.setIcon(icon);
                         }
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        log.error("error: {}", e.getMessage(), e);
                     }
                 });
             }
@@ -406,7 +408,7 @@ public class PluginMarket {
             try {
                 return getPluginInfo(infoUrl, pluginName + ".json");
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error("error: {}", e.getMessage(), e);
             }
         }
         return null;
@@ -472,7 +474,7 @@ public class PluginMarket {
             //防止执行太快导致窗口无法正常关闭
             TimeUnit.MILLISECONDS.sleep(10);
         } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
         }
     }
 

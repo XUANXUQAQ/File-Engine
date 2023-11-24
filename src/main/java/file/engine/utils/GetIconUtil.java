@@ -7,6 +7,7 @@ import file.engine.utils.system.properties.IsDebug;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
@@ -19,6 +20,7 @@ import java.util.concurrent.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+@Slf4j
 public class GetIconUtil {
     private static final int MAX_CONSUMER_THREAD_NUM = 4;
     private static final FileSystemView FILE_SYSTEM_VIEW = FileSystemView.getFileSystemView();
@@ -75,7 +77,7 @@ public class GetIconUtil {
     public ImageIcon getCommandIcon(String commandName, int width, int height) {
         if (commandName == null || commandName.isEmpty()) {
             if (IsDebug.isDebug()) {
-                System.err.println("Command is empty");
+                log.warn("Command is empty");
             }
             return null;
         }

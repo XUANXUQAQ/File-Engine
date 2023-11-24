@@ -2,6 +2,7 @@ package file.engine.utils;
 
 import file.engine.configs.Constants;
 import file.engine.utils.file.FileUtil;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -18,6 +19,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+@Slf4j
 public class StartupUtil {
 
     /**
@@ -63,7 +65,7 @@ public class StartupUtil {
             deleteStartup();
             return 1;
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
             return 2;
         } finally {
             if (p != null) {

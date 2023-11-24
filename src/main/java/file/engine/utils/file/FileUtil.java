@@ -1,10 +1,13 @@
 package file.engine.utils.file;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 
+@Slf4j
 public class FileUtil {
 
     public static boolean isFileNotExist(String path) {
@@ -17,7 +20,7 @@ public class FileUtil {
         } catch (InvalidPathException ignored) {
             // ignored
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
         }
         return false;
     }
@@ -42,7 +45,7 @@ public class FileUtil {
             }
             //删除空目录
             if (!temp.delete()) {
-                System.err.println("Failed to delete " + temp.getAbsolutePath());
+                log.error("Failed to delete " + temp.getAbsolutePath());
             }
         }
     }
@@ -76,7 +79,7 @@ public class FileUtil {
              BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(dest))) {
             bis.transferTo(bos);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
         }
     }
 
@@ -84,7 +87,7 @@ public class FileUtil {
         try (FileInputStream inputStream = new FileInputStream(file)) {
             copyFile(inputStream, dest);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
         }
     }
 }

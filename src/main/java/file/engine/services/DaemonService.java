@@ -10,10 +10,12 @@ import file.engine.event.handler.impl.open.file.OpenFileEvent;
 import file.engine.services.utils.DaemonUtil;
 import file.engine.utils.ProcessUtil;
 import file.engine.utils.system.properties.IsDebug;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.IOException;
 
+@Slf4j
 public class DaemonService {
 
     private static final String OPEN_FROM_JAR_SIGNAL = "tmp/openFromJar";
@@ -32,17 +34,17 @@ public class DaemonService {
     private static void startDaemon(Event event) {
         File launcher = new File("..", Constants.LAUNCH_WRAPPER_NAME);
         if (IsDebug.isDebug()) {
-            System.out.println("启动守护进程" + Constants.LAUNCH_WRAPPER_NAME);
+            log.info("启动守护进程" + Constants.LAUNCH_WRAPPER_NAME);
             return;
         }
         File openFromJar = new File(OPEN_FROM_JAR_SIGNAL);
         if (!openFromJar.exists()) {
             try {
                 if (!openFromJar.createNewFile()) {
-                    System.err.println("error create open from jar file signal. File: " + OPEN_FROM_JAR_SIGNAL);
+                    log.error("error create open from jar file signal. File: " + OPEN_FROM_JAR_SIGNAL);
                 }
             } catch (IOException ex) {
-                ex.printStackTrace();
+                log.error("error: {}", ex.getMessage(), ex);
             }
         }
         EventManagement.getInstance().putEvent(new OpenFileEvent(OpenFileEvent.OpenStatus.WITH_ADMIN, launcher.getAbsolutePath()));

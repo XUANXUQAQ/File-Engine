@@ -44,6 +44,7 @@ import file.engine.utils.ThreadPoolUtil;
 import file.engine.utils.file.MoveDesktopFilesUtil;
 import file.engine.utils.system.properties.IsDebug;
 import file.engine.utils.system.properties.IsPreview;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -79,7 +80,7 @@ import java.util.regex.Pattern;
 import static file.engine.utils.ColorUtil.*;
 import static file.engine.utils.StartupUtil.hasStartup;
 
-
+@Slf4j
 public class SettingsFrame {
     private Set<String> cacheSet;
     private volatile boolean isFramePrepared = false;
@@ -1149,7 +1150,7 @@ public class SettingsFrame {
                 Constants.Enums.DatabaseStatus status = DatabaseService.getInstance().getStatus();
                 if (status == Constants.Enums.DatabaseStatus.NORMAL) {
                     if (IsDebug.isDebug()) {
-                        System.out.println("开始优化");
+                        log.info("开始优化");
                     }
                     eventManagement.putEvent(new OptimiseDatabaseEvent());
                     threadPoolUtil.executeTask(() -> {
@@ -2527,7 +2528,7 @@ public class SettingsFrame {
             try {
                 TimeUnit.MILLISECONDS.sleep(200);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                log.error("error: {}", e.getMessage(), e);
             }
         }
         return true;
@@ -3326,7 +3327,7 @@ public class SettingsFrame {
             width = Integer.parseInt(translateService.getFrameWidth());
             height = Integer.parseInt(translateService.getFrameHeight());
         } catch (NumberFormatException e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
             width = (int) (1000 / dpi);
             height = (int) (700 / dpi);
         }

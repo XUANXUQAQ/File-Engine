@@ -14,6 +14,7 @@ import file.engine.services.TranslateService;
 import file.engine.utils.ThreadPoolUtil;
 import file.engine.utils.DpiUtil;
 import file.engine.utils.system.properties.IsDebug;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.swing.*;
 import java.awt.*;
@@ -24,6 +25,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@Slf4j
 public class TaskBar {
     private TrayIcon trayIcon = null;
     private SystemTray systemTray;
@@ -176,7 +178,7 @@ public class TaskBar {
                 // 为系统托盘加托盘图标
                 systemTray.add(trayIcon);
             } catch (AWTException e) {
-                e.printStackTrace();
+                log.error("error: {}", e.getMessage(), e);
             }
         }
     }

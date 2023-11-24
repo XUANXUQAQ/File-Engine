@@ -1,10 +1,13 @@
 package file.engine.utils.file;
 
+import lombok.extern.slf4j.Slf4j;
+
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
 import java.io.*;
 import java.util.ArrayList;
 
+@Slf4j
 public class MoveDesktopFilesUtil {
     public static boolean start() {
         boolean desktop1HasConflictFile;
@@ -24,7 +27,7 @@ public class MoveDesktopFilesUtil {
             desktop2HasConflictFile = moveFiles.moveFolder("C:\\Users\\Public\\Desktop", fileBackUp.getAbsolutePath());
             return !desktop1HasConflictFile && !desktop2HasConflictFile;
         } else {
-            System.err.println("Error mkdir \"Files\"");
+            log.error("error: {}", "Error mkdir \"Files\"");
             return false;
         }
     }
@@ -111,7 +114,7 @@ public class MoveDesktopFilesUtil {
                     }
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("error: {}", e.getMessage(), e);
             }
             return isHasRepeatFiles;
         }

@@ -19,6 +19,7 @@ import file.engine.services.TranslateService;
 import file.engine.utils.ThreadPoolUtil;
 import file.engine.utils.gson.GsonUtil;
 import file.engine.utils.system.properties.IsDebug;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
 import java.net.URL;
@@ -33,6 +34,7 @@ import java.util.function.BiConsumer;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+@Slf4j
 public class PluginService {
     private final Set<PluginInfo> pluginInfoSet = ConcurrentHashMap.newKeySet();
     private final Set<String> NOT_LATEST_PLUGINS = ConcurrentHashMap.newKeySet();
@@ -261,7 +263,7 @@ public class PluginService {
                 strb.append(line);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
         }
         return strb.toString();
     }
@@ -394,7 +396,7 @@ public class PluginService {
                                 }
                             } catch (Exception e) {
                                 LOAD_ERROR_PLUGINS.add(pluginName);
-                                e.printStackTrace();
+                                log.error("error: {}", e.getMessage(), e);
                             }
                         } else {
                             REPEAT_PLUGINS.add(jar.getName());
@@ -403,7 +405,7 @@ public class PluginService {
                     }
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error("error: {}", e.getMessage(), e);
             }
         }
     }
@@ -414,9 +416,9 @@ public class PluginService {
             try {
                 isLatest = isPluginLatest(each.plugin);
                 if (IsDebug.isDebug()) {
-                    System.out.println("++++++++++++++++++++++++++++++++++++++++++++");
-                    System.out.println("插件：" + each.name + "已检查完毕，结果：" + isLatest);
-                    System.out.println("++++++++++++++++++++++++++++++++++++++++++++");
+                    log.info("++++++++++++++++++++++++++++++++++++++++++++");
+                    log.info("插件：" + each.name + "已检查完毕，结果：" + isLatest);
+                    log.info("++++++++++++++++++++++++++++++++++++++++++++");
                 }
                 if (!isLatest) {
                     oldPlugins.append(each.name).append(" ");
@@ -424,9 +426,9 @@ public class PluginService {
                 }
             } catch (Exception e) {
                 if (IsDebug.isDebug()) {
-                    System.err.println("++++++++++++++++++++++++++++++++++++++++++++");
-                    System.err.println("插件：" + each + "检查更新失败");
-                    System.err.println("++++++++++++++++++++++++++++++++++++++++++++");
+                    log.error("++++++++++++++++++++++++++++++++++++++++++++");
+                    log.error("插件：" + each + "检查更新失败");
+                    log.error("++++++++++++++++++++++++++++++++++++++++++++");
                 }
             }
         }
@@ -451,7 +453,7 @@ public class PluginService {
                 isVersionLatest.set(plugin.isLatest());
                 finishFlag.set(1);
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("error: {}", e.getMessage(), e);
                 finishFlag.set(2);
             }
         });

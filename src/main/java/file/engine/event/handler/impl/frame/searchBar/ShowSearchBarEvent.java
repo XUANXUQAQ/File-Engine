@@ -4,6 +4,7 @@ import file.engine.event.handler.Event;
 
 /**
  * 该类用于显示调用searchBar，若要监听显示searchBar事件，请使用@EventListener监听SearchBarReadyEvent
+ *
  * @see SearchBarReadyEvent
  */
 public class ShowSearchBarEvent extends Event {

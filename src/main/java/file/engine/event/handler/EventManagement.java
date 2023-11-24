@@ -13,6 +13,7 @@ import file.engine.utils.clazz.scan.ClassScannerUtil;
 import file.engine.utils.system.properties.IsDebug;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -31,6 +32,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+@Slf4j
 public class EventManagement {
     private static volatile EventManagement instance = null;
     private static volatile boolean exit = false;
@@ -93,7 +95,7 @@ public class EventManagement {
         var listenersPerPlugin = listenerMap.get(pluginIdentifier);
         boolean isListenerNameRepeat = listenersPerPlugin.stream().anyMatch(eachListener -> listenerName.equals(eachListener.listenerName));
         if (isListenerNameRepeat) {
-            System.err.println("插件" + pluginIdentifier + "注册事件 " + className + " 监听器重复，名称为：" + listenerName);
+            log.error("插件" + pluginIdentifier + "注册事件 " + className + " 监听器重复，名称为：" + listenerName);
             return;
         }
         listenersPerPlugin.add(new ListenerPair(listenerName, listener));
@@ -110,13 +112,13 @@ public class EventManagement {
         long startTime = System.currentTimeMillis();
         while (!event.allRetryFailed() && !event.isFinished()) {
             if (System.currentTimeMillis() - startTime > timeout) {
-                System.err.println("等待" + event + "超时");
+                log.error("等待" + event + "超时");
                 break;
             }
             try {
                 TimeUnit.MILLISECONDS.sleep(1);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                log.error("error: {}", e.getMessage(), e);
             }
         }
         return event.allRetryFailed();
@@ -198,7 +200,7 @@ public class EventManagement {
                 event.setFinishedAndExecCallback();
                 return false;
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("error: {}", e.getMessage(), e);
                 return true;
             }
         } else {
@@ -210,7 +212,7 @@ public class EventManagement {
                     event.setFinishedAndExecCallback();
                     return false;
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    log.error("error: {}", e.getMessage(), e);
                     return true;
                 }
             } else {
@@ -304,10 +306,10 @@ public class EventManagement {
                     }
                     return registerEvent;
                 } catch (Exception ex) {
-                    ex.printStackTrace();
+                    log.error("error: {}", ex.getMessage(), ex);
                 }
             } else {
-                e.printStackTrace();
+                log.error("error: {}", e.getMessage(), e);
             }
         }
         return null;
@@ -337,7 +339,7 @@ public class EventManagement {
                 try {
                     each.invoke(null, event);
                 } catch (IllegalAccessException | InvocationTargetException e) {
-                    e.printStackTrace();
+                    log.error("error: {}", e.getMessage(), e);
                 }
             });
         }
@@ -362,7 +364,7 @@ public class EventManagement {
     public void putEvent(Event event) {
         final boolean isDebug = IsDebug.isDebug();
         if (isDebug) {
-            System.err.println("尝试放入任务" + event.toString() + "---来自" + getStackTraceElement().toString());
+            log.info("尝试放入任务" + event.toString() + "---来自" + getStackTraceElement().toString());
         }
         if (notMainExit()) {
             if (event.isBlock()) {
@@ -372,7 +374,7 @@ public class EventManagement {
             }
         } else {
             if (isDebug) {
-                System.err.println("任务已被拒绝---" + event);
+                log.warn("任务已被拒绝---" + event);
             }
         }
     }
@@ -439,7 +441,7 @@ public class EventManagement {
                 }
             }
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
         }
     }
 
@@ -480,7 +482,7 @@ public class EventManagement {
                 }
             }
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
         }
     }
 
@@ -497,7 +499,7 @@ public class EventManagement {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
         }
     }
 
@@ -513,7 +515,7 @@ public class EventManagement {
      */
     private void registerHandler(String eventType, Method handler) {
         if (IsDebug.isDebug()) {
-            System.err.println("注册处理器" + eventType);
+            log.info("注册处理器" + eventType);
         }
         if (EVENT_HANDLER_MAP.containsKey(eventType)) {
             throw new RuntimeException("重复的监听器：" + eventType + "方法：" + handler);
@@ -528,7 +530,7 @@ public class EventManagement {
      */
     private void registerListener(String eventType, Method listenerMethod) {
         if (IsDebug.isDebug()) {
-            System.err.println("注册监听器" + eventType);
+            log.info("注册监听器" + eventType);
         }
         ConcurrentLinkedQueue<Method> queue = EVENT_LISTENER_MAP.get(eventType);
         if (queue == null) {
@@ -571,7 +573,7 @@ public class EventManagement {
                 try {
                     TimeUnit.MILLISECONDS.sleep(5);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    log.error("error: {}", e.getMessage(), e);
                 }
                 continue;
             }
@@ -583,11 +585,11 @@ public class EventManagement {
                 //判断是否超过最大次数
                 event.execErrorHandler();
                 if (isDebug) {
-                    System.err.println("任务超时---" + event);
+                    log.error("任务超时---" + event);
                 }
             } else {
                 if (executeTaskFailed(event)) {
-                    System.err.println("任务执行失败---" + event);
+                    log.error("任务执行失败---" + event);
                     eventQueue.add(event);
                 } else {
                     // 任务执行成功
@@ -610,11 +612,11 @@ public class EventManagement {
                 //判断是否超过最大次数
                 event.execErrorHandler();
                 if (isDebug) {
-                    System.err.println("任务超时---" + event);
+                    log.error("任务超时---" + event);
                 }
             } else {
                 if (executeTaskFailed(event)) {
-                    System.err.println("任务执行失败---" + event);
+                    log.error("任务执行失败---" + event);
                 } else {
                     // 任务执行成功
                     if (!(event instanceof EventProcessedBroadcastEvent)) {

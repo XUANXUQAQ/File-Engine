@@ -3,6 +3,7 @@ package file.engine.configs;
 import file.engine.dllInterface.SystemThemeInfo;
 import file.engine.utils.system.properties.IsDebug;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,6 +14,7 @@ import static file.engine.utils.BeanUtil.copyMatchingFields;
 /**
  * 项目使用到的常量
  */
+@Slf4j
 public class Constants {
     public static String version;
 
@@ -61,7 +63,7 @@ public class Constants {
                 version = properties.getProperty("project.version");
                 buildVersion = properties.getProperty("project.build.version");
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error("error: {}", e.getMessage(), e);
             }
         }
     }

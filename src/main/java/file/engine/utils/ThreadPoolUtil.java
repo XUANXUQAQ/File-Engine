@@ -1,8 +1,11 @@
 package file.engine.utils;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@Slf4j
 public enum ThreadPoolUtil {
     INSTANCE;
     private static final int THREAD_POOL_AWAIT_TIMEOUT = 60;
@@ -130,7 +133,7 @@ public enum ThreadPoolUtil {
                 System.err.println("总线程数：" + taskCount);
             }
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
         }
     }
 }

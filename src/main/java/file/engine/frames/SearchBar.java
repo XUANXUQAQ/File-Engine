@@ -30,6 +30,7 @@ import file.engine.utils.*;
 import file.engine.utils.file.FileUtil;
 import file.engine.utils.system.properties.IsDebug;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -60,7 +61,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-
+@Slf4j
 @SuppressWarnings({"IndexOfReplaceableByContains", "ListIndexOfReplaceableByContains"})
 public class SearchBar {
     private static final String RESULT_LABEL_NAME_HOLDER = "filled";
@@ -1023,7 +1024,7 @@ public class SearchBar {
                     try {
                         TimeUnit.MILLISECONDS.sleep(250);
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        log.error("error: {}", e.getMessage(), e);
                     }
                 }
                 EmptyRecycleBin.INSTANCE.emptyRecycleBin();
@@ -2594,9 +2595,7 @@ public class SearchBar {
         }
         TranslateService translateService = TranslateService.getInstance();
         if (IsDebug.isDebug()) {
-            System.out.println();
-            System.err.println("正在切换字体");
-            System.out.println();
+            log.error("正在切换字体");
         }
         Font labelFont = label1.getFont();
         Font newFont = translateService.getFitFont(labelFont.getStyle(), labelFont.getSize(), testStr);
@@ -3814,20 +3813,20 @@ public class SearchBar {
                 var prepareSearchEvent = new PrepareSearchEvent(() -> searchText, () -> searchCase, () -> keywords);
                 eventManagement.putEvent(prepareSearchEvent);
                 if (eventManagement.waitForEvent(prepareSearchEvent)) {
-                    System.err.println("prepare search event failed.");
+                    log.error("prepare search event failed.");
                     throw new RuntimeException();
                 }
                 prepareSearchEvent.getReturnValue().ifPresent(res -> {
                     if (isThreadEnded != null) {
                         try {
                             if (IsDebug.isDebug()) {
-                                System.out.println("等待上一个合并结果线程结束");
+                                log.info("等待上一个合并结果线程结束");
                             }
                             shouldExitMergeResultThread = true;
                             isThreadEnded.get();
                             shouldExitMergeResultThread = false;
                             if (IsDebug.isDebug()) {
-                                System.out.println("等待完成");
+                                log.info("等待完成");
                             }
                         } catch (InterruptedException | ExecutionException e) {
                             throw new RuntimeException(e);
@@ -3865,7 +3864,7 @@ public class SearchBar {
                 var startSearchEvent = new StartSearchEvent(() -> searchText, () -> searchCase, () -> keywords);
                 eventManagement.putEvent(startSearchEvent);
                 if (eventManagement.waitForEvent(startSearchEvent)) {
-                    System.err.println("send start search event failed.");
+                    log.error("send start search event failed.");
                     throw new RuntimeException();
                 }
                 startSearchEvent.getReturnValue().ifPresent(res -> {
@@ -3875,13 +3874,13 @@ public class SearchBar {
                     if (isThreadEnded != null) {
                         try {
                             if (IsDebug.isDebug()) {
-                                System.out.println("等待上一个合并结果线程结束");
+                                log.info("等待上一个合并结果线程结束");
                             }
                             shouldExitMergeResultThread = true;
                             isThreadEnded.get();
                             shouldExitMergeResultThread = false;
                             if (IsDebug.isDebug()) {
-                                System.out.println("等待完成");
+                                log.info("等待完成");
                             }
                         } catch (InterruptedException | ExecutionException e) {
                             throw new RuntimeException(e);

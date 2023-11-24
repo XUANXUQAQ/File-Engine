@@ -1,6 +1,8 @@
 package file.engine.services.plugin.system;
 
 
+import lombok.extern.slf4j.Slf4j;
+
 import javax.swing.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
@@ -10,6 +12,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 public class Plugin {
     public final String name;
     public final String identifier;
@@ -84,7 +87,7 @@ public class Plugin {
             try {
                 return (T) methodHashMap.get(key).invoke(instance, args);
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("error: {}", e.getMessage(), e);
             }
         }
         return null;

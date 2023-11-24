@@ -1,8 +1,11 @@
 package file.engine.utils;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.lang.reflect.Field;
 import java.util.Date;
 
+@Slf4j
 public class BeanUtil {
 
     public static void copyMatchingFields(Object fromObj, Object toObj) {
@@ -33,7 +36,7 @@ public class BeanUtil {
             } catch (NoSuchFieldException ex) {
                 // skip it
             } catch (IllegalAccessException ex) {
-                ex.printStackTrace();
+                log.error("error: {}", ex.getMessage(), ex);
             }
         }
     }

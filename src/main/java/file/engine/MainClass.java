@@ -22,6 +22,7 @@ import file.engine.utils.clazz.scan.ClassScannerUtil;
 import file.engine.utils.file.FileUtil;
 import file.engine.utils.system.properties.IsDebug;
 import file.engine.utils.system.properties.IsPreview;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.swing.*;
 import java.io.*;
@@ -34,7 +35,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-
+@Slf4j
 public class MainClass {
     private static final int UPDATE_DATABASE_THRESHOLD = 3;
 
@@ -68,7 +69,7 @@ public class MainClass {
 
             mainLoop();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
             System.exit(-1);
         }
     }
@@ -129,7 +130,7 @@ public class MainClass {
         }
         File tmpPlugins = new File("tmp/pluginsUpdate");
         if (IsDebug.isDebug()) {
-            System.out.println("正在更新插件");
+            log.info("正在更新插件");
         }
         File[] files = tmpPlugins.listFiles();
         if (files == null) {
@@ -286,7 +287,7 @@ public class MainClass {
                 isFileCreated = startTimeCount.createNewFile();
             } catch (IOException e) {
                 isFileCreated = false;
-                e.printStackTrace();
+                log.error("error: {}", e.getMessage(), e);
             }
         }
         if (isFileCreated) {
@@ -313,7 +314,7 @@ public class MainClass {
                     writer.write(String.valueOf(startTimes));
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("error: {}", e.getMessage(), e);
             }
         }
         return ret;
@@ -355,7 +356,7 @@ public class MainClass {
             String md5InsideJar = Md5Util.getMD5(insideJar);
             if (!target.exists() || !md5InsideJar.equals(fileMd5)) {
                 if (IsDebug.isDebug()) {
-                    System.out.println("正在重新释放文件：" + path);
+                    log.info("正在重新释放文件：" + path);
                 }
                 FileUtil.copyFile(MainClass.class.getResourceAsStream(rootPath), target);
             }
@@ -397,7 +398,7 @@ public class MainClass {
                 result = true;
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
             result = false;
         }
         return result;
@@ -419,7 +420,7 @@ public class MainClass {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
         }
         return true;
     }

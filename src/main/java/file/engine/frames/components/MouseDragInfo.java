@@ -3,6 +3,7 @@ package file.engine.frames.components;
 import file.engine.utils.ThreadPoolUtil;
 import file.engine.utils.DpiUtil;
 import file.engine.utils.GetIconUtil;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,6 +11,7 @@ import java.awt.geom.RoundRectangle2D;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+@Slf4j
 public class MouseDragInfo extends JFrame {
     private final JLabel iconLabel = new JLabel("icon");
     private final JPanel jPanel = new JPanel();
@@ -57,7 +59,7 @@ public class MouseDragInfo extends JFrame {
                     this.setBounds(_point.x - length / 2, _point.y - length + offset, length, length);
                 }
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                log.error("error: {}", e.getMessage(), e);
             }
             this.setVisible(false);
             this.dispose();

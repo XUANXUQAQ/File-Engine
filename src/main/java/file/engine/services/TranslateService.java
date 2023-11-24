@@ -3,6 +3,7 @@ package file.engine.services;
 import file.engine.utils.RegexUtil;
 import file.engine.utils.system.properties.IsDebug;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.swing.*;
 import java.awt.*;
@@ -14,6 +15,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 public enum TranslateService {
     INSTANCE;
 
@@ -113,7 +115,7 @@ public enum TranslateService {
                     String[] record = RegexUtil.getPattern("=", 0).split(line);
                     if (IsDebug.isDebug()) {
                         if (translationMap.get(record[0].toLowerCase()) != null) {
-                            System.err.println("警告：翻译重复   " + record[0]);
+                            log.warn("警告：翻译重复   " + record[0]);
                         }
                     }
                     if (record.length == 2) {
@@ -121,7 +123,7 @@ public enum TranslateService {
                     }
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("error: {}", e.getMessage(), e);
             }
         } else {
             translationMap.put("#frame_width", String.valueOf(1000));

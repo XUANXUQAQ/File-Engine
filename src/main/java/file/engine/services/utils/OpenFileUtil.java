@@ -2,11 +2,13 @@ package file.engine.services.utils;
 
 import file.engine.services.TranslateService;
 import file.engine.utils.file.FileUtil;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
 
+@Slf4j
 public class OpenFileUtil {
 
     /**
@@ -42,11 +44,11 @@ public class OpenFileUtil {
                 }
             } catch (Exception e) {
                 //打开上级文件夹
-                e.printStackTrace();
+                log.error("error: {}", e.getMessage(), e);
                 try {
                     openFolderByExplorer(path);
                 } catch (IOException ex) {
-                    ex.printStackTrace();
+                    log.error("error: {}", ex.getMessage(), ex);
                 }
             }
         } else {
@@ -70,7 +72,7 @@ public class OpenFileUtil {
             try {
                 openFolderByExplorer(path);
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error("error: {}", e.getMessage(), e);
                 JOptionPane.showMessageDialog(null, translateService.getTranslation("Execute failed"));
             }
             return;
@@ -82,12 +84,13 @@ public class OpenFileUtil {
                 String end = "\"" + command.substring(2) + "\"";
                 Runtime.getRuntime().exec("cmd.exe /c start " + start + end, null, file.getParentFile());
             } catch (IOException e) {
+                log.error("error: {}", e.getMessage(), e);
                 //打开上级文件夹
                 try {
                     OpenFileUtil.openFolderByExplorer(file.getAbsolutePath());
                 } catch (IOException e1) {
                     JOptionPane.showMessageDialog(null, translateService.getTranslation("Execute failed"));
-                    e.printStackTrace();
+                    log.error("error: {}", e1.getMessage(), e1);
                 }
             }
         } else {
@@ -122,7 +125,7 @@ public class OpenFileUtil {
             vbsW.newLine();
             vbsW.write("ws.run \"" + batFilePath + "\", 0");
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
         }
         return vbsFilePath.getAbsolutePath();
     }

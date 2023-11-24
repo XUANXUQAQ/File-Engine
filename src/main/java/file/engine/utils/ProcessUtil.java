@@ -1,6 +1,7 @@
 package file.engine.utils;
 
 import file.engine.utils.system.properties.IsDebug;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -8,6 +9,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class ProcessUtil {
 
     /**
@@ -51,7 +53,7 @@ public class ProcessUtil {
         while (isProcessExist(procName)) {
             TimeUnit.MILLISECONDS.sleep(checkInterval);
             if (System.currentTimeMillis() - start > timeLimit) {
-                System.err.printf("等待进程%s超时%n", procName);
+                log.warn("等待进程{}超时%n", procName);
                 Process exec = Runtime.getRuntime().exec(new String[]{"cmd.exe", "/c", "taskkill", "/im", procName, "/f"});
                 exec.waitFor();
                 break;

@@ -1,11 +1,11 @@
 package file.engine.services.download;
 
+import file.engine.configs.AllConfigs;
 import file.engine.configs.Constants;
+import file.engine.configs.ProxyInfo;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.download.DownloadDoneEvent;
-import file.engine.utils.system.properties.IsDebug;
-import file.engine.configs.AllConfigs;
-import file.engine.configs.ProxyInfo;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.net.ssl.*;
 import java.io.*;
@@ -18,6 +18,7 @@ import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class DownloadManager {
     public final String url;
     public final String savePath;
@@ -58,7 +59,7 @@ public class DownloadManager {
         HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
         HostnameVerifier hv = (urlHostName, session) -> {
             if (!urlHostName.equalsIgnoreCase(session.getPeerHost())) {
-                System.out.println("Warning: URL host '" + urlHostName + "' is different to SSLSession host '" + session.getPeerHost() + "'.");
+                log.info("Warning: URL host '" + urlHostName + "' is different to SSLSession host '" + session.getPeerHost() + "'.");
             }
             return true;
         };
@@ -95,7 +96,8 @@ public class DownloadManager {
         try {
             this.downloadStatus = Constants.Enums.DownloadStatus.DOWNLOAD_DOWNLOADING;
             System.setProperty("http.keepAlive", "false");
-            URL urlAddress = new URL(url);
+            URI uriAddress = new URI(url);
+            var urlAddress = uriAddress.toURL();
             HttpURLConnection con;
             doTrustToCertificates();
             if (proxy.equals(Proxy.NO_PROXY)) {
@@ -144,12 +146,12 @@ public class DownloadManager {
             downloadStatus = Constants.Enums.DownloadStatus.DOWNLOAD_DONE;
             EventManagement.getInstance().putEvent(new DownloadDoneEvent(this));
         } catch (IOException | NoSuchAlgorithmException | KeyManagementException e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
             if (!"User Interrupted".equals(e.getMessage())) {
                 downloadStatus = Constants.Enums.DownloadStatus.DOWNLOAD_ERROR;
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
         }
     }
 
@@ -173,9 +175,6 @@ public class DownloadManager {
             return downloadStatus;
         } else {
             if (!new File(savePath, fileName).exists()) {
-                if (IsDebug.isDebug()) {
-                    System.err.println("文件不存在，重新下载");
-                }
                 return Constants.Enums.DownloadStatus.DOWNLOAD_NO_TASK;
             } else {
                 return downloadStatus;

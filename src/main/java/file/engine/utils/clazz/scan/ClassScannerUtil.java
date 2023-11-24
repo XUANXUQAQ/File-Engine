@@ -1,6 +1,7 @@
 package file.engine.utils.clazz.scan;
 
 import file.engine.utils.system.properties.IsDebug;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -13,6 +14,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
+@Slf4j
 public class ClassScannerUtil {
 
     private static HashSet<String> classWithAnnotation = null;
@@ -71,7 +73,7 @@ public class ClassScannerUtil {
                 classListStream.newLine();
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
         }
     }
 }

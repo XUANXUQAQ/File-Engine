@@ -11,6 +11,7 @@ import file.engine.utils.ThreadPoolUtil;
 import file.engine.utils.file.FileUtil;
 import file.engine.utils.gson.GsonUtil;
 import file.engine.utils.system.properties.IsDebug;
+import lombok.extern.slf4j.Slf4j;
 import org.sqlite.SQLiteConfig;
 import org.sqlite.SQLiteConnection;
 import org.sqlite.SQLiteOpenMode;
@@ -33,6 +34,7 @@ import java.util.function.Consumer;
 /**
  * @author XUANXU
  */
+@Slf4j
 public class SQLiteUtil {
     private static final SQLiteConfig sqLiteConfig = new SQLiteConfig();
     private static final ConcurrentHashMap<String, ConnectionWrapper> connectionPool = new ConcurrentHashMap<>();
@@ -45,12 +47,12 @@ public class SQLiteUtil {
                     conn.lock.lock();
                     if (conn.isIdleTimeout() && !conn.connection.isClosed()) {
                         if (IsDebug.isDebug()) {
-                            System.out.println("长时间未使用 " + conn.url + "  已关闭连接");
+                            log.info("长时间未使用 " + conn.url + "  已关闭连接");
                         }
                         conn.connection.close();
                     }
                 } catch (SQLException e) {
-                    e.printStackTrace();
+                    log.error("error: {}", e.getMessage(), e);
                 } finally {
                     conn.lock.unlock();
                 }
@@ -71,7 +73,7 @@ public class SQLiteUtil {
                 try {
                     TimeUnit.MILLISECONDS.sleep(50);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    log.error("error: {}", e.getMessage(), e);
                     throw new RuntimeException(e);
                 }
             }
@@ -99,7 +101,7 @@ public class SQLiteUtil {
                     }
                     conn.usingTimeMills = System.currentTimeMillis();
                 } catch (SQLException e) {
-                    e.printStackTrace();
+                    log.error("error: {}", e.getMessage(), e);
                 } finally {
                     conn.lock.unlock();
                 }
@@ -116,7 +118,7 @@ public class SQLiteUtil {
             connectionWrapper.lock.lock();
             if (connectionWrapper.connection.isClosed()) {
                 connectionWrapper.connection = DriverManager.getConnection(connectionWrapper.url, sqLiteConfig.toProperties());
-                System.out.println("已恢复连接 " + connectionWrapper.url);
+                log.info("已恢复连接 " + connectionWrapper.url);
             }
             connectionWrapper.usingTimeMills = System.currentTimeMillis();
         } finally {
@@ -196,7 +198,7 @@ public class SQLiteUtil {
      */
     public static void closeAll() {
         if (IsDebug.isDebug()) {
-            System.err.println("正在关闭数据库连接");
+            log.error("正在关闭数据库连接");
         }
         final int timeout = 30_000; // 30s
         for (var entry : connectionPool.entrySet()) {
@@ -209,7 +211,7 @@ public class SQLiteUtil {
                 }
                 v.connection.close();
             } catch (SQLException | InterruptedException e) {
-                e.printStackTrace();
+                log.error("error: {}", e.getMessage(), e);
             } finally {
                 v.lock.unlock();
             }
@@ -232,12 +234,12 @@ public class SQLiteUtil {
                     Files.delete(Path.of(line));
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error("error: {}", e.getMessage(), e);
             }
             try {
                 Files.delete(malformedDB);
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error("error: {}", e.getMessage(), e);
             }
         }
     }
@@ -248,7 +250,7 @@ public class SQLiteUtil {
             try {
                 Files.createDirectories(data);
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error("error: {}", e.getMessage(), e);
             }
         }
         String disks = AllConfigs.getInstance().getAvailableDisks();
@@ -317,7 +319,7 @@ public class SQLiteUtil {
             }
             return isDatabaseEmpty(list);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
             return true;
         }
     }
@@ -338,7 +340,7 @@ public class SQLiteUtil {
                 initConnection("jdbc:sqlite:" + data.getAbsolutePath(), String.valueOf(eachDisk.charAt(0)));
                 initTables(String.valueOf(eachDisk.charAt(0)));
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("error: {}", e.getMessage(), e);
                 malformedFiles.add(data);
             }
         }
@@ -349,7 +351,7 @@ public class SQLiteUtil {
             createCacheTable();
             createPriorityTable();
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
             malformedFiles.add(cache);
         }
         File weight = new File(dir, "weight.db");
@@ -357,7 +359,7 @@ public class SQLiteUtil {
             initConnection("jdbc:sqlite:" + weight.getAbsolutePath(), "weight");
             createWeightTable();
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("error: {}", e.getMessage(), e);
             malformedFiles.add(weight);
         }
         if (!malformedFiles.isEmpty()) {
@@ -372,7 +374,7 @@ public class SQLiteUtil {
                     }
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error("error: {}", e.getMessage(), e);
             }
             EventManagement.getInstance().putEvent(new RestartEvent());
         }
@@ -396,7 +398,7 @@ public class SQLiteUtil {
             p.execute(String.format("SELECT * FROM %s", tableName));
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
+            log.error("error: {}", ex.getMessage(), ex);
             return false;
         }
     }
@@ -424,8 +426,8 @@ public class SQLiteUtil {
             for (int i = 0; i < 41; i++) {
                 stmt.executeUpdate("CREATE TABLE IF NOT EXISTS list" + i + "(ASCII INT, PATH TEXT, PRIORITY INT, PRIMARY KEY(\"ASCII\",\"PATH\",\"PRIORITY\"));");
             }
-        } catch (SQLException exception) {
-            exception.printStackTrace();
+        } catch (SQLException e) {
+            log.error("error: {}", e.getMessage(), e);
         }
     }
 
@@ -481,18 +483,18 @@ public class SQLiteUtil {
             suffixMap.forEach((suffix, priority) -> {
                 String generateFormattedSql = generateFormattedSql(suffix, priority);
                 try {
-                    statement.execute(generateFormattedSql);
+                    statement.executeUpdate(generateFormattedSql);
                 } catch (SQLException e) {
-                    e.printStackTrace();
+                    log.error("error: {}", e.getMessage(), e);
                 }
             });
-        } catch (SQLException throwable) {
-            throwable.printStackTrace();
+        } catch (SQLException e) {
+            log.error("error: {}", e.getMessage(), e);
         } finally {
             try {
                 statement.execute("COMMIT;");
             } catch (SQLException e) {
-                e.printStackTrace();
+                log.error("error: {}", e.getMessage(), e);
             }
         }
     }
