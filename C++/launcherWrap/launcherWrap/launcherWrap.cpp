@@ -22,7 +22,7 @@
 #pragma comment(lib, "User32.lib")
 
 // TODO 该变量为File-Engine.zip中的File-Engine.jar的md5值
-#define FILE_ENGINE_JAR_MD5 "2819b4b5a65b4df483f84eb4c871c855"
+#define FILE_ENGINE_JAR_MD5 "f4d3d0482e5a81b1fffb9babbe015f06"
 
 constexpr auto MAX_LOG_PRESERVE_DAYS = 5;
 constexpr auto CHECK_TIME_THRESHOLD = 1;
@@ -86,7 +86,7 @@ int main()
         return 0;
     }
     init_path();
-    check_logs();
+    // check_logs();
 #ifdef TEST
 	std::cout << "file-engine.jar path :  " << g_file_engine_jar_path << std::endl;
 	std::cout << "jre path: " << g_jre_path << std::endl;
@@ -441,20 +441,21 @@ void restart_file_engine(const bool is_ignore_close_file)
     }
     g_restart_count++;
 
-    std::ofstream log_file(g_log_file_path + std::string(get_date()) + ".log", std::ios::app);
-    const tm t = get_tm();
-    log_file << "------------------------------------------------------------------------------------------------------"
-        << std::endl;
-    log_file << t.tm_hour << ":" << t.tm_min << ":" << t.tm_sec << std::endl;
-    log_file.close();
+    // std::ofstream log_file(g_log_file_path + std::string(get_date()) + ".log", std::ios::app);
+    // const tm t = get_tm();
+    // log_file << "------------------------------------------------------------------------------------------------------"
+    //     << std::endl;
+    // log_file << t.tm_hour << ":" << t.tm_min << ":" << t.tm_sec << std::endl;
+    // log_file.close();
 
     std::string command("/c ");
     const std::string jre(g_jre_path);
     command.append(jre.substr(0, 2));
     command.append("\"");
     command.append(jre.substr(2));
-    command.append("bin\\java.exe\" ").append(vm_options).append(" -jar File-Engine.jar").append(" 1> normal.log")
-           .append(" 2>> ").append("\"").append(g_log_file_path).append(get_date()).append(".log").append("\"");
+    command.append("bin\\javaw.exe\" ").append(vm_options).append(" -jar File-Engine.jar");
+    // .append(" 1> normal.log")
+    // .append(" 2>> ").append("\"").append(g_log_file_path).append(get_date()).append(".log").append("\"");
 #ifdef TEST
 	std::cout << "running command: " << command << std::endl;
 #endif
