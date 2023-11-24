@@ -1344,7 +1344,12 @@ public class DatabaseService {
                     if (statementHashMap.containsKey(sqlWithTaskId.diskStr)) {
                         stmt = statementHashMap.get(sqlWithTaskId.diskStr);
                     } else {
-                        stmt = SQLiteUtil.getStatement(sqlWithTaskId.diskStr);
+                        try {
+                            stmt = SQLiteUtil.getStatement(sqlWithTaskId.diskStr);
+                        } catch (RuntimeException e) {
+                            log.warn(e.getMessage(), e);
+                            continue;
+                        }
                         statementHashMap.put(sqlWithTaskId.diskStr, stmt);
                         stmt.execute("BEGIN;");
                     }
@@ -1395,7 +1400,6 @@ public class DatabaseService {
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);
                 }
-                EventManagement.getInstance().putEvent(new RestartEvent());
             }
         }
     }

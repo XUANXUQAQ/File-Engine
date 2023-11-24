@@ -138,7 +138,7 @@ public class SQLiteUtil {
         if (isConnectionNotInitialized(key)) {
             var root = key + ":\\";
             if (FileUtil.isFileNotExist(root) || !IsLocalDisk.INSTANCE.isDiskNTFS(root)) {
-                throw new SQLException(root + " disk is invalid.");
+                throw new RuntimeException(root + " disk is invalid.");
             } else {
                 File data = new File(currentDatabaseDir, key + ".db");
                 initConnection("jdbc:sqlite:" + data.getAbsolutePath(), key);
@@ -158,7 +158,7 @@ public class SQLiteUtil {
         if (isConnectionNotInitialized(key)) {
             var root = key + ":\\";
             if (FileUtil.isFileNotExist(root) || !IsLocalDisk.INSTANCE.isDiskNTFS(root)) {
-                throw new SQLException(root + " disk is invalid.");
+                throw new RuntimeException(root + " disk is invalid.");
             } else {
                 File data = new File(currentDatabaseDir, key + ".db");
                 initConnection("jdbc:sqlite:" + data.getAbsolutePath(), key);
