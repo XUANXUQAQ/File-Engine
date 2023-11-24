@@ -170,7 +170,7 @@ depsStr = ','.join(moduleList)
 shutil.rmtree('jre')
 jlinkExe = os.path.join(binPath, 'jlink.exe')
 jlinkExe = jlinkExe[0:1] + '\"' + jlinkExe[1:] + '\"'
-if os.system(jlinkExe + r' --no-header-files --no-man-pages --compress=2 --module-path jmods --add-modules ' + depsStr + ' --output jre') != 0:
+if os.system(jlinkExe + r' --no-header-files --no-man-pages --module-path jmods --add-modules ' + depsStr + ' --output jre') != 0:
     print('Generate jre failed.')
     exit()
 os.system('pause')

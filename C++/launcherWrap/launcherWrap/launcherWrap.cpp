@@ -22,7 +22,7 @@
 #pragma comment(lib, "User32.lib")
 
 // TODO 该变量为File-Engine.zip中的File-Engine.jar的md5值
-#define FILE_ENGINE_JAR_MD5 "f4d3d0482e5a81b1fffb9babbe015f06"
+#define FILE_ENGINE_JAR_MD5 "bb63a2bc1c7ed0380c36a05550b78d2f"
 
 constexpr auto MAX_LOG_PRESERVE_DAYS = 5;
 constexpr auto CHECK_TIME_THRESHOLD = 1;
@@ -650,7 +650,7 @@ DWORD find_process()
             pe.dwSize = sizeof(PROCESSENTRY32);
             if (Process32Next(hSnapshot, &pe) == FALSE)
                 break;
-            if (wcscmp(pe.szExeFile, L"java.exe") == 0)
+            if (wcscmp(pe.szExeFile, L"javaw.exe") == 0)
             {
                 const DWORD id = pe.th32ProcessID;
                 TCHAR szProcessName[1000] = {0};
