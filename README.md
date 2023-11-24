@@ -21,7 +21,7 @@
 - Python >= 3.7
 - Visual Studio 2022（C++ 生成工具 >= v143）
 - maven >= 3.6.1
-- [如何编译构建项目](https://github.com/XUANXUQAQ/File-Engine/blob/master/README_BUILD.md)
+- [如何编译构建项目](https://github.com/XUANXUQAQ/File-Engine/blob/master/README_BUILD.md) 初次编译请使用maven进行编译(mvn compile)
 
 ---
 
