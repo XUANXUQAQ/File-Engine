@@ -398,7 +398,6 @@ public class SQLiteUtil {
             p.execute(String.format("SELECT * FROM %s", tableName));
             return true;
         } catch (SQLException ex) {
-            log.error("error: {}", ex.getMessage(), ex);
             return false;
         }
     }

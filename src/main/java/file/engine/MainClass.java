@@ -372,6 +372,8 @@ public class MainClass {
         isSucceeded = createFileOrFolder("user", false, false);
         //plugins
         isSucceeded &= createFileOrFolder("plugins", false, false);
+        //data
+        isSucceeded &= createFileOrFolder("data", false, false);
         //tmp
         File tmp = new File("tmp");
         isSucceeded &= createFileOrFolder(tmp, false, false);

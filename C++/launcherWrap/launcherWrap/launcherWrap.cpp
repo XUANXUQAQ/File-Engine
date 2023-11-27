@@ -22,9 +22,8 @@
 #pragma comment(lib, "User32.lib")
 
 // TODO 该变量为File-Engine.zip中的File-Engine.jar的md5值
-#define FILE_ENGINE_JAR_MD5 "bb63a2bc1c7ed0380c36a05550b78d2f"
+#define FILE_ENGINE_JAR_MD5 "7956679e598104b55b3f30e86330f86f"
 
-constexpr auto MAX_LOG_PRESERVE_DAYS = 5;
 constexpr auto CHECK_TIME_THRESHOLD = 1;
 
 const std::string redirect_error_file_option = "-XX:ErrorFile=../logs/hs_err_pid%p.log";
@@ -52,9 +51,7 @@ char g_update_signal_file[1000]{0};
 char g_new_file_engine_jar_path[1000]{0};
 char g_log_file_path[1000]{0};
 char g_jvm_parameter_file_path[1000]{0};
-
 short g_restart_count = 0;
-std::time_t g_restart_time = std::time(nullptr);
 
 bool is_close_exist();
 DWORD find_process();
@@ -70,12 +67,7 @@ bool is_launched();
 std::wstring get_self_name();
 void delete_jre_dir();
 bool remove_dir(const char* szFileDir);
-std::string get_date();
-time_t convert(int year, int month, int day);
-int get_days(const char* from, const char* to);
-void check_logs();
 std::string init_jvm_parameters();
-tm get_tm();
 std::wstring string2wstring(const std::string& str);
 std::string& trim(std::string& s);
 
@@ -267,66 +259,9 @@ inline void init_path()
     strcpy_s(g_jvm_parameter_file_path, jvm_parameter_file.c_str());
 }
 
-void check_logs()
-{
-    WIN32_FIND_DATAA FindFileData;
-    char tmp[1000]{0};
-    strcpy_s(tmp, g_log_file_path);
-    std::string _log_dir(tmp);
-    _log_dir += "*";
-    strcpy_s(tmp, _log_dir.c_str());
-
-    HANDLE hFind = FindFirstFileA(tmp, &FindFileData);
-
-    if (hFind == INVALID_HANDLE_VALUE) //如果hFind句柄创建失败，输出错误信息
-    {
-        FindClose(hFind);
-        return;
-    }
-    while (FindNextFileA(hFind, &FindFileData) != 0) //当文件或者文件夹存在时
-    {
-        if ((FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0 && strcmp(FindFileData.cFileName, ".") == 0
-            ||
-            strcmp(FindFileData.cFileName, "..") == 0) //判断是文件夹&&表示为"."||表示为"."
-        {
-            continue;
-        }
-        if ((FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) //如果不是文件夹
-        {
-            const int days = get_days(FindFileData.cFileName, get_date().c_str());
-            if (days > MAX_LOG_PRESERVE_DAYS)
-            {
-                std::string full_path(g_log_file_path);
-                full_path += FindFileData.cFileName;
-                DeleteFileA(full_path.c_str());
-            }
-        }
-    }
-    FindClose(hFind);
-}
-
 inline void delete_jre_dir()
 {
     remove_dir(g_jre_path);
-}
-
-inline time_t convert(const int year, const int month, const int day)
-{
-    tm info = {};
-    info.tm_year = year - 1900;
-    info.tm_mon = month - 1;
-    info.tm_mday = day;
-    return mktime(&info);
-}
-
-inline int get_days(const char* from, const char* to)
-{
-    int year, month, day;
-    sscanf_s(from, "%d-%d-%d.log", &year, &month, &day);
-    const int fromSecond = static_cast<int>(convert(year, month, day));
-    sscanf_s(to, "%d-%d-%d", &year, &month, &day);
-    const int toSecond = static_cast<int>(convert(year, month, day));
-    return (toSecond - fromSecond) / 24 / 3600;
 }
 
 /**
@@ -460,29 +395,6 @@ void restart_file_engine(const bool is_ignore_close_file)
 	std::cout << "running command: " << command << std::endl;
 #endif
     ShellExecuteA(nullptr, "open", "cmd", command.c_str(), g_file_engine_working_dir, SW_HIDE);
-}
-
-/**
- * 获取具体时间
-*/
-tm get_tm()
-{
-    time_t timep;
-    time(&timep);
-    tm tmpTime = {};
-    localtime_s(&tmpTime, &timep);
-    return tmpTime;
-}
-
-/**
- * 获取当前日期
- */
-std::string get_date()
-{
-    const tm tmpTime = get_tm();
-    char tmp[64]{0};
-    strftime(tmp, sizeof(tmp), "%Y-%m-%d", &tmpTime);
-    return tmp;
 }
 
 /**
