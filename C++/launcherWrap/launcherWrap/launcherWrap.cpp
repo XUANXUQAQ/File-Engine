@@ -22,7 +22,7 @@
 #pragma comment(lib, "User32.lib")
 
 // TODO 该变量为File-Engine.zip中的File-Engine.jar的md5值
-#define FILE_ENGINE_JAR_MD5 "7956679e598104b55b3f30e86330f86f"
+#define FILE_ENGINE_JAR_MD5 "2db8c607ee7faff1564d38a26affb4d6"
 
 constexpr auto CHECK_TIME_THRESHOLD = 1;
 
@@ -142,7 +142,7 @@ int main()
                 restart_file_engine(false);
             }
         }
-        Sleep(50);
+        Sleep(500);
     }
     return 0;
 }
