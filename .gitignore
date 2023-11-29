@@ -514,6 +514,6 @@ FodyWeavers.xsd
 *.sln.iml
 
 File-Engine.zip
-cudart64_*.dll
+/cudart64_*.dll
 /C++/openclAccelerator/temp/
 /experiments/openclAccelerator/temp/
