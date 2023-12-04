@@ -749,18 +749,18 @@ public class DatabaseService {
         AtomicInteger matchedResultCount = new AtomicInteger();
         EventManagement eventManagement = EventManagement.getInstance();
         boolean isGPUMatchDone = false;
-        ArrayList<Future<Void>> futures = new ArrayList<>();
         try (ResultSet resultSet = stmt.executeQuery(sql)) {
             boolean noMoreRecords = false;
+            ConcurrentLinkedQueue<String> tmpQueryResultsCache = new ConcurrentLinkedQueue<>();
             out:
             while (!noMoreRecords && !searchTask.shouldStopSearch() && eventManagement.notMainExit()) {
                 if (isEnableGPUAccelerate && GPUAccelerator.INSTANCE.isMatchDone(key)) {
                     isGPUMatchDone = true;
                     break;
                 }
+                tmpQueryResultsCache.clear();
                 // 查询数据库，分配String数组
                 int realResultCount = 0;
-                String[] tmpQueryResultsCache = new String[MAX_TEMP_QUERY_RESULT_CACHE];
                 // 先将结果查询出来，再进行字符串匹配，提高吞吐量
                 while (realResultCount < MAX_TEMP_QUERY_RESULT_CACHE) {
                     if (isEnableGPUAccelerate && GPUAccelerator.INSTANCE.isMatchDone(key)) {
@@ -768,38 +768,22 @@ public class DatabaseService {
                         break out;
                     }
                     if (resultSet.next()) {
-                        tmpQueryResultsCache[realResultCount] = resultSet.getString("PATH");
+                        tmpQueryResultsCache.add(resultSet.getString("PATH"));
                         ++realResultCount;
                     } else {
                         noMoreRecords = true;
                         break;
                     }
                 }
-                // 向线程池提交搜索任务
-                final int realResultCount1 = realResultCount;
-                Future<Void> taskFuture = ThreadPoolUtil.getInstance().executeTask(() -> {
-                    for (int j = 0; j < realResultCount1; ++j) {
-                        if (checkIsMatchedAndAddToList(tmpQueryResultsCache[j], searchTask)) {
-                            matchedResultCount.getAndIncrement();
-                        }
-                        if (searchTask.shouldStopSearch()) {
-                            return null;
-                        }
+                tmpQueryResultsCache.parallelStream().forEach(each -> {
+                    if (checkIsMatchedAndAddToList(each, searchTask)) {
+                        matchedResultCount.getAndIncrement();
                     }
-                    return null;
                 });
-                futures.add(taskFuture);
             }
         } catch (SQLException e) {
             log.error("error sql : " + sql);
             log.error("error: {}", e.getMessage(), e);
-        }
-        for (Future<Void> future : futures) {
-            try {
-                future.get();
-            } catch (InterruptedException | ExecutionException e) {
-                log.error("error: {}", e.getMessage(), e);
-            }
         }
         if (isGPUMatchDone) {
             return GPUAccelerator.INSTANCE.matchedNumber(key);
