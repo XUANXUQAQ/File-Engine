@@ -96,27 +96,35 @@ public class GetIconUtil {
         return image[0];
     }
 
+    // 清除图标缓存线程
     public void clearIconCacheThread() {
         Runnable clearCacheFunc = () -> {
             var eventManagement = EventManagement.getInstance();
             var allConfigs = AllConfigs.getInstance();
             long startCheck = System.currentTimeMillis();
             while (eventManagement.notMainExit()) {
+                // 获取清除图标缓存超时时间
                 long clearIconCacheTimeoutInMills = allConfigs
                         .getConfigEntity()
                         .getAdvancedConfigEntity()
                         .getClearIconCacheTimeoutInMills();
+                // 每隔一段时间检查一次
                 if (System.currentTimeMillis() - startCheck > clearIconCacheTimeoutInMills) {
                     startCheck = System.currentTimeMillis();
+                    // 创建一个要移除的key的ArrayList
                     ArrayList<String> keyToRemove = new ArrayList<>();
+                    // 遍历缓存图标map
                     cacheIconMap.forEach((path, iconCache) -> {
+                        // 如果缓存创建时间超过超时时间，则添加到要移除的key的ArrayList中
                         if (System.currentTimeMillis() - iconCache.cacheCreateTime > clearIconCacheTimeoutInMills) {
                             keyToRemove.add(path);
                         }
                     });
+                    // 遍历要移除的key的ArrayList，从缓存图标map中移除
                     keyToRemove.forEach(cacheIconMap::remove);
                 }
                 try {
+                    // 每隔100毫秒检查一次
                     TimeUnit.MILLISECONDS.sleep(100);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
