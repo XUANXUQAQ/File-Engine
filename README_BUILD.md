@@ -1,6 +1,6 @@
 # 如何编译构建本项目
 
-## 该项目仅支持windows 7以上系统。
+## 该项目仅支持windows 10以上系统。
 
 ### 1. 将本项目源码下载到本地。
 
@@ -45,7 +45,6 @@ pip install vswhere jproperties
 python .\build.py
 ```
 
-![Dd7jp.jpeg](https://i.328888.xyz/2022/12/25/Dd7jp.jpeg)
 
 或指定使用的jdk位置，在后面增加参数即可。
 
@@ -53,11 +52,7 @@ python .\build.py
 python .\build.py "/path/to/jdk"
 ```
 
-![DdEFU.jpeg](https://i.328888.xyz/2022/12/25/DdEFU.jpeg)
-
 脚本运行完成后在build文件夹将会生成File-Engine.exe
-
-![DdQsA.jpeg](https://i.328888.xyz/2022/12/26/DdQsA.jpeg)
 
 # 以下内容已过时
 
