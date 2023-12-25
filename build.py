@@ -127,7 +127,7 @@ if not os.path.exists(buildDir):
 jdkPath = ''
 if len(sys.argv) == 2:
     jdkPath = sys.argv[1]
-    print("JAVA_HOME set to " + jdkPath)
+    print("JAVA_HOME is set to " + jdkPath)
 
 # 编译jar
 if os.system('set JAVA_HOME=' + jdkPath + '&& mvn clean compile package') != 0:
@@ -167,7 +167,9 @@ for eachModule in modulesFromJar:
 moduleList = set(moduleList)
 print("deps: " + str(moduleList))
 depsStr = ','.join(moduleList)
-shutil.rmtree('jre')
+#判断jre文件夹是否存在
+if os.path.exists('jre'):
+    shutil.rmtree('jre')
 jlinkExe = os.path.join(binPath, 'jlink.exe')
 jlinkExe = jlinkExe[0:1] + '\"' + jlinkExe[1:] + '\"'
 if os.system(jlinkExe + r' --no-header-files --no-man-pages --module-path jmods --add-modules ' + depsStr + ' --output jre') != 0:
