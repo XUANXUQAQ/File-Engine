@@ -62,7 +62,7 @@ public class Constants {
                 properties.load(projectInfo);
                 version = properties.getProperty("project.version");
                 buildVersion = properties.getProperty("project.build.version");
-            } catch (IOException e) {
+            } catch (Exception e) {
                 log.error("error: {}", e.getMessage(), e);
             }
         }
