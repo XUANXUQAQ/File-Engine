@@ -161,9 +161,10 @@ BOOL CALLBACK is_hwnd_has_cabinetWClass(HWND hwndChild, LPARAM lParam)
 	char window_class_name[100] = { '\0' };
 	GetClassNameA(hwndChild, window_class_name, sizeof window_class_name);
 	const std::string class_name_str(window_class_name);
-	if (class_name_str.find("Windows.UI.Core.CoreWindow") != std::string::npos)
+	if (class_name_str.find("Windows.UI.Core.CoreWindow") != std::string::npos ||
+		class_name_str.find("TITLE_BAR_SCAFFOLDING_WINDOW_CLASS") != std::string::npos)
 	{
-		*flag = 1;
+		*flag |= 1;
 	}
 	else if (*flag & 1 && class_name_str.find("WorkerW") != std::string::npos)
 	{
