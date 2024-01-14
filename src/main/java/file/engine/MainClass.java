@@ -203,7 +203,7 @@ public class MainClass {
         checkMd5AndReplace("user/emptyRecycleBin.dll", "/win32-native/emptyRecycleBin.dll");
         checkMd5AndReplace("user/systemThemeInfo.dll", "/win32-native/systemThemeInfo.dll");
         checkMd5AndReplace("user/getDpi.exe", "/win32-native/getDpi.exe");
-        checkMd5AndReplace(Constants.FILE_ENGINE_CORE_DIR + "File-Engine-Core.exe", "/win32-native/File-Engine-Core.exe");
+        checkMd5AndReplace(Constants.FILE_ENGINE_CORE_DIR + Constants.FILE_ENGINE_CORE_NAME, "/win32-native/File-Engine-Core.exe");
     }
 
     private static void checkMd5AndReplace(String path, String rootPath) throws IOException {

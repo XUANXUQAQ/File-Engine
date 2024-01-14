@@ -37,6 +37,14 @@ public class ProcessUtil {
         return false;
     }
 
+    public static void waitForProcess(@SuppressWarnings("SameParameterValue") String procName, long checkInterval) throws IOException, InterruptedException {
+        long timeLimit = 10 * 60 * 1000;
+        if (IsDebug.isDebug()) {
+            timeLimit = Long.MAX_VALUE;
+        }
+        waitForProcess(procName, checkInterval, timeLimit);
+    }
+
     /**
      * 等待进程
      *
@@ -44,12 +52,8 @@ public class ProcessUtil {
      * @throws IOException          失败
      * @throws InterruptedException 失败
      */
-    public static void waitForProcess(@SuppressWarnings("SameParameterValue") String procName, long checkInterval) throws IOException, InterruptedException {
+    public static void waitForProcess(@SuppressWarnings("SameParameterValue") String procName, long checkInterval, long timeLimit) throws IOException, InterruptedException {
         long start = System.currentTimeMillis();
-        long timeLimit = 10 * 60 * 1000;
-        if (IsDebug.isDebug()) {
-            timeLimit = Long.MAX_VALUE;
-        }
         while (isProcessExist(procName)) {
             TimeUnit.MILLISECONDS.sleep(checkInterval);
             if (System.currentTimeMillis() - start > timeLimit) {

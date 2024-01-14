@@ -38,7 +38,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @SuppressWarnings("unchecked")
 public class DatabaseNativeService {
-    private static final String coreFile = Path.of(Constants.FILE_ENGINE_CORE_DIR + "File-Engine-Core.exe").toAbsolutePath().toString();
+    private static final String coreFile = Path.of(Constants.FILE_ENGINE_CORE_DIR + Constants.FILE_ENGINE_CORE_NAME).toAbsolutePath().toString();
     private static int port = 50721;
     private static final String coreUrl = "http://127.0.0.1:%d";
     private static final String coreConfigFile = Constants.FILE_ENGINE_CORE_DIR + "user/settings.json";
@@ -155,7 +155,7 @@ public class DatabaseNativeService {
     @SneakyThrows
     private static void initCore(Event event) {
         startCore();
-        while (!ProcessUtil.isProcessExist("File-Engine-Core.exe")) {
+        while (!ProcessUtil.isProcessExist(Constants.FILE_ENGINE_CORE_NAME)) {
             TimeUnit.MILLISECONDS.sleep(100);
         }
         Constants.Enums.DatabaseStatus status = null;
@@ -305,5 +305,10 @@ public class DatabaseNativeService {
     private static void restartEvent(Event event) {
         String url = getUrl() + "/close";
         HttpUtil.post(url, Collections.emptyMap());
+        try {
+            ProcessUtil.waitForProcess(Constants.FILE_ENGINE_CORE_NAME, 500, 5000);
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

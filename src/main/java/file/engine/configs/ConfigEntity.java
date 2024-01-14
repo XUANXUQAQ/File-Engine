@@ -2,9 +2,13 @@ package file.engine.configs;
 
 import com.google.gson.annotations.SerializedName;
 import file.engine.configs.core.CoreConfigEntity;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class ConfigEntity {
 
     @SerializedName("isShowTipOnCreatingLnk")

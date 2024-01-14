@@ -1,9 +1,13 @@
 package file.engine.configs.core;
 
 import com.google.gson.annotations.SerializedName;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class CoreConfigEntity {
     @SerializedName("cacheNumLimit")
     private int cacheNumLimit;
