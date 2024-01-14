@@ -7,17 +7,18 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
-import file.engine.configs.*;
+import file.engine.configs.AllConfigs;
+import file.engine.configs.ConfigEntity;
+import file.engine.configs.Constants;
 import file.engine.configs.core.CoreConfigEntity;
 import file.engine.configs.core.ResultEntity;
 import file.engine.event.handler.Event;
-import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.configs.SetConfigsEvent;
 import file.engine.event.handler.impl.database.*;
 import file.engine.event.handler.impl.frame.searchBar.SearchBarCloseEvent;
 import file.engine.event.handler.impl.frame.searchBar.SearchBarReadyEvent;
-import file.engine.event.handler.impl.open.file.OpenFileEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
+import file.engine.services.utils.OpenFileUtil;
 import file.engine.utils.ProcessUtil;
 import file.engine.utils.file.FileUtil;
 import file.engine.utils.gson.GsonUtil;
@@ -35,6 +36,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
+@SuppressWarnings("unchecked")
 public class DatabaseNativeService {
     private static final String coreFile = Path.of(Constants.FILE_ENGINE_CORE_DIR + "File-Engine-Core.exe").toAbsolutePath().toString();
     private static int port = 50721;
@@ -146,7 +148,7 @@ public class DatabaseNativeService {
             coreConfigs = gson.toJson(coreConfigMap);
             Files.writeString(coreSettingsPath, coreConfigs);
         }
-        EventManagement.getInstance().putEvent(new OpenFileEvent(OpenFileEvent.OpenStatus.WITH_ADMIN, coreFile));
+        OpenFileUtil.openWithAdmin(coreFile, true);
     }
 
     @EventRegister(registerClass = StartCoreEvent.class)
@@ -213,7 +215,7 @@ public class DatabaseNativeService {
     @EventListener(listenClass = SearchBarCloseEvent.class)
     private static void stopSearchEvent(Event event) {
         String url = getUrl() + "/search";
-        HttpRequest.delete(url).timeout(HttpGlobalConfig.getTimeout()).execute().body();
+        HttpRequest.delete(url).timeout(HttpGlobalConfig.getTimeout()).execute().close();
     }
 
     @EventRegister(registerClass = AddToCacheEvent.class)
@@ -230,13 +232,28 @@ public class DatabaseNativeService {
         String url = getUrl() + "/cache";
         HashMap<String, Object> params = new HashMap<>();
         params.put("path", ((DeleteFromCacheEvent) event).path);
-        HttpRequest.delete(url).form(params).timeout(HttpGlobalConfig.getTimeout()).execute().body();
+        String paramsStr = HttpUtil.toParams(params);
+        HttpRequest.delete(url + "?" + paramsStr).timeout(HttpGlobalConfig.getTimeout()).execute().close();
     }
 
     @EventRegister(registerClass = UpdateDatabaseEvent.class)
     private static void updateDatabaseEvent(Event event) {
         String url = getUrl() + "/update";
-        HttpUtil.post(url, Collections.emptyMap());
+        UpdateDatabaseEvent updateDatabaseEvent = (UpdateDatabaseEvent) event;
+        HashMap<String, Object> params = new HashMap<>();
+        params.put("isDropPrevious", updateDatabaseEvent.isDropPrevious);
+        String paramsStr = HttpUtil.toParams(params);
+        HttpUtil.post(url + "?" + paramsStr, Collections.emptyMap());
+        do {
+            try {
+                TimeUnit.SECONDS.sleep(1);
+                if (!ProcessUtil.isProcessExist("fileSearcherUSN.exe")) {
+                    break;
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        } while (true);
     }
 
     @EventRegister(registerClass = OptimiseDatabaseEvent.class)
@@ -259,7 +276,7 @@ public class DatabaseNativeService {
     @EventRegister(registerClass = ClearSuffixPriorityMapEvent.class)
     private static void clearSuffixPriorityMapEvent(Event event) {
         String url = getUrl() + "/clearSuffixPriority";
-        HttpRequest.delete(url).timeout(HttpGlobalConfig.getTimeout()).execute().body();
+        HttpRequest.delete(url).timeout(HttpGlobalConfig.getTimeout()).execute().close();
     }
 
     @EventRegister(registerClass = DeleteFromSuffixPriorityMapEvent.class)
@@ -269,7 +286,7 @@ public class DatabaseNativeService {
         HashMap<String, Object> params = new HashMap<>();
         params.put("suffix", deleteFromSuffixPriorityMapEvent.suffix);
         String paramsStr = HttpUtil.toParams(params);
-        HttpRequest.delete(url + "?" + paramsStr).timeout(HttpGlobalConfig.getTimeout()).execute().body();
+        HttpRequest.delete(url + "?" + paramsStr).timeout(HttpGlobalConfig.getTimeout()).execute().close();
     }
 
     @EventRegister(registerClass = UpdateSuffixPriorityEvent.class)
@@ -281,7 +298,7 @@ public class DatabaseNativeService {
         params.put("newSuffix", updateSuffixPriorityEvent.newSuffix);
         params.put("priority", updateSuffixPriorityEvent.newPriority);
         String paramsStr = HttpUtil.toParams(params);
-        HttpRequest.put(url + "?" + paramsStr).timeout(HttpGlobalConfig.getTimeout()).execute().body();
+        HttpRequest.put(url + "?" + paramsStr).timeout(HttpGlobalConfig.getTimeout()).execute().close();
     }
 
     @EventListener(listenClass = RestartEvent.class)

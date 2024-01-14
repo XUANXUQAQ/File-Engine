@@ -726,6 +726,7 @@ public class AllConfigs {
         if (setConfigsEvent.getConfigs() == null) {
             // MainClass初始化
             allConfigs.readAllSettings();
+            allConfigs.saveAllSettings();
         } else {
             // 添加高级设置参数
             Map<String, Object> configsJson = allConfigs.getSettingsJSON();

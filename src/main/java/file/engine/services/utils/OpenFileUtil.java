@@ -65,7 +65,7 @@ public class OpenFileUtil {
      *
      * @param path 文件路径
      */
-    public static void openWithAdmin(String path) {
+    public static void openWithAdmin(String path, boolean isHideWindow) {
         TranslateService translateService = TranslateService.getInstance();
         File file = new File(path);
         if (file.isDirectory()) {
@@ -82,7 +82,11 @@ public class OpenFileUtil {
                 String command = file.getAbsolutePath();
                 String start = command.substring(0, 2);
                 String end = "\"" + command.substring(2) + "\"";
-                Runtime.getRuntime().exec("cmd.exe /c start " + start + end, null, file.getParentFile());
+                if (isHideWindow) {
+                    Runtime.getRuntime().exec("cmd.exe /c " + start + end, null, file.getParentFile());
+                } else {
+                    Runtime.getRuntime().exec("cmd.exe /c start " + start + end, null, file.getParentFile());
+                }
             } catch (IOException e) {
                 log.error("error: {}", e.getMessage(), e);
                 //打开上级文件夹

@@ -29,7 +29,7 @@ public class OpenFileService {
     }
 
     private static void openFileWithAdmin(String path) {
-        OpenFileUtil.openWithAdmin(path);
+        OpenFileUtil.openWithAdmin(path, false);
     }
 
     private static void openParentPath(String path) {

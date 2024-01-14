@@ -3449,14 +3449,16 @@ public class SearchBar {
         var listSet = new HashSet<>();
         int cacheStartIndex = 0;
         int resultStartIndex = 0;
+        boolean isResultEndedLast = false;
         boolean isResultEnded = false;
-        while (listResultsTemp == listResults && eventManagement.notMainExit() && !shouldExitMergeResultThread && !isResultEnded) {
+        while (listResultsTemp == listResults && eventManagement.notMainExit() && !shouldExitMergeResultThread) {
             if (getSearchBarText().isEmpty()) {
                 listResultsTemp.clear();
             } else if (runningMode == RunningMode.NORMAL_MODE) {
                 if (taskUUID != null) {
                     ResultEntity cacheAndPriorityResults = DatabaseNativeService.getCacheAndPriorityResults(cacheStartIndex);
                     cacheStartIndex = cacheAndPriorityResults.nextIndex();
+                    isResultEndedLast = isResultEnded;
                     isResultEnded = cacheAndPriorityResults.isDone();
                     isDone.set(cacheAndPriorityResults.isDone());
                     for (String each : cacheAndPriorityResults.data()) {
@@ -3488,6 +3490,7 @@ public class SearchBar {
                 if (taskUUID != null) {
                     ResultEntity results = DatabaseNativeService.getResults(resultStartIndex);
                     resultStartIndex = results.nextIndex();
+                    isResultEndedLast = isResultEnded;
                     isResultEnded = results.isDone();
                     isDone.set(results.isDone());
                     for (String each : results.data()) {
@@ -3502,6 +3505,7 @@ public class SearchBar {
                     }
                 }
             }
+            if (isResultEndedLast && isResultEnded) break;
             try {
                 TimeUnit.MILLISECONDS.sleep(100);
             } catch (InterruptedException e) {
