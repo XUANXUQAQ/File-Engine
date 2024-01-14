@@ -22,7 +22,7 @@
 #pragma comment(lib, "User32.lib")
 
 // TODO 该变量为File-Engine.zip中的File-Engine.jar的md5值
-#define FILE_ENGINE_JAR_MD5 "36e00eaf4f2b45a9f2b274279d30bdb8"
+#define FILE_ENGINE_JAR_MD5 "89a88723d600651649c0929579d90bdd"
 
 constexpr auto CHECK_TIME_THRESHOLD = 1;
 

@@ -6,13 +6,17 @@ import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.ConfigEntity;
 import file.engine.configs.Constants;
+import file.engine.configs.core.ResultEntity;
 import file.engine.dllInterface.EmptyRecycleBin;
 import file.engine.dllInterface.GetHandle;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.BootSystemEvent;
 import file.engine.event.handler.impl.configs.SetConfigsEvent;
-import file.engine.event.handler.impl.database.*;
+import file.engine.event.handler.impl.database.AddToCacheEvent;
+import file.engine.event.handler.impl.database.PrepareSearchEvent;
+import file.engine.event.handler.impl.database.StartSearchEvent;
+import file.engine.event.handler.impl.database.UpdateDatabaseEvent;
 import file.engine.event.handler.impl.frame.searchBar.*;
 import file.engine.event.handler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import file.engine.event.handler.impl.open.file.OpenFileEvent;
@@ -22,7 +26,7 @@ import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.frames.components.LoadingPanel;
 import file.engine.frames.components.MouseDragInfo;
 import file.engine.frames.components.RoundBorder;
-import file.engine.services.DatabaseService;
+import file.engine.services.DatabaseNativeService;
 import file.engine.services.TranslateService;
 import file.engine.services.plugin.system.Plugin;
 import file.engine.services.plugin.system.PluginService;
@@ -143,7 +147,7 @@ public class SearchBar {
 
     private static volatile SearchBar instance = null;
 
-    private record ResultWrap(DatabaseService.SearchTask searchTask, String result) {
+    private record ResultWrap(String taskUUID, String result) {
     }
 
     private SearchBar() {
@@ -1096,9 +1100,8 @@ public class SearchBar {
         final long startWait = System.currentTimeMillis();
         AtomicBoolean isCanceled = new AtomicBoolean(false);
         TranslateService translateService = TranslateService.getInstance();
-        DatabaseService databaseService = DatabaseService.getInstance();
         //检查数据库是否正常
-        if (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL || AllConfigs.isFirstRun()) {
+        if (DatabaseNativeService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL || AllConfigs.isFirstRun()) {
             closeSearchBar();
             JFrame frame = new JFrame();
             frame.setUndecorated(true);
@@ -1122,13 +1125,13 @@ public class SearchBar {
             try {
                 //二次检查并尝试等待
                 while (System.currentTimeMillis() - startWait <= maxWaiting) {
-                    if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
+                    if (DatabaseNativeService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
                         break;
                     }
-                    TimeUnit.MILLISECONDS.sleep(1);
+                    TimeUnit.MILLISECONDS.sleep(100);
                 }
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                log.warn(e.getMessage(), e);
             } finally {
                 glassPane.stop();
                 frame.setVisible(false);
@@ -1223,7 +1226,7 @@ public class SearchBar {
                     desktop.browse(new URI("https://github.com/XUANXUQAQ/File-Engine/wiki/Usage"));
                 }
             } catch (URISyntaxException | IOException e) {
-                e.printStackTrace();
+                log.error(e.getMessage(), e);
             }
         }
     }
@@ -1289,7 +1292,7 @@ public class SearchBar {
                     TimeUnit.MILLISECONDS.sleep(50);
                 }
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                log.error(e.getMessage(), e);
             }
         });
 
@@ -1334,7 +1337,7 @@ public class SearchBar {
                                                     AllConfigs.getInstance().getConfigEntity().isShowTipCreatingLnk());
                                         }
                                     } catch (Exception exception) {
-                                        exception.printStackTrace();
+                                        log.error(exception.getMessage(), exception);
                                     }
                                     isIconCreated.set(false);
                                     isMouseDraggedInWindow.set(false);
@@ -2048,7 +2051,7 @@ public class SearchBar {
                 showResultsWrapMethod(listResultsTemp, size, currentResultCount.get() - 1, label7, false, showResultOnLabelMethod);
                 showResultsWrapMethod(listResultsTemp, size, currentResultCount.get(), label8, true, showResultOnLabelMethod);
             } catch (ArrayIndexOutOfBoundsException e) {
-                e.printStackTrace();
+                log.error(e.getMessage(), e);
             }
         } else if (runningMode == RunningMode.COMMAND_MODE) {
             //到达了最下端，刷新显示
@@ -2063,7 +2066,7 @@ public class SearchBar {
                 showResultsWrapMethod(listResultsTemp, size, currentResultCount.get() - 1, label7, false, showCommandOnLabelMethod);
                 showResultsWrapMethod(listResultsTemp, size, currentResultCount.get(), label8, true, showCommandOnLabelMethod);
             } catch (ArrayIndexOutOfBoundsException e) {
-                e.printStackTrace();
+                log.error(e.getMessage(), e);
             }
         } else if (runningMode == RunningMode.PLUGIN_MODE) {
             try {
@@ -2077,7 +2080,7 @@ public class SearchBar {
                 showResultsWrapMethod(listResultsTemp, size, currentResultCount.get() - 1, label7, false, showPluginResultOnLabelMethod);
                 showResultsWrapMethod(listResultsTemp, size, currentResultCount.get(), label8, true, showPluginResultOnLabelMethod);
             } catch (ArrayIndexOutOfBoundsException e) {
-                e.printStackTrace();
+                log.error(e.getMessage(), e);
             }
         }
     }
@@ -2180,7 +2183,7 @@ public class SearchBar {
                 showPluginResultOnLabel(command, label8, isLabelChosenFunc.test(label8));
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
         }
     }
 
@@ -2223,7 +2226,7 @@ public class SearchBar {
                 showCommandOnLabel(command, label8, isLabelChosenFunc.test(label8));
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
         }
     }
 
@@ -2266,7 +2269,7 @@ public class SearchBar {
                 showResultOnLabel(path, label8, isLabelChosenFunc.test(label8));
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
         }
     }
 
@@ -2707,19 +2710,18 @@ public class SearchBar {
             isWaiting.set(true);
             ThreadPoolUtil.getInstance().executeTask(() -> {
                 try {
-                    DatabaseService databaseService = DatabaseService.getInstance();
                     while (isWaiting.get()) {
-                        if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
+                        if (DatabaseNativeService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
                             startTime = System.currentTimeMillis() - 300;
                             startSearchSignal.set(true);
                             isSearchNotStarted.set(true);
                             isCudaSearchNotStarted.set(true);
                             return;
                         }
-                        TimeUnit.MILLISECONDS.sleep(20);
+                        TimeUnit.MILLISECONDS.sleep(200);
                     }
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    log.warn(e.getMessage(), e);
                 } finally {
                     isWaiting.set(false);
                 }
@@ -2828,8 +2830,7 @@ public class SearchBar {
                 throw new RuntimeException(e);
             }
         }
-        DatabaseService databaseService = DatabaseService.getInstance();
-        List<String> top8Caches = databaseService.getTop8Caches();
+        List<String> top8Caches = DatabaseNativeService.getTop8Caches();
         top8Caches.forEach(e -> searchBarInstance.listResults.add(new ResultWrap(null, e)));
     }
 
@@ -2848,11 +2849,9 @@ public class SearchBar {
             searchBarInstance.detectShowingModeAndClose();
         } else {
             searchBarInstance.showSearchbar(switchVisibleStatusEvent.isGrabFocus, switchVisibleStatusEvent.isSwitchToNormal);
-            DatabaseService databaseService = DatabaseService.getInstance();
-            List<String> top8Caches = databaseService.getTop8Caches();
+            List<String> top8Caches = DatabaseNativeService.getTop8Caches();
             top8Caches.forEach(e -> searchBarInstance.listResults.add(new ResultWrap(null, e)));
         }
-
     }
 
     @EventListener(listenClass = RestartEvent.class)
@@ -2982,7 +2981,7 @@ public class SearchBar {
                                             }
                                         });
                                     } catch (Exception e) {
-                                        e.printStackTrace();
+                                        log.error(e.getMessage(), e);
                                     }
                                 }
                             }
@@ -3278,7 +3277,7 @@ public class SearchBar {
                     TimeUnit.MILLISECONDS.sleep(20);
                 }
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                log.error(e.getMessage(), e);
             } finally {
                 isLockMouseMotionThreadNotExist.set(true);
             }
@@ -3304,7 +3303,7 @@ public class SearchBar {
                                 JLabel labelObj = (JLabel) labelField.get(this);
                                 return labelObj == label;
                             } catch (NoSuchFieldException | IllegalAccessException e) {
-                                e.printStackTrace();
+                                log.error(e.getMessage(), e);
                                 throw new RuntimeException(e);
                             }
                         });
@@ -3363,15 +3362,15 @@ public class SearchBar {
         SwingUtilities.invokeLater(searchBar::repaint);
     }
 
-    private Future<Void> addShowSearchStatusThread(DatabaseService.SearchTask currentTaskRef, ArrayList<ResultWrap> listResultsTemp) {
+    private Future<Void> addShowSearchStatusThread(AtomicBoolean isDone, ArrayList<ResultWrap> listResultsTemp) {
         Callable<Void> func = () -> {
             var isIconSetObj = new Object() {
                 boolean isIconSet = false;
             };
             while (isVisible() &&
                     !getSearchBarText().isEmpty() &&
-                    !currentTaskRef.isSearchDone() &&
                     !shouldExitMergeResultThread &&
+                    !isDone.get() &&
                     (runningMode == RunningMode.NORMAL_MODE) &&
                     listResultsTemp == listResults) {
                 SwingUtilities.invokeLater(() -> {
@@ -3441,22 +3440,30 @@ public class SearchBar {
     /**
      * 将tempResults以及插件返回的结果转移到listResults中来显示
      */
-    private void mergeResults(DatabaseService.SearchTask currentSearchTask,
+    private void mergeResults(String taskUUID,
+                              AtomicBoolean isDone,
                               ArrayList<ResultWrap> listResultsTemp) {
         var pluginService = PluginService.getInstance();
         var allPlugins = pluginService.getAllPlugins();
         var eventManagement = EventManagement.getInstance();
         var listSet = new HashSet<>();
-        while (listResultsTemp == listResults && eventManagement.notMainExit() && !shouldExitMergeResultThread) {
+        int cacheStartIndex = 0;
+        int resultStartIndex = 0;
+        boolean isResultEnded = false;
+        while (listResultsTemp == listResults && eventManagement.notMainExit() && !shouldExitMergeResultThread && !isResultEnded) {
             if (getSearchBarText().isEmpty()) {
                 listResultsTemp.clear();
             } else if (runningMode == RunningMode.NORMAL_MODE) {
-                if (currentSearchTask != null) {
-                    for (String each : currentSearchTask.getCacheAndPriorityResults()) {
+                if (taskUUID != null) {
+                    ResultEntity cacheAndPriorityResults = DatabaseNativeService.getCacheAndPriorityResults(cacheStartIndex);
+                    cacheStartIndex = cacheAndPriorityResults.nextIndex();
+                    isResultEnded = cacheAndPriorityResults.isDone();
+                    isDone.set(cacheAndPriorityResults.isDone());
+                    for (String each : cacheAndPriorityResults.data()) {
                         if (listSet.add(each)) {
-                            ResultWrap resultWrap = new ResultWrap(currentSearchTask, each);
+                            ResultWrap resultWrap = new ResultWrap(cacheAndPriorityResults.uuid(), each);
                             listResultsTemp.add(resultWrap);
-                            listResultsTemp.removeIf(e -> e.searchTask != currentSearchTask);
+                            listResultsTemp.removeIf(e -> !Objects.equals(e.taskUUID(), taskUUID));
                         }
                         if (listResultsTemp != listResults || shouldExitMergeResultThread) {
                             break;
@@ -3469,21 +3476,25 @@ public class SearchBar {
                     while ((each = eachPlugin.plugin.pollFromResultQueue()) != null) {
                         each = "plugin" + PLUGIN_RESULT_SPLITTER_STR + eachPlugin.plugin.identifier + PLUGIN_RESULT_SPLITTER_STR + each;
                         if (listSet.add(each)) {
-                            ResultWrap resultWrap = new ResultWrap(currentSearchTask, each);
+                            ResultWrap resultWrap = new ResultWrap(taskUUID, each);
                             listResultsTemp.add(resultWrap);
-                            listResultsTemp.removeIf(e -> e.searchTask != currentSearchTask);
+                            listResultsTemp.removeIf(e -> !Objects.equals(e.taskUUID(), taskUUID));
                         }
                         if (listResultsTemp != listResults || shouldExitMergeResultThread) {
                             break out;
                         }
                     }
                 }
-                if (currentSearchTask != null) {
-                    for (String each : currentSearchTask.getTempResults()) {
+                if (taskUUID != null) {
+                    ResultEntity results = DatabaseNativeService.getResults(resultStartIndex);
+                    resultStartIndex = results.nextIndex();
+                    isResultEnded = results.isDone();
+                    isDone.set(results.isDone());
+                    for (String each : results.data()) {
                         if (listSet.add(each)) {
-                            ResultWrap resultWrap = new ResultWrap(currentSearchTask, each);
+                            ResultWrap resultWrap = new ResultWrap(results.uuid(), each);
                             listResultsTemp.add(resultWrap);
-                            listResultsTemp.removeIf(e -> e.searchTask != currentSearchTask);
+                            listResultsTemp.removeIf(e -> !Objects.equals(e.taskUUID(), taskUUID));
                         }
                         if (listResultsTemp != listResults || shouldExitMergeResultThread) {
                             break;
@@ -3492,7 +3503,7 @@ public class SearchBar {
                 }
             }
             try {
-                TimeUnit.MILLISECONDS.sleep(1);
+                TimeUnit.MILLISECONDS.sleep(100);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -3807,7 +3818,7 @@ public class SearchBar {
         var ret = new Object[2];
         if (!getSearchBarText().isEmpty()) {
             isCudaSearchNotStarted.set(false);
-            if (DatabaseService.getInstance().getStatus() == Constants.Enums.DatabaseStatus.NORMAL &&
+            if (DatabaseNativeService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL &&
                     runningMode == RunningMode.NORMAL_MODE) {
                 searchCaseToLowerAndRemoveConflict();
                 var prepareSearchEvent = new PrepareSearchEvent(() -> searchText, () -> searchCase, () -> keywords);
@@ -3836,9 +3847,14 @@ public class SearchBar {
                     var listResultsTemp = new ArrayList<ResultWrap>();
                     listResults = listResultsTemp;
                     labelRefreshFlag = new AtomicInteger();
-                    var showSearchStatusFuture = addShowSearchStatusThread((DatabaseService.SearchTask) res, listResultsTemp);
+                    AtomicBoolean isSearchDone = new AtomicBoolean();
+                    var showSearchStatusFuture = addShowSearchStatusThread(isSearchDone, listResultsTemp);
                     Callable<Void> mergeFunc = () -> {
-                        mergeResults((DatabaseService.SearchTask) res, listResultsTemp);
+                        try {
+                            mergeResults((String) res, isSearchDone, listResultsTemp);
+                        } catch (Exception e) {
+                            log.error(e.getMessage(), e);
+                        }
                         showSearchStatusFuture.get();
                         return null;
                     };
@@ -3853,12 +3869,12 @@ public class SearchBar {
      * 发送开始搜索事件
      */
     @SuppressWarnings("unchecked")
-    private Future<Void> sendSearchEvent(DatabaseService.SearchTask preparedSearchTasks, Future<Void> isThreadEnded) {
+    private Future<Void> sendSearchEvent(String preparedSearchTaskUUID, Future<Void> isThreadEnded) {
         EventManagement eventManagement = EventManagement.getInstance();
         var ret = new Object[1];
         if (!getSearchBarText().isEmpty()) {
             isSearchNotStarted.set(false);
-            if (DatabaseService.getInstance().getStatus() == Constants.Enums.DatabaseStatus.NORMAL &&
+            if (DatabaseNativeService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL &&
                     runningMode == RunningMode.NORMAL_MODE) {
                 searchCaseToLowerAndRemoveConflict();
                 var startSearchEvent = new StartSearchEvent(() -> searchText, () -> searchCase, () -> keywords);
@@ -3868,7 +3884,7 @@ public class SearchBar {
                     throw new RuntimeException();
                 }
                 startSearchEvent.getReturnValue().ifPresent(res -> {
-                    if (preparedSearchTasks == res) {
+                    if (Objects.equals(preparedSearchTaskUUID, res)) {
                         return;
                     }
                     if (isThreadEnded != null) {
@@ -3889,9 +3905,14 @@ public class SearchBar {
                     var listResultsTemp = new ArrayList<ResultWrap>();
                     listResults = listResultsTemp;
                     labelRefreshFlag = new AtomicInteger();
-                    var showSearchStatusFuture = addShowSearchStatusThread((DatabaseService.SearchTask) res, listResultsTemp);
+                    AtomicBoolean isSearchDone = new AtomicBoolean();
+                    var showSearchStatusFuture = addShowSearchStatusThread(isSearchDone, listResultsTemp);
                     Callable<Void> mergeResultsFunc = () -> {
-                        mergeResults((DatabaseService.SearchTask) res, listResultsTemp);
+                        try {
+                            mergeResults((String) res, isSearchDone, listResultsTemp);
+                        } catch (Exception e) {
+                            log.error(e.getMessage(), e);
+                        }
                         showSearchStatusFuture.get();
                         return null;
                     };
@@ -3913,48 +3934,52 @@ public class SearchBar {
                 runInternalCommand("help");
             }
             final AtomicBoolean isWaiting = new AtomicBoolean(false);
-            DatabaseService.SearchTask preparedSearchTask = null;
+            String preparedSearchTaskUUID = "";
             Future<Void> mergeResultsThreadFuture = null;
             while (eventManagement.notMainExit()) {
-                var advancedConfigs = AllConfigs.getInstance().getConfigEntity().getAdvancedConfigEntity();
-                final long endTime = System.currentTimeMillis();
-                long waitForInputAndPrepareSearchTimeoutInMills = advancedConfigs.getWaitForInputAndPrepareSearchTimeoutInMills();
-                if ((endTime - startTime > waitForInputAndPrepareSearchTimeoutInMills) && isCudaSearchNotStarted.get() &&
-                        startSearchSignal.get() && !getSearchBarText().startsWith(">") && runningMode == RunningMode.NORMAL_MODE) {
-                    setSearchKeywordsAndSearchCase();
-                    var ret = sendPrepareSearchEvent(mergeResultsThreadFuture);
-                    preparedSearchTask = (DatabaseService.SearchTask) ret[0];
-                    mergeResultsThreadFuture = (Future<Void>) ret[1];
-                }
-                long waitForInputAndStartSearchTimeoutInMills = advancedConfigs.getWaitForInputAndStartSearchTimeoutInMills();
-                if ((endTime - startTime > waitForInputAndStartSearchTimeoutInMills) && isSearchNotStarted.get() &&
-                        startSearchSignal.get() && !getSearchBarText().startsWith(">") && runningMode == RunningMode.NORMAL_MODE) {
-                    setSearchKeywordsAndSearchCase();
-                    var ret = sendSearchEvent(preparedSearchTask, mergeResultsThreadFuture);
-                    if (ret != null) {
-                        mergeResultsThreadFuture = ret;
-                    }
-                }
-
-                if ((endTime - startTime > waitForInputAndStartSearchTimeoutInMills) && startSearchSignal.get()) {
-                    startSearchSignal.set(false); //开始搜索 计时停止
-                    if (runningMode == RunningMode.COMMAND_MODE) {
-                        addAvailableCommands(translateService);
-                    } else if (runningMode == RunningMode.NORMAL_MODE) {
-                        addAvailablePlugins(eventManagement, translateService);
-                    } else if (runningMode == RunningMode.PLUGIN_MODE) {
-                        addPluginResults();
-                    }
-                    if (DatabaseService.getInstance().getStatus() != Constants.Enums.DatabaseStatus.NORMAL) {
-                        //开启线程等待搜索完成
-                        addSearchWaiter(isWaiting);
-                        clearAllLabels();
-                    }
-                }
                 try {
-                    TimeUnit.MILLISECONDS.sleep(10);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    var advancedConfigs = AllConfigs.getInstance().getConfigEntity().getAdvancedConfigEntity();
+                    final long endTime = System.currentTimeMillis();
+                    long waitForInputAndPrepareSearchTimeoutInMills = advancedConfigs.getWaitForInputAndPrepareSearchTimeoutInMills();
+                    if ((endTime - startTime > waitForInputAndPrepareSearchTimeoutInMills) && isCudaSearchNotStarted.get() &&
+                            startSearchSignal.get() && !getSearchBarText().startsWith(">") && runningMode == RunningMode.NORMAL_MODE) {
+                        setSearchKeywordsAndSearchCase();
+                        var ret = sendPrepareSearchEvent(mergeResultsThreadFuture);
+                        preparedSearchTaskUUID = (String) ret[0];
+                        mergeResultsThreadFuture = (Future<Void>) ret[1];
+                    }
+                    long waitForInputAndStartSearchTimeoutInMills = advancedConfigs.getWaitForInputAndStartSearchTimeoutInMills();
+                    if ((endTime - startTime > waitForInputAndStartSearchTimeoutInMills) && isSearchNotStarted.get() &&
+                            startSearchSignal.get() && !getSearchBarText().startsWith(">") && runningMode == RunningMode.NORMAL_MODE) {
+                        setSearchKeywordsAndSearchCase();
+                        var ret = sendSearchEvent(preparedSearchTaskUUID, mergeResultsThreadFuture);
+                        if (ret != null) {
+                            mergeResultsThreadFuture = ret;
+                        }
+                    }
+
+                    if ((endTime - startTime > waitForInputAndStartSearchTimeoutInMills) && startSearchSignal.get()) {
+                        startSearchSignal.set(false); //开始搜索 计时停止
+                        if (runningMode == RunningMode.COMMAND_MODE) {
+                            addAvailableCommands(translateService);
+                        } else if (runningMode == RunningMode.NORMAL_MODE) {
+                            addAvailablePlugins(eventManagement, translateService);
+                        } else if (runningMode == RunningMode.PLUGIN_MODE) {
+                            addPluginResults();
+                        }
+                        if (DatabaseNativeService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL) {
+                            //开启线程等待搜索完成
+                            addSearchWaiter(isWaiting);
+                            clearAllLabels();
+                        }
+                    }
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(10);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                } catch (Exception e) {
+                    log.error(e.getMessage(), e);
                 }
             }
         });
@@ -3994,14 +4019,14 @@ public class SearchBar {
                 listResults.add(new ResultWrap(null, pluginInfo.identifier));
             }
         } else {
-            DatabaseService databaseService = DatabaseService.getInstance();
-            if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
+            Constants.Enums.DatabaseStatus status = DatabaseNativeService.getStatus();
+            if (status == Constants.Enums.DatabaseStatus.NORMAL) {
                 setLabelChosen(label1);
-            } else if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.MANUAL_UPDATE) {
+            } else if (status == Constants.Enums.DatabaseStatus.MANUAL_UPDATE) {
                 setLabelChosen(label1);
                 eventManagement.putEvent(new ShowTaskBarMessageEvent(translateService.getTranslation("Info"),
                         translateService.getTranslation("Updating file index") + "..."));
-            } else if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.VACUUM) {
+            } else if (status == Constants.Enums.DatabaseStatus.VACUUM) {
                 setLabelChosen(label1);
                 eventManagement.putEvent(new ShowTaskBarMessageEvent(translateService.getTranslation("Info"),
                         translateService.getTranslation("Organizing database")));
@@ -4438,11 +4463,8 @@ public class SearchBar {
      * @param content 文件路径
      */
     private void saveCache(String content) {
-        AllConfigs allConfigs = AllConfigs.getInstance();
         EventManagement eventManagement = EventManagement.getInstance();
-        if (DatabaseService.getInstance().getDatabaseCacheNum() < allConfigs.getConfigEntity().getCacheNumLimit()) {
-            eventManagement.putEvent(new AddToCacheEvent(content));
-        }
+        eventManagement.putEvent(new AddToCacheEvent(content));
     }
 
     /**

@@ -8,8 +8,8 @@ import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.ConfigEntity;
 import file.engine.configs.Constants;
+import file.engine.configs.core.CoreConfigEntity;
 import file.engine.dllInterface.IsLocalDisk;
-import file.engine.dllInterface.gpu.GPUAccelerator;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.configs.AddCmdEvent;
@@ -32,7 +32,7 @@ import file.engine.event.handler.impl.plugin.GetPluginByNameEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.frames.components.SetDownloadProgress;
-import file.engine.services.DatabaseService;
+import file.engine.services.DatabaseNativeService;
 import file.engine.services.TranslateService;
 import file.engine.services.download.DownloadManager;
 import file.engine.services.plugin.system.Plugin;
@@ -76,6 +76,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static file.engine.utils.ColorUtil.*;
 import static file.engine.utils.StartupUtil.hasStartup;
@@ -96,7 +97,7 @@ public class SettingsFrame {
     private static final ThreadPoolUtil threadPoolUtil = ThreadPoolUtil.getInstance();
     private final HashMap<TabNameAndTitle, Component> tabComponentNameMap = new HashMap<>();
     private Map<String, String> cudaDeviceMap = new HashMap<>();
-    private HashMap<String, Integer> suffixMap;
+    private Map<String, Integer> suffixMap;
     private final Set<Component> excludeComponent = ConcurrentHashMap.newKeySet();
     private final LinkedHashSet<String> diskSet = new LinkedHashSet<>();
     private final Set<String> downloadedPlugins = ConcurrentHashMap.newKeySet();
@@ -419,7 +420,7 @@ public class SettingsFrame {
                         JOptionPane.showMessageDialog(null, translateService.getTranslation("Files with the same name are detected, please move them by yourself"));
                     }
                 } catch (InterruptedException | ExecutionException exception) {
-                    exception.printStackTrace();
+                    log.error(exception.getMessage(), exception);
                 }
             }
         });
@@ -654,7 +655,7 @@ public class SettingsFrame {
                             URI uri = new URI(link);
                             desktop.browse(uri);
                         } catch (Exception ex) {
-                            ex.printStackTrace();
+                            log.error(ex.getMessage(), ex);
                         }
                     }
                 }
@@ -725,7 +726,7 @@ public class SettingsFrame {
                             Files.createFile(Path.of("user/updateLauncher"));
                         }
                     } catch (IOException e1) {
-                        e1.printStackTrace();
+                        log.error(e1.getMessage(), e1);
                     }
                 });
                 //下载File-Engine.jar
@@ -773,7 +774,7 @@ public class SettingsFrame {
                 try {
                     desktop.browse(new URI("https://github.com/XUANXUQAQ/File-Engine/releases/"));
                 } catch (IOException | URISyntaxException ioException) {
-                    ioException.printStackTrace();
+                    log.error(ioException.getMessage(), ioException);
                 }
             }
         }
@@ -1147,7 +1148,7 @@ public class SettingsFrame {
         buttonVacuum.addActionListener(e -> {
             int ret = JOptionPane.showConfirmDialog(frame, translateService.getTranslation("Confirm whether to start optimizing the database?"));
             if (JOptionPane.YES_OPTION == ret) {
-                Constants.Enums.DatabaseStatus status = DatabaseService.getInstance().getStatus();
+                Constants.Enums.DatabaseStatus status = DatabaseNativeService.getStatus();
                 if (status == Constants.Enums.DatabaseStatus.NORMAL) {
                     if (IsDebug.isDebug()) {
                         log.info("开始优化");
@@ -1156,8 +1157,7 @@ public class SettingsFrame {
                     threadPoolUtil.executeTask(() -> {
                         //实时显示VACUUM状态
                         try {
-                            DatabaseService instance = DatabaseService.getInstance();
-                            while (instance.getStatus() == Constants.Enums.DatabaseStatus.VACUUM) {
+                            while (DatabaseNativeService.getStatus() == Constants.Enums.DatabaseStatus.VACUUM) {
                                 labelVacuumStatus.setText(translateService.getTranslation("Optimizing..."));
                                 TimeUnit.MILLISECONDS.sleep(50);
                             }
@@ -2583,7 +2583,7 @@ public class SettingsFrame {
                                     isCheckDone.set(true); //表示检查成功
                                 }
                             } catch (Exception ex) {
-                                ex.printStackTrace();
+                                log.error(ex.getMessage(), ex);
                             }
                         });
                         checkUpdateThread.start();
@@ -2652,7 +2652,8 @@ public class SettingsFrame {
         labelIcon.setIcon(imageIcon);
         labelVersion.setText(translateService.getTranslation("Current Version:") + Constants.version);
         labelBuildVersion.setText(Constants.buildVersion);
-        labelCurrentCacheNum.setText(translateService.getTranslation("Current Caches Num:") + DatabaseService.getInstance().getDatabaseCacheNum());
+        int cacheNum = cacheSet != null ? cacheSet.size() : 0;
+        labelCurrentCacheNum.setText(translateService.getTranslation("Current Caches Num:") + cacheNum);
     }
 
     /**
@@ -2660,6 +2661,7 @@ public class SettingsFrame {
      */
     private void setTextFieldAndTextAreaGui() {
         var configs = allConfigs.getConfigEntity();
+        CoreConfigEntity coreConfigs = configs.getCoreConfigEntity();
         textFieldSearchCache.setText("");
         textFieldBackgroundDefault.setText(toRGBHexString(configs.getDefaultBackgroundColor()));
         textFieldLabelColor.setText(toRGBHexString(configs.getLabelColor()));
@@ -2668,18 +2670,18 @@ public class SettingsFrame {
         textFieldBorderColor.setText(toRGBHexString(configs.getBorderColor()));
         textFieldFontColor.setText(toRGBHexString(configs.getFontColor()));
         textFieldSearchBarFontColor.setText(toRGBHexString(configs.getSearchBarFontColor()));
-        textFieldCacheNum.setText(String.valueOf(configs.getCacheNumLimit()));
+        textFieldCacheNum.setText(String.valueOf(coreConfigs.getCacheNumLimit()));
         textFieldHotkey.setText(configs.getHotkey());
         textFieldRoundRadius.setText(String.valueOf(configs.getRoundRadius()));
-        textFieldPriorityFolder.setText(configs.getPriorityFolder());
-        textFieldUpdateInterval.setText(String.valueOf(configs.getUpdateTimeLimit()));
+        textFieldPriorityFolder.setText(coreConfigs.getPriorityFolder());
+        textFieldUpdateInterval.setText(String.valueOf(coreConfigs.getUpdateTimeLimit()));
         textFieldSearchBarColor.setText(toRGBHexString(configs.getSearchBarColor()));
         textFieldAddress.setText(configs.getProxyAddress());
         textFieldPort.setText(String.valueOf(configs.getProxyPort()));
         textFieldUserName.setText(configs.getProxyUserName());
         textFieldPassword.setText(configs.getProxyPassword());
         textFieldBorderThickness.setText(String.valueOf(configs.getBorderThickness()));
-        textAreaIgnorePath.setText(RegexUtil.comma.matcher(configs.getIgnorePath()).replaceAll(",\n"));
+        textAreaIgnorePath.setText(RegexUtil.comma.matcher(coreConfigs.getIgnorePath()).replaceAll(",\n"));
         if (configs.getRunAsAdminKeyCode() == 17) {
             textFieldRunAsAdminHotKey.setText("Ctrl + Enter");
         } else if (configs.getRunAsAdminKeyCode() == 16) {
@@ -2744,7 +2746,7 @@ public class SettingsFrame {
      * @param val               val
      * @return key
      */
-    private String getSuffixByValue(HashMap<String, Integer> suffixPriorityMap, int val) {
+    private String getSuffixByValue(Map<String, Integer> suffixPriorityMap, int val) {
         for (String each : suffixPriorityMap.keySet()) {
             if (suffixPriorityMap.get(each) == val) {
                 return each;
@@ -2782,14 +2784,15 @@ public class SettingsFrame {
             threads.add(i);
         }
         var configs = allConfigs.getConfigEntity();
+        CoreConfigEntity coreConfigs = configs.getCoreConfigEntity();
         comboBoxSearchThread.setModel(new DefaultComboBoxModel<>(new Vector<>(threads)));
-        comboBoxSearchThread.setSelectedItem(configs.getSearchThreadNumber());
-        boolean cudaAvailableOnSystem = GPUAccelerator.INSTANCE.isGPUAvailableOnSystem();
-        comboBoxCudaDevice.setEnabled(cudaAvailableOnSystem);
-        if (cudaAvailableOnSystem) {
-            cudaDeviceMap = GPUAccelerator.INSTANCE.getDevices();
+        comboBoxSearchThread.setSelectedItem(coreConfigs.getSearchThreadNumber());
+        Map<String, String> gpuDevices = DatabaseNativeService.getGpuDevices();
+        comboBoxCudaDevice.setEnabled(!gpuDevices.isEmpty());
+        if (!gpuDevices.isEmpty()) {
+            cudaDeviceMap = gpuDevices;
             comboBoxCudaDevice.setModel(new DefaultComboBoxModel<>(new Vector<>(cudaDeviceMap.keySet())));
-            String gpuDevice = configs.getGpuDevice();
+            String gpuDevice = coreConfigs.getGpuDevice();
             if (gpuDevice == null || gpuDevice.isEmpty()) {
                 comboBoxCudaDevice.setSelectedIndex(0);
             } else {
@@ -2805,6 +2808,7 @@ public class SettingsFrame {
      */
     private void setCheckBoxGui() {
         var configs = allConfigs.getConfigEntity();
+        CoreConfigEntity coreConfig = configs.getCoreConfigEntity();
         checkBoxLoseFocus.setSelected(configs.isLoseFocusClose());
         int startup = hasStartup();
         if (startup == 1) {
@@ -2816,8 +2820,8 @@ public class SettingsFrame {
         checkBoxResponseCtrl.setSelected(configs.isDoubleClickCtrlOpen());
         checkBoxCheckUpdate.setSelected(configs.isCheckUpdateStartup());
         checkBoxIsAttachExplorer.setSelected(configs.isAttachExplorer());
-        checkBoxEnableCuda.setSelected(configs.isEnableGpuAccelerate());
-        checkBoxEnableCuda.setEnabled(GPUAccelerator.INSTANCE.isGPUAvailableOnSystem());
+        checkBoxEnableCuda.setSelected(coreConfig.isEnableGpuAccelerate());
+        checkBoxEnableCuda.setEnabled(!DatabaseNativeService.getGpuDevices().isEmpty());
     }
 
     /**
@@ -2843,7 +2847,10 @@ public class SettingsFrame {
      * 初始化后缀名map
      */
     private void initSuffixMap() {
-        suffixMap = DatabaseService.getInstance().getPriorityMap();
+        suffixMap = DatabaseNativeService.getPriorityMap()
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> (Integer) entry.getValue()));
     }
 
     /**
@@ -2930,7 +2937,7 @@ public class SettingsFrame {
      * 初始化cache
      */
     private void initCacheArray() {
-        cacheSet = DatabaseService.getInstance().getCache();
+        cacheSet = DatabaseNativeService.getCache();
     }
 
     /**
@@ -2945,7 +2952,7 @@ public class SettingsFrame {
     }
 
     private void initDiskSet() {
-        String[] disks = RegexUtil.comma.split(allConfigs.getConfigEntity().getDisks());
+        String[] disks = RegexUtil.comma.split(allConfigs.getConfigEntity().getCoreConfigEntity().getDisks());
         diskSet.addAll(Arrays.asList(disks));
     }
 
@@ -3179,7 +3186,8 @@ public class SettingsFrame {
         labelCacheTip2.setText(translateService.getTranslation("The cache is automatically generated " + "by the software and will be displayed first when searching."));
         labelSearchBarFontColor.setText(translateService.getTranslation("SearchBar Font Color:"));
         labelBorderColor.setText(translateService.getTranslation("Border Color:"));
-        labelCurrentCacheNum.setText(translateService.getTranslation("Current Caches Num:") + DatabaseService.getInstance().getDatabaseCacheNum());
+        int cacheNum = cacheSet != null ? cacheSet.size() : 0;
+        labelCurrentCacheNum.setText(translateService.getTranslation("Current Caches Num:") + cacheNum);
         labelUninstallPluginTip.setText(translateService.getTranslation("If you need to delete a plug-in, just delete it under the \"plugins\" folder in the software directory."));
         labelUninstallPluginTip2.setText(translateService.getTranslation("Tip:"));
         chooseUpdateAddressLabel.setText(translateService.getTranslation("Choose update address"));
@@ -3455,6 +3463,7 @@ public class SettingsFrame {
      */
     private ConfigEntity getConfigEntity() {
         ConfigEntity configEntity = new ConfigEntity();
+        CoreConfigEntity coreConfigEntity = new CoreConfigEntity();
         String ignorePathTemp = RegexUtil.getPattern("\n", 0).matcher(textAreaIgnorePath.getText()).replaceAll("");
         String swingTheme = (String) listSwingThemes.getSelectedValue();
         Constants.Enums.BorderType borderType = (Constants.Enums.BorderType) comboBoxBorderType.getSelectedItem();
@@ -3475,11 +3484,11 @@ public class SettingsFrame {
             borderType = Constants.Enums.BorderType.AROUND;
         }
         configEntity.setBorderType(borderType.toString());
-        configEntity.setPriorityFolder(textFieldPriorityFolder.getText());
+        coreConfigEntity.setPriorityFolder(textFieldPriorityFolder.getText());
         configEntity.setHotkey(textFieldHotkey.getText());
-        configEntity.setCacheNumLimit(Integer.parseInt(textFieldCacheNum.getText()));
-        configEntity.setUpdateTimeLimit(Integer.parseInt(textFieldUpdateInterval.getText()));
-        configEntity.setIgnorePath(ignorePathTemp);
+        coreConfigEntity.setCacheNumLimit(Integer.parseInt(textFieldCacheNum.getText()));
+        coreConfigEntity.setUpdateTimeLimit(Integer.parseInt(textFieldUpdateInterval.getText()));
+        coreConfigEntity.setIgnorePath(ignorePathTemp);
         configEntity.setDefaultAdmin(checkBoxAdmin.isSelected());
         configEntity.setLoseFocusClose(checkBoxLoseFocus.isSelected());
         configEntity.setShowTipCreatingLnk(checkBoxIsShowTipOnCreatingLnk.isSelected());
@@ -3503,13 +3512,14 @@ public class SettingsFrame {
         configEntity.setLanguage(translateService.getLanguage());
         configEntity.setDoubleClickCtrlOpen(checkBoxResponseCtrl.isSelected());
         configEntity.setCheckUpdateStartup(checkBoxCheckUpdate.isSelected());
-        configEntity.setDisks(parseDisk());
+        coreConfigEntity.setDisks(parseDisk());
         configEntity.setAttachExplorer(checkBoxIsAttachExplorer.isSelected());
-        configEntity.setEnableGpuAccelerate(checkBoxEnableCuda.isSelected());
+        coreConfigEntity.setEnableGpuAccelerate(checkBoxEnableCuda.isSelected());
         String selectedCudaDevice = (String) comboBoxCudaDevice.getSelectedItem();
-        configEntity.setGpuDevice(cudaDeviceMap.getOrDefault(selectedCudaDevice, ""));
+        coreConfigEntity.setGpuDevice(cudaDeviceMap.getOrDefault(selectedCudaDevice, ""));
         var threadNum = (Integer) comboBoxSearchThread.getSelectedItem();
-        configEntity.setSearchThreadNumber(threadNum == null ? Runtime.getRuntime().availableProcessors() * 2 : threadNum);
+        coreConfigEntity.setSearchThreadNumber(threadNum == null ? Runtime.getRuntime().availableProcessors() * 2 : threadNum);
+        configEntity.setCoreConfigEntity(coreConfigEntity);
         return configEntity;
     }
 
@@ -3592,7 +3602,7 @@ public class SettingsFrame {
                     JOptionPane.showMessageDialog(frame, translateService.getTranslation("Add to startup failed, please try to run as administrator") + "\n" + result);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error(e.getMessage(), e);
             }
         } else {
             if (hasStartup() == 0) {
@@ -3610,7 +3620,7 @@ public class SettingsFrame {
                         JOptionPane.showMessageDialog(frame, translateService.getTranslation("Delete startup failed, please try to run as administrator"));
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    log.error(e.getMessage(), e);
                 }
             }
         }

@@ -5,7 +5,6 @@ import file.engine.utils.system.properties.IsDebug;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
@@ -20,14 +19,8 @@ public class Constants {
 
     public static String buildVersion;
 
-    // 数据库中最大的分表ID  list[0-40]
-    public static final int MAX_TABLE_NUM = 40;
-
     // 搜索框最短应该显示的时间，单位毫秒
     public static final int MIN_FRAME_VISIBLE_TIME = 500;
-
-    // 关闭数据库连接超时时间
-    public static final int CLOSE_DATABASE_TIMEOUT_MILLS = 60 * 1000;
 
     // 启动文件名
     public static final String FILE_NAME = "File-Engine.jar";
@@ -44,11 +37,7 @@ public class Constants {
     // 默认swing主题
     public static final String DEFAULT_SWING_THEME = "MaterialLighter";
 
-    public static final int MAX_SEARCH_TEXT_LENGTH = 300;
-
-    public static final String DATABASE_CREATE_TIME_FILE = "user/databaseCreateTime.dat";
-
-    public static final String DATABASE_INTEGRITY_CHECK_FILE = "user/databaseIntegrityCheck.dat";
+    public static final String FILE_ENGINE_CORE_DIR = "core/";
 
     static {
         version = "0";

@@ -10,23 +10,20 @@ import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMaterialLighte
 import com.google.gson.Gson;
 import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
-import file.engine.dllInterface.GetWindowsKnownFolder;
-import file.engine.dllInterface.IsLocalDisk;
-import file.engine.dllInterface.gpu.GPUAccelerator;
+import file.engine.configs.core.CoreConfigEntity;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.BootSystemEvent;
 import file.engine.event.handler.impl.configs.*;
 import file.engine.event.handler.impl.download.StartDownloadEvent;
 import file.engine.event.handler.impl.frame.settingsFrame.GetExcludeComponentEvent;
-import file.engine.event.handler.impl.monitor.disk.StartMonitorDiskEvent;
 import file.engine.event.handler.impl.plugin.LoadAllPluginsEvent;
 import file.engine.event.handler.impl.stop.CloseEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.event.handler.impl.taskbar.ShowTrayIconEvent;
+import file.engine.services.DatabaseNativeService;
 import file.engine.services.TranslateService;
 import file.engine.services.download.DownloadManager;
-import file.engine.utils.RegexUtil;
 import file.engine.utils.gson.GsonUtil;
 import file.engine.utils.system.properties.IsDebug;
 import lombok.Getter;
@@ -37,10 +34,7 @@ import java.awt.*;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static file.engine.configs.Constants.DEFAULT_SWING_THEME;
 import static file.engine.configs.Constants.Enums;
@@ -140,50 +134,6 @@ public class AllConfigs {
     }
 
     /**
-     * 获取在配置文件中但是实际不存在的磁盘（如移动硬盘）
-     *
-     * @return set
-     */
-    public Set<String> getUnAvailableDiskSet() {
-        String disks = configEntity.getDisks();
-        String[] splitDisks = RegexUtil.comma.split(disks);
-        Set<String> set = ConcurrentHashMap.newKeySet();
-        for (String root : splitDisks) {
-            if (!isDiskAvailable(root)) {
-                set.add(root);
-            }
-        }
-        return set;
-    }
-
-    /**
-     * 获取可搜索磁盘
-     *
-     * @return 每个磁盘使用逗号隔开，如[C:\,D:\]
-     */
-    public String getAvailableDisks() {
-        String disks = configEntity.getDisks();
-        String[] splitDisks = RegexUtil.comma.split(disks);
-        StringBuilder stringBuilder = new StringBuilder();
-        for (String root : splitDisks) {
-            if (isDiskAvailable(root)) {
-                stringBuilder.append(root).append(",");
-            }
-        }
-        return stringBuilder.toString();
-    }
-
-    /**
-     * 判断磁盘是否存在且为NTFS文件系统
-     *
-     * @param root 磁盘路径，C:\  D:\
-     * @return true如果存在且是NTFS磁盘
-     */
-    private boolean isDiskAvailable(String root) {
-        return Files.exists(Path.of(root)) && IsLocalDisk.INSTANCE.isDiskNTFS(root);
-    }
-
-    /**
      * 初始化cmdSet，在搜索框中输入":"，进入命令模式显示的内容
      */
     private void initCmdSetSettings() {
@@ -244,61 +194,6 @@ public class AllConfigs {
         return updateAddressMap.get(updateAddress);
     }
 
-    /**
-     * 获取所有可用的本地磁盘
-     *
-     * @return String，用逗号隔开
-     */
-    private String getLocalDisks() {
-        File[] files = File.listRoots();
-        if (files == null || files.length == 0) {
-            return "";
-        }
-        String diskName;
-        StringBuilder stringBuilder = new StringBuilder();
-        for (File each : files) {
-            diskName = each.getAbsolutePath();
-            if (IsLocalDisk.INSTANCE.isDiskNTFS(diskName) && IsLocalDisk.INSTANCE.isLocalDisk(diskName)) {
-                stringBuilder.append(each.getAbsolutePath()).append(",");
-            }
-        }
-        return stringBuilder.toString();
-    }
-
-    /**
-     * 获取用户配置的磁盘信息
-     *
-     * @param settingsInJson 用户配置json
-     */
-    private void readDisks(Map<String, Object> settingsInJson) {
-        String disks = getFromJson(settingsInJson, "disks", getLocalDisks());
-        String[] stringDisk = RegexUtil.comma.split(disks);
-        StringBuilder stringBuilder = new StringBuilder();
-        for (String each : stringDisk) {
-            stringBuilder.append(each).append(",");
-        }
-        configEntity.setDisks(stringBuilder.toString());
-    }
-
-    private void readIsEnableGpuAccelerate(Map<String, Object> settingsInJson) {
-        boolean isEnableGpuAccelerate = getFromJson(settingsInJson, "isEnableGpuAccelerate", true);
-        if (isEnableGpuAccelerate) {
-            configEntity.setEnableGpuAccelerate(GPUAccelerator.INSTANCE.isGPUAvailableOnSystem());
-        } else {
-            configEntity.setEnableGpuAccelerate(false);
-        }
-    }
-
-    private void readGpuDevice(Map<String, Object> settingsInJson) {
-        String deviceNumber = getFromJson(settingsInJson, "gpuDevice", "");
-        Map<String, String> devices = GPUAccelerator.INSTANCE.getDevices();
-        if (!deviceNumber.isEmpty() && devices.containsValue(deviceNumber)) {
-            configEntity.setGpuDevice(deviceNumber);
-        } else {
-            configEntity.setGpuDevice("");
-        }
-    }
-
     private void readIsAttachExplorer(Map<String, Object> settingsInJson) {
         configEntity.setAttachExplorer(getFromJson(settingsInJson, "isAttachExplorer", true));
     }
@@ -315,25 +210,8 @@ public class AllConfigs {
         configEntity.setUpdateAddress(getFromJson(settingsInJson, "updateAddress", "jsdelivr CDN"));
     }
 
-    private void readCacheNumLimit(Map<String, Object> settingsInJson) {
-        configEntity.setCacheNumLimit(getFromJson(settingsInJson, "cacheNumLimit", 1000));
-    }
-
     private void readHotKey(Map<String, Object> settingsInJson) {
         configEntity.setHotkey(getFromJson(settingsInJson, "hotkey", "Ctrl + Alt + K"));
-    }
-
-    private void readPriorityFolder(Map<String, Object> settingsInJson) {
-        configEntity.setPriorityFolder(getFromJson(settingsInJson, "priorityFolder", ""));
-    }
-
-    private void readIgnorePath(Map<String, Object> settingsInJson) {
-        String defaultIgnore = "C:\\Windows," + GetWindowsKnownFolder.INSTANCE.getKnownFolder("{AE50C081-EBD2-438A-8655-8A092E34987A}") + ",";
-        configEntity.setIgnorePath(getFromJson(settingsInJson, "ignorePath", defaultIgnore));
-    }
-
-    private void readUpdateTimeLimit(Map<String, Object> settingsInJson) {
-        configEntity.setUpdateTimeLimit(getFromJson(settingsInJson, "updateTimeLimit", 5));
     }
 
     private void readIsDefaultAdmin(Map<String, Object> settingsInJson) {
@@ -460,32 +338,22 @@ public class AllConfigs {
         translateService.setLanguage(language);
     }
 
+    private void readCoreConfigs() {
+        CoreConfigEntity coreConfigs = DatabaseNativeService.getCoreConfigs();
+        configEntity.setCoreConfigEntity(coreConfigs);
+    }
+
     @SuppressWarnings("unchecked")
     private void readAdvancedConfigs(Map<String, Object> settingsInJson) {
         Map<String, Object> advancedConfigs = (Map<String, Object>) settingsInJson.getOrDefault("advancedConfigs", new HashMap<String, Object>());
-        long searchWarmupTimeoutInMills = Long.parseLong(getFromJson(advancedConfigs, "searchWarmupTimeoutInMills", (long) 10 * 60 * 1000).toString());
         long waitForInputAndPrepareSearchTimeoutInMills = Long.parseLong(getFromJson(advancedConfigs, "waitForInputAndPrepareSearchTimeoutInMills", (long) 350).toString());
         long waitForInputAndStartSearchTimeoutInMills = Long.parseLong(getFromJson(advancedConfigs, "waitForInputAndStartSearchTimeoutInMills", (long) 450).toString());
-        long waitForSearchTasksTimeoutInMills = Long.parseLong(getFromJson(advancedConfigs, "waitForSearchTasksTimeoutInMills", (long) 5 * 60 * 1000).toString());
         long clearIconCacheTimeoutInMills = Long.parseLong(getFromJson(advancedConfigs, "clearIconCacheTimeoutInMills", (long) 60 * 1000).toString());
-        boolean isDeleteUsnOnExit = Boolean.parseBoolean(getFromJson(advancedConfigs, "isDeleteUsnOnExit", false).toString());
-        long restartMonitorDiskThreadTimeoutInMills = Long.parseLong(getFromJson(advancedConfigs, "restartMonitorDiskThreadTimeoutInMills", (long) 10 * 60 * 1000).toString());
-        configEntity.setAdvancedConfigEntity(new AdvancedConfigEntity(searchWarmupTimeoutInMills,
+        configEntity.setAdvancedConfigEntity(new AdvancedConfigEntity(
                 waitForInputAndPrepareSearchTimeoutInMills,
                 waitForInputAndStartSearchTimeoutInMills,
-                waitForSearchTasksTimeoutInMills,
-                clearIconCacheTimeoutInMills,
-                isDeleteUsnOnExit,
-                restartMonitorDiskThreadTimeoutInMills));
-    }
-
-    private void readSearchThreadNumber(Map<String, Object> settingsInJson) {
-        int maxThreadNumber = Runtime.getRuntime().availableProcessors() * 2;
-        int searchThreadNumber = getFromJson(settingsInJson, "searchThreadNumber", maxThreadNumber);
-        if (searchThreadNumber > maxThreadNumber || searchThreadNumber < 1) {
-            searchThreadNumber = maxThreadNumber;
-        }
-        configEntity.setSearchThreadNumber(searchThreadNumber);
+                clearIconCacheTimeoutInMills
+        ));
     }
 
     private void readProxy(Map<String, Object> settingsInJson) {
@@ -573,20 +441,6 @@ public class AllConfigs {
     }
 
     /**
-     * 检查配置并发出警告
-     *
-     * @param configEntity 配置
-     * @return 错误信息
-     */
-    private static String checkPriorityFolder(ConfigEntity configEntity) {
-        String priorityFolder = configEntity.getPriorityFolder();
-        if (!priorityFolder.isEmpty() && !Files.exists(Path.of(priorityFolder))) {
-            return "Priority folder does not exist";
-        }
-        return "";
-    }
-
-    /**
      * 读取所有配置
      */
     private void readAllSettings() {
@@ -609,23 +463,16 @@ public class AllConfigs {
         readOpenLastFolderKeyCode(settingsInJson);
         readIsLoseFocusClose(settingsInJson);
         readIsDefaultAdmin(settingsInJson);
-        readUpdateTimeLimit(settingsInJson);
-        readIgnorePath(settingsInJson);
-        readPriorityFolder(settingsInJson);
-        readCacheNumLimit(settingsInJson);
         readUpdateAddress(settingsInJson);
         readHotKey(settingsInJson);
         readResponseCtrl(settingsInJson);
         readIsAttachExplorer(settingsInJson);
         readShowTipOnCreatingLnk(settingsInJson);
         readSwingTheme(settingsInJson);
-        readDisks(settingsInJson);
         readCheckUpdateStartup(settingsInJson);
         readBorderThickness(settingsInJson);
-        readIsEnableGpuAccelerate(settingsInJson);
-        readGpuDevice(settingsInJson);
-        readSearchThreadNumber(settingsInJson);
         readAdvancedConfigs(settingsInJson);
+        readCoreConfigs();
         initUpdateAddress();
         initCmdSetSettings();
     }
@@ -727,15 +574,7 @@ public class AllConfigs {
      * @param config 配置实体
      */
     private void correctInvalidConfigs(ConfigEntity config) {
-        if (config.isEnableGpuAccelerate()) {
-            config.setEnableGpuAccelerate(GPUAccelerator.INSTANCE.isGPUAvailableOnSystem());
-        }
-        int availableProcessors = Runtime.getRuntime().availableProcessors();
-        int maxThreadNumber = availableProcessors * 2;
-        int searchThreadNumber = config.getSearchThreadNumber();
-        if (searchThreadNumber > maxThreadNumber || searchThreadNumber < 1) {
-            config.setSearchThreadNumber(maxThreadNumber);
-        }
+
     }
 
     /**
@@ -853,10 +692,6 @@ public class AllConfigs {
     private static void checkConfigsEvent(Event event) {
         StringBuilder stringBuilder = new StringBuilder();
         TranslateService translateService = TranslateService.INSTANCE;
-        stringBuilder.append(translateService.getTranslation(checkPriorityFolder(getInstance().configEntity)));
-        if (!stringBuilder.toString().isEmpty()) {
-            stringBuilder.append("\n");
-        }
         if (hasStartup() == 1) {
             stringBuilder.append(translateService.getTranslation("The startup path is invalid"));
         }
@@ -871,7 +706,6 @@ public class AllConfigs {
     @EventRegister(registerClass = BootSystemEvent.class)
     private static void bootSystemEvent(Event event) {
         EventManagement eventManagement = EventManagement.getInstance();
-        eventManagement.putEvent(new StartMonitorDiskEvent());
         eventManagement.putEvent(new ShowTrayIconEvent());
         eventManagement.putEvent(new LoadAllPluginsEvent("plugins"));
         eventManagement.putEvent(new SetSwingLaf());
@@ -892,14 +726,12 @@ public class AllConfigs {
         if (setConfigsEvent.getConfigs() == null) {
             // MainClass初始化
             allConfigs.readAllSettings();
-            setConfigsEvent.setConfigs(allConfigs.configEntity);
         } else {
             // 添加高级设置参数
             Map<String, Object> configsJson = allConfigs.getSettingsJSON();
             allConfigs.readAdvancedConfigs(configsJson);
             ConfigEntity tempConfigEntity = setConfigsEvent.getConfigs();
             tempConfigEntity.setAdvancedConfigEntity(allConfigs.configEntity.getAdvancedConfigEntity());
-
             // 更新设置
             if (allConfigs.noNullValue(tempConfigEntity)) {
                 allConfigs.correctInvalidConfigs(tempConfigEntity);

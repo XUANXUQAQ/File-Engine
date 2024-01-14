@@ -263,26 +263,26 @@ public static void main(String[] args) {
         传入StartDownloadEvent需要使用DownloadManager类描述下载文件信息。
         
         ```java
-        public class DownloadManager {
-            public final String url;
-            public final String savePath;
-            public final String fileName;
-            private volatile double progress = 0.0;
-            private volatile boolean isUserInterrupted = false;
-            private volatile Constants.Enums.DownloadStatus downloadStatus;
-            private Proxy proxy = null;
-            private Authenticator authenticator = null;
-        
-            public DownloadManager(String url, String fileName, String savePath) {
-                this.url = url;
-                this.fileName = fileName;
-                this.savePath = savePath;
-                this.downloadStatus = Constants.Enums.DownloadStatus.DOWNLOAD_NO_TASK;
-                ProxyInfo proxyInfo = AllConfigs.getInstance().getProxy();
-                setProxy(proxyInfo.type, proxyInfo.address, proxyInfo.port, proxyInfo.userName, proxyInfo.password);
-            }
-        }
-        ```
+public class DownloadManager {
+    public final String url;
+    public final String savePath;
+    public final String fileName;
+    private volatile double progress = 0.0;
+    private volatile boolean isUserInterrupted = false;
+    private volatile Constants.Enums.DownloadStatus downloadStatus;
+    private Proxy proxy = null;
+    private final Authenticator authenticator = null;
+
+    public DownloadManager(String url, String fileName, String savePath) {
+        this.url = url;
+        this.fileName = fileName;
+        this.savePath = savePath;
+        this.downloadStatus = Constants.Enums.DownloadStatus.DOWNLOAD_NO_TASK;
+        ProxyInfo proxyInfo = AllConfigs.getInstance().getProxy();
+        setProxy(proxyInfo.type, proxyInfo.address, proxyInfo.port, proxyInfo.userName, proxyInfo.password);
+    }
+}
+```
         
         DownloadManager类中包含**下载地址url**，**保存路径savePath**，**文件名fileName**，**下载进度progress**，**下载状态downloadStatus**
         

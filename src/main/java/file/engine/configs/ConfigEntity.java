@@ -1,27 +1,17 @@
 package file.engine.configs;
 
 import com.google.gson.annotations.SerializedName;
+import file.engine.configs.core.CoreConfigEntity;
 import lombok.Data;
 
 @Data
 public class ConfigEntity {
-    @SerializedName("cacheNumLimit")
-    private int cacheNumLimit;
 
     @SerializedName("isShowTipOnCreatingLnk")
     private boolean isShowTipCreatingLnk;
 
     @SerializedName("hotkey")
     private String hotkey;
-
-    @SerializedName("updateTimeLimit")
-    private int updateTimeLimit;
-
-    @SerializedName("ignorePath")
-    private String ignorePath;
-
-    @SerializedName("priorityFolder")
-    private String priorityFolder;
 
     @SerializedName("isDefaultAdmin")
     private boolean isDefaultAdmin;
@@ -89,9 +79,6 @@ public class ConfigEntity {
     @SerializedName("doubleClickCtrlOpen")
     private boolean doubleClickCtrlOpen;
 
-    @SerializedName("disks")
-    private String disks;
-
     @SerializedName("isCheckUpdateStartup")
     private boolean isCheckUpdateStartup;
 
@@ -107,15 +94,9 @@ public class ConfigEntity {
     @SerializedName("isAttachExplorer")
     private boolean isAttachExplorer;
 
-    @SerializedName("isEnableGpuAccelerate")
-    private boolean isEnableGpuAccelerate;
-
-    @SerializedName("gpuDevice")
-    private String gpuDevice;
-
-    @SerializedName("searchThreadNumber")
-    private int searchThreadNumber;
-
     @SerializedName("advancedConfigs")
     private AdvancedConfigEntity advancedConfigEntity;
+
+    @SerializedName("coreConfigs")
+    private CoreConfigEntity coreConfigEntity;
 }

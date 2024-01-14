@@ -5,7 +5,7 @@ import file.engine.event.handler.Event;
 
 public class SetConfigsEvent extends Event {
 
-    private ConfigEntity configs;
+    private final ConfigEntity configs;
 
     public SetConfigsEvent(ConfigEntity configEntity) {
         super();
@@ -20,9 +20,5 @@ public class SetConfigsEvent extends Event {
      */
     public ConfigEntity getConfigs() {
         return configs;
-    }
-
-    public void setConfigs(ConfigEntity configs) {
-        this.configs = configs;
     }
 }

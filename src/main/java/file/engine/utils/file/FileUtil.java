@@ -10,10 +10,6 @@ import java.nio.file.Path;
 @Slf4j
 public class FileUtil {
 
-    public static boolean isFileNotExist(String path) {
-        return !isFileExist(path);
-    }
-
     public static boolean isFileExist(String path) {
         try {
             return Files.exists(Path.of(path));

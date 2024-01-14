@@ -2,7 +2,6 @@ package file.engine;
 
 import file.engine.configs.AllConfigs;
 import file.engine.configs.Constants;
-import file.engine.dllInterface.GetHandle;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.BootSystemEvent;
@@ -10,12 +9,9 @@ import file.engine.event.handler.impl.configs.CheckConfigsEvent;
 import file.engine.event.handler.impl.configs.SetConfigsEvent;
 import file.engine.event.handler.impl.daemon.StartDaemonEvent;
 import file.engine.event.handler.impl.daemon.StopDaemonEvent;
-import file.engine.event.handler.impl.database.CheckDatabaseEmptyEvent;
-import file.engine.event.handler.impl.database.InitializeDatabaseEvent;
-import file.engine.event.handler.impl.database.UpdateDatabaseEvent;
+import file.engine.event.handler.impl.database.StartCoreEvent;
 import file.engine.event.handler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
-import file.engine.services.DatabaseService;
 import file.engine.services.TranslateService;
 import file.engine.utils.Md5Util;
 import file.engine.utils.clazz.scan.ClassScannerUtil;
@@ -26,18 +22,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.swing.*;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.time.LocalDate;
-import java.time.Period;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class MainClass {
-    private static final int UPDATE_DATABASE_THRESHOLD = 3;
 
     public static void main(String[] args) {
         try {
@@ -51,40 +41,23 @@ public class MainClass {
 
             initFoldersAndFiles();
             releaseAllDependence();
-            Class.forName("org.sqlite.JDBC");
-            initializeDllInterface();
             initEventManagement();
             updateLauncher();
             //清空tmp
             FileUtil.deleteDir(new File("tmp"));
+            sendStartCoreEvent();
             setAllConfigs();
             checkConfigs();
-            initDatabase();
             // 初始化全部完成，发出启动系统事件
             if (sendBootSystemSignal()) {
                 JOptionPane.showMessageDialog(null, "Boot system failed", "ERROR", JOptionPane.ERROR_MESSAGE);
                 throw new RuntimeException("Boot System Failed");
             }
             checkVersion();
-
-            mainLoop();
         } catch (Exception e) {
             log.error("error: {}", e.getMessage(), e);
             System.exit(-1);
         }
-    }
-
-    /**
-     * 加载本地释放的dll
-     *
-     * @throws ClassNotFoundException 加载失败
-     */
-    private static void initializeDllInterface() throws ClassNotFoundException {
-        Class.forName("file.engine.dllInterface.FileMonitor");
-        Class.forName("file.engine.dllInterface.IsLocalDisk");
-        Class.forName("file.engine.dllInterface.HotkeyListener");
-        Class.forName("file.engine.dllInterface.GetHandle");
-        Class.forName("file.engine.dllInterface.EmptyRecycleBin");
     }
 
     /**
@@ -166,18 +139,6 @@ public class MainClass {
      */
     private static void setSystemProperties() {
         System.setProperty("file.encoding", "UTF-8");
-        System.setProperty("org.sqlite.lib.path", Path.of("user/").toAbsolutePath().toString());
-        System.setProperty("org.sqlite.lib.name", "sqliteJDBC.dll");
-    }
-
-    private static void initDatabase() {
-        EventManagement eventManagement = EventManagement.getInstance();
-        InitializeDatabaseEvent initializeDatabaseEvent = new InitializeDatabaseEvent();
-        eventManagement.putEvent(initializeDatabaseEvent);
-        if (eventManagement.waitForEvent(initializeDatabaseEvent, 5 * 60 * 1000)) {
-            JOptionPane.showMessageDialog(null, "Initialize database failed", "ERROR", JOptionPane.ERROR_MESSAGE);
-            throw new RuntimeException("Initialize database failed");
-        }
     }
 
     private static void setAllConfigs() {
@@ -215,109 +176,11 @@ public class MainClass {
         }, null);
     }
 
-    /**
-     * 主循环
-     * 检查启动时间并更新索引
-     */
-    private static void mainLoop() throws InterruptedException {
+    private static void sendStartCoreEvent() {
         EventManagement eventManagement = EventManagement.getInstance();
-        TranslateService translateService = TranslateService.getInstance();
-
-        boolean isNeedUpdate = false;
-        boolean isDatabaseOutDated = false;
-
-        if (!IsDebug.isDebug()) {
-            isNeedUpdate = isStartOverThreshold();
-        }
-        CheckDatabaseEmptyEvent checkDatabaseEmptyEvent = new CheckDatabaseEmptyEvent();
-        eventManagement.putEvent(checkDatabaseEmptyEvent);
-        if (eventManagement.waitForEvent(checkDatabaseEmptyEvent)) {
-            throw new RuntimeException("check database empty failed");
-        }
-        Optional<Object> returnValue = checkDatabaseEmptyEvent.getReturnValue();
-        // 不使用lambda表达式，否则需要转换成原子或者进行包装
-        if (returnValue.isPresent()) {
-            isNeedUpdate |= (boolean) returnValue.get();
-        }
-        var startTime = LocalDate.now();
-        while (eventManagement.notMainExit()) {
-            // 主循环开始
-            //检查已工作时间
-            var endTime = LocalDate.now();
-            var diffDays = Period.between(startTime, endTime);
-            if (diffDays.getDays() > 2) {
-                startTime = endTime;
-                //启动时间已经超过2天,更新索引
-                isDatabaseOutDated = true;
-            }
-            // 更新标志isNeedUpdate为true，则更新
-            // 数据库损坏或者重启次数超过3次，需要重建索引
-            if ((isDatabaseOutDated && !GetHandle.INSTANCE.isForegroundFullscreen()) || isNeedUpdate) {
-                isDatabaseOutDated = false;
-                isNeedUpdate = false;
-                eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                        translateService.getTranslation("Info"),
-                        translateService.getTranslation("Updating file index")));
-                eventManagement.putEvent(new UpdateDatabaseEvent(false),
-                        event -> eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                                translateService.getTranslation("Info"),
-                                translateService.getTranslation("Search Done"))),
-                        event -> eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                                translateService.getTranslation("Warning"),
-                                translateService.getTranslation("Search Failed"))));
-            }
-            TimeUnit.MILLISECONDS.sleep(50);
-        }
-    }
-
-    /**
-     * 检查启动次数，若已超过三次则发出重新更新索引信号
-     *
-     * @return true如果启动超过三次
-     */
-    private static boolean isStartOverThreshold() {
-        int startTimes = 0;
-        File startTimeCount = new File("user/startTimeCount.dat");
-        boolean isFileCreated;
-        boolean ret = false;
-        if (startTimeCount.exists()) {
-            isFileCreated = true;
-        } else {
-            try {
-                isFileCreated = startTimeCount.createNewFile();
-            } catch (IOException e) {
-                isFileCreated = false;
-                log.error("error: {}", e.getMessage(), e);
-            }
-        }
-        if (isFileCreated) {
-            try (var reader = new BufferedReader(new InputStreamReader(new FileInputStream(startTimeCount), StandardCharsets.UTF_8))) {
-                //读取启动次数
-                String times = reader.readLine();
-                if (!(times == null || times.isEmpty())) {
-                    try {
-                        startTimes = Integer.parseInt(times);
-                        //使用次数大于3次，优化数据库
-                        if (startTimes >= UPDATE_DATABASE_THRESHOLD) {
-                            startTimes = 0;
-                            if (DatabaseService.getInstance().getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
-                                ret = true;
-                            }
-                        }
-                    } catch (NumberFormatException e) {
-                        ret = true;
-                    }
-                }
-                //自增后写入
-                startTimes++;
-                try (var writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(startTimeCount), StandardCharsets.UTF_8))) {
-                    writer.write(String.valueOf(startTimes));
-                }
-            } catch (Exception e) {
-                log.error("error: {}", e.getMessage(), e);
-            }
-        }
-        return ret;
+        StartCoreEvent startCoreEvent = new StartCoreEvent();
+        eventManagement.putEvent(startCoreEvent);
+        eventManagement.waitForEvent(startCoreEvent);
     }
 
     /**
@@ -332,22 +195,15 @@ public class MainClass {
     }
 
     private static void releaseAllDependence() throws IOException {
-        checkMd5AndReplace("user/fileMonitor.dll", "/win32-native/fileMonitor.dll");
         checkMd5AndReplace("user/hotkeyListener.dll", "/win32-native/hotkeyListener.dll");
         checkMd5AndReplace("user/isLocalDisk.dll", "/win32-native/isLocalDisk.dll");
-        checkMd5AndReplace("user/fileSearcherUSN.exe", "/win32-native/fileSearcherUSN.exe");
-        checkMd5AndReplace("user/sqlite3.dll", "/win32-native/sqlite3.dll");
         checkMd5AndReplace("user/getHandle.dll", "/win32-native/getHandle.dll");
         checkMd5AndReplace("user/shortcutGenerator.vbs", "/shortcutGenerator.vbs");
         checkMd5AndReplace("user/getWindowsKnownFolder.dll", "/win32-native/getWindowsKnownFolder.dll");
-        checkMd5AndReplace("user/sqliteJDBC.dll", "/win32-native/sqliteJDBC.dll");
         checkMd5AndReplace("user/emptyRecycleBin.dll", "/win32-native/emptyRecycleBin.dll");
-        checkMd5AndReplace("user/cudaAccelerator.dll", "/win32-native/cudaAccelerator.dll");
-        checkMd5AndReplace("user/openclAccelerator.dll", "/win32-native/openclAccelerator.dll");
-        checkMd5AndReplace("cudart64_110.dll", "/win32-native/cudart64_110.dll");
-        checkMd5AndReplace("cudart64_12.dll", "/win32-native/cudart64_12.dll");
         checkMd5AndReplace("user/systemThemeInfo.dll", "/win32-native/systemThemeInfo.dll");
         checkMd5AndReplace("user/getDpi.exe", "/win32-native/getDpi.exe");
+        checkMd5AndReplace(Constants.FILE_ENGINE_CORE_DIR + "File-Engine-Core.exe", "/win32-native/File-Engine-Core.exe");
     }
 
     private static void checkMd5AndReplace(String path, String rootPath) throws IOException {
@@ -373,11 +229,11 @@ public class MainClass {
         isSucceeded = createFileOrFolder("user", false, false);
         //plugins
         isSucceeded &= createFileOrFolder("plugins", false, false);
-        //data
-        isSucceeded &= createFileOrFolder("data", false, false);
         //tmp
         File tmp = new File("tmp");
         isSucceeded &= createFileOrFolder(tmp, false, false);
+        //core
+        isSucceeded &= createFileOrFolder("core", false, false);
         //cmd.txt
         isSucceeded &= createFileOrFolder("user/cmds.txt", true, false);
         if (!isSucceeded) {

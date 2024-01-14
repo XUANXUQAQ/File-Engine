@@ -15,7 +15,7 @@ import com.sun.jna.ptr.PointerByReference;
  * GitHub: https://github.com/MrMarnic
  */
 public interface Shell32Extra extends Shell32 {
-    Shell32Extra INSTANCE = (Shell32Extra) Native.load("shell32", Shell32Extra.class);
+    Shell32Extra INSTANCE = Native.load("shell32", Shell32Extra.class);
 
     WinNT.HRESULT SHCreateItemFromParsingName(WString path, Pointer pointer, Guid.REFIID guid, PointerByReference reference);
 }

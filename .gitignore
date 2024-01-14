@@ -25,7 +25,7 @@ C++/restart/Debug/
 data.db
 data.db-shm
 data.db-wal
-
+/core/
 
 ### VisualStudio ###
 ## Ignore Visual Studio temporary files, build results, and
