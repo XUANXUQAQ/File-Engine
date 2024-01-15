@@ -3454,7 +3454,7 @@ public class SearchBar {
                 ResultEntity cacheAndPriorityResults = DatabaseNativeService.getCacheAndPriorityResults(cacheStartIndex);
                 cacheStartIndex = cacheAndPriorityResults.nextIndex();
                 isDone.set(cacheAndPriorityResults.isDone());
-                noMoreResult = true;
+                noMoreResult = cacheAndPriorityResults.isDone();
                 for (String each : cacheAndPriorityResults.data()) {
                     if (listSet.add(each)) {
                         noMoreResult = false;
@@ -3822,6 +3822,7 @@ public class SearchBar {
                         } catch (Exception e) {
                             log.error(e.getMessage(), e);
                         }
+                        isSearchDone.set(true);
                         showSearchStatusFuture.get();
                         return null;
                     };
@@ -3880,6 +3881,7 @@ public class SearchBar {
                         } catch (Exception e) {
                             log.error(e.getMessage(), e);
                         }
+                        isSearchDone.set(true);
                         showSearchStatusFuture.get();
                         return null;
                     };
