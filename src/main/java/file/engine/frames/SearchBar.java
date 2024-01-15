@@ -13,10 +13,7 @@ import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.BootSystemEvent;
 import file.engine.event.handler.impl.configs.SetConfigsEvent;
-import file.engine.event.handler.impl.database.AddToCacheEvent;
-import file.engine.event.handler.impl.database.PrepareSearchEvent;
-import file.engine.event.handler.impl.database.StartSearchEvent;
-import file.engine.event.handler.impl.database.UpdateDatabaseEvent;
+import file.engine.event.handler.impl.database.*;
 import file.engine.event.handler.impl.frame.searchBar.*;
 import file.engine.event.handler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import file.engine.event.handler.impl.open.file.OpenFileEvent;
@@ -3449,23 +3446,24 @@ public class SearchBar {
         var listSet = new HashSet<>();
         int cacheStartIndex = 0;
         int resultStartIndex = 0;
-        while (listResultsTemp == listResults && eventManagement.notMainExit() && !shouldExitMergeResultThread) {
+        boolean noMoreResult = false;
+        while (listResultsTemp == listResults && eventManagement.notMainExit() && !shouldExitMergeResultThread && !noMoreResult) {
             if (getSearchBarText().isEmpty()) {
                 listResultsTemp.clear();
             } else if (runningMode == RunningMode.NORMAL_MODE) {
-                if (taskUUID != null) {
-                    ResultEntity cacheAndPriorityResults = DatabaseNativeService.getCacheAndPriorityResults(cacheStartIndex);
-                    cacheStartIndex = cacheAndPriorityResults.nextIndex();
-                    isDone.set(cacheAndPriorityResults.isDone());
-                    for (String each : cacheAndPriorityResults.data()) {
-                        if (listSet.add(each)) {
-                            ResultWrap resultWrap = new ResultWrap(cacheAndPriorityResults.uuid(), each);
-                            listResultsTemp.add(resultWrap);
-                            listResultsTemp.removeIf(e -> !Objects.equals(e.taskUUID(), taskUUID));
-                        }
-                        if (listResultsTemp != listResults || shouldExitMergeResultThread) {
-                            break;
-                        }
+                ResultEntity cacheAndPriorityResults = DatabaseNativeService.getCacheAndPriorityResults(cacheStartIndex);
+                cacheStartIndex = cacheAndPriorityResults.nextIndex();
+                isDone.set(cacheAndPriorityResults.isDone());
+                noMoreResult = true;
+                for (String each : cacheAndPriorityResults.data()) {
+                    if (listSet.add(each)) {
+                        noMoreResult = false;
+                        ResultWrap resultWrap = new ResultWrap(cacheAndPriorityResults.uuid(), each);
+                        listResultsTemp.add(resultWrap);
+                        listResultsTemp.removeIf(e -> !Objects.equals(e.taskUUID(), taskUUID));
+                    }
+                    if (listResultsTemp != listResults || shouldExitMergeResultThread) {
+                        break;
                     }
                 }
                 out:
@@ -3474,6 +3472,7 @@ public class SearchBar {
                     while ((each = eachPlugin.plugin.pollFromResultQueue()) != null) {
                         each = "plugin" + PLUGIN_RESULT_SPLITTER_STR + eachPlugin.plugin.identifier + PLUGIN_RESULT_SPLITTER_STR + each;
                         if (listSet.add(each)) {
+                            noMoreResult = false;
                             ResultWrap resultWrap = new ResultWrap(taskUUID, each);
                             listResultsTemp.add(resultWrap);
                             listResultsTemp.removeIf(e -> !Objects.equals(e.taskUUID(), taskUUID));
@@ -3483,19 +3482,18 @@ public class SearchBar {
                         }
                     }
                 }
-                if (taskUUID != null) {
-                    ResultEntity results = DatabaseNativeService.getResults(resultStartIndex);
-                    resultStartIndex = results.nextIndex();
-                    isDone.set(results.isDone());
-                    for (String each : results.data()) {
-                        if (listSet.add(each)) {
-                            ResultWrap resultWrap = new ResultWrap(results.uuid(), each);
-                            listResultsTemp.add(resultWrap);
-                            listResultsTemp.removeIf(e -> !Objects.equals(e.taskUUID(), taskUUID));
-                        }
-                        if (listResultsTemp != listResults || shouldExitMergeResultThread) {
-                            break;
-                        }
+                ResultEntity results = DatabaseNativeService.getResults(resultStartIndex);
+                resultStartIndex = results.nextIndex();
+                isDone.set(results.isDone());
+                for (String each : results.data()) {
+                    if (listSet.add(each)) {
+                        noMoreResult = false;
+                        ResultWrap resultWrap = new ResultWrap(results.uuid(), each);
+                        listResultsTemp.add(resultWrap);
+                        listResultsTemp.removeIf(e -> !Objects.equals(e.taskUUID(), taskUUID));
+                    }
+                    if (listResultsTemp != listResults || shouldExitMergeResultThread) {
+                        break;
                     }
                 }
             }
@@ -3774,34 +3772,6 @@ public class SearchBar {
             }
             keywords = RegexUtil.semicolon.split(searchText);
         }
-//        String searchBarText = getSearchBarText();
-//        if (!searchBarText.isEmpty()) {
-//            final int i = searchBarText.lastIndexOf(':');
-//            if (i == -1) {
-//                searchText = searchBarText;
-//                searchCase = null;
-//            } else {
-//                if (searchBarText.length() - 1 > i) {
-//                    final char c = searchBarText.charAt(i + 1);
-//                    // 如 test;/C:/  test;/C:\  test;/D:  test;/D:;  则判断为搜索磁盘内的文件
-//                    if (c == '/' || c == File.separatorChar || c == ' ' || c == ';') {
-//                        searchText = searchBarText;
-//                        searchCase = null;
-//                    } else {
-//                        searchText = searchBarText.substring(0, i);
-//                        String[] tmpSearchCase = RegexUtil.semicolon.split(searchBarText.substring(i + 1));
-//                        searchCase = new String[tmpSearchCase.length];
-//                        for (int j = 0; j < tmpSearchCase.length; j++) {
-//                            searchCase[j] = tmpSearchCase[j].trim();
-//                        }
-//                    }
-//                } else {
-//                    searchText = searchBarText;
-//                    searchCase = null;
-//                }
-//            }
-//            keywords = RegexUtil.semicolon.split(searchText);
-//        }
     }
 
     /**

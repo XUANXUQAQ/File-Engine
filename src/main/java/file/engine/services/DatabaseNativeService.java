@@ -40,6 +40,7 @@ import java.util.concurrent.TimeUnit;
 public class DatabaseNativeService {
     private static final String coreFile = Path.of(Constants.FILE_ENGINE_CORE_DIR + Constants.FILE_ENGINE_CORE_NAME).toAbsolutePath().toString();
     private static int port = 50721;
+    private static final int MAX_RESULT_NUMBER = 200;
     private static final String coreUrl = "http://127.0.0.1:%d";
     private static final String coreConfigFile = Constants.FILE_ENGINE_CORE_DIR + "user/settings.json";
 
@@ -194,8 +195,14 @@ public class DatabaseNativeService {
     private static void prepareSearchEvent(Event event) {
         String url = getUrl() + "/prepareSearch";
         HashMap<String, Object> params = new HashMap<>();
-        params.put("searchText", ((PrepareSearchEvent) event).searchText.get());
-        params.put("maxResultNum", 200);
+        PrepareSearchEvent prepareSearchEvent = (PrepareSearchEvent) event;
+        String[] searchCase = prepareSearchEvent.searchCase.get();
+        if (searchCase != null) {
+            params.put("searchText", prepareSearchEvent.searchText.get() + "|" + String.join(",", searchCase));
+        } else {
+            params.put("searchText", prepareSearchEvent.searchText.get());
+        }
+        params.put("maxResultNum", MAX_RESULT_NUMBER);
         String paramsStr = HttpUtil.toParams(params);
         String taskUUID = HttpUtil.post(url + "?" + paramsStr, Collections.emptyMap());
         event.setReturnValue(taskUUID);
@@ -205,8 +212,14 @@ public class DatabaseNativeService {
     private static void startSearchEvent(Event event) {
         String url = getUrl() + "/searchAsync";
         HashMap<String, Object> params = new HashMap<>();
-        params.put("searchText", ((StartSearchEvent) event).searchText.get());
-        params.put("maxResultNum", 200);
+        StartSearchEvent startSearchEvent = (StartSearchEvent) event;
+        String[] searchCase = startSearchEvent.searchCase.get();
+        if (searchCase != null) {
+            params.put("searchText", startSearchEvent.searchText.get() + "|" + String.join(",", searchCase));
+        } else {
+            params.put("searchText", startSearchEvent.searchText.get());
+        }
+        params.put("maxResultNum", MAX_RESULT_NUMBER);
         String paramsStr = HttpUtil.toParams(params);
         String taskUUID = HttpUtil.post(url + "?" + paramsStr, Collections.emptyMap());
         event.setReturnValue(taskUUID);
