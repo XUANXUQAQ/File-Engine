@@ -13,6 +13,7 @@ import file.engine.event.handler.impl.database.StartCoreEvent;
 import file.engine.event.handler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.services.TranslateService;
+import file.engine.utils.CompressUtil;
 import file.engine.utils.Md5Util;
 import file.engine.utils.clazz.scan.ClassScannerUtil;
 import file.engine.utils.file.FileUtil;
@@ -22,6 +23,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.swing.*;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -203,7 +206,20 @@ public class MainClass {
         checkMd5AndReplace("user/emptyRecycleBin.dll", "/win32-native/emptyRecycleBin.dll");
         checkMd5AndReplace("user/systemThemeInfo.dll", "/win32-native/systemThemeInfo.dll");
         checkMd5AndReplace("user/getDpi.exe", "/win32-native/getDpi.exe");
-        checkMd5AndReplace(Constants.FILE_ENGINE_CORE_DIR + Constants.FILE_ENGINE_CORE_NAME, "/win32-native/File-Engine-Core.exe");
+        String corePath = "tmp/File-Engine-Core.7z";
+        String tmpCoreExePath = "tmp/" + Constants.FILE_ENGINE_CORE_NAME;
+        String coreExePath = Constants.FILE_ENGINE_CORE_DIR + Constants.FILE_ENGINE_CORE_NAME;
+        checkMd5AndReplace(corePath, "/win32-native/File-Engine-Core.7z");
+        CompressUtil.decompress7Z(new File(corePath), "tmp/");
+        String coreMd5 = Md5Util.getMD5(coreExePath);
+        String md5 = Md5Util.getMD5(tmpCoreExePath);
+        if (!coreMd5.equals(md5)) {
+            InputStream inputStream = Files.newInputStream(Path.of(tmpCoreExePath));
+            OutputStream outputStream = Files.newOutputStream(Path.of(coreExePath));
+            try (inputStream; outputStream) {
+                inputStream.transferTo(outputStream);
+            }
+        }
     }
 
     private static void checkMd5AndReplace(String path, String rootPath) throws IOException {
