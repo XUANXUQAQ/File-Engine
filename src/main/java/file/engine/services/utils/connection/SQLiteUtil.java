@@ -219,6 +219,10 @@ public class SQLiteUtil {
         connectionPool.clear();
     }
 
+    public static String getDbAbsolutePath(String key) {
+        return new File(currentDatabaseDir, key + ".db").getAbsolutePath();
+    }
+
     /**
      * 删除有问题的数据库文件，有问题的数据库被记录在user/malformedDB文件中
      */

@@ -5,10 +5,7 @@ import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.Constants;
-import file.engine.dllInterface.FileMonitor;
-import file.engine.dllInterface.GetHandle;
-import file.engine.dllInterface.GetWindowsKnownFolder;
-import file.engine.dllInterface.IsLocalDisk;
+import file.engine.dllInterface.*;
 import file.engine.dllInterface.gpu.GPUAccelerator;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
@@ -82,7 +79,7 @@ public class DatabaseService {
     private static final int MAX_TEMP_QUERY_RESULT_CACHE = 1024;
     private static final int MAX_CACHED_RECORD_NUM = 10240 * 5;
     private static final int MAX_SQL_NUM = 5000;
-    private static final int MAX_RESULTS = 200;
+    public static final int MAX_RESULTS = 200;
 
     private static volatile DatabaseService INSTANCE = null;
 
@@ -867,6 +864,7 @@ public class DatabaseService {
             GPUAccelerator.INSTANCE.stopCollectResults();
         }
         searchTask.searchDoneFlag = true;
+        PathMatcher.INSTANCE.closeConnections();
     }
 
     /**
@@ -923,9 +921,9 @@ public class DatabaseService {
                                      Bit currentTaskNum,
                                      SearchTask searchTask) {
         tasks.add(() -> {
-            Statement[] stmt = new Statement[]{null};
+            String diskStr = String.valueOf(diskChar.charAt(0));
+            PathMatcher.INSTANCE.openConnection(SQLiteUtil.getDbAbsolutePath(diskStr));
             for (var sqlAndTableName : sqlToExecute.entrySet()) {
-                String diskStr = String.valueOf(diskChar.charAt(0));
                 String eachSql = sqlAndTableName.getKey();
                 String tableName = sqlAndTableName.getValue();
                 String priority = getPriorityFromSelectSql(eachSql);
@@ -945,7 +943,7 @@ public class DatabaseService {
                         recordsNum = databaseResultsCount.get(key).get();
                     }
                     if (recordsNum != 0) {
-                        matchedNum = fallbackToSearchDatabase(searchTask, stmt, diskStr, eachSql, key);
+                        matchedNum = fallbackToSearchDatabase(searchTask, diskStr, eachSql, key);
                     }
                 }
                 final long weight = Math.min(matchedNum, 5);
@@ -959,19 +957,15 @@ public class DatabaseService {
             do {
                 originalBytes = searchTask.taskStatus.getBytes();
             } while (!searchTask.taskStatus.compareAndSet(originalBytes, Bit.or(originalBytes, currentTaskNum.getBytes())));
-            if (stmt[0] != null) {
-                try {
-                    stmt[0].close();
-                } catch (SQLException e) {
-                    log.error("error: {}", e.getMessage(), e);
-                }
-            }
         });
     }
 
-    private long fallbackToSearchDatabase(SearchTask searchTask, Statement[] stmt, String diskStr, String eachSql, String key) {
+    private long fallbackToSearchDatabase(SearchTask searchTask, String diskStr, String eachSql, String key) {
         if (searchTask.shouldStopSearch()) {
             return 0;
+        }
+        if (isEnableGPUAccelerate && GPUAccelerator.INSTANCE.isMatchDone(key)) {
+            return GPUAccelerator.INSTANCE.matchedNumber(key);
         }
         long matchedNum;
         Cache cache = tableCache.get(key);
@@ -983,16 +977,25 @@ public class DatabaseService {
         } else {
             //格式化是为了以后的拓展性
             String formattedSql = String.format(eachSql, "PATH");
-            if (stmt[0] == null) {
-                try {
-                    stmt[0] = SQLiteUtil.getStatement(diskStr);
-                } catch (SQLException e) {
-                    log.error("error: {}", e.getMessage(), e);
-                    throw new RuntimeException(e);
+            // C++实现
+            var searchInfo = searchTask.searchInfo;
+            String[] match = PathMatcher.INSTANCE.match(formattedSql,
+                    SQLiteUtil.getDbAbsolutePath(diskStr),
+                    searchInfo.searchCase,
+                    searchInfo.isIgnoreCase,
+                    searchInfo.searchText,
+                    searchInfo.keywords,
+                    searchInfo.keywordsLowerCase,
+                    searchInfo.isKeywordPath,
+                    DatabaseService.MAX_RESULTS
+            );
+            matchedNum = match.length;
+            for (String path : match) {
+                if (searchTask.tempResultsSet.add(path)) {
+                    searchTask.resultCounter.getAndIncrement();
+                    searchTask.tempResults.add(path);
                 }
             }
-            //当前数据库表中有多少个结果匹配成功
-            matchedNum = searchAndAddToTempResults(formattedSql, stmt[0], searchTask, key);
         }
         return matchedNum;
     }
