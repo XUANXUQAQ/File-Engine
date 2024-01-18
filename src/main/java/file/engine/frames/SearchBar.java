@@ -3446,18 +3446,15 @@ public class SearchBar {
         var listSet = new HashSet<>();
         int cacheStartIndex = 0;
         int resultStartIndex = 0;
-        boolean noMoreResult = false;
-        while (listResultsTemp == listResults && eventManagement.notMainExit() && !shouldExitMergeResultThread && !noMoreResult) {
+        while (listResultsTemp == listResults && eventManagement.notMainExit() && !shouldExitMergeResultThread) {
             if (getSearchBarText().isEmpty()) {
                 listResultsTemp.clear();
             } else if (runningMode == RunningMode.NORMAL_MODE) {
                 ResultEntity cacheAndPriorityResults = DatabaseNativeService.getCacheAndPriorityResults(cacheStartIndex);
                 cacheStartIndex = cacheAndPriorityResults.nextIndex();
-                isDone.set(cacheAndPriorityResults.isDone());
-                noMoreResult = cacheAndPriorityResults.isDone();
+                isDone.compareAndSet(false, cacheAndPriorityResults.isDone());
                 for (String each : cacheAndPriorityResults.data()) {
                     if (listSet.add(each)) {
-                        noMoreResult = false;
                         ResultWrap resultWrap = new ResultWrap(cacheAndPriorityResults.uuid(), each);
                         listResultsTemp.add(resultWrap);
                         listResultsTemp.removeIf(e -> !Objects.equals(e.taskUUID(), taskUUID));
@@ -3472,7 +3469,6 @@ public class SearchBar {
                     while ((each = eachPlugin.plugin.pollFromResultQueue()) != null) {
                         each = "plugin" + PLUGIN_RESULT_SPLITTER_STR + eachPlugin.plugin.identifier + PLUGIN_RESULT_SPLITTER_STR + each;
                         if (listSet.add(each)) {
-                            noMoreResult = false;
                             ResultWrap resultWrap = new ResultWrap(taskUUID, each);
                             listResultsTemp.add(resultWrap);
                             listResultsTemp.removeIf(e -> !Objects.equals(e.taskUUID(), taskUUID));
@@ -3484,10 +3480,9 @@ public class SearchBar {
                 }
                 ResultEntity results = DatabaseNativeService.getResults(resultStartIndex);
                 resultStartIndex = results.nextIndex();
-                isDone.set(results.isDone());
+                isDone.compareAndSet(false, results.isDone());
                 for (String each : results.data()) {
                     if (listSet.add(each)) {
-                        noMoreResult = false;
                         ResultWrap resultWrap = new ResultWrap(results.uuid(), each);
                         listResultsTemp.add(resultWrap);
                         listResultsTemp.removeIf(e -> !Objects.equals(e.taskUUID(), taskUUID));
@@ -3822,7 +3817,6 @@ public class SearchBar {
                         } catch (Exception e) {
                             log.error(e.getMessage(), e);
                         }
-                        isSearchDone.set(true);
                         showSearchStatusFuture.get();
                         return null;
                     };
@@ -3881,7 +3875,6 @@ public class SearchBar {
                         } catch (Exception e) {
                             log.error(e.getMessage(), e);
                         }
-                        isSearchDone.set(true);
                         showSearchStatusFuture.get();
                         return null;
                     };
