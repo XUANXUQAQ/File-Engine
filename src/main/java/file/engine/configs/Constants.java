@@ -28,7 +28,7 @@ public class Constants {
     // 启动器文件（进程）名
     public static final String LAUNCH_WRAPPER_NAME = "File-Engine.exe";
 
-    public static final String FILE_ENGINE_CORE_NAME = "File-Engine-Core.exe";
+    public static final String FILE_ENGINE_CORE_CMD_NAME = "startup.txt";
 
     // 插件API版本
     public static final int API_VERSION = 8;

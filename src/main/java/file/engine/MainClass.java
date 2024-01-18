@@ -23,8 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.swing.*;
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -207,19 +205,8 @@ public class MainClass {
         checkMd5AndReplace("user/systemThemeInfo.dll", "/win32-native/systemThemeInfo.dll");
         checkMd5AndReplace("user/getDpi.exe", "/win32-native/getDpi.exe");
         String corePath = "tmp/File-Engine-Core.7z";
-        String tmpCoreExePath = "tmp/" + Constants.FILE_ENGINE_CORE_NAME;
-        String coreExePath = Constants.FILE_ENGINE_CORE_DIR + Constants.FILE_ENGINE_CORE_NAME;
         checkMd5AndReplace(corePath, "/win32-native/File-Engine-Core.7z");
-        CompressUtil.decompress7Z(new File(corePath), "tmp/");
-        String coreMd5 = Md5Util.getMD5(coreExePath);
-        String md5 = Md5Util.getMD5(tmpCoreExePath);
-        if (!coreMd5.equals(md5)) {
-            InputStream inputStream = Files.newInputStream(Path.of(tmpCoreExePath));
-            OutputStream outputStream = Files.newOutputStream(Path.of(coreExePath));
-            try (inputStream; outputStream) {
-                inputStream.transferTo(outputStream);
-            }
-        }
+        CompressUtil.decompress7Z(new File(corePath), Constants.FILE_ENGINE_CORE_DIR);
     }
 
     private static void checkMd5AndReplace(String path, String rootPath) throws IOException {

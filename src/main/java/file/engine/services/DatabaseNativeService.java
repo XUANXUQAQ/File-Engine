@@ -18,7 +18,6 @@ import file.engine.event.handler.impl.database.*;
 import file.engine.event.handler.impl.frame.searchBar.SearchBarCloseEvent;
 import file.engine.event.handler.impl.frame.searchBar.SearchBarReadyEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
-import file.engine.services.utils.OpenFileUtil;
 import file.engine.utils.ProcessUtil;
 import file.engine.utils.file.FileUtil;
 import file.engine.utils.gson.GsonUtil;
@@ -26,6 +25,7 @@ import file.engine.utils.system.properties.IsDebug;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.BindException;
 import java.net.ServerSocket;
@@ -38,11 +38,11 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @SuppressWarnings("unchecked")
 public class DatabaseNativeService {
-    private static final String coreFile = Path.of(Constants.FILE_ENGINE_CORE_DIR + Constants.FILE_ENGINE_CORE_NAME).toAbsolutePath().toString();
+    private static final String CORE_START_CMD = Path.of(Constants.FILE_ENGINE_CORE_DIR + Constants.FILE_ENGINE_CORE_CMD_NAME).toAbsolutePath().toString();
     private static int port = 50721;
     private static final int MAX_RESULT_NUMBER = 200;
-    private static final String coreUrl = "http://127.0.0.1:%d";
-    private static final String coreConfigFile = Constants.FILE_ENGINE_CORE_DIR + "user/settings.json";
+    private static final String CORE_URL = "http://127.0.0.1:%d";
+    private static final String CORE_CONFIG_FILE = Constants.FILE_ENGINE_CORE_DIR + "user/settings.json";
 
     public static List<String> getTop8Caches() {
         String url = getUrl() + "/frequentResult";
@@ -123,7 +123,7 @@ public class DatabaseNativeService {
     }
 
     private static String getUrl() {
-        return String.format(coreUrl, port);
+        return String.format(CORE_URL, port);
     }
 
     private static boolean isAvailable(int port) {
@@ -139,8 +139,8 @@ public class DatabaseNativeService {
 
     @SneakyThrows
     private static void startCore() {
-        Path coreSettingsPath = Path.of(coreConfigFile);
-        if (FileUtil.isFileExist(coreConfigFile)) {
+        Path coreSettingsPath = Path.of(CORE_CONFIG_FILE);
+        if (FileUtil.isFileExist(CORE_CONFIG_FILE)) {
             String coreConfigs = Files.readString(coreSettingsPath, StandardCharsets.UTF_8);
             Gson gson = GsonUtil.getInstance().getGson();
             Map<String, Object> coreConfigMap = gson.fromJson(coreConfigs, Map.class);
@@ -149,16 +149,14 @@ public class DatabaseNativeService {
             coreConfigs = gson.toJson(coreConfigMap);
             Files.writeString(coreSettingsPath, coreConfigs);
         }
-        OpenFileUtil.openWithAdmin(coreFile, true);
+        String startCmd = Files.readString(Path.of(CORE_START_CMD));
+        Runtime.getRuntime().exec(new String[]{"cmd.exe", "/c", startCmd}, null, new File(Constants.FILE_ENGINE_CORE_DIR));
     }
 
     @EventRegister(registerClass = StartCoreEvent.class)
     @SneakyThrows
     private static void initCore(Event event) {
         startCore();
-        while (!ProcessUtil.isProcessExist(Constants.FILE_ENGINE_CORE_NAME)) {
-            TimeUnit.MILLISECONDS.sleep(100);
-        }
         Constants.Enums.DatabaseStatus status = null;
         final long startTime = System.currentTimeMillis();
         do {
@@ -318,10 +316,5 @@ public class DatabaseNativeService {
     private static void restartEvent(Event event) {
         String url = getUrl() + "/close";
         HttpUtil.post(url, Collections.emptyMap());
-        try {
-            ProcessUtil.waitForProcess(Constants.FILE_ENGINE_CORE_NAME, 500, 5000);
-        } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
-        }
     }
 }
