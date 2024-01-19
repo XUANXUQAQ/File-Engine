@@ -1,5 +1,7 @@
 package file.engine.services;
 
+import cn.hutool.http.HttpGlobalConfig;
+import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -17,7 +19,6 @@ import file.engine.event.handler.impl.database.*;
 import file.engine.event.handler.impl.frame.searchBar.SearchBarCloseEvent;
 import file.engine.event.handler.impl.frame.searchBar.SearchBarReadyEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
-import file.engine.services.utils.CoreUtil;
 import file.engine.utils.ProcessUtil;
 import file.engine.utils.ThreadPoolUtil;
 import file.engine.utils.file.FileUtil;
@@ -42,58 +43,58 @@ public class DatabaseNativeService {
     private static final String CORE_START_CMD = Path.of(Constants.FILE_ENGINE_CORE_DIR + Constants.FILE_ENGINE_CORE_CMD_NAME).toAbsolutePath().toString();
     private static int port = 50721;
     private static final int MAX_RESULT_NUMBER = 200;
+    private static final String CORE_URL = "http://127.0.0.1:%d";
     private static final String CORE_CONFIG_FILE = Constants.FILE_ENGINE_CORE_DIR + "user/settings.json";
     private static volatile long connectionEstablishedTime = 0;
 
     public static void closeConnections() {
-        String url = "/closeConnections";
-        CoreUtil.getCoreResult("DELETE", url, port);
+        String url = getUrl() + "/closeConnections";
+        HttpRequest.delete(url).timeout(HttpGlobalConfig.getTimeout()).execute().close();
     }
 
     public static List<String> getTop8Caches() {
-        String url = "/frequentResult";
+        String url = getUrl() + "/frequentResult";
         HashMap<String, Object> params = new HashMap<>();
         params.put("num", 8);
-        String paramsStr = HttpUtil.toParams(params);
-        String res = CoreUtil.get(url + "?" + paramsStr, port);
+        String res = HttpUtil.get(url, params);
         Gson gson = GsonUtil.getInstance().getGson();
         return gson.fromJson(res, List.class);
     }
 
     public static Set<String> getCache() {
-        String url = "/cache";
-        String res = CoreUtil.get(url, port);
+        String url = getUrl() + "/cache";
+        String res = HttpUtil.get(url);
         Gson gson = GsonUtil.getInstance().getGson();
         return gson.fromJson(res, Set.class);
     }
 
     public static Map<String, Object> getPriorityMap() {
-        String url = "/suffixPriority";
+        String url = getUrl() + "/suffixPriority";
         Gson gson = GsonUtil.getInstance().getGson();
-        String res = CoreUtil.get(url, port);
+        String res = HttpUtil.get(url);
         return gson.fromJson(res, Map.class);
     }
 
     public static ResultEntity getCacheAndPriorityResults(int startIndex) {
-        String cacheResults = "/cacheResult";
+        String cacheResults = getUrl() + "/cacheResult";
         return getResultEntity(startIndex, cacheResults);
     }
 
     public static ResultEntity getResults(int startIndex) {
-        String url = "/result";
+        String url = getUrl() + "/result";
         return getResultEntity(startIndex, url);
     }
 
     public static Map<String, String> getGpuDevices() {
-        String s = "/gpu";
-        String res = CoreUtil.get(s, port);
+        String s = getUrl() + "/gpu";
+        String res = HttpUtil.get(s);
         Gson gson = GsonUtil.getInstance().getGson();
         return gson.fromJson(res, Map.class);
     }
 
     public static CoreConfigEntity getCoreConfigs() {
-        String url = "/config";
-        String res = CoreUtil.get(url, port);
+        String url = getUrl() + "/config";
+        String res = HttpUtil.get(url);
         Gson gson = GsonUtil.getInstance().getGson();
         return gson.fromJson(res, CoreConfigEntity.class);
     }
@@ -101,8 +102,7 @@ public class DatabaseNativeService {
     private static ResultEntity getResultEntity(int startIndex, String url) {
         HashMap<String, Object> params = new HashMap<>();
         params.put("startIndex", startIndex);
-        String paramsStr = HttpUtil.toParams(params);
-        String res = CoreUtil.get(url + "?" + paramsStr, port);
+        String res = HttpUtil.get(url, params);
         Gson gson = GsonUtil.getInstance().getGson();
         return gson.fromJson(res, ResultEntity.class);
     }
@@ -113,8 +113,8 @@ public class DatabaseNativeService {
      * @return 数据库状态
      */
     public static Constants.Enums.DatabaseStatus getStatus() {
-        String url = "/status";
-        String status = CoreUtil.get(url, port);
+        String url = getUrl() + "/status";
+        String status = HttpUtil.get(url);
         return Constants.Enums.DatabaseStatus.valueOf(status);
     }
 
@@ -128,6 +128,10 @@ public class DatabaseNativeService {
             port = random.nextInt(20000, 65535);
         } while (!isAvailable(port));
         return port;
+    }
+
+    private static String getUrl() {
+        return String.format(CORE_URL, port);
     }
 
     private static boolean isAvailable(int port) {
@@ -192,8 +196,8 @@ public class DatabaseNativeService {
 
     @EventListener(listenClass = SearchBarReadyEvent.class)
     private static void searchBarVisibleListener(Event event) {
-        String url = "/flushFileChanges";
-        CoreUtil.post(url, port);
+        String url = getUrl() + "/flushFileChanges";
+        HttpUtil.post(url, Collections.emptyMap());
     }
 
     @EventListener(listenClass = SetConfigsEvent.class)
@@ -206,31 +210,27 @@ public class DatabaseNativeService {
             JsonElement jsonTree = gson.toJsonTree(configEntity.getCoreConfigEntity());
             Map<String, Object> configMap = gson.fromJson(jsonTree, Map.class);
             configMap.put("port", port);
-            String url = "/config";
-            String configJson = gson.toJson(configMap);
-            HashMap<String, String> paramMap = new HashMap<>();
-            paramMap.put("config", configJson);
-            String paramsStr = HttpUtil.toParams(paramMap);
-            CoreUtil.post(url + "?" + paramsStr, port);
+            String url = getUrl() + "/config";
+            HttpUtil.post(url, gson.toJson(configMap));
         }
     }
 
     @EventRegister(registerClass = PrepareSearchEvent.class)
     private static void prepareSearchEvent(Event event) {
-        String url = "/prepareSearch";
-        sendSearchToCore((PrepareSearchEvent) event, url);
+        String url = getUrl() + "/prepareSearch";
+        sendSearchToCore(url, (PrepareSearchEvent) event);
     }
 
     @EventRegister(registerClass = StartSearchEvent.class)
     private static void startSearchEvent(Event event) {
         connectionEstablishedTime = System.currentTimeMillis();
         synchronized (DatabaseNativeService.class) {
-            String url = "/searchAsync";
-            sendSearchToCore((StartSearchEvent) event, url);
+            String url = getUrl() + "/searchAsync";
+            sendSearchToCore(url, (StartSearchEvent) event);
         }
     }
 
-    private static void sendSearchToCore(StartSearchEvent startSearchEvent, String url) {
+    private static void sendSearchToCore(String url, StartSearchEvent startSearchEvent) {
         HashMap<String, Object> params = new HashMap<>();
         String[] searchCase = startSearchEvent.searchCase.get();
         if (searchCase != null) {
@@ -240,42 +240,42 @@ public class DatabaseNativeService {
         }
         params.put("maxResultNum", MAX_RESULT_NUMBER);
         String paramsStr = HttpUtil.toParams(params);
-        String taskUUID = CoreUtil.post(url + "?" + paramsStr, port);
+        String taskUUID = HttpUtil.post(url + "?" + paramsStr, Collections.emptyMap());
         startSearchEvent.setReturnValue(taskUUID);
     }
 
     @EventListener(listenClass = SearchBarCloseEvent.class)
     private static void stopSearchEvent(Event event) {
-        String url = "/search";
-        CoreUtil.getCoreResult("DELETE", url, port);
+        String url = getUrl() + "/search";
+        HttpRequest.delete(url).timeout(HttpGlobalConfig.getTimeout()).execute().close();
     }
 
     @EventRegister(registerClass = AddToCacheEvent.class)
     private static void addToCacheEvent(Event event) {
-        String url = "/cache";
+        String url = getUrl() + "/cache";
         HashMap<String, Object> params = new HashMap<>();
         params.put("path", ((AddToCacheEvent) event).path);
         String paramsStr = HttpUtil.toParams(params);
-        CoreUtil.post(url + "?" + paramsStr, port);
+        HttpUtil.post(url + "?" + paramsStr, Collections.emptyMap());
     }
 
     @EventRegister(registerClass = DeleteFromCacheEvent.class)
     private static void deleteFromCacheEvent(Event event) {
-        String url = "/cache";
+        String url = getUrl() + "/cache";
         HashMap<String, Object> params = new HashMap<>();
         params.put("path", ((DeleteFromCacheEvent) event).path);
         String paramsStr = HttpUtil.toParams(params);
-        CoreUtil.getCoreResult("DELETE", url + "?" + paramsStr, port);
+        HttpRequest.delete(url + "?" + paramsStr).timeout(HttpGlobalConfig.getTimeout()).execute().close();
     }
 
     @EventRegister(registerClass = UpdateDatabaseEvent.class)
     private static void updateDatabaseEvent(Event event) {
-        String url = "/update";
+        String url = getUrl() + "/update";
         UpdateDatabaseEvent updateDatabaseEvent = (UpdateDatabaseEvent) event;
         HashMap<String, Object> params = new HashMap<>();
         params.put("isDropPrevious", updateDatabaseEvent.isDropPrevious);
         String paramsStr = HttpUtil.toParams(params);
-        CoreUtil.post(url + "?" + paramsStr, port);
+        HttpUtil.post(url + "?" + paramsStr, Collections.emptyMap());
         do {
             try {
                 TimeUnit.SECONDS.sleep(1);
@@ -290,52 +290,52 @@ public class DatabaseNativeService {
 
     @EventRegister(registerClass = OptimiseDatabaseEvent.class)
     private static void optimizeDatabaseEvent(Event event) {
-        String url = "/optimize";
-        CoreUtil.post(url, port);
+        String url = getUrl() + "/optimize";
+        HttpUtil.post(url, Collections.emptyMap());
     }
 
     @EventRegister(registerClass = AddToSuffixPriorityMapEvent.class)
     private static void addToSuffixPriorityMapEvent(Event event) {
         AddToSuffixPriorityMapEvent addToSuffixPriorityMapEvent = (AddToSuffixPriorityMapEvent) event;
-        String url = "/suffixPriority";
+        String url = getUrl() + "/suffixPriority";
         HashMap<String, Object> params = new HashMap<>();
         params.put("suffix", addToSuffixPriorityMapEvent.suffix);
         params.put("priority", addToSuffixPriorityMapEvent.priority);
         String paramsStr = HttpUtil.toParams(params);
-        CoreUtil.post(url + "?" + paramsStr, port);
+        HttpUtil.post(url + "?" + paramsStr, Collections.emptyMap());
     }
 
     @EventRegister(registerClass = ClearSuffixPriorityMapEvent.class)
     private static void clearSuffixPriorityMapEvent(Event event) {
-        String url = "/clearSuffixPriority";
-        CoreUtil.getCoreResult("DELETE", url, port);
+        String url = getUrl() + "/clearSuffixPriority";
+        HttpRequest.delete(url).timeout(HttpGlobalConfig.getTimeout()).execute().close();
     }
 
     @EventRegister(registerClass = DeleteFromSuffixPriorityMapEvent.class)
     private static void deleteFromSuffixPriorityMapEvent(Event event) {
-        String url = "/suffixPriority";
+        String url = getUrl() + "/suffixPriority";
         DeleteFromSuffixPriorityMapEvent deleteFromSuffixPriorityMapEvent = (DeleteFromSuffixPriorityMapEvent) event;
         HashMap<String, Object> params = new HashMap<>();
         params.put("suffix", deleteFromSuffixPriorityMapEvent.suffix);
         String paramsStr = HttpUtil.toParams(params);
-        CoreUtil.getCoreResult("DELETE", url + "?" + paramsStr, port);
+        HttpRequest.delete(url + "?" + paramsStr).timeout(HttpGlobalConfig.getTimeout()).execute().close();
     }
 
     @EventRegister(registerClass = UpdateSuffixPriorityEvent.class)
     private static void updateSuffixPriorityEvent(Event event) {
         UpdateSuffixPriorityEvent updateSuffixPriorityEvent = (UpdateSuffixPriorityEvent) event;
-        String url = "/suffixPriority";
+        String url = getUrl() + "/suffixPriority";
         HashMap<String, Object> params = new HashMap<>();
         params.put("oldSuffix", updateSuffixPriorityEvent.originSuffix);
         params.put("newSuffix", updateSuffixPriorityEvent.newSuffix);
         params.put("priority", updateSuffixPriorityEvent.newPriority);
         String paramsStr = HttpUtil.toParams(params);
-        CoreUtil.getCoreResult("PUT", url + "?" + paramsStr, port);
+        HttpRequest.put(url + "?" + paramsStr).timeout(HttpGlobalConfig.getTimeout()).execute().close();
     }
 
     @EventListener(listenClass = RestartEvent.class)
     private static void restartEvent(Event event) {
-        String url = "/close";
-        CoreUtil.post(url, port);
+        String url = getUrl() + "/close";
+        HttpUtil.post(url, Collections.emptyMap());
     }
 }
