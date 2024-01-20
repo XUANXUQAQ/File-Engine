@@ -49,9 +49,12 @@ public class MainClass {
             //清空tmp
             FileUtil.deleteDir(new File("tmp"));
             //兼容以前版本，将data文件夹移动到core
-            FileUtil.copyDir("data", "core\\data");
-            FileUtil.deleteDir(new File("data"));
-            Files.delete(Path.of("data"));
+            File data = new File("data");
+            if (data.exists()) {
+                FileUtil.copyDir("data", "core\\data");
+                FileUtil.deleteDir(data);
+                Files.delete(Path.of("data"));
+            }
             sendStartCoreEvent();
             setAllConfigs();
             checkConfigs();
