@@ -864,7 +864,6 @@ public class DatabaseService {
             GPUAccelerator.INSTANCE.stopCollectResults();
         }
         searchTask.searchDoneFlag = true;
-        PathMatcher.INSTANCE.closeConnections();
     }
 
     /**
@@ -2005,6 +2004,21 @@ public class DatabaseService {
     private static void stopSearchEvent(Event event) {
         DatabaseService databaseService = getInstance();
         databaseService.stopAllSearch();
+        ThreadPoolUtil.getInstance().executeTask(() -> {
+            EventManagement eventManagement = EventManagement.getInstance();
+            final long startTime = System.currentTimeMillis();
+            while (eventManagement.notMainExit() && System.currentTimeMillis() - startTime < Constants.CLOSE_DATABASE_TIMEOUT_MILLS) {
+                if (databaseService.searchThreadCount.get() == 0) {
+                    PathMatcher.INSTANCE.closeConnections();
+                    break;
+                }
+                try {
+                    TimeUnit.MILLISECONDS.sleep(100);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
     }
 
     @EventListener(listenClass = BootSystemEvent.class)
