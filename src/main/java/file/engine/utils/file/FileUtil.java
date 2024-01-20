@@ -86,4 +86,27 @@ public class FileUtil {
             log.error("error: {}", e.getMessage(), e);
         }
     }
+
+    public static void copyDir(String sourcePath, String newPath) {
+        File source = new File(sourcePath);
+        File dest = new File(newPath);
+        String[] filePath = source.list();
+        //获取该文件夹下的所有文件以及目录的名字
+        if (filePath == null || filePath.length == 0) {
+            return;
+        }
+        if (!dest.exists()) {
+            dest.mkdirs();
+        }
+        for (String temp : filePath) {
+            //查看其数组中每一个是文件还是文件夹
+            if (isDir(sourcePath + File.separator + temp)) {
+                //为文件夹，进行递归
+                copyDir(sourcePath + File.separator + temp, newPath + File.separator + temp);
+            } else {
+                //为文件则进行拷贝
+                copyFile(new File(sourcePath + File.separator + temp), new File(newPath + File.separator + temp));
+            }
+        }
+    }
 }
