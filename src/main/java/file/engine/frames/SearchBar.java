@@ -125,6 +125,8 @@ public class SearchBar {
     private volatile AtomicInteger labelRefreshFlag = new AtomicInteger(); //记录label是否已经有显示结果，从低位开始，label1-8对应1-8位
     private volatile ArrayList<ResultWrap> listResults = new ArrayList<>();  //保存从数据库中找出符合条件的记录（文件路径）
     private volatile String[] searchCase;
+    private short searchCaseMask = 0;
+    private short lastSearchCaseMask = 0;
     private volatile String searchText = "";
     private volatile String[] keywords;
     private final AtomicInteger currentLabelSelectedPosition;   //保存当前是哪个label被选中 范围 0 - 7
@@ -798,9 +800,16 @@ public class SearchBar {
                 } else if (configs.getCopyPathKeyCode() == key) {
                     isCopyPathPressed.set(true);
                 }
+                if (key == KeyEvent.VK_CONTROL) {
+                    searchCaseMask &= ~3;
+                    searchCaseMask |= 1;
+                } else if (key == KeyEvent.VK_SHIFT) {
+                    searchCaseMask &= ~3;
+                    searchCaseMask |= 2;
+                }
 
                 if (!listResults.isEmpty()) {
-                    if (key != 38 && key != 40) {
+                    if (key != KeyEvent.VK_UP && key != KeyEvent.VK_DOWN) {
                         String res = listResults.get(currentResultCount.get()).result();
                         if (runningMode == RunningMode.NORMAL_MODE) {
                             if (res.startsWith("plugin")) {
@@ -933,21 +942,50 @@ public class SearchBar {
                 }
                 var configs = allConfigs.getConfigEntity();
 
-                if (key != 38 && key != 40) {
-                    String res = listResults.get(currentResultCount.get()).result();
-                    if (runningMode == RunningMode.NORMAL_MODE) {
-                        if (res.startsWith("plugin")) {
-                            String[] split = splitPluginResult(res);
-                            GetPluginByIdentifierEvent getPluginByIdentifierEvent = new GetPluginByIdentifierEvent(split[1]);
-                            EventManagement eventManagement = EventManagement.getInstance();
-                            eventManagement.putEvent(getPluginByIdentifierEvent);
-                            eventManagement.waitForEvent(getPluginByIdentifierEvent);
-                            Optional<PluginService.PluginInfo> pluginInfoOptional = getPluginByIdentifierEvent.getReturnValue();
-                            pluginInfoOptional.ifPresent(pluginInfo -> pluginInfo.plugin.keyReleased(arg0, split[2]));
+                if (key == KeyEvent.VK_CONTROL) {
+                    searchCaseMask &= ~1;
+                } else if (key == KeyEvent.VK_SHIFT) {
+                    searchCaseMask &= ~2;
+                }
+
+                if (key == KeyEvent.VK_SPACE) {
+                    boolean isValid = (searchCaseMask & 3) != 0;
+                    if (isValid) {
+                        if ((searchCaseMask & 1) != 0) {
+                            searchCaseMask |= (short) 0x8000;
+                        } else if ((searchCaseMask & 2) != 0) {
+                            searchCaseMask &= 3;
                         }
-                    } else if (runningMode == RunningMode.PLUGIN_MODE) {
-                        if (currentUsingPlugin != null) {
-                            currentUsingPlugin.keyReleased(arg0, splitPluginResult(res)[2]);
+                        if (runningMode == RunningMode.NORMAL_MODE) {
+                            if (lastSearchCaseMask == 0 || lastSearchCaseMask != searchCaseMask) {
+                                lastSearchCaseMask = searchCaseMask;
+                                listResults = new ArrayList<>();
+                                labelRefreshFlag = new AtomicInteger();
+                                clearAllLabels();
+                                resetAllStatus();
+                                sendSearchSignal();
+                            }
+                        }
+                    }
+                }
+
+                if (!listResults.isEmpty()) {
+                    if (key != KeyEvent.VK_UP && key != KeyEvent.VK_DOWN) {
+                        String res = listResults.get(currentResultCount.get()).result();
+                        if (runningMode == RunningMode.NORMAL_MODE) {
+                            if (res.startsWith("plugin")) {
+                                String[] split = splitPluginResult(res);
+                                GetPluginByIdentifierEvent getPluginByIdentifierEvent = new GetPluginByIdentifierEvent(split[1]);
+                                EventManagement eventManagement = EventManagement.getInstance();
+                                eventManagement.putEvent(getPluginByIdentifierEvent);
+                                eventManagement.waitForEvent(getPluginByIdentifierEvent);
+                                Optional<PluginService.PluginInfo> pluginInfoOptional = getPluginByIdentifierEvent.getReturnValue();
+                                pluginInfoOptional.ifPresent(pluginInfo -> pluginInfo.plugin.keyReleased(arg0, split[2]));
+                            }
+                        } else if (runningMode == RunningMode.PLUGIN_MODE) {
+                            if (currentUsingPlugin != null) {
+                                currentUsingPlugin.keyReleased(arg0, splitPluginResult(res)[2]);
+                            }
                         }
                     }
                 }
@@ -2537,6 +2575,8 @@ public class SearchBar {
         isRoundRadiusSet.set(false);
         searchInfoLabel.setText("");
         searchInfoLabel.setIcon(null);
+        searchCaseMask = 0;
+        lastSearchCaseMask = 0;
     }
 
     /**
@@ -2610,6 +2650,13 @@ public class SearchBar {
         label8.setFont(newFont);
     }
 
+    private void sendSearchSignal() {
+        startTime = System.currentTimeMillis();
+        startSearchSignal.set(true);
+        isSearchNotStarted.set(true);
+        isCudaSearchNotStarted.set(true);
+    }
+
     private void addTextFieldDocumentListener() {
         textField.getDocument().addDocumentListener(new DocumentListener() {
             private boolean isSendSignal;
@@ -2634,10 +2681,7 @@ public class SearchBar {
                 }
                 isSendSignal = setRunningMode(isPluginSearchBarClearReady);
                 if (isSendSignal) {
-                    startTime = System.currentTimeMillis();
-                    startSearchSignal.set(true);
-                    isSearchNotStarted.set(true);
-                    isCudaSearchNotStarted.set(true);
+                    sendSearchSignal();
                 }
             }
 
@@ -2670,10 +2714,7 @@ public class SearchBar {
                     }
                     isSendSignal = setRunningMode(isPluginSearchBarClearReady);
                     if (isSendSignal) {
-                        startTime = System.currentTimeMillis();
-                        startSearchSignal.set(true);
-                        isSearchNotStarted.set(true);
-                        isCudaSearchNotStarted.set(true);
+                        sendSearchSignal();
                     }
                 }
             }
@@ -3389,7 +3430,7 @@ public class SearchBar {
             final long startShowSearchDoneTime = System.currentTimeMillis();
             while (isVisible() &&
                     !getSearchBarText().isEmpty() &&
-                    ((System.currentTimeMillis() - startShowSearchDoneTime) < 3000) &&
+                    ((System.currentTimeMillis() - startShowSearchDoneTime) < 1000) &&
                     !shouldExitMergeResultThread &&
                     (runningMode == RunningMode.NORMAL_MODE) &&
                     listResultsTemp == listResults) {
@@ -3428,8 +3469,29 @@ public class SearchBar {
      */
     private void showSelectInfoOnLabel() {
         SwingUtilities.invokeLater(() -> {
-            searchInfoLabel.setText(TranslateService.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
-                    TranslateService.INSTANCE.getTranslation("Number of current results") + ": " + listResults.size());
+            String onlyFiles = TranslateService.INSTANCE.getTranslation("Ctrl + Space") + ": " + TranslateService.INSTANCE.getTranslation("Files only");
+            String onlyFolders = TranslateService.INSTANCE.getTranslation("Ctrl + Shift + Space") + ": " + TranslateService.INSTANCE.getTranslation("Folders only");
+            StringBuilder showText = new StringBuilder();
+            if (searchCase != null) {
+                boolean fileFilterExist = Arrays.asList(searchCase).contains("f");
+                boolean folderFilterExist = Arrays.asList(searchCase).contains("d");
+                if (fileFilterExist) {
+                    showText.append(TranslateService.INSTANCE.getTranslation("Files only")).append("  ");
+                } else if (folderFilterExist) {
+                    showText.append(TranslateService.INSTANCE.getTranslation("Folders only")).append("  ");
+                }
+                showText.append(TranslateService.INSTANCE.getTranslation("Currently selected"))
+                        .append(": ")
+                        .append(currentResultCount.get() + 1)
+                        .append("    ")
+                        .append(TranslateService.INSTANCE.getTranslation("Number of current results"))
+                        .append(": ")
+                        .append(listResults.size());
+            } else {
+                showText.append(onlyFiles).append(", ").append(onlyFolders);
+            }
+
+            searchInfoLabel.setText(showText.toString());
             searchInfoLabel.setIcon(null);
         });
     }
@@ -3766,6 +3828,23 @@ public class SearchBar {
                 }
             }
             keywords = RegexUtil.semicolon.split(searchText);
+            final String onlyFile = "f";
+            final String onlyDir = "d";
+            if (searchCase == null || Arrays.stream(searchCase).noneMatch(each -> onlyFile.equals(each) || onlyDir.equals(each))) {
+                if ((searchCaseMask & 3) != 0) {
+                    ArrayList<String> searchCaseArray = new ArrayList<>();
+                    if (searchCase != null) {
+                        searchCaseArray.addAll(List.of(searchCase));
+                    }
+                    if ((searchCaseMask & 0x8000) != 0) {
+                        searchCaseArray.add(onlyFile);
+                    } else {
+                        searchCaseArray.add(onlyDir);
+                    }
+                    var arr = new String[searchCaseArray.size()];
+                    searchCase = searchCaseArray.toArray(arr);
+                }
+            }
         }
     }
 

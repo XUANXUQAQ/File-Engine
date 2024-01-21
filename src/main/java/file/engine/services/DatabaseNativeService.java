@@ -234,7 +234,7 @@ public class DatabaseNativeService {
         HashMap<String, Object> params = new HashMap<>();
         String[] searchCase = startSearchEvent.searchCase.get();
         if (searchCase != null) {
-            params.put("searchText", startSearchEvent.searchText.get() + "|" + String.join(",", searchCase));
+            params.put("searchText", String.join(";", startSearchEvent.keywords.get()) + "|" + String.join(";", searchCase));
         } else {
             params.put("searchText", startSearchEvent.searchText.get());
         }

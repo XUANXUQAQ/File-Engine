@@ -243,3 +243,7 @@ Enable GPU acceleration=
 Double-click shift to switch here=
 GUI related settings=
 Search related settings=
+Files only=
+Folders only=
+Ctrl + Space=
+Ctrl + Shift + Space=

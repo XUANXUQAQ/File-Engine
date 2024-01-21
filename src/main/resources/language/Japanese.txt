@@ -244,3 +244,7 @@ Number of search threads=検索スレッド数
 Double-click shift to switch here=ここで切り替えるにはシフトをダブルクリックします
 GUI related settings=GUI関連の設定
 Search related settings=検索関連の設定
+Files only=ファイルのみ
+Folders only=フォルダのみ
+Ctrl + Space=Ctrl + Space
+Ctrl + Shift + Space=Ctrl + Shift + Space

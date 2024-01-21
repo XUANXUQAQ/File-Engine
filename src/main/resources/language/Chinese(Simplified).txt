@@ -244,3 +244,7 @@ Number of search threads=搜索线程数
 Double-click shift to switch here=双击shift以切换到这里
 GUI related settings=界面相关设置
 Search related settings=搜索相关设置
+Files only=仅文件
+Folders only=仅文件夹
+Ctrl + Space=Ctrl + 空格
+Ctrl + Shift + Space=Ctrl + Shift + 空格
