@@ -23,15 +23,10 @@ import file.engine.utils.ProcessUtil;
 import file.engine.utils.ThreadPoolUtil;
 import file.engine.utils.file.FileUtil;
 import file.engine.utils.gson.GsonUtil;
-import file.engine.utils.system.properties.IsDebug;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.BindException;
-import java.net.ServerSocket;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -44,7 +39,7 @@ public class DatabaseNativeService {
     private static int port = 50721;
     private static final int MAX_RESULT_NUMBER = 200;
     private static final String CORE_URL = "http://127.0.0.1:%d";
-    private static final String CORE_CONFIG_FILE = Constants.FILE_ENGINE_CORE_DIR + "user/settings.json";
+    private static final String CORE_PORT_FILE = Constants.FILE_ENGINE_CORE_DIR + "tmp/$$port";
     private static volatile long connectionEstablishedTime = 0;
 
     public static void closeConnections() {
@@ -118,47 +113,23 @@ public class DatabaseNativeService {
         return Constants.Enums.DatabaseStatus.valueOf(status);
     }
 
-    private static int getAvailablePort() {
-        if (IsDebug.isDebug()) {
-            return 50721;
-        }
-        int port;
-        do {
-            Random random = new Random();
-            port = random.nextInt(20000, 65535);
-        } while (!isAvailable(port));
-        return port;
-    }
-
     private static String getUrl() {
         return String.format(CORE_URL, port);
     }
 
-    private static boolean isAvailable(int port) {
-        try {
-            new ServerSocket(port).close();
-        } catch (IOException e) {
-            if (e instanceof BindException) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     @SneakyThrows
     private static void startCore() {
-        Path coreSettingsPath = Path.of(CORE_CONFIG_FILE);
-        if (FileUtil.isFileExist(CORE_CONFIG_FILE)) {
-            String coreConfigs = Files.readString(coreSettingsPath, StandardCharsets.UTF_8);
-            Gson gson = GsonUtil.getInstance().getGson();
-            Map<String, Object> coreConfigMap = gson.fromJson(coreConfigs, Map.class);
-            port = getAvailablePort();
-            coreConfigMap.put("port", port);
-            coreConfigs = gson.toJson(coreConfigMap);
-            Files.writeString(coreSettingsPath, coreConfigs);
+        Path portFilepath = Path.of(CORE_PORT_FILE);
+        if (!FileUtil.isFileExist(CORE_PORT_FILE)) {
+            String startCmd = Files.readString(Path.of(CORE_START_CMD));
+            Runtime.getRuntime().exec(new String[]{"cmd.exe", "/c", startCmd}, null, new File(Constants.FILE_ENGINE_CORE_DIR));
+            final long start = System.currentTimeMillis();
+            while (!FileUtil.isFileExist(CORE_PORT_FILE) && System.currentTimeMillis() - start < 10_000) {
+                TimeUnit.MILLISECONDS.sleep(500);
+            }
         }
-        String startCmd = Files.readString(Path.of(CORE_START_CMD));
-        Runtime.getRuntime().exec(new String[]{"cmd.exe", "/c", startCmd}, null, new File(Constants.FILE_ENGINE_CORE_DIR));
+        String s = Files.readString(portFilepath);
+        port = Integer.parseInt(s);
     }
 
     @EventRegister(registerClass = StartCoreEvent.class)
