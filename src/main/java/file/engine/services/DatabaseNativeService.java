@@ -27,6 +27,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -120,13 +121,26 @@ public class DatabaseNativeService {
     @SneakyThrows
     private static void startCore() {
         Path portFilepath = Path.of(CORE_PORT_FILE);
-        if (!FileUtil.isFileExist(CORE_PORT_FILE)) {
-            String startCmd = Files.readString(Path.of(CORE_START_CMD));
-            Runtime.getRuntime().exec(new String[]{"cmd.exe", "/c", startCmd}, null, new File(Constants.FILE_ENGINE_CORE_DIR));
-            final long start = System.currentTimeMillis();
-            while (!FileUtil.isFileExist(CORE_PORT_FILE) && System.currentTimeMillis() - start < 10_000) {
-                TimeUnit.MILLISECONDS.sleep(500);
+        if (FileUtil.isFileExist(CORE_PORT_FILE)) {
+            String s = Files.readString(portFilepath);
+            port = Integer.parseInt(s);
+            try {
+                getStatus();
+            } catch (Exception e) {
+                log.error("Check core process failed. Try to restart");
+                startCoreProcess(portFilepath);
             }
+        } else {
+            startCoreProcess(portFilepath);
+        }
+    }
+
+    private static void startCoreProcess(Path portFilepath) throws IOException, InterruptedException {
+        String startCmd = Files.readString(Path.of(CORE_START_CMD));
+        Runtime.getRuntime().exec(new String[]{"cmd.exe", "/c", startCmd}, null, new File(Constants.FILE_ENGINE_CORE_DIR));
+        final long start = System.currentTimeMillis();
+        while (!FileUtil.isFileExist(CORE_PORT_FILE) && System.currentTimeMillis() - start < 10_000) {
+            TimeUnit.MILLISECONDS.sleep(500);
         }
         String s = Files.readString(portFilepath);
         port = Integer.parseInt(s);
