@@ -47,6 +47,10 @@ public class Event {
         isFinished.set(true);
     }
 
+    protected void setFinished() {
+        isFinished.set(true);
+    }
+
     public void setReturnValue(Object obj) {
         this.returnValue = obj;
     }

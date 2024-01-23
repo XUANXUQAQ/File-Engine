@@ -578,12 +578,13 @@ public class EventManagement {
                 continue;
             }
             //判断任务是否执行完成或者失败
-            if (event.isFinished() || event.allRetryFailed()) {
+            if (event.isFinished()) {
                 continue;
             }
             if (event.allRetryFailed()) {
                 //判断是否超过最大次数
                 event.execErrorHandler();
+                event.setFinished();
                 if (isDebug) {
                     log.error("任务超时---" + event);
                 }
@@ -603,14 +604,15 @@ public class EventManagement {
 
     private void eventHandle(@NonNull Event event) {
         final boolean isDebug = IsDebug.isDebug();
-        while (true) {
+        while (!exit) {
             //判断任务是否执行完成或者失败
-            if (event.isFinished() || event.allRetryFailed()) {
+            if (event.isFinished()) {
                 return;
             }
             if (event.allRetryFailed()) {
                 //判断是否超过最大次数
                 event.execErrorHandler();
+                event.setFinished();
                 if (isDebug) {
                     log.error("任务超时---" + event);
                 }
