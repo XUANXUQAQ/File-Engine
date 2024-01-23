@@ -122,12 +122,13 @@ public class DatabaseNativeService {
     private static void startCore() {
         Path portFilepath = Path.of(CORE_PORT_FILE);
         if (FileUtil.isFileExist(CORE_PORT_FILE)) {
-            String s = Files.readString(portFilepath);
-            port = Integer.parseInt(s);
             try {
+                String s = Files.readString(portFilepath);
+                port = Integer.parseInt(s);
                 getStatus();
             } catch (Exception e) {
                 log.error("Check core process failed. Try to restart");
+                Files.delete(portFilepath);
                 startCoreProcess(portFilepath);
             }
         } else {
