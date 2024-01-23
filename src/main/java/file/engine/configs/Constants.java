@@ -39,7 +39,7 @@ public class Constants {
     // 默认swing主题
     public static final String DEFAULT_SWING_THEME = "MaterialLighter";
 
-    public static final String FILE_ENGINE_CORE_DIR = "core/";
+    public static final String FILE_ENGINE_CORE_DIR = ".\\core\\";
 
     static {
         version = "0";

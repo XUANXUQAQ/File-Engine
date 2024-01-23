@@ -27,7 +27,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -40,7 +40,7 @@ public class DatabaseNativeService {
     private static int port = 50721;
     private static final int MAX_RESULT_NUMBER = 200;
     private static final String CORE_URL = "http://127.0.0.1:%d";
-    private static final String CORE_PORT_FILE = Constants.FILE_ENGINE_CORE_DIR + "tmp/$$port";
+    private static final String CORE_CONFIG = Constants.FILE_ENGINE_CORE_DIR + "user" + File.separator + "settings.json";
     private static volatile long connectionEstablishedTime = 0;
 
     public static void closeConnections() {
@@ -120,31 +120,22 @@ public class DatabaseNativeService {
 
     @SneakyThrows
     private static void startCore() {
-        Path portFilepath = Path.of(CORE_PORT_FILE);
-        if (FileUtil.isFileExist(CORE_PORT_FILE)) {
-            try {
-                String s = Files.readString(portFilepath);
-                port = Integer.parseInt(s);
-                getStatus();
-            } catch (Exception e) {
-                log.error("Check core process failed. Try to restart");
-                Files.delete(portFilepath);
-                startCoreProcess(portFilepath);
-            }
-        } else {
-            startCoreProcess(portFilepath);
-        }
-    }
-
-    private static void startCoreProcess(Path portFilepath) throws IOException, InterruptedException {
         String startCmd = Files.readString(Path.of(CORE_START_CMD));
         Runtime.getRuntime().exec(new String[]{"cmd.exe", "/c", startCmd}, null, new File(Constants.FILE_ENGINE_CORE_DIR));
-        final long start = System.currentTimeMillis();
-        while (!FileUtil.isFileExist(CORE_PORT_FILE) && System.currentTimeMillis() - start < 10_000) {
-            TimeUnit.MILLISECONDS.sleep(500);
+        final long startTime = System.currentTimeMillis();
+        while (!FileUtil.isFileExist(CORE_CONFIG)) {
+            TimeUnit.SECONDS.sleep(1);
+            if (System.currentTimeMillis() - startTime > 10_000) {
+                throw new RuntimeException("Start File-Engine-Core failed");
+            }
         }
-        String s = Files.readString(portFilepath);
-        port = Integer.parseInt(s);
+        try {
+            String s = Files.readString(Path.of(CORE_CONFIG), StandardCharsets.UTF_8);
+            CoreConfigEntity coreConfigEntity = GsonUtil.INSTANCE.getGson().fromJson(s, CoreConfigEntity.class);
+            port = coreConfigEntity.getPort();
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+        }
     }
 
     @EventRegister(registerClass = StartCoreEvent.class)
@@ -158,6 +149,7 @@ public class DatabaseNativeService {
                 status = getStatus();
                 TimeUnit.MILLISECONDS.sleep(250);
             } catch (Exception ignored) {
+                // ignored
             }
         } while (status != Constants.Enums.DatabaseStatus.NORMAL && System.currentTimeMillis() - startTime < 10_000);
         log.info("File-Engine-Core启动完成");
