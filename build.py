@@ -125,9 +125,14 @@ if not os.path.exists(buildDir):
     os.mkdir(buildDir)
 
 jdkPath = ''
-if len(sys.argv) == 2:
+additionalModule = []
+if len(sys.argv) > 1:
     jdkPath = sys.argv[1]
     print("JAVA_HOME is set to " + jdkPath)
+if len(sys.argv) > 2:
+    for i in range(2, len(sys.argv)):
+        additionalModule.append(sys.argv[i])
+        print("additional module added: " + sys.argv[i])
 
 # 编译jar
 if os.system('set JAVA_HOME=' + jdkPath + '&& mvn clean compile package') != 0:
@@ -164,6 +169,9 @@ for each in tmpModuleList:
         moduleList.append(moduleName[0])
 for eachModule in modulesFromJar:
     moduleList.append(eachModule)
+#将additionalModule添加到moduleList
+for eachModule in additionalModule:
+    moduleList.append(eachModule.strip())
 moduleList = set(moduleList)
 print("deps: " + str(moduleList))
 depsStr = ','.join(moduleList)
