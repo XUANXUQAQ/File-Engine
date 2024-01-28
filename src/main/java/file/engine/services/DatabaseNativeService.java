@@ -31,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -42,6 +43,7 @@ public class DatabaseNativeService {
     private static final String CORE_URL = "http://127.0.0.1:%d";
     private static final String CORE_CONFIG = Constants.FILE_ENGINE_CORE_DIR + "user" + File.separator + "settings.json";
     private static volatile long connectionEstablishedTime = 0;
+    private static final Set<String> searchTaskUUIDSet = ConcurrentHashMap.newKeySet();
 
     public static void closeConnections() {
         String url = getUrl() + "/closeConnections";
@@ -209,6 +211,9 @@ public class DatabaseNativeService {
     }
 
     private static void sendSearchToCore(String url, StartSearchEvent startSearchEvent) {
+        String removeTaskUrl = getUrl() + "/result";
+        searchTaskUUIDSet.forEach(uuid -> HttpRequest.delete(removeTaskUrl + "?uuid=" + uuid).execute().close());
+        searchTaskUUIDSet.clear();
         HashMap<String, Object> params = new HashMap<>();
         String[] searchCase = startSearchEvent.searchCase.get();
         if (searchCase != null) {
@@ -219,6 +224,7 @@ public class DatabaseNativeService {
         params.put("maxResultNum", MAX_RESULT_NUMBER);
         String paramsStr = HttpUtil.toParams(params);
         String taskUUID = HttpUtil.post(url + "?" + paramsStr, Collections.emptyMap());
+        searchTaskUUIDSet.add(taskUUID);
         startSearchEvent.setReturnValue(taskUUID);
     }
 
@@ -226,6 +232,9 @@ public class DatabaseNativeService {
     private static void stopSearchEvent(Event event) {
         String url = getUrl() + "/search";
         HttpRequest.delete(url).timeout(HttpGlobalConfig.getTimeout()).execute().close();
+        String removeTaskUrl = getUrl() + "/result";
+        searchTaskUUIDSet.forEach(uuid -> HttpRequest.delete(removeTaskUrl + "?uuid=" + uuid).execute().close());
+        searchTaskUUIDSet.clear();
     }
 
     @EventRegister(registerClass = AddToCacheEvent.class)
