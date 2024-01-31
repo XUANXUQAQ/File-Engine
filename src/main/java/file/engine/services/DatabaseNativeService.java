@@ -4,7 +4,6 @@ import cn.hutool.http.HttpGlobalConfig;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpUtil;
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
@@ -27,7 +26,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.nio.charset.StandardCharsets;
+import java.net.ServerSocket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -120,9 +119,20 @@ public class DatabaseNativeService {
         return String.format(CORE_URL, port);
     }
 
+    private static int getRandomPort() {
+        try (ServerSocket serverSocket = new ServerSocket(0)) {
+            return serverSocket.getLocalPort();
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
+    }
+
     @SneakyThrows
     private static void startCore() {
         String startCmd = Files.readString(Path.of(CORE_START_CMD));
+        port = getRandomPort();
+        startCmd += " " + port;
         Runtime.getRuntime().exec(new String[]{"cmd.exe", "/c", startCmd}, null, new File(Constants.FILE_ENGINE_CORE_DIR));
         final long startTime = System.currentTimeMillis();
         while (!FileUtil.isFileExist(CORE_CONFIG)) {
@@ -130,13 +140,6 @@ public class DatabaseNativeService {
             if (System.currentTimeMillis() - startTime > 10_000) {
                 throw new RuntimeException("Start File-Engine-Core failed");
             }
-        }
-        try {
-            String s = Files.readString(Path.of(CORE_CONFIG), StandardCharsets.UTF_8);
-            CoreConfigEntity coreConfigEntity = GsonUtil.INSTANCE.getGson().fromJson(s, CoreConfigEntity.class);
-            port = coreConfigEntity.getPort();
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
         }
     }
 
@@ -187,11 +190,9 @@ public class DatabaseNativeService {
         if (configEntity != null) {
             configEntity = AllConfigs.getInstance().getConfigEntity();
             Gson gson = GsonUtil.getInstance().getGson();
-            JsonElement jsonTree = gson.toJsonTree(configEntity.getCoreConfigEntity());
-            Map<String, Object> configMap = gson.fromJson(jsonTree, Map.class);
-            configMap.put("port", port);
+            String coreJson = gson.toJson(configEntity.getCoreConfigEntity());
             String url = getUrl() + "/config";
-            HttpUtil.post(url, gson.toJson(configMap));
+            HttpUtil.post(url, coreJson);
         }
     }
 
