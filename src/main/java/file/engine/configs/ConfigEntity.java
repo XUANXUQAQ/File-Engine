@@ -102,5 +102,5 @@ public class ConfigEntity {
     private AdvancedConfigEntity advancedConfigEntity;
 
     @SerializedName("coreConfigs")
-    private CoreConfigEntity coreConfigEntity;
+    private transient CoreConfigEntity coreConfigEntity;
 }

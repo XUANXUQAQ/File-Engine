@@ -6,7 +6,6 @@ import file.engine.event.handler.EventManagement;
 import file.engine.utils.system.properties.IsDebug;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.swing.*;
@@ -16,7 +15,9 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Objects;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -210,44 +211,47 @@ public class GetIconUtil {
         }
     }
 
-    @SneakyThrows
     private void consumeTaskFunc() {
         var eventManagement = EventManagement.getInstance();
         while (eventManagement.notMainExit()) {
-            var task = workingQueue.take();
-            if (task == EMPTY_TASK) {
-                return;
-            }
-            if (task.timeoutCallBack != null) {
-                ImageIcon icon;
-                if (task.isDone) {
-                    icon = task.icon;
-                } else {
-                    BufferedImage iconForFile = JIconExtract.getIconForFile(task.width, task.height, task.path);
-                    if (iconForFile == null) {
-                        icon = changeIcon(constantIconMap.get("blankIcon"), task.width, task.height);
+            try {
+                var task = workingQueue.take();
+                if (task == EMPTY_TASK) {
+                    return;
+                }
+                if (task.timeoutCallBack != null) {
+                    ImageIcon icon;
+                    if (task.isDone) {
+                        icon = task.icon;
                     } else {
-                        icon = new ImageIcon(iconForFile);
-                        cacheIconMap.put(task.path.getAbsolutePath(), new IconCache(System.currentTimeMillis(), icon));
-                    }
+                        BufferedImage iconForFile = JIconExtract.getIconForFile(task.width, task.height, task.path);
+                        if (iconForFile == null) {
+                            icon = changeIcon(constantIconMap.get("blankIcon"), task.width, task.height);
+                        } else {
+                            icon = new ImageIcon(iconForFile);
+                            cacheIconMap.put(task.path.getAbsolutePath(), new IconCache(System.currentTimeMillis(), icon));
+                        }
 //                     icon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(task.path), task.width, task.height);
 //                    if (null != icon) {
 //                        cacheIconMap.put(task.path.getAbsolutePath(), new IconCache(System.currentTimeMillis(), icon));
 //                    } else {
 //                        icon = changeIcon(constantIconMap.get("blankIcon"), task.width, task.height);
 //                    }
-                }
-                task.timeoutCallBack.accept(icon);
-            } else {
-                BufferedImage iconForFile = JIconExtract.getIconForFile(task.width, task.height, task.path);
-                if (iconForFile == null) {
-                    task.icon = changeIcon(constantIconMap.get("blankIcon"), task.width, task.height);
+                    }
+                    task.timeoutCallBack.accept(icon);
                 } else {
-                    task.icon = new ImageIcon(iconForFile);
-                    cacheIconMap.put(task.path.getAbsolutePath(), new IconCache(System.currentTimeMillis(), task.icon));
-                }
+                    BufferedImage iconForFile = JIconExtract.getIconForFile(task.width, task.height, task.path);
+                    if (iconForFile == null) {
+                        task.icon = changeIcon(constantIconMap.get("blankIcon"), task.width, task.height);
+                    } else {
+                        task.icon = new ImageIcon(iconForFile);
+                        cacheIconMap.put(task.path.getAbsolutePath(), new IconCache(System.currentTimeMillis(), task.icon));
+                    }
 //                task.icon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(task.path), task.width, task.height);
-                task.isDone = true;
+                    task.isDone = true;
+                }
+            } catch (Exception e) {
+                log.warn(e.getMessage(), e);
             }
         }
     }
