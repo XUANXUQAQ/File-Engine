@@ -67,6 +67,11 @@ public class AllConfigs {
         return instance;
     }
 
+    public CoreConfigEntity getCoreConfigs() {
+        readCoreConfigs();
+        return configEntity.getCoreConfigEntity();
+    }
+
     /**
      * 将swingTheme字符串映射到枚举类
      *
@@ -472,7 +477,6 @@ public class AllConfigs {
         readCheckUpdateStartup(settingsInJson);
         readBorderThickness(settingsInJson);
         readAdvancedConfigs(settingsInJson);
-        readCoreConfigs();
         initUpdateAddress();
         initCmdSetSettings();
     }

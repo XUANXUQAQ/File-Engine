@@ -6,7 +6,6 @@ import cn.hutool.http.HttpUtil;
 import com.google.gson.Gson;
 import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
-import file.engine.configs.AllConfigs;
 import file.engine.configs.ConfigEntity;
 import file.engine.configs.Constants;
 import file.engine.configs.core.CoreConfigEntity;
@@ -144,37 +143,41 @@ public class DatabaseNativeService {
     }
 
     @EventRegister(registerClass = StartCoreEvent.class)
-    @SneakyThrows
     private static void initCore(Event event) {
-        startCore();
-        Constants.Enums.DatabaseStatus status = null;
-        final long startTime = System.currentTimeMillis();
-        do {
-            try {
-                status = getStatus();
-                TimeUnit.MILLISECONDS.sleep(250);
-            } catch (Exception ignored) {
-                // ignored
-            }
-        } while (status != Constants.Enums.DatabaseStatus.NORMAL && System.currentTimeMillis() - startTime < 10_000);
-        log.info("File-Engine-Core启动完成");
-        ThreadPoolUtil.getInstance().executeTask(() -> {
-            EventManagement eventManagement = EventManagement.getInstance();
-            while (eventManagement.notMainExit()) {
-                //数据库连接超过3分钟未使用
-                if (connectionEstablishedTime != 0 && System.currentTimeMillis() - connectionEstablishedTime > 3 * 60 * 1000) {
-                    connectionEstablishedTime = 0;
-                    synchronized (DatabaseNativeService.class) {
-                        closeConnections();
+        try {
+            startCore();
+            Constants.Enums.DatabaseStatus status = null;
+            final long startTime = System.currentTimeMillis();
+            do {
+                try {
+                    status = getStatus();
+                    TimeUnit.MILLISECONDS.sleep(250);
+                } catch (Exception ignored) {
+                    // ignored
+                }
+            } while (status != Constants.Enums.DatabaseStatus.NORMAL && System.currentTimeMillis() - startTime < 10_000);
+            log.info("File-Engine-Core启动完成");
+            ThreadPoolUtil.getInstance().executeTask(() -> {
+                EventManagement eventManagement = EventManagement.getInstance();
+                while (eventManagement.notMainExit()) {
+                    //数据库连接超过3分钟未使用
+                    if (connectionEstablishedTime != 0 && System.currentTimeMillis() - connectionEstablishedTime > 3 * 60 * 1000) {
+                        connectionEstablishedTime = 0;
+                        synchronized (DatabaseNativeService.class) {
+                            closeConnections();
+                        }
+                    }
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(100);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
                     }
                 }
-                try {
-                    TimeUnit.MILLISECONDS.sleep(100);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
+            });
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
     }
 
     @EventListener(listenClass = SearchBarReadyEvent.class)
@@ -188,7 +191,6 @@ public class DatabaseNativeService {
         SetConfigsEvent setConfigsEvent = (SetConfigsEvent) event;
         ConfigEntity configEntity = setConfigsEvent.getConfigs();
         if (configEntity != null) {
-            configEntity = AllConfigs.getInstance().getConfigEntity();
             Gson gson = GsonUtil.getInstance().getGson();
             String coreJson = gson.toJson(configEntity.getCoreConfigEntity());
             String url = getUrl() + "/config";

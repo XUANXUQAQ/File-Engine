@@ -2661,7 +2661,7 @@ public class SettingsFrame {
      */
     private void setTextFieldAndTextAreaGui() {
         var configs = allConfigs.getConfigEntity();
-        CoreConfigEntity coreConfigs = configs.getCoreConfigEntity();
+        CoreConfigEntity coreConfigs = allConfigs.getCoreConfigs();
         textFieldSearchCache.setText("");
         textFieldBackgroundDefault.setText(toRGBHexString(configs.getDefaultBackgroundColor()));
         textFieldLabelColor.setText(toRGBHexString(configs.getLabelColor()));
@@ -2783,8 +2783,7 @@ public class SettingsFrame {
         for (int i = 1; i <= availableProcessors * 2; i++) {
             threads.add(i);
         }
-        var configs = allConfigs.getConfigEntity();
-        CoreConfigEntity coreConfigs = configs.getCoreConfigEntity();
+        CoreConfigEntity coreConfigs = allConfigs.getCoreConfigs();
         comboBoxSearchThread.setModel(new DefaultComboBoxModel<>(new Vector<>(threads)));
         comboBoxSearchThread.setSelectedItem(coreConfigs.getSearchThreadNumber());
         Map<String, String> gpuDevices = DatabaseNativeService.getGpuDevices();
@@ -2808,7 +2807,7 @@ public class SettingsFrame {
      */
     private void setCheckBoxGui() {
         var configs = allConfigs.getConfigEntity();
-        CoreConfigEntity coreConfig = configs.getCoreConfigEntity();
+        CoreConfigEntity coreConfig = allConfigs.getCoreConfigs();
         checkBoxLoseFocus.setSelected(configs.isLoseFocusClose());
         int startup = hasStartup();
         if (startup == 1) {
@@ -2952,7 +2951,7 @@ public class SettingsFrame {
     }
 
     private void initDiskSet() {
-        String[] disks = RegexUtil.comma.split(allConfigs.getConfigEntity().getCoreConfigEntity().getDisks());
+        String[] disks = RegexUtil.comma.split(allConfigs.getCoreConfigs().getDisks());
         diskSet.addAll(Arrays.asList(disks));
     }
 
