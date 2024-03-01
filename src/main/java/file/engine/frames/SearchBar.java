@@ -3508,13 +3508,21 @@ public class SearchBar {
         var listSet = new HashSet<>();
         int cacheStartIndex = 0;
         int resultStartIndex = 0;
+        boolean sendSearchDoneEvent = false;
         while (listResultsTemp == listResults && eventManagement.notMainExit() && !shouldExitMergeResultThread) {
+            if (sendSearchDoneEvent) {
+                eventManagement.putEvent(new SearchDoneEvent(new ConcurrentLinkedQueue<>(listResultsTemp.stream().map(ResultWrap::result).toList())));
+                break;
+            }
             if (getSearchBarText().isEmpty()) {
                 listResultsTemp.clear();
             } else if (runningMode == RunningMode.NORMAL_MODE) {
                 ResultEntity cacheAndPriorityResults = DatabaseNativeService.getCacheAndPriorityResults(cacheStartIndex);
                 cacheStartIndex = cacheAndPriorityResults.nextIndex();
-                isDone.compareAndSet(false, cacheAndPriorityResults.isDone());
+                final boolean done = cacheAndPriorityResults.isDone();
+                if (isDone.compareAndSet(false, done) && done) {
+                    sendSearchDoneEvent = true;
+                }
                 for (String each : cacheAndPriorityResults.data()) {
                     if (listSet.add(each)) {
                         ResultWrap resultWrap = new ResultWrap(cacheAndPriorityResults.uuid(), each);
@@ -3542,7 +3550,10 @@ public class SearchBar {
                 }
                 ResultEntity results = DatabaseNativeService.getResults(resultStartIndex);
                 resultStartIndex = results.nextIndex();
-                isDone.compareAndSet(false, results.isDone());
+                final boolean resultsDone = results.isDone();
+                if (isDone.compareAndSet(false, resultsDone) && resultsDone) {
+                    sendSearchDoneEvent = true;
+                }
                 for (String each : results.data()) {
                     if (listSet.add(each)) {
                         ResultWrap resultWrap = new ResultWrap(results.uuid(), each);
