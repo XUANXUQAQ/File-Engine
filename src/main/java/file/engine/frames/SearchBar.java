@@ -3511,6 +3511,14 @@ public class SearchBar {
         boolean sendSearchDoneEvent = false;
         while (listResultsTemp == listResults && eventManagement.notMainExit() && !shouldExitMergeResultThread) {
             if (sendSearchDoneEvent) {
+                ResultEntity results = DatabaseNativeService.getResults(resultStartIndex);
+                for (String each : results.data()) {
+                    if (listSet.add(each)) {
+                        ResultWrap resultWrap = new ResultWrap(results.uuid(), each);
+                        listResultsTemp.add(resultWrap);
+                        listResultsTemp.removeIf(e -> !Objects.equals(e.taskUUID(), taskUUID));
+                    }
+                }
                 eventManagement.putEvent(new SearchDoneEvent(new ConcurrentLinkedQueue<>(listResultsTemp.stream().map(ResultWrap::result).toList())));
                 break;
             }

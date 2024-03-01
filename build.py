@@ -183,7 +183,7 @@ jlinkExe = jlinkExe[0:1] + '\"' + jlinkExe[1:] + '\"'
 if os.system(jlinkExe + r' --no-header-files --no-man-pages --module-path jmods --add-modules ' + depsStr + ' --output jre') != 0:
     print('Generate jre failed.')
     exit()
-os.system('pause')
+# os.system('pause')
 # 精简jar
 delFileInZip()
 md5Str = getFileMd5('File-Engine.jar')
