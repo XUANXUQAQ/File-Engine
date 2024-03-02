@@ -21,6 +21,7 @@ import file.engine.utils.ProcessUtil;
 import file.engine.utils.ThreadPoolUtil;
 import file.engine.utils.file.FileUtil;
 import file.engine.utils.gson.GsonUtil;
+import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 @SuppressWarnings("unchecked")
 public class DatabaseNativeService {
     private static final String CORE_START_CMD = Path.of(Constants.FILE_ENGINE_CORE_DIR + Constants.FILE_ENGINE_CORE_CMD_NAME).toAbsolutePath().toString();
+    @Getter
     private static int port = 50721;
     private static final int MAX_RESULT_NUMBER = 200;
     private static final String CORE_URL = "http://127.0.0.1:%d";
