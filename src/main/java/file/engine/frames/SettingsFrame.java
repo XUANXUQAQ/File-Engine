@@ -2645,7 +2645,7 @@ public class SettingsFrame {
         labelProject7.setText(String.format(template, "https://github.com/ProjectPhysX/OpenCL-Wrapper", "ProjectPhysX/OpenCLWrapper"));
         labelProject8.setText(String.format(template, "https://github.com/oshi/oshi", "oshi/oshi"));
         labelProject9.setText(String.format(template, "https://github.com/java-native-access/jna", "java-native-access/jna"));
-        labelProject10.setText(String.format(template, "https://github.com/MrMarnic/JIconExtractReloaded", "MrMarnic/JIconExtractReloaded"));
+        labelProject10.setText(String.format(template, "https://javalin.io/", "javalin/javalin"));
         labelAboutGithub.setText(String.format(template, "https://github.com/XUANXUQAQ/File-Engine", "File-Engine"));
         labelPluginNum.setText(String.valueOf(PluginService.getInstance().getInstalledPluginNum()));
         ImageIcon imageIcon = new ImageIcon(Objects.requireNonNull(SettingsFrame.class.getResource("/icons/frame.png")));

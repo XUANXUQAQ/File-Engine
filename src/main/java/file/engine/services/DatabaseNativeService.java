@@ -41,6 +41,7 @@ public class DatabaseNativeService {
     private static int port = 50721;
     private static final int MAX_RESULT_NUMBER = 200;
     private static final String CORE_URL = "http://127.0.0.1:%d";
+    private static final String PORT_CMD_PLACEHOLDER = "${PORT}";
     private static final String CORE_CONFIG = Constants.FILE_ENGINE_CORE_DIR + "user" + File.separator + "settings.json";
     private static volatile long connectionEstablishedTime = 0;
     private static final Set<String> searchTaskUUIDSet = ConcurrentHashMap.newKeySet();
@@ -133,7 +134,10 @@ public class DatabaseNativeService {
     private static void startCore() {
         String startCmd = Files.readString(Path.of(CORE_START_CMD));
         port = getRandomPort();
-        startCmd += " " + port;
+        if (!startCmd.contains(PORT_CMD_PLACEHOLDER)) {
+            throw new RuntimeException("Port placeholder not found");
+        }
+        startCmd = startCmd.replace(PORT_CMD_PLACEHOLDER, String.valueOf(port));
         Runtime.getRuntime().exec(new String[]{"cmd.exe", "/c", startCmd}, null, new File(Constants.FILE_ENGINE_CORE_DIR));
         final long startTime = System.currentTimeMillis();
         while (!FileUtil.isFileExist(CORE_CONFIG)) {

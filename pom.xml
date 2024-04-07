@@ -99,7 +99,7 @@
         <dependency>
             <groupId>com.formdev</groupId>
             <artifactId>flatlaf</artifactId>
-            <version>3.2.5</version>
+            <version>3.4.1</version>
         </dependency>
         <!--    mvn install:install-file -Dfile=libs/forms_rt.jar -DgroupId=com.intellij -DartifactId=forms_rt -Dversion=1.0 -Dpackaging=jar    -->
         <dependency>
