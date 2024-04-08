@@ -13,6 +13,11 @@
   <img src="https://img.shields.io/badge/documentation-yes-brightgreen"/>
 </div>
 
+---   
+该分支前后端分离，使用File-Engine-Core
+https://github.com/XUANXUQAQ/File-Engine-Core
+
+
 ## 🏠如何编译构建本项目
 
 ---
@@ -100,4 +105,3 @@
 - [OpenCLWrapper](https://github.com/ProjectPhysX/OpenCL-Wrapper)
 - [oshi](https://github.com/oshi/oshi)
 - [jna](https://github.com/java-native-access/jna)
-- [JIconExtractReloaded](https://github.com/MrMarnic/JIconExtractReloaded)
