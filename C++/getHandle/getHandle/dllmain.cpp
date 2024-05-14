@@ -218,8 +218,8 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_GetHandle_setEditPath
     const jchar* raw = env->GetStringChars(path, nullptr);
     const jchar* raw_name = env->GetStringChars(file_name, nullptr);
 
-    jsize len = env->GetStringLength(path);
-    jsize len_name = env->GetStringLength(file_name);
+    const jsize len = env->GetStringLength(path);
+    const jsize len_name = env->GetStringLength(file_name);
 
     path_wstring.assign(raw, raw + len);
     file_name_wstring.assign(raw_name, raw_name + len_name);
@@ -228,8 +228,19 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_GetHandle_setEditPath
     env->ReleaseStringChars(file_name, raw_name);
 
     CoInitialize(nullptr);
-    jump_to_dest(current_attach_explorer, path_wstring.c_str());
-    set_file_selected(current_attach_explorer, file_name_wstring.c_str());
+    try
+    {
+        jump_to_dest(current_attach_explorer, path_wstring.c_str());
+        set_file_selected(current_attach_explorer, file_name_wstring.c_str());
+    }
+    catch (std::exception& ex)
+    {
+        env->ThrowNew(env->FindClass("java/lang/RuntimeException"), ex.what());
+    }
+    catch (...)
+    {
+        env->ThrowNew(env->FindClass("java/lang/RuntimeException"), "unknown exception");
+    }
     CoUninitialize();
 }
 
