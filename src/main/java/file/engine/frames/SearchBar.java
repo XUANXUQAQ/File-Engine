@@ -721,7 +721,11 @@ public class SearchBar {
         saveCache(result);
         jumpLocation = new String(jumpLocation.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
         fileName = new String(fileName.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
-        GetHandle.INSTANCE.setEditPath(jumpLocation, fileName);
+        try {
+            GetHandle.INSTANCE.setEditPath(jumpLocation, fileName);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+        }
     }
 
     /**
