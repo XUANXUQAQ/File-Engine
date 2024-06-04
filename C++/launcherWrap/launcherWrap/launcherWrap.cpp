@@ -22,7 +22,7 @@
 #pragma comment(lib, "User32.lib")
 
 // TODO 该变量为File-Engine.zip中的File-Engine.jar的md5值
-#define FILE_ENGINE_JAR_MD5 "89a88723d600651649c0929579d90bdd"
+#define FILE_ENGINE_JAR_MD5 "03982bb570b453b681643944017eab8f"
 
 constexpr auto CHECK_TIME_THRESHOLD = 1;
 
@@ -271,6 +271,7 @@ void release_all()
 {
     // 删除jre文件夹
     delete_jre_dir();
+    remove(g_jvm_parameter_file_path);
     if (release_resources())
     {
         extract_zip();
@@ -336,7 +337,6 @@ inline void extract_zip()
  */
 void restart_file_engine(const bool is_ignore_close_file)
 {
-    auto&& vm_options = init_jvm_parameters();
     if (is_ignore_close_file)
     {
         remove(g_close_signal_file);
@@ -382,6 +382,7 @@ void restart_file_engine(const bool is_ignore_close_file)
     //     << std::endl;
     // log_file << t.tm_hour << ":" << t.tm_min << ":" << t.tm_sec << std::endl;
     // log_file.close();
+    auto&& vm_options = init_jvm_parameters();
 
     std::string command("/c ");
     const std::string jre(g_jre_path);
