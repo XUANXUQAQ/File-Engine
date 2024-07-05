@@ -272,10 +272,21 @@ public class DatabaseNativeService {
         params.put("isDropPrevious", updateDatabaseEvent.isDropPrevious);
         String paramsStr = HttpUtil.toParams(params);
         HttpUtil.post(url + "?" + paramsStr, Collections.emptyMap());
+        try {
+            TimeUnit.SECONDS.sleep(5);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         do {
+            final long start = System.currentTimeMillis();
             try {
                 TimeUnit.SECONDS.sleep(1);
-                if (!ProcessUtil.isProcessExist("fileSearcherUSN.exe")) {
+                if (!ProcessUtil.isProcessExist("fileSearcherUSN.exe") &&
+                        getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
+                    break;
+                }
+                // 超时时间10分钟
+                if (System.currentTimeMillis() - start > 10 * 60 * 1000) {
                     break;
                 }
             } catch (Exception e) {
