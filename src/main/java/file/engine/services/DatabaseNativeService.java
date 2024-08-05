@@ -132,13 +132,28 @@ public class DatabaseNativeService {
 
     @SneakyThrows
     private static void startCore() {
-        String startCmd = Files.readString(Path.of(CORE_START_CMD));
+        List<String> startCmdList = Files.readAllLines(Path.of(CORE_START_CMD));
         port = getRandomPort();
-        if (!startCmd.contains(PORT_CMD_PLACEHOLDER)) {
+        if (!startCmdList.contains(PORT_CMD_PLACEHOLDER)) {
             throw new RuntimeException("Port placeholder not found");
         }
-        startCmd = startCmd.replace(PORT_CMD_PLACEHOLDER, String.valueOf(port));
-        Runtime.getRuntime().exec(new String[]{"cmd.exe", "/c", startCmd}, null, new File(Constants.FILE_ENGINE_CORE_DIR));
+        List<String> startCmdListWithPort = startCmdList.stream().map(eachCmd -> {
+            if (PORT_CMD_PLACEHOLDER.equals(eachCmd)) {
+                return String.valueOf(port);
+            }
+            return eachCmd;
+        }).toList();
+
+        File jvmFile = new File(Constants.FILE_ENGINE_CORE_DIR, "..\\jre\\bin\\java.exe");
+
+        ArrayList<String> allCmds = new ArrayList<>();
+        allCmds.add(jvmFile.getCanonicalPath());
+        allCmds.add("-jar");
+        allCmds.addAll(startCmdListWithPort);
+
+        log.info("start core cmd: {}", allCmds);
+        Runtime.getRuntime().exec(allCmds.toArray(new String[0]), null, new File(Constants.FILE_ENGINE_CORE_DIR));
+
         final long startTime = System.currentTimeMillis();
         while (!FileUtil.isFileExist(CORE_CONFIG)) {
             TimeUnit.SECONDS.sleep(1);
