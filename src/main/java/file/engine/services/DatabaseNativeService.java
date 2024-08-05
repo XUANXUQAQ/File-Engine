@@ -21,6 +21,7 @@ import file.engine.utils.ProcessUtil;
 import file.engine.utils.ThreadPoolUtil;
 import file.engine.utils.file.FileUtil;
 import file.engine.utils.gson.GsonUtil;
+import file.engine.utils.system.properties.IsDebug;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -166,7 +167,9 @@ public class DatabaseNativeService {
     @EventRegister(registerClass = StartCoreEvent.class)
     private static void initCore(Event event) {
         try {
-            startCore();
+            if (!IsDebug.isDebug()) {
+                startCore();
+            }
             Constants.Enums.DatabaseStatus status = null;
             final long startTime = System.currentTimeMillis();
             do {
