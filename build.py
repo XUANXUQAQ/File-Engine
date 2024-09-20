@@ -6,7 +6,8 @@ import sys
 import zipfile
 import vswhere
 import jproperties
-
+import platform
+import winreg
 
 rulesToDelete = [
     r'com\sun\jna\aix-ppc',
@@ -120,19 +121,37 @@ def getFileMd5(file_name):
     return m.hexdigest()  # 返回md5对象
 
 
+def get_java_path():
+    if platform.system() == "Windows":
+        registry_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\\JavaSoft\\Java Development Kit")
+        try:
+            i = 0
+            while True:
+                sub_key_name = winreg.EnumKey(registry_key, i)
+                sub_key = winreg.OpenKey(registry_key, sub_key_name)
+                java_home = winreg.QueryValueEx(sub_key, "JavaHome")[0]
+                if os.path.exists(java_home):
+                    return java_home
+                i += 1
+        except WindowsError:
+            return None
+    return None
+
 buildDir = 'build'
 if not os.path.exists(buildDir):
     os.mkdir(buildDir)
 
-jdkPath = ''
+jdkPath = get_java_path()
 additionalModule = []
 if len(sys.argv) > 1:
     jdkPath = sys.argv[1]
-    print("JAVA_HOME is set to " + jdkPath)
 if len(sys.argv) > 2:
     for i in range(2, len(sys.argv)):
         additionalModule.append(sys.argv[i])
         print("additional module added: " + sys.argv[i])
+if jdkPath is None:
+    raise EnvironmentError('未找到JAVA_HOME')
+print("JAVA_HOME is set to " + jdkPath)
 
 # 编译jar
 if os.system('set JAVA_HOME=' + jdkPath + '&& mvn clean compile package') != 0:
