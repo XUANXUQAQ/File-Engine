@@ -237,7 +237,7 @@ if os.system(r'xcopy File-Engine.zip "..\C++\launcherWrap\launcherWrap\" /Y') !=
 
 # 编译启动器
 vsPathList = vswhere.find(
-    latest=True, requires='Microsoft.Component.MSBuild', find='MSBuild\**\Bin\MSBuild.exe')
+    latest=True, requires='Microsoft.Component.MSBuild', find=r'MSBuild\**\Bin\MSBuild.exe')
 
 if not vsPathList:
     raise RuntimeError("Cannot find visual studio installation or MSBuild.exe")
