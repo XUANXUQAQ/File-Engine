@@ -22,19 +22,19 @@
 #pragma comment(lib, "User32.lib")
 
 // TODO 该变量为File-Engine.zip中的File-Engine.jar的md5值
-#define FILE_ENGINE_JAR_MD5 "03982bb570b453b681643944017eab8f"
+#define FILE_ENGINE_JAR_MD5 "c0cf09e0b6d069aa2efb62a7834a727d"
 
 constexpr auto CHECK_TIME_THRESHOLD = 1;
 
 const std::string redirect_error_file_option = "-XX:ErrorFile=../logs/hs_err_pid%p.log";
 const std::string default_jvm_params =
-    "-Xms8M "
-    "-Xmx256M "
-    "-XX:MaxHeapFreeRatio=20 "
-    "-XX:MinHeapFreeRatio=10 "
-    "-Dsun.java2d.noddraw=true "
-    "-XX:+CompactStrings " +
-    redirect_error_file_option;
+"-Xms8M "
+"-Xmx256M "
+"-XX:MaxHeapFreeRatio=20 "
+"-XX:MinHeapFreeRatio=10 "
+"-Dsun.java2d.noddraw=true "
+"-XX:+CompactStrings " +
+redirect_error_file_option;
 
 #ifndef TEST
 #pragma comment( linker, "/subsystem:windows /entry:mainCRTStartup" )
@@ -42,15 +42,15 @@ const std::string default_jvm_params =
 
 constexpr auto* g_file_engine_zip_name = "File-Engine.zip";
 
-char g_close_signal_file[1000]{0};
-char g_open_from_jar_signal_file[1000]{0};
-char g_file_engine_jar_path[1000]{0};
-char g_file_engine_working_dir[1000]{0};
-char g_jre_path[1000]{0};
-char g_update_signal_file[1000]{0};
-char g_new_file_engine_jar_path[1000]{0};
-char g_log_file_path[1000]{0};
-char g_jvm_parameter_file_path[1000]{0};
+wchar_t g_close_signal_file[1000]{ 0 };
+wchar_t g_open_from_jar_signal_file[1000]{ 0 };
+wchar_t g_file_engine_jar_path[1000]{ 0 };
+wchar_t g_file_engine_working_dir[1000]{ 0 };
+wchar_t g_jre_path[1000]{ 0 };
+wchar_t g_update_signal_file[1000]{ 0 };
+wchar_t g_new_file_engine_jar_path[1000]{ 0 };
+wchar_t g_log_file_path[1000]{ 0 };
+wchar_t g_jvm_parameter_file_path[1000]{ 0 };
 short g_restart_count = 0;
 
 bool is_close_exist();
@@ -58,18 +58,20 @@ DWORD find_process();
 void restart_file_engine(bool);
 bool release_resources();
 void extract_zip();
-bool is_file_exist(const char* file_path);
+bool is_file_exist(const wchar_t* file_path);
 void release_all();
-bool is_dir_not_exist(const char* path);
+bool is_dir_not_exist(const wchar_t* path);
 void update();
 void init_path();
 bool is_launched();
 std::wstring get_self_name();
 void delete_jre_dir();
-bool remove_dir(const char* szFileDir);
-std::string init_jvm_parameters();
+bool remove_dir(const wchar_t* szFileDir);
+std::wstring init_jvm_parameters();
 std::wstring string2wstring(const std::string& str);
 std::string& trim(std::string& s);
+std::string to_utf8(const wchar_t* buffer, const int len);
+std::string to_utf8(const std::wstring& str);
 
 int main()
 {
@@ -80,31 +82,25 @@ int main()
     init_path();
     // check_logs();
 #ifdef TEST
-	std::cout << "file-engine.jar path :  " << g_file_engine_jar_path << std::endl;
-	std::cout << "jre path: " << g_jre_path << std::endl;
-	std::cout << "file-engine working dir: " << g_file_engine_working_dir << std::endl;
-	std::cout << "new file-engine.jar path: " << g_new_file_engine_jar_path << std::endl;
-	std::cout << "update signal file: " << g_update_signal_file << std::endl;
-	std::cout << "close signal file : " << g_close_signal_file << std::endl;
-	std::cout << "log file path: " << g_log_file_path << std::endl;
+    std::cout << "file-engine.jar path :  " << g_file_engine_jar_path << std::endl;
+    std::cout << "jre path: " << g_jre_path << std::endl;
+    std::cout << "file-engine working dir: " << g_file_engine_working_dir << std::endl;
+    std::cout << "new file-engine.jar path: " << g_new_file_engine_jar_path << std::endl;
+    std::cout << "update signal file: " << g_update_signal_file << std::endl;
+    std::cout << "close signal file : " << g_close_signal_file << std::endl;
+    std::cout << "log file path: " << g_log_file_path << std::endl;
 #endif
     if (is_dir_not_exist(g_log_file_path))
     {
-        if (_mkdir(g_log_file_path))
+        if (_wmkdir(g_log_file_path))
         {
-            std::string msg;
-            msg.append("Create dir ").append(g_log_file_path).append(" failed");
-            MessageBoxA(nullptr, msg.c_str(), "Error", MB_OK);
             return 0;
         }
     }
     if (is_dir_not_exist(g_file_engine_working_dir))
     {
-        if (_mkdir(g_file_engine_working_dir))
+        if (_wmkdir(g_file_engine_working_dir))
         {
-            std::string msg;
-            msg.append("Create dir ").append(g_file_engine_working_dir).append(" failed");
-            MessageBoxA(nullptr, msg.c_str(), "Error", MB_OK);
             return 0;
         }
     }
@@ -116,16 +112,16 @@ int main()
             system(("TASKKILL /PID " + std::to_string(pid) + " /F").c_str());
         }
 #ifdef TEST
-		std::cout << "starting file-engine" << std::endl;
+        std::cout << "starting file-engine" << std::endl;
 #endif
         restart_file_engine(true);
     }
     else
     {
-        remove(g_open_from_jar_signal_file);
+        _wremove(g_open_from_jar_signal_file);
     }
 #ifdef TEST
-	std::cout << "start loop" << std::endl;
+    std::cout << "start loop" << std::endl;
 #endif
     std::time_t start_time = std::time(nullptr);
     while (!is_close_exist())
@@ -138,7 +134,7 @@ int main()
             if (!find_process())
             {
 #ifdef TEST
-				std::cout << "File-Engine process not exist" << std::endl;
+                std::cout << "File-Engine process not exist" << std::endl;
 #endif
                 restart_file_engine(false);
             }
@@ -147,7 +143,7 @@ int main()
     return 0;
 }
 
-std::string init_jvm_parameters()
+std::wstring init_jvm_parameters()
 {
     // 读取默认jvm启动参数
     std::unordered_set<std::string> default_jvm_parameters_set;
@@ -182,22 +178,22 @@ std::string init_jvm_parameters()
             custom_vm_options.insert(redirect_error_file_option);
         }
     }
-    std::string vm_option_str;
+    std::wstring vm_option_str;
     if (is_all_default)
     {
-        vm_option_str = default_jvm_params;
+        vm_option_str = string2wstring(default_jvm_params);
     }
     else
     {
         for (const auto& custom_vm_option : custom_vm_options)
         {
-            vm_option_str += custom_vm_option;
+            vm_option_str += string2wstring(custom_vm_option);
             vm_option_str += ' ';
         }
     }
     // 保存到文件
     std::ofstream output_stream(g_jvm_parameter_file_path, std::ios::binary);
-    for (char each_char : vm_option_str)
+    for (wchar_t each_char : vm_option_str)
     {
         output_stream.put(each_char == ' ' ? '\n' : each_char);
     }
@@ -218,45 +214,45 @@ std::string& trim(std::string& s)
 
 inline void init_path()
 {
-    char current_dir[1000];
-    GetModuleFileNameA(nullptr, current_dir, sizeof current_dir);
-    const std::string tmp_current_dir(current_dir);
-    strcpy_s(current_dir, tmp_current_dir.substr(0, tmp_current_dir.find_last_of('\\')).c_str());
+    wchar_t current_dir[1000]{ 0 };
+    GetModuleFileName(nullptr, current_dir, sizeof current_dir / 2);
+    const std::wstring tmp_current_dir(current_dir);
+    wcscpy_s(current_dir, tmp_current_dir.substr(0, tmp_current_dir.find_last_of(L'\\')).c_str());
 
-    std::string _file_engine_log_path(current_dir);
-    _file_engine_log_path += "\\logs\\";
-    strcpy_s(g_log_file_path, _file_engine_log_path.c_str());
+    std::wstring _file_engine_log_path(current_dir);
+    _file_engine_log_path += L"\\logs\\";
+    wcscpy_s(g_log_file_path, _file_engine_log_path.c_str());
 
-    std::string file_engine_jar_dir_string(current_dir);
-    file_engine_jar_dir_string += "\\data\\";
-    strcpy_s(g_file_engine_working_dir, file_engine_jar_dir_string.c_str());
+    std::wstring file_engine_jar_dir_string(current_dir);
+    file_engine_jar_dir_string += L"\\data\\";
+    wcscpy_s(g_file_engine_working_dir, file_engine_jar_dir_string.c_str());
 
-    std::string jre_path(file_engine_jar_dir_string);
-    jre_path += "jre\\";
-    strcpy_s(g_jre_path, jre_path.c_str());
+    std::wstring jre_path(file_engine_jar_dir_string);
+    jre_path += L"jre\\";
+    wcscpy_s(g_jre_path, jre_path.c_str());
 
-    file_engine_jar_dir_string += "File-Engine.jar";
-    strcpy_s(g_file_engine_jar_path, file_engine_jar_dir_string.c_str());
+    file_engine_jar_dir_string += L"File-Engine.jar";
+    wcscpy_s(g_file_engine_jar_path, file_engine_jar_dir_string.c_str());
 
-    std::string file_engine_directory(g_file_engine_working_dir);
-    file_engine_directory += "tmp\\closeDaemon";
-    strcpy_s(g_close_signal_file, file_engine_directory.c_str());
+    std::wstring file_engine_directory(g_file_engine_working_dir);
+    file_engine_directory += L"tmp\\closeDaemon";
+    wcscpy_s(g_close_signal_file, file_engine_directory.c_str());
 
-    std::string open_from_jar_signal_file(g_file_engine_working_dir);
-    open_from_jar_signal_file += "tmp\\openFromJar";
-    strcpy_s(g_open_from_jar_signal_file, open_from_jar_signal_file.c_str());
+    std::wstring open_from_jar_signal_file(g_file_engine_working_dir);
+    open_from_jar_signal_file += L"tmp\\openFromJar";
+    wcscpy_s(g_open_from_jar_signal_file, open_from_jar_signal_file.c_str());
 
-    std::string new_file_engine_path(g_file_engine_working_dir);
-    new_file_engine_path += "tmp\\File-Engine.jar";
-    strcpy_s(g_new_file_engine_jar_path, new_file_engine_path.c_str());
+    std::wstring new_file_engine_path(g_file_engine_working_dir);
+    new_file_engine_path += L"tmp\\File-Engine.jar";
+    wcscpy_s(g_new_file_engine_jar_path, new_file_engine_path.c_str());
 
-    std::string update_signal_file(g_file_engine_working_dir);
-    update_signal_file += "user\\update";
-    strcpy_s(g_update_signal_file, update_signal_file.c_str());
+    std::wstring update_signal_file(g_file_engine_working_dir);
+    update_signal_file += L"user\\update";
+    wcscpy_s(g_update_signal_file, update_signal_file.c_str());
 
-    std::string jvm_parameter_file(g_file_engine_working_dir);
-    jvm_parameter_file += "jvm.vmoptions";
-    strcpy_s(g_jvm_parameter_file_path, jvm_parameter_file.c_str());
+    std::wstring jvm_parameter_file(g_file_engine_working_dir);
+    jvm_parameter_file += L"jvm.vmoptions";
+    wcscpy_s(g_jvm_parameter_file_path, jvm_parameter_file.c_str());
 }
 
 inline void delete_jre_dir()
@@ -271,7 +267,7 @@ void release_all()
 {
     // 删除jre文件夹
     delete_jre_dir();
-    remove(g_jvm_parameter_file_path);
+    _wremove(g_jvm_parameter_file_path);
     if (release_resources())
     {
         extract_zip();
@@ -286,7 +282,7 @@ void release_all()
  */
 bool release_resources()
 {
-    HRSRC hRsrc = FindResourceW(nullptr, MAKEINTRESOURCEW(IDR_ZIP2), L"ZIP");
+    HRSRC hRsrc = FindResource(nullptr, MAKEINTRESOURCEW(IDR_ZIP2), L"ZIP");
     if (nullptr == hRsrc)
     {
         return false;
@@ -329,7 +325,9 @@ bool release_resources()
  */
 inline void extract_zip()
 {
-    zip_extract(g_file_engine_zip_name, g_file_engine_working_dir, nullptr, nullptr);
+    std::wstring working_dir(g_file_engine_working_dir);
+    auto&& w_working_dir = to_utf8(working_dir);
+    zip_extract(g_file_engine_zip_name, w_working_dir.c_str(), nullptr, nullptr);
 }
 
 /**
@@ -339,7 +337,7 @@ void restart_file_engine(const bool is_ignore_close_file)
 {
     if (is_ignore_close_file)
     {
-        remove(g_close_signal_file);
+        _wremove(g_close_signal_file);
     }
     else
     {
@@ -356,7 +354,7 @@ void restart_file_engine(const bool is_ignore_close_file)
     else if (is_file_exist(g_file_engine_jar_path))
     {
         // 检查File-Engine.jar是否与启动器中的版本一致
-        auto&& jar_md5 = GetFileHash(string2wstring(g_file_engine_jar_path).c_str());
+        auto&& jar_md5 = GetFileHash(g_file_engine_jar_path);
         if (jar_md5 != FILE_ENGINE_JAR_MD5)
         {
             release_all();
@@ -370,32 +368,26 @@ void restart_file_engine(const bool is_ignore_close_file)
     if (g_restart_count >= 3 || !is_file_exist(g_file_engine_jar_path))
     {
 #ifdef TEST
-		std::cout << "release File-Engine.zip" << std::endl;
+        std::cout << "release File-Engine.zip" << std::endl;
 #endif
         release_all();
     }
     g_restart_count++;
 
-    // std::ofstream log_file(g_log_file_path + std::string(get_date()) + ".log", std::ios::app);
-    // const tm t = get_tm();
-    // log_file << "------------------------------------------------------------------------------------------------------"
-    //     << std::endl;
-    // log_file << t.tm_hour << ":" << t.tm_min << ":" << t.tm_sec << std::endl;
-    // log_file.close();
     auto&& vm_options = init_jvm_parameters();
 
-    std::string command("/c ");
-    const std::string jre(g_jre_path);
+    std::wstring command(L"/c ");
+    const std::wstring jre(g_jre_path);
     command.append(jre.substr(0, 2));
-    command.append("\"");
+    command.append(L"\"");
     command.append(jre.substr(2));
-    command.append("bin\\javaw.exe\" ").append(vm_options).append(" -jar File-Engine.jar");
+    command.append(L"bin\\javaw.exe\" ").append(vm_options).append(L" -jar File-Engine.jar");
     // .append(" 1> normal.log")
     // .append(" 2>> ").append("\"").append(g_log_file_path).append(get_date()).append(".log").append("\"");
 #ifdef TEST
-	std::cout << "running command: " << command << std::endl;
+    std::cout << "running command: " << command << std::endl;
 #endif
-    ShellExecuteA(nullptr, "open", "cmd", command.c_str(), g_file_engine_working_dir, SW_HIDE);
+    ShellExecute(nullptr, L"open", L"cmd", command.c_str(), g_file_engine_working_dir, SW_HIDE);
 }
 
 /**
@@ -403,8 +395,8 @@ void restart_file_engine(const bool is_ignore_close_file)
  */
 void update()
 {
-    CopyFileA(g_new_file_engine_jar_path, g_file_engine_jar_path, false);
-    remove(g_update_signal_file);
+    CopyFile(g_new_file_engine_jar_path, g_file_engine_jar_path, false);
+    _wremove(g_update_signal_file);
 }
 
 /**
@@ -415,27 +407,20 @@ bool is_close_exist()
     return is_file_exist(g_close_signal_file);
 }
 
-bool is_dir_not_exist(const char* path)
+bool is_dir_not_exist(const wchar_t* path)
 {
-    const int tmp = _access(path, 0);
+    const int tmp = _waccess(path, 0);
     return -1 == tmp;
 }
 
-bool is_file_exist(const char* file_path)
+bool is_file_exist(const wchar_t* file_path)
 {
-    FILE* fp = nullptr;
-    fopen_s(&fp, file_path, "rb");
-    if (fp != nullptr)
-    {
-        fclose(fp);
-        return true;
-    }
-    return false;
+    return GetFileAttributes(file_path) != INVALID_FILE_ATTRIBUTES;
 }
 
 BOOL dos_path_to_nt_path(LPTSTR pszDosPath, LPTSTR pszNtPath)
 {
-    TCHAR szDriveStr[500]{0};
+    TCHAR szDriveStr[500]{ 0 };
 
     //检查参数
     if (!pszDosPath || !pszNtPath)
@@ -444,10 +429,10 @@ BOOL dos_path_to_nt_path(LPTSTR pszDosPath, LPTSTR pszNtPath)
     //获取本地磁盘字符串
     if (GetLogicalDriveStrings(500, szDriveStr))
     {
-        TCHAR szDrive[3]{0};
+        TCHAR szDrive[3]{ 0 };
         for (int i = 0; szDriveStr[i]; i += 4)
         {
-            TCHAR szDevName[100]{0};
+            TCHAR szDevName[100]{ 0 };
             if (!lstrcmpi(&(szDriveStr[i]), TEXT("A:\\")) || !lstrcmpi(&(szDriveStr[i]), TEXT("B:\\")))
                 continue;
 
@@ -551,8 +536,7 @@ DWORD find_process()
         DWORD ret = 0;
         auto* const hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
         pe.dwSize = sizeof(PROCESSENTRY32);
-        const std::string _workingDir(g_file_engine_working_dir);
-        const std::wstring workingDir = string2wstring(_workingDir);
+        const std::wstring workingDir(g_file_engine_working_dir);
         if (!Process32First(hSnapshot, &pe))
         {
             CloseHandle(hSnapshot);
@@ -566,7 +550,7 @@ DWORD find_process()
             if (wcscmp(pe.szExeFile, L"javaw.exe") == 0)
             {
                 const DWORD id = pe.th32ProcessID;
-                TCHAR szProcessName[1000] = {0};
+                TCHAR szProcessName[1000] = { 0 };
                 get_process_full_path(id, szProcessName);
                 std::wstring processName(szProcessName);
                 if (processName.find(workingDir) != std::wstring::npos)
@@ -585,6 +569,40 @@ DWORD find_process()
     }
 }
 
+std::string to_utf8(const std::wstring& str)
+{
+    return to_utf8(str.c_str(), static_cast<int>(str.size()));
+}
+
+std::string to_utf8(const wchar_t* buffer, const int len)
+{
+    const auto n_chars = WideCharToMultiByte(
+        CP_UTF8,
+        0,
+        buffer,
+        len,
+        nullptr,
+        0,
+        nullptr,
+        nullptr);
+    if (n_chars == 0)
+    {
+        return "";
+    }
+    std::string new_buffer;
+    new_buffer.resize(n_chars);
+    WideCharToMultiByte(
+        CP_UTF8,
+        0,
+        buffer,
+        len,
+        const_cast<char*>(new_buffer.c_str()),
+        n_chars,
+        nullptr,
+        nullptr);
+
+    return new_buffer;
+}
 
 std::wstring string2wstring(const std::string& str)
 {
@@ -601,30 +619,29 @@ std::wstring string2wstring(const std::string& str)
     return result;
 }
 
-bool remove_dir(const char* szFileDir)
+bool remove_dir(const wchar_t* szFileDir)
 {
-    std::string strDir = szFileDir;
-    if (strDir.at(strDir.length() - 1) != '\\')
-        strDir += '\\';
-    WIN32_FIND_DATAA wfd;
-    HANDLE hFind = FindFirstFileA((strDir + "*.*").c_str(), &wfd);
+    std::wstring strDir = szFileDir;
+    if (strDir.at(strDir.length() - 1) != L'\\')
+        strDir += L'\\';
+    WIN32_FIND_DATA wfd;
+    HANDLE hFind = FindFirstFile((strDir + L"*.*").c_str(), &wfd);
     if (hFind == INVALID_HANDLE_VALUE)
         return false;
     do
     {
         if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
-            if (_stricmp(wfd.cFileName, ".") != 0 &&
-                _stricmp(wfd.cFileName, "..") != 0)
+            if (_wcsicmp(wfd.cFileName, L".") != 0 &&
+                _wcsicmp(wfd.cFileName, L"..") != 0)
                 remove_dir((strDir + wfd.cFileName).c_str());
         }
         else
         {
-            DeleteFileA((strDir + wfd.cFileName).c_str());
+            DeleteFile((strDir + wfd.cFileName).c_str());
         }
-    }
-    while (FindNextFileA(hFind, &wfd));
+    } while (FindNextFile(hFind, &wfd));
     FindClose(hFind);
-    RemoveDirectoryA(szFileDir);
+    RemoveDirectory(szFileDir);
     return true;
 }
