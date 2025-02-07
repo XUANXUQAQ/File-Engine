@@ -21,7 +21,7 @@ https://github.com/XUANXUQAQ/File-Engine-Core
 [![Aiverything](https://img.shields.io/badge/Try-Aiverything-blue?style=for-the-badge)](https://github.com/panwangwin/aiverything-official-forum)
 
 # 新项目推荐
-[![Aiverything-LOGO](https://raw.githubusercontent.com/panwangwin/aiverything-official-forum/refs/heads/main/logo-2.png)]
+![Aiverything-LOGO](https://raw.githubusercontent.com/panwangwin/aiverything-official-forum/refs/heads/main/logo-2.png)    
 [![Aiverything](https://img.shields.io/badge/Try-Aiverything-blue?style=for-the-badge)](https://github.com/panwangwin/aiverything-official-forum)
 
 
