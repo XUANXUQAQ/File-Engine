@@ -20,6 +20,7 @@ https://github.com/XUANXUQAQ/File-Engine-Core
 
 # 新项目推荐 Aiverything
 使用File-Engine-Core，更易用的UI，更强大的搜索性能以及更多   
+欢迎加入我们的QQ群，一起交流学习，或者水群聊聊天，交个朋友~：893463594   
 [Aiverything | Launcher to your everything.](https://aiverything.me/)   
 [小众软件-Aiverything - GPU加速的文件搜索&启动工具](https://meta.appinn.net/t/topic/66229)   
 ![Aiverything-LOGO](https://raw.githubusercontent.com/panwangwin/aiverything-official-forum/refs/heads/main/logo-2.png)    
